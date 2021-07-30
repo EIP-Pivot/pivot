@@ -1,6 +1,6 @@
 : 1
 name: hello
-version: 0.1.0-a.0.z
+version: 0.1.0-a.1
 project: game-engine
 summary: hello C++ executable
 license: other: proprietary ; Not free/open source.

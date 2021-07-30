@@ -1,0 +1,3 @@
+# libhello
+
+C++ library

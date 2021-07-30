@@ -1,4 +1,5 @@
-#include <iostream>
+import <iostream>;
+import hello;
 
 int main (int argc, char* argv[])
 {
@@ -10,5 +11,5 @@ int main (int argc, char* argv[])
     return 1;
   }
 
-  cout << "Hello, " << argv[1] << '!' << endl;
+  hello::say_hello(cout, argv[1]);
 }

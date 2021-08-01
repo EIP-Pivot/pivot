@@ -1,6 +1,9 @@
 : basics
 :
-$* 'World' >'Hello, World!'
+$* 'World' >>EOI
+Hello, World!
+0.489152
+EOI
 
 : missing-name
 :

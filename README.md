@@ -19,7 +19,7 @@ directories.
 ### Create the build configuration
 
 ``` sh
-bdep init --config-create build-gcc @gcc cc config.cxx=g++
+bdep init --config-create ../build-gcc @gcc cc config.cxx=g++
 ```
 
 ### Build the project

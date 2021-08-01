@@ -1,6 +1,6 @@
 libs =
-import libs += libhello%lib{hello}
+import libs += libhello%lib{hello} glm%lib{glm}
 
-exe{hello}: {hxx ixx txx cxx}{**} $libs testscript
+exe{hello}: {hxx ixx txx cxx mxx}{**} $libs testscript
 
 cxx.poptions =+ "-I$out_root" "-I$src_root"

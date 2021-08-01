@@ -10,3 +10,4 @@ email: lucie@cryptio.co
 depends: * build2 >= 0.13.0
 depends: * bpkg >= 0.13.0
 depends: libhello ^0.1.0-a.1
+depends: glm ^0.9.9

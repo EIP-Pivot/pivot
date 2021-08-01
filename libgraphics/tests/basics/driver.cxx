@@ -2,7 +2,7 @@
 #include <sstream>
 #include <stdexcept>
 
-import pivot.graphic;
+import pivot.graphics;
 
 int main ()
 {

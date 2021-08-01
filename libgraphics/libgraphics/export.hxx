@@ -8,21 +8,21 @@
 // used before their inline definition. The workaround is to reorder code. In
 // the end it's all trial and error.
 
-#if defined(LIBGRAPHIC_STATIC)         // Using static.
-#  define LIBGRAPHIC_SYMEXPORT
-#elif defined(LIBGRAPHIC_STATIC_BUILD) // Building static.
-#  define LIBGRAPHIC_SYMEXPORT
-#elif defined(LIBGRAPHIC_SHARED)       // Using shared.
+#if defined(LIBGRAPHICS_STATIC)         // Using static.
+#  define LIBGRAPHICS_SYMEXPORT
+#elif defined(LIBGRAPHICS_STATIC_BUILD) // Building static.
+#  define LIBGRAPHICS_SYMEXPORT
+#elif defined(LIBGRAPHICS_SHARED)       // Using shared.
 #  ifdef _WIN32
-#    define LIBGRAPHIC_SYMEXPORT __declspec(dllimport)
+#    define LIBGRAPHICS_SYMEXPORT __declspec(dllimport)
 #  else
-#    define LIBGRAPHIC_SYMEXPORT
+#    define LIBGRAPHICS_SYMEXPORT
 #  endif
-#elif defined(LIBGRAPHIC_SHARED_BUILD) // Building shared.
+#elif defined(LIBGRAPHICS_SHARED_BUILD) // Building shared.
 #  ifdef _WIN32
-#    define LIBGRAPHIC_SYMEXPORT __declspec(dllexport)
+#    define LIBGRAPHICS_SYMEXPORT __declspec(dllexport)
 #  else
-#    define LIBGRAPHIC_SYMEXPORT
+#    define LIBGRAPHICS_SYMEXPORT
 #  endif
 #else
 // If none of the above macros are defined, then we assume we are being used
@@ -34,6 +34,6 @@
 // then you will probably want to replace the fallback with the (commented
 // out) error since it won't work for the shared case.
 // 
-#  define LIBGRAPHIC_SYMEXPORT         // Using static or shared.
-// #  error define LIBGRAPHIC_STATIC or LIBGRAPHIC_SHARED preprocessor macro to signal libgraphic library type being linked
+#  define LIBGRAPHICS_SYMEXPORT         // Using static or shared.
+// #  error define LIBGRAPHICS_STATIC or LIBGRAPHICS_SHARED preprocessor macro to signal libgraphics library type being linked
 #endif

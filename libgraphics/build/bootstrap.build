@@ -1,4 +1,4 @@
-project = libgraphic
+project = libgraphics
 
 using version
 using config

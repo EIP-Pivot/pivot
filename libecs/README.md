@@ -1,0 +1,3 @@
+# libecs
+
+C++ library

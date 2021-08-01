@@ -2,3 +2,7 @@
 location: hello/
 :
 location: libhello/
+:
+location: libecs/
+:
+location: libgraphic/

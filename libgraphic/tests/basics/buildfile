@@ -1,0 +1,3 @@
+import libs = libgraphic%lib{graphic}
+
+exe{driver}: {hxx mxx cxx}{**} $libs testscript{**}

@@ -1,0 +1,6 @@
+$out_root/
+{
+  include libecs/
+}
+
+export $out_root/libecs/$import.target

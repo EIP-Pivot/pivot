@@ -1,0 +1,53 @@
+intf_libs = # Interface dependencies.
+impl_libs = # Implementation dependencies.
+#import xxxx_libs += libhello%lib{hello}
+
+lib{graphic}: {hxx mxx cxx}{** -version} hxx{version} $impl_libs $intf_libs
+
+# Include the generated version header into the distribution (so that we don't
+# pick up an installed one) and don't remove it when cleaning in src (so that
+# clean results in a state identical to distributed).
+#
+hxx{version}: in{version} $src_root/manifest
+{
+  dist  = true
+  clean = ($src_root != $out_root)
+}
+
+hxx{export}@./: cxx.importable = false
+
+# Build options.
+#
+cxx.poptions =+ "-I$out_root" "-I$src_root"
+
+{hbmia obja}{*}: cxx.poptions += -DLIBGRAPHIC_STATIC_BUILD
+{hbmis objs}{*}: cxx.poptions += -DLIBGRAPHIC_SHARED_BUILD
+
+# Export options.
+#
+lib{graphic}:
+{
+  cxx.export.poptions = "-I$out_root" "-I$src_root"
+  cxx.export.libs = $intf_libs
+}
+
+liba{graphic}: cxx.export.poptions += -DLIBGRAPHIC_STATIC
+libs{graphic}: cxx.export.poptions += -DLIBGRAPHIC_SHARED
+
+# For pre-releases use the complete version to make sure they cannot be used
+# in place of another pre-release or the final version. See the version module
+# for details on the version.* variable values.
+#
+if $version.pre_release
+  lib{graphic}: bin.lib.version = @"-$version.project_id"
+else
+  lib{graphic}: bin.lib.version = @"-$version.major.$version.minor"
+
+# Install into the libgraphic/ subdirectory of, say, /usr/include/
+# recreating subdirectories.
+#
+{hxx mxx}{*}:
+{
+  install         = include/libgraphic/
+  install.subdirs = true
+}

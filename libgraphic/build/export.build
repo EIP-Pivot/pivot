@@ -1,0 +1,6 @@
+$out_root/
+{
+  include libgraphic/
+}
+
+export $out_root/libgraphic/$import.target

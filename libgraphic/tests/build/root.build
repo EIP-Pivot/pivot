@@ -1,0 +1,19 @@
+cxx.std = latest
+
+using cxx
+
+mxx{*}: extension = mxx
+hxx{*}: extension = hxx
+cxx{*}: extension = cxx
+
+# Assume headers are importable unless stated otherwise.
+#
+hxx{*}: cxx.importable = true
+
+# Every exe{} in this subproject is by default a test.
+#
+exe{*}: test = true
+
+# The test target for cross-testing (running tests under Wine, etc).
+#
+test.target = $cxx.target

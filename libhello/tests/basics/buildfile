@@ -1,3 +1,0 @@
-import libs = libhello%lib{hello}
-
-exe{driver}: {hxx ixx txx cxx}{**} $libs testscript{**}

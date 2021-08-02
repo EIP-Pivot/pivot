@@ -1,9 +1,0 @@
-module;
-
-#include <ostream>
-
-export module hello;
-
-export namespace hello {
-void say_hello(std::ostream &o, const std::string &n);
-}

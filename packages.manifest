@@ -1,8 +1,4 @@
 : 1
-location: hello/
-:
-location: libhello/
-:
 location: libecs/
-:
+: 
 location: libgraphics/

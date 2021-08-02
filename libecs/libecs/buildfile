@@ -1,6 +1,5 @@
 intf_libs = # Interface dependencies.
 impl_libs = # Implementation dependencies.
-#import xxxx_libs += libhello%lib{hello}
 
 lib{ecs}: {hxx mxx cxx}{** -version} hxx{version} $impl_libs $intf_libs
 

@@ -10,4 +10,3 @@ email: julien.philippon@epitech.eu
 #build-error-email: julien.philippon@epitech.eu
 depends: * build2 >= 0.13.0
 depends: * bpkg >= 0.13.0
-#depends: libhello ^1.0.0

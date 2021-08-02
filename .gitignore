@@ -5,3 +5,6 @@
 .build2/local/
 
 build-*
+
+.ccls-cache/*
+compile_commands.json

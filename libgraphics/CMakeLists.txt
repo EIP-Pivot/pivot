@@ -38,7 +38,9 @@ if (NOT glm_POPULATED)
 endif()
 
 
-add_library(${PROJECT_NAME} source/lib.cxx)
+add_library(${PROJECT_NAME} source/lib.cxx
+                            source/Camera.cxx
+)
 
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 

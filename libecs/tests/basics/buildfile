@@ -1,3 +1,0 @@
-import libs = libecs%lib{ecs}
-
-exe{driver}: {hxx mxx cxx}{**} $libs testscript{**}

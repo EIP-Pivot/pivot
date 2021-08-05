@@ -1,3 +1,0 @@
-# libgraphics
-
-C++ library

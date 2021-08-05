@@ -1,10 +1,17 @@
-.bdep/
-
-# Local default options files.
-#
-.build2/local/
-
-build-*
-
-.ccls-cache/*
+# Ignore the deps and obj files
+*.o
+*.d
+.clangd/
+.ccls-cache/
 compile_commands.json
+
+
+# Ignore the CMake build file
+CMakeFiles
+CMakeCache.txt
+*.cmake
+Makefile
+
+# Ignore the build directory
+build/
+cmake-build-*

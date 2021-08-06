@@ -55,6 +55,7 @@ endif()
 
 add_library(${PROJECT_NAME} source/lib.cxx
                             source/Camera.cxx
+                            source/Swapchain.cxx
                             source/PipelineBuilder.cxx
                             source/VulkanLoader.cxx
 )

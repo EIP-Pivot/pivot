@@ -6,6 +6,7 @@
 
 #include "pivot/graphics/QueueFamilyIndices.hxx"
 #include "pivot/graphics/SwapChainSupportDetails.hxx"
+#include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
 class Window;
@@ -97,28 +98,7 @@ void Swapchain::createImageViews(VkDevice &device)
     swapChainImageViews.resize(swapChainImages.size());
 
     for (size_t i = 0; i < swapChainImages.size(); ++i) {
-        auto createInfo = VkImageViewCreateInfo{
-            .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-            .pNext = nullptr,
-            .image = swapChainImages.at(i),
-            .viewType = VK_IMAGE_VIEW_TYPE_2D,
-            .format = swapChainImageFormat,
-            .components =
-                {
-                    .r = VK_COMPONENT_SWIZZLE_IDENTITY,
-                    .g = VK_COMPONENT_SWIZZLE_IDENTITY,
-                    .b = VK_COMPONENT_SWIZZLE_IDENTITY,
-                    .a = VK_COMPONENT_SWIZZLE_IDENTITY,
-                },
-            .subresourceRange =
-                {
-                    .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                    .baseMipLevel = 0,
-                    .levelCount = 1,
-                    .baseArrayLayer = 0,
-                    .layerCount = 1,
-                },
-        };
+        auto createInfo = vk_init::populateVkImageViewCreateInfo(swapChainImages.at(i), swapChainImageFormat);
         VK_TRY(vkCreateImageView(device, &createInfo, nullptr, &swapChainImageViews[i]));
     }
     chainDeletionQueue.push([&]() {

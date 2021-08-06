@@ -41,6 +41,16 @@ if (NOT glm_POPULATED)
     )
 endif()
 
+FetchContent_Declare(
+    vma
+    GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+    GIT_TAG b0fce340b6c581d2bb75ca6c8c6e55235a52d8e2
+)
+if (NOT vma_POPULATED)
+    message(STATUS "Populating vma")
+    FetchContent_Populate(vma)
+    add_subdirectory(${vma_SOURCE_DIR} ${vma_BINARY_DIR})
+endif()
 
 FetchContent_Declare(
     logger
@@ -66,4 +76,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Vulkan::Vulkan
                                               logger
                                               glfw
                                               glm
+                                              vma
 )

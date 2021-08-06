@@ -1,10 +1,14 @@
 project(pivot-graphics)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 find_package(Vulkan REQUIRED)
 
 include(shaders/CMakeRule.txt)
 
 include(FetchContent)
+
 FetchContent_Declare(
     glfw
     GIT_REPOSITORY https://github.com/glfw/glfw.git
@@ -38,13 +42,26 @@ if (NOT glm_POPULATED)
 endif()
 
 
+FetchContent_Declare(
+    logger
+    GIT_REPOSITORY https://github.com/zcorniere/logger-cpp.git
+    GIT_TAG de80acfa90259c1ba4b83fd725d969ccbed3626f
+)
+if (NOT logger_POPULATED)
+    message(STATUS "Populating logger")
+    FetchContent_Populate(logger)
+    add_subdirectory(${logger_SOURCE_DIR} ${logger_BINARY_DIR})
+endif()
+
 add_library(${PROJECT_NAME} source/lib.cxx
                             source/Camera.cxx
+                            source/VulkanLoader.cxx
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Vulkan::Vulkan
+                                              logger
                                               glfw
                                               glm
 )

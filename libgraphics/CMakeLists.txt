@@ -68,6 +68,7 @@ add_library(${PROJECT_NAME} source/lib.cxx
                             source/Swapchain.cxx
                             source/PipelineBuilder.cxx
                             source/VulkanLoader.cxx
+                            source/UniformBufferObject.cxx
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC include/)

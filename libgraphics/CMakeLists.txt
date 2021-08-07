@@ -49,6 +49,7 @@ FetchContent_Declare(
 if (NOT vma_POPULATED)
     message(STATUS "Populating vma")
     FetchContent_Populate(vma)
+    set(VMA_USE_STL_CONTAINERS ON)
     add_subdirectory(${vma_SOURCE_DIR} ${vma_BINARY_DIR})
 endif()
 
@@ -72,6 +73,9 @@ add_library(${PROJECT_NAME} source/lib.cxx
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
+
+# Apparently, VMA does not add its include path to the target
+target_include_directories(${PROJECT_NAME} PUBLIC ${vma_SOURCE_DIR}/include)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Vulkan::Vulkan
                                               logger

@@ -100,8 +100,8 @@ size_t VulkanApplication::load3DModels(const std::vector<std::filesystem::path> 
         }
         loadedMeshes[f.stem()] = mesh;
     }
-    cpuStorage.vertexBuffer = vertexStagingBuffer;
-    cpuStorage.indexBuffer = indexStagingBuffer;
+    cpuStorage.vertexBuffer.swap(vertexStagingBuffer);
+    cpuStorage.indexBuffer.swap(indexStagingBuffer);
     logger->deleteProgressBar(bar);
     return loadedMeshes.size();
 }

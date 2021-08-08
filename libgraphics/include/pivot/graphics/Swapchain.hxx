@@ -18,9 +18,9 @@ public:
     Swapchain();
     ~Swapchain();
 
-    void init(VkExtent2D &windowExtent, VkPhysicalDevice &gpu, VkDevice &device, VkSurfaceKHR &surface);
+    void init(const VkExtent2D &windowExtent, VkPhysicalDevice &gpu, VkDevice &device, VkSurfaceKHR &surface);
     void destroy();
-    void recreate(VkExtent2D &windowExtent, VkPhysicalDevice &gpu, VkDevice &device, VkSurfaceKHR &surface);
+    void recreate(const VkExtent2D &windowExtent, VkPhysicalDevice &gpu, VkDevice &device, VkSurfaceKHR &surface);
     uint32_t nbOfImage() const;
 
     inline const VkSwapchainKHR &getSwapchain() const { return swapChain; }
@@ -42,7 +42,8 @@ public:
     }
 
 private:
-    void createSwapchain(VkExtent2D &windowExtent, VkPhysicalDevice &gpu, VkDevice &device, VkSurfaceKHR &surface);
+    void createSwapchain(const VkExtent2D &windowExtent, VkPhysicalDevice &gpu, VkDevice &device,
+                         VkSurfaceKHR &surface);
     void getImages(VkDevice &device);
     void createImageViews(VkDevice &device);
 

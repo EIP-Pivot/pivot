@@ -1,0 +1,55 @@
+---
+Language: Cpp
+Standard: c++20
+AccessModifierOffset: -4
+AlignEscapedNewlinesLeft: true
+AlignTrailingComments: true
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortFunctionsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: true
+AllowShortLoopsOnASingleLine: true
+AllowShortBlocksOnASingleLine: Always
+AllowShortCaseLabelsOnASingleLine: true
+AlwaysBreakBeforeMultilineStrings: false
+AlwaysBreakTemplateDeclarations: true
+#BitFieldColonSpacingStyle: After
+BreakBeforeBraces: Linux
+BraceWrapping:
+  AfterEnum: false
+  AfterClass: false
+  AfterUnion: true
+  BeforeElse: false
+#  BeforeWhile: false
+  BeforeCatch: false
+  AfterStruct: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterCaseLabel: false
+  AfterExternBlock: false
+#  BeforeLambdaBody: false
+  SplitEmptyFunction: false
+#  BraceWrappingAfterControlStatementStyle: Never
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+ConstructorInitializerIndentWidth: 4
+Cpp11BracedListStyle: true
+IndentCaseLabels: true
+IndentWidth: 4
+ColumnLimit: 120
+NamespaceIndentation: Inner
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCtorInitializerColon: false
+SpaceBeforeInheritanceColon: true
+SpaceBeforeParens: ControlStatements
+SpaceBeforeRangeBasedForLoopColon: false
+SpaceBeforeSquareBrackets: false
+SpaceInEmptyBlock: false
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 4
+SpacesInAngles: false
+SpacesInCStyleCastParentheses: false
+SpacesInConditionalStatement: false
+SpacesInContainerLiterals: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+UseTab: Never
+...

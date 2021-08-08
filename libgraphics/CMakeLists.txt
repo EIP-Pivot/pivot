@@ -9,11 +9,14 @@ include(shaders/CMakeRule.txt)
 
 
 add_library(${PROJECT_NAME} source/lib.cxx
+                            source/vk_utils.cxx
+                            source/vk_init.cxx
                             source/Camera.cxx
                             source/Swapchain.cxx
                             source/PipelineBuilder.cxx
                             source/VulkanLoader.cxx
                             source/UniformBufferObject.cxx
+                            source/VulkanException.cxx
                             source/VulkanApplication.cxx
                             source/VulkanApplication_static.cxx
                             source/VulkanApplication_helper.cxx
@@ -103,17 +106,18 @@ if (NOT logger_POPULATED)
     # )
 endif()
 
+add_shader(${PROJECT_NAME} triangle.vert)
+add_shader(${PROJECT_NAME} triangle.frag)
 
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 
 # Apparently, VMA does not add its include path to the target
 target_include_directories(${PROJECT_NAME} PUBLIC ${vma_SOURCE_DIR}/include)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Vulkan::Vulkan
-                                              logger
-                                              glfw
-                                              glm
-                                              vma
-                                              stb
-                                              tinyobjloader
+target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan::Vulkan
+                                      PUBLIC logger
+                                      PUBLIC glfw
+                                      PUBLIC glm
+                                      PUBLIC VulkanMemoryAllocator
+                                      PUBLIC tinyobjloader
 )

@@ -15,7 +15,7 @@ Swapchain::Swapchain() {}
 
 Swapchain::~Swapchain() {}
 
-void Swapchain::init(VkExtent2D &windowExtent, VkPhysicalDevice &gpu, VkDevice &device, VkSurfaceKHR &surface)
+void Swapchain::init(const VkExtent2D &windowExtent, VkPhysicalDevice &gpu, VkDevice &device, VkSurfaceKHR &surface)
 {
     createSwapchain(windowExtent, gpu, device, surface);
     getImages(device);
@@ -24,7 +24,7 @@ void Swapchain::init(VkExtent2D &windowExtent, VkPhysicalDevice &gpu, VkDevice &
 
 void Swapchain::destroy() { chainDeletionQueue.flush(); }
 
-void Swapchain::recreate(VkExtent2D &windowExtent, VkPhysicalDevice &gpu, VkDevice &device, VkSurfaceKHR &surface)
+void Swapchain::recreate(const VkExtent2D &windowExtent, VkPhysicalDevice &gpu, VkDevice &device, VkSurfaceKHR &surface)
 {
     this->destroy();
     this->init(windowExtent, gpu, device, surface);
@@ -37,7 +37,7 @@ uint32_t Swapchain::nbOfImage() const
     return swapChainImages.size();
 }
 
-void Swapchain::createSwapchain(VkExtent2D &windowExtent, VkPhysicalDevice &gpu, VkDevice &device,
+void Swapchain::createSwapchain(const VkExtent2D &windowExtent, VkPhysicalDevice &gpu, VkDevice &device,
                                 VkSurfaceKHR &surface)
 {
     auto indices = QueueFamilyIndices::findQueueFamilies(gpu, surface);

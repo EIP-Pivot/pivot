@@ -7,6 +7,20 @@ find_package(Vulkan REQUIRED)
 
 include(shaders/CMakeRule.txt)
 
+
+add_library(${PROJECT_NAME} source/lib.cxx
+                            source/Camera.cxx
+                            source/Swapchain.cxx
+                            source/PipelineBuilder.cxx
+                            source/VulkanLoader.cxx
+                            source/UniformBufferObject.cxx
+                            source/VulkanApplication.cxx
+                            source/VulkanApplication_static.cxx
+                            source/VulkanApplication_helper.cxx
+                            source/VulkanApplication_loader.cxx
+
+)
+
 include(FetchContent)
 
 FetchContent_Declare(
@@ -54,6 +68,28 @@ if (NOT vma_POPULATED)
 endif()
 
 FetchContent_Declare(
+    stb
+    GIT_REPOSITORY https://github.com/nothings/stb.git
+    GIT_TAG 3a1174060a7dd4eb652d4e6854bc4cd98c159200
+)
+if (NOT stb_POPULATED)
+    message(STATUS "Populating stb")
+    FetchContent_Populate(stb)
+    target_include_directories(${PROJECT_NAME} PUBLIC ${stb_SOURCE_DIR})
+endif()
+
+FetchContent_Declare(
+    tinyobjloader
+    GIT_REPOSITORY https://github.com/tinyobjloader/tinyobjloader.git
+    GIT_TAG 51908fb967baad5b98973796b32c57989915d910
+)
+if (NOT tinyobjloader_POPULATED)
+    message(STATUS "Populating tinyobjloader")
+    FetchContent_Populate(tinyobjloader)
+    add_subdirectory(${tinyobjloader_SOURCE_DIR} ${tinyobjloader_BINARY_DIR})
+endif()
+
+FetchContent_Declare(
     logger
     GIT_REPOSITORY https://github.com/zcorniere/logger-cpp.git
     GIT_TAG de80acfa90259c1ba4b83fd725d969ccbed3626f
@@ -62,15 +98,11 @@ if (NOT logger_POPULATED)
     message(STATUS "Populating logger")
     FetchContent_Populate(logger)
     add_subdirectory(${logger_SOURCE_DIR} ${logger_BINARY_DIR})
+    # target_compile_definitions(logger INTERFACE
+    #     -DLOGGER_NO_GLOBAL_OBJECT
+    # )
 endif()
 
-add_library(${PROJECT_NAME} source/lib.cxx
-                            source/Camera.cxx
-                            source/Swapchain.cxx
-                            source/PipelineBuilder.cxx
-                            source/VulkanLoader.cxx
-                            source/UniformBufferObject.cxx
-)
 
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 
@@ -82,4 +114,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Vulkan::Vulkan
                                               glfw
                                               glm
                                               vma
+                                              stb
+                                              tinyobjloader
 )

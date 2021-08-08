@@ -1,6 +1,7 @@
 ######################
 # SHADER COMPILATION #
 ######################
+# add_shader(${TARGET} shader.(vert|frag|comp))
 function(add_shader TARGET SHADER)
     find_program(GLSLC glslc REQUIRED)
 

@@ -148,7 +148,10 @@ void VulkanApplication::pushTexturesToGPU()
             createBuffer(texture.size(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
         copyBuffer(stagingBuffer, texture);
 
-        // mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
+        mipLevels =
+            static_cast<uint32_t>(std::floor(std::log2(std::max(cpuStorage.loadedTexturesSize.at(name).width,
+                                                                cpuStorage.loadedTexturesSize.at(name).height)))) +
+            1;
         AllocatedImage image{};
         VkImageCreateInfo imageInfo{
             .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
@@ -179,6 +182,12 @@ void VulkanApplication::pushTexturesToGPU()
         generateMipmaps(image.image, VK_FORMAT_R8G8B8A8_SRGB, cpuStorage.loadedTexturesSize.at(name), mipLevels);
         loadedTextures.insert({name, std::move(image)});
     }
+    mainDeletionQueue.push([&] {
+        for (auto &[_, i]: loadedTextures) {
+            vkDestroyImageView(device, i.imageView, nullptr);
+            vmaDestroyImage(allocator, i.image, i.memory);
+        }
+    });
     cpuStorage.loadedTextures.clear();
     cpuStorage.loadedTexturesSize.clear();
 }

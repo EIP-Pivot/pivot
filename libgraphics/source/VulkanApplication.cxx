@@ -31,27 +31,28 @@ void VulkanApplication::initVulkanRessources()
     createSurface();
     pickPhysicalDevice();
     createLogicalDevice();
-    createAllocator();
 
-    createSyncStructure();
-    createDescriptorSetsLayout();
-    createUniformBuffers();
-    createCommandPool();
     swapchain.init(window->get().getSize(), physicalDevice, device, surface);
-    createCommandBuffers();
+
+    createAllocator();
+    createSyncStructure();
+    createRenderPass();
+    createDescriptorSetsLayout();
+    createPipeline();
+    createCommandPool();
+    createDepthResources();
+    createColorResources();
+    createFramebuffers();
+    createUniformBuffers();
     createDescriptorPool();
     createDescriptorSets();
-    createTextureDescriptorSets();
-    createFramebuffers();
-    createTextureSampler();
 
     this->pushModelsToGPU();
     this->pushTexturesToGPU();
 
-    createDepthResources();
-    createColorResources();
-    createRenderPass();
-    createPipeline();
+    createTextureSampler();
+    createTextureDescriptorSets();
+    createCommandBuffers();
 }
 
 void VulkanApplication::createInstance()
@@ -372,7 +373,7 @@ void VulkanApplication::createDepthResources()
         .extent = swapchain.getSwapchainExtent3D(),
         .mipLevels = 1,
         .arrayLayers = 1,
-        .samples = VK_SAMPLE_COUNT_1_BIT,
+        .samples = VK_SAMPLE_COUNT_2_BIT,
         .tiling = VK_IMAGE_TILING_OPTIMAL,
         .usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
         .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
@@ -406,7 +407,7 @@ void VulkanApplication::createColorResources()
         .extent = swapchain.getSwapchainExtent3D(),
         .mipLevels = 1,
         .arrayLayers = 1,
-        .samples = VK_SAMPLE_COUNT_1_BIT,
+        .samples = VK_SAMPLE_COUNT_2_BIT,
         .tiling = VK_IMAGE_TILING_OPTIMAL,
         .usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
         .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
@@ -431,7 +432,7 @@ void VulkanApplication::createRenderPass()
 {
     VkAttachmentDescription colorAttachment{
         .format = swapchain.getSwapchainFormat(),
-        .samples = VK_SAMPLE_COUNT_1_BIT,
+        .samples = VK_SAMPLE_COUNT_2_BIT,
         .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
         .storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
         .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -443,7 +444,7 @@ void VulkanApplication::createRenderPass()
         .format = vk_utils::findSupportedFormat(
             physicalDevice, {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
             VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT),
-        .samples = VK_SAMPLE_COUNT_1_BIT,
+        .samples = VK_SAMPLE_COUNT_2_BIT,
         .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
         .storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
         .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -650,7 +651,7 @@ void VulkanApplication::createPipeline()
     builder.vertexInputInfo = vk_init::populateVkPipelineVertexInputStateCreateInfo(binding, attribute);
     builder.inputAssembly =
         vk_init::populateVkPipelineInputAssemblyCreateInfo(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_FALSE);
-    builder.multisampling = vk_init::populateVkPipelineMultisampleStateCreateInfo(VK_SAMPLE_COUNT_1_BIT);
+    builder.multisampling = vk_init::populateVkPipelineMultisampleStateCreateInfo(VK_SAMPLE_COUNT_2_BIT);
     builder.depthStencil = vk_init::populateVkPipelineDepthStencilStateCreateInfo();
     builder.viewport.x = 0.0f;
     builder.viewport.y = 0.0f;

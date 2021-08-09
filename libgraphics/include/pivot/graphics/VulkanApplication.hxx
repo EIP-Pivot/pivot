@@ -39,8 +39,13 @@ public:
     VulkanApplication();
     ~VulkanApplication();
 
-    virtual void init() { initVulkanRessources(); };
     virtual void draw(float fElapsedTime) = 0;
+    void init(IWindow &win)
+    {
+        window = win;
+        initVulkanRessources();
+    };
+
     size_t load3DModels(const std::vector<std::filesystem::path> &);
     size_t loadTexturess(const std::vector<std::filesystem::path> &);
 

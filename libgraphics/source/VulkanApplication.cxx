@@ -33,9 +33,6 @@ void VulkanApplication::initVulkanRessources()
     createLogicalDevice();
     createAllocator();
 
-    this->pushModelsToGPU();
-    this->pushTexturesToGPU();
-
     createSyncStructure();
     createDescriptorSetsLayout();
     createUniformBuffers();
@@ -47,6 +44,9 @@ void VulkanApplication::initVulkanRessources()
     createTextureDescriptorSets();
     createFramebuffers();
     createTextureSampler();
+
+    this->pushModelsToGPU();
+    this->pushTexturesToGPU();
 
     createDepthResources();
     createColorResources();

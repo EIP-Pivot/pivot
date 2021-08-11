@@ -101,10 +101,7 @@ private:
                                   const VkDebugUtilsMessengerCallbackDataEXT *, void *);
     static bool checkValiationLayerSupport();
 
-private:
-    uint32_t mipLevels = 0;
-    // VkSampleCountFlagBits maxMsaaSample = VK_SAMPLE_COUNT_1_BIT;
-
+protected:
     std::optional<std::reference_wrapper<IWindow>> window;
     std::optional<std::reference_wrapper<I3DScene>> activeScene;
 
@@ -116,6 +113,10 @@ private:
     } cpuStorage;
     std::unordered_map<std::string, GPUMesh> loadedMeshes;
     std::unordered_map<std::string, AllocatedImage> loadedTextures;
+
+    uint32_t mipLevels = 0;
+    // VkSampleCountFlagBits maxMsaaSample = VK_SAMPLE_COUNT_1_BIT;
+
     AllocatedBuffer vertexBuffers;
     AllocatedBuffer indicesBuffers;
 

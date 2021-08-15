@@ -21,7 +21,6 @@ add_library(${PROJECT_NAME} source/lib.cxx
                             source/VulkanApplication_static.cxx
                             source/VulkanApplication_helper.cxx
                             source/VulkanApplication_loader.cxx
-
 )
 
 include(FetchContent)
@@ -95,15 +94,15 @@ endif()
 FetchContent_Declare(
     logger
     GIT_REPOSITORY https://github.com/zcorniere/logger-cpp.git
-    GIT_TAG de80acfa90259c1ba4b83fd725d969ccbed3626f
+    GIT_TAG v0.2
 )
 if (NOT logger_POPULATED)
     message(STATUS "Populating logger")
     FetchContent_Populate(logger)
     add_subdirectory(${logger_SOURCE_DIR} ${logger_BINARY_DIR})
-    # target_compile_definitions(logger INTERFACE
-    #     -DLOGGER_NO_GLOBAL_OBJECT
-    # )
+    target_compile_definitions(logger INTERFACE
+        -DLOGGER_EXTERN_DECLARATION_PTR
+    )
 endif()
 
 add_shader(${PROJECT_NAME} triangle.vert)

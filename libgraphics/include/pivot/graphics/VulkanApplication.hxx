@@ -24,7 +24,7 @@ const std::vector<const char *> deviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 };
 
-constexpr uint8_t MAX_FRAME_FRAME_IN_FLIGHT = 2;
+constexpr uint8_t MAX_FRAME_FRAME_IN_FLIGHT = 3;
 
 class VulkanApplication : public VulkanLoader
 {

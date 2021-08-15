@@ -7,6 +7,7 @@
 #include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
+#include <numeric>
 #include <set>
 
 #define MAX_OBJECT 1000
@@ -233,25 +234,27 @@ void VulkanApplication::createDescriptorSetsLayout()
 
 void VulkanApplication::createDescriptorPool()
 {
-    std::array<VkDescriptorPoolSize, 2> poolSizes{};
-    poolSizes.at(0) = {
-        .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-        .descriptorCount = static_cast<uint32_t>(swapchain.nbOfImage()),
-    };
-    poolSizes.at(1) = {
-        .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-        .descriptorCount = MAX_TEXTURES,
+    VkDescriptorPoolSize poolSize[] = {
+        {
+            .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .descriptorCount = MAX_FRAME_FRAME_IN_FLIGHT,
+        },
+        {
+            .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+            .descriptorCount = 100,
+        },
     };
 
     VkDescriptorPoolCreateInfo poolInfo{
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
         .pNext = nullptr,
-        .maxSets = static_cast<uint32_t>(swapchain.nbOfImage()),
-        .poolSizeCount = static_cast<uint32_t>(poolSizes.size()),
-        .pPoolSizes = poolSizes.data(),
+        .maxSets = static_cast<uint32_t>(std::accumulate(poolSize, poolSize + std::size(poolSize), 0,
+                                                         [](auto prev, auto &i) { return prev + i.descriptorCount; })),
+        .poolSizeCount = std::size(poolSize),
+        .pPoolSizes = poolSize,
     };
     VK_TRY(vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool));
-    swapchainDeletionQueue.push([&] { vkDestroyDescriptorPool(device, descriptorPool, nullptr); });
+    swapchainDeletionQueue.push([&]() { vkDestroyDescriptorPool(device, descriptorPool, nullptr); });
 }
 
 void VulkanApplication::createDescriptorSets()

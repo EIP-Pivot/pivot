@@ -85,6 +85,7 @@ public:
     VULKAN_PROTOTYPE(vkCmdBindVertexBuffers);
     VULKAN_PROTOTYPE(vkCmdBindIndexBuffer);
     VULKAN_PROTOTYPE(vkCmdDrawIndexed);
+    VULKAN_PROTOTYPE(vkCmdDrawIndexedIndirect);
     VULKAN_PROTOTYPE(vkCmdEndRenderPass);
     VULKAN_PROTOTYPE(vkQueuePresentKHR);
 

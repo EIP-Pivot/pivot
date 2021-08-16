@@ -41,3 +41,46 @@ void Camera::updateCameraVectors()
     right = glm::normalize(glm::cross(tmpFront, worldUp));
     up = glm::normalize(glm::cross(right, tmpFront));
 }
+
+void Camera::processKeyboard(Movement direction)
+{
+    auto velocity = 50;
+    switch (direction) {
+        case Movement::FORWARD: {
+            position.x += front.x * velocity;
+            position.z += front.z * velocity;
+        } break;
+        case Movement::BACKWARD: {
+            position.x -= front.x * velocity;
+            position.z -= front.z * velocity;
+        } break;
+        case Movement::RIGHT: {
+            position.x += right.x * velocity;
+            position.z += right.z * velocity;
+        } break;
+        case Movement::LEFT: {
+            position.x -= right.x * velocity;
+            position.z -= right.z * velocity;
+        } break;
+        case Movement::UP: {
+            position.y += 50;
+        } break;
+        case Movement::DOWN: position.y -= velocity; break;
+    }
+}
+
+void Camera::processMouseMovement(float xoffset, float yoffset, bool bConstrainPitch)
+{
+    xoffset *= SENSITIVITY;
+    yoffset *= SENSITIVITY;
+
+    yaw += xoffset;
+    pitch += yoffset;
+
+    if (bConstrainPitch) {
+        if (pitch > 89.0f) pitch = 89.0f;
+        if (pitch < -89.0f) pitch = -89.0f;
+    }
+
+    updateCameraVectors();
+}

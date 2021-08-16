@@ -18,6 +18,7 @@ add_library(${PROJECT_NAME} source/lib.cxx
                             source/UniformBufferObject.cxx
                             source/VulkanException.cxx
                             source/VulkanApplication.cxx
+                            source/VulkanApplication_init.cxx
                             source/VulkanApplication_static.cxx
                             source/VulkanApplication_helper.cxx
                             source/VulkanApplication_loader.cxx

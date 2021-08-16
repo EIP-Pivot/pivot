@@ -99,6 +99,7 @@ void VulkanLoader::createInstance(const VkInstanceCreateInfo &createInfo)
     VULKAN_LOAD_REQUIRED(vkCmdBindVertexBuffers);
     VULKAN_LOAD_REQUIRED(vkCmdBindIndexBuffer);
     VULKAN_LOAD_REQUIRED(vkCmdDrawIndexed);
+    VULKAN_LOAD_REQUIRED(vkCmdDrawIndexedIndirect);
     VULKAN_LOAD_REQUIRED(vkCmdEndRenderPass);
     VULKAN_LOAD_REQUIRED(vkQueuePresentKHR);
 

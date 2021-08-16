@@ -7,6 +7,7 @@
 #include <vector>
 #include <vulkan/vulkan_core.h>
 
+#include "pivot/graphics/Camera.hxx"
 #include "pivot/graphics/DeletionQueue.hxx"
 #include "pivot/graphics/Swapchain.hxx"
 #include "pivot/graphics/VulkanLoader.hxx"
@@ -14,12 +15,18 @@
 #include "pivot/graphics/interface/IWindow.hxx"
 #include "pivot/graphics/types/Frame.hxx"
 #include "pivot/graphics/types/Mesh.hxx"
+#include "pivot/graphics/types/RenderObject.hxx"
 
-#include <Logger.hpp>
+#define MAX_OBJECT 1000
+#define MAX_TEXTURES 1000
+
+#define MAX_COMMANDS 100
+#define MAX_MATERIALS 100
 
 const std::vector<const char *> validationLayers = {
     "VK_LAYER_KHRONOS_validation",
 };
+
 const std::vector<const char *> deviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 };
@@ -34,24 +41,26 @@ public:
 #else
     const bool bEnableValidationLayers = true;
 #endif
+    struct DrawBatch {
+        std::string meshId;
+        uint32_t first;
+        uint32_t count;
+    };
 
 public:
     VulkanApplication();
     ~VulkanApplication();
 
-    virtual void draw(float fElapsedTime) = 0;
-    void init(IWindow &win)
-    {
-        window = win;
-        initVulkanRessources();
-    };
+    void init(IWindow &win);
+    void draw(const I3DScene &scene, const Camera &camera, float fElapsedTime);
 
     size_t load3DModels(const std::vector<std::filesystem::path> &);
     size_t loadTexturess(const std::vector<std::filesystem::path> &);
 
-    void setActiveScene(I3DScene &scene) { activeScene = scene; }
+private:
+    std::vector<DrawBatch> buildDrawBatch(std::vector<RenderObject> &object);
+    void buildIndirectBuffers(const std::vector<DrawBatch> &scene, Frame &frame);
 
-protected:
     void initVulkanRessources();
 
     template <typename T>
@@ -90,6 +99,7 @@ private:
     void createDepthResources();
     void createColorResources();
     void createRenderPass();
+    void createIndirectBuffer();
     void createTextureSampler();
     void createFramebuffers();
 
@@ -103,7 +113,6 @@ private:
 
 protected:
     std::optional<std::reference_wrapper<IWindow>> window;
-    std::optional<std::reference_wrapper<I3DScene>> activeScene;
 
     struct {
         std::unordered_map<std::string, std::vector<std::byte>> loadedTextures;
@@ -124,6 +133,7 @@ protected:
         VkFence uploadFence = VK_NULL_HANDLE;
         VkCommandPool commandPool = VK_NULL_HANDLE;
     } uploadContext = {};
+
     DeletionQueue mainDeletionQueue;
     DeletionQueue swapchainDeletionQueue;
     VkDebugUtilsMessengerEXT debugUtilsMessenger = VK_NULL_HANDLE;

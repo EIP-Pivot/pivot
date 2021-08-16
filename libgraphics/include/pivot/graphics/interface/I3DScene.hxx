@@ -3,11 +3,10 @@
 #include <string>
 #include <vector>
 
-#include "pivot/graphics/types/UniformBufferObject.hxx"
+#include "pivot/graphics/types/RenderObject.hxx"
 
 class I3DScene
 {
 public:
-    virtual ~I3DScene();
-    virtual std::vector<ObjectInformation> getSceneInformations() const = 0;
+    virtual std::vector<RenderObject> getSceneInformations() const = 0;
 };

@@ -2,6 +2,7 @@
 #include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
+#include <Logger.hpp>
 #include <stb_image.h>
 #include <tiny_obj_loader.h>
 
@@ -98,6 +99,8 @@ size_t VulkanApplication::load3DModels(const std::vector<std::filesystem::path> 
                 indexStagingBuffer.push_back(uniqueVertices.at(vertex));
             }
         }
+        mesh.indicesSize = indexStagingBuffer.size() - mesh.indicesOffset;
+        mesh.verticiesSize = vertexStagingBuffer.size() - mesh.verticiesOffset;
         loadedMeshes[f.stem()] = mesh;
     }
     cpuStorage.vertexBuffer.swap(vertexStagingBuffer);
@@ -127,7 +130,7 @@ void VulkanApplication::pushModelsToGPU()
     vmaDestroyBuffer(allocator, stagingVertex.buffer, stagingVertex.memory);
     vmaDestroyBuffer(allocator, stagingIndex.buffer, stagingIndex.memory);
 
-    // clear CPU storage, as it is not neaded anymore
+    // clear CPU storage, as it is not needed anymore
     cpuStorage.vertexBuffer.clear();
     cpuStorage.vertexBuffer.shrink_to_fit();
     cpuStorage.indexBuffer.clear();
@@ -140,6 +143,7 @@ void VulkanApplication::pushModelsToGPU()
 
 void VulkanApplication::pushTexturesToGPU()
 {
+    auto &bar = logger->newProgressBar("GPU Textures", cpuStorage.loadedTextures.size());
     for (const auto &[name, texture]: cpuStorage.loadedTextures) {
         logger->info("GPU") << "Loading Textures onto the GPU";
         LOGGER_ENDL;
@@ -181,6 +185,7 @@ void VulkanApplication::pushTexturesToGPU()
         vmaDestroyBuffer(allocator, stagingBuffer.buffer, stagingBuffer.memory);
         generateMipmaps(image.image, VK_FORMAT_R8G8B8A8_SRGB, cpuStorage.loadedTexturesSize.at(name), mipLevels);
         loadedTextures.insert({name, std::move(image)});
+        ++bar;
     }
     mainDeletionQueue.push([&] {
         for (auto &[_, i]: loadedTextures) {
@@ -188,6 +193,7 @@ void VulkanApplication::pushTexturesToGPU()
             vmaDestroyImage(allocator, i.image, i.memory);
         }
     });
+    logger->deleteProgressBar(bar);
     cpuStorage.loadedTextures.clear();
     cpuStorage.loadedTexturesSize.clear();
 }

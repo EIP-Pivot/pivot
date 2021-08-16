@@ -1,5 +1,7 @@
 #include "pivot/graphics/VulkanApplication.hxx"
 
+#include <Logger.hpp>
+
 static const char *to_string_message_type(VkDebugUtilsMessageTypeFlagsEXT s)
 {
     if (s == 7) return "General | Validation | Performance";

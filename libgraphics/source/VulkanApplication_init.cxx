@@ -23,6 +23,8 @@ void VulkanApplication::createInstance()
 
     VkApplicationInfo applicationInfo{
         .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+        .pNext = nullptr,
+        .pEngineName = "Pivot",
         .apiVersion = VK_API_VERSION_1_2,
     };
     VkInstanceCreateInfo createInfo{
@@ -48,6 +50,8 @@ void VulkanApplication::createDebugMessenger()
     auto debugInfo = vk_init::populateDebugUtilsMessengerCreateInfoEXT(&VulkanApplication::debugCallback);
     VK_TRY(vkCreateDebugUtilsMessengerEXT(instance, &debugInfo, nullptr, &debugUtilsMessenger));
 
+    logger->warn("Validation Layers") << "Validation Layers are activated !";
+    LOGGER_ENDL;
     mainDeletionQueue.push([&] { vkDestroyDebugUtilsMessengerEXT(instance, debugUtilsMessenger, nullptr); });
 }
 

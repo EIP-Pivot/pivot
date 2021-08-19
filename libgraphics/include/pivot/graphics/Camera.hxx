@@ -16,8 +16,8 @@ public:
     enum Movement { FORWARD, BACKWARD, LEFT, RIGHT, UP, DOWN };
     static constexpr const float YAW = -90.0f;
     static constexpr const float PITCH = 0.0f;
-    static constexpr const float SPEED = 25.0f;
-    static constexpr const float JUMP = 50.0f;
+    static constexpr const float SPEED = 2.5f;
+    static constexpr const float JUMP = 2.5f;
 
     static constexpr const float SENSITIVITY = 0.1f;
 

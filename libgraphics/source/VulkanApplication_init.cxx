@@ -555,7 +555,7 @@ void VulkanApplication::createCommandBuffers()
     };
     VK_TRY(vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data()));
     swapchainDeletionQueue.push(
-        [&]() { vkFreeCommandBuffers(device, commandPool, commandBuffers.size(), commandBuffers.data()); });
+        [&] { vkFreeCommandBuffers(device, commandPool, commandBuffers.size(), commandBuffers.data()); });
 }
 
 void VulkanApplication::createIndirectBuffer()
@@ -566,7 +566,7 @@ void VulkanApplication::createIndirectBuffer()
                                                   VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
                                               VMA_MEMORY_USAGE_CPU_TO_GPU);
     }
-    mainDeletionQueue.push([&]() {
+    mainDeletionQueue.push([&] {
         for (auto &f: frames) { vmaDestroyBuffer(allocator, f.indirectBuffer.buffer, f.indirectBuffer.memory); }
     });
 }

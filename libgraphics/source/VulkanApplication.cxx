@@ -1,6 +1,7 @@
 #include "pivot/graphics/VulkanApplication.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
+#include <Logger.hpp>
 #include <algorithm>
 
 VulkanApplication::VulkanApplication() {}
@@ -25,8 +26,10 @@ void VulkanApplication::draw(const I3DScene &scene, const Camera &camera, float 
     uint32_t imageIndex;
 
     VK_TRY(vkWaitForFences(device, 1, &frame.inFlightFences, VK_TRUE, UINT64_MAX));
-    VK_TRY(vkAcquireNextImageKHR(device, swapchain.getSwapchain(), UINT64_MAX, frame.imageAvailableSemaphore, nullptr,
-                                 &imageIndex));
+
+    auto result = vkAcquireNextImageKHR(device, swapchain.getSwapchain(), UINT64_MAX, frame.imageAvailableSemaphore,
+                                        nullptr, &imageIndex);
+    if (vk_utils::isSwapchainInvalid(result, VK_ERROR_OUT_OF_DATE_KHR)) { return recreateSwapchain(); }
 
     auto &cmd = commandBuffers[imageIndex];
 
@@ -119,7 +122,11 @@ void VulkanApplication::draw(const I3DScene &scene, const Camera &camera, float 
         .pImageIndices = &imageIndex,
         .pResults = nullptr,
     };
-    VK_TRY(vkQueuePresentKHR(presentQueue, &presentInfo));
+    result = vkQueuePresentKHR(presentQueue, &presentInfo);
+
+    if (vk_utils::isSwapchainInvalid(result, VK_ERROR_OUT_OF_DATE_KHR, VK_SUBOPTIMAL_KHR)) {
+        return recreateSwapchain();
+    }
     currentFrame = (currentFrame + 1) % MAX_FRAME_FRAME_IN_FLIGHT;
 }
 
@@ -203,7 +210,11 @@ void VulkanApplication::initVulkanRessources()
         .diffuse = {1.0f, 1.0f, 1.0f, 1.0f},
         .specular = {1.0f, 1.0f, 1.0f, 1.0f},
     });
+    postInitialization();
+}
 
+void VulkanApplication::postInitialization()
+{
     void *materialData = nullptr;
     for (auto &frame: frames) {
         vmaMapMemory(allocator, frame.data.materialBuffer.memory, &materialData);
@@ -211,4 +222,36 @@ void VulkanApplication::initVulkanRessources()
         for (unsigned i = 0; i < materials.size(); i++) { objectSSBI[i] = materials.at(i); }
         vmaUnmapMemory(allocator, frame.data.materialBuffer.memory);
     }
+}
+
+void VulkanApplication::recreateSwapchain()
+{
+    // int width = 0, height = 0;
+    // glfwGetFramebufferSize(window.getWindow(), &width, &height);
+    // while (width == 0 || height == 0) {
+    //     glfwGetFramebufferSize(window.getWindow(), &width, &height);
+    //     glfwWaitEvents();
+    // }
+
+    logger->info("Swapchain") << "Recreaing swapchain...";
+    LOGGER_ENDL;
+
+    vkDeviceWaitIdle(device);
+    swapchainDeletionQueue.flush();
+
+    swapchain.recreate(window->get().getSize(), physicalDevice, device, surface);
+    createRenderPass();
+    createPipeline();
+    createColorResources();
+    createDepthResources();
+    createFramebuffers();
+    createDescriptorPool();
+    createDescriptorSets();
+    createTextureDescriptorSets();
+    createCommandBuffers();
+    logger->info("Swapchain") << "Swapchain recreation complete... { height=" << swapchain.getSwapchainExtent().height
+                              << ", width =" << swapchain.getSwapchainExtent().width
+                              << ", numberOfImage = " << swapchain.nbOfImage() << " }";
+    LOGGER_ENDL;
+    postInitialization();
 }

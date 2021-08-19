@@ -14,6 +14,7 @@
 #include "pivot/graphics/interface/I3DScene.hxx"
 #include "pivot/graphics/interface/IWindow.hxx"
 #include "pivot/graphics/types/Frame.hxx"
+#include "pivot/graphics/types/Material.hxx"
 #include "pivot/graphics/types/Mesh.hxx"
 #include "pivot/graphics/types/RenderObject.hxx"
 
@@ -120,6 +121,7 @@ protected:
         std::vector<Vertex> vertexBuffer;
         std::vector<uint32_t> indexBuffer;
     } cpuStorage;
+    std::vector<gpuObject::Material> materials;
     std::unordered_map<std::string, GPUMesh> loadedMeshes;
     std::unordered_map<std::string, AllocatedImage> loadedTextures;
 

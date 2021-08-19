@@ -179,6 +179,7 @@ void VulkanApplication::initVulkanRessources()
 
     createAllocator();
     createSyncStructure();
+    createIndirectBuffer();
     createRenderPass();
     createDescriptorSetsLayout();
     createPipeline();
@@ -193,8 +194,21 @@ void VulkanApplication::initVulkanRessources()
     this->pushModelsToGPU();
     this->pushTexturesToGPU();
 
-    createIndirectBuffer();
     createTextureSampler();
     createTextureDescriptorSets();
     createCommandBuffers();
+
+    materials.push_back({
+        .ambientColor = {1.0f, 1.0f, 1.0f, 1.0f},
+        .diffuse = {1.0f, 1.0f, 1.0f, 1.0f},
+        .specular = {1.0f, 1.0f, 1.0f, 1.0f},
+    });
+
+    void *materialData = nullptr;
+    for (auto &frame: frames) {
+        vmaMapMemory(allocator, frame.data.materialBuffer.memory, &materialData);
+        auto *objectSSBI = (gpuObject::Material *)materialData;
+        for (unsigned i = 0; i < materials.size(); i++) { objectSSBI[i] = materials.at(i); }
+        vmaUnmapMemory(allocator, frame.data.materialBuffer.memory);
+    }
 }

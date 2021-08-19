@@ -2,7 +2,7 @@
 #include "pivot/graphics/PipelineBuilder.hxx"
 #include "pivot/graphics/QueueFamilyIndices.hxx"
 #include "pivot/graphics/VulkanApplication.hxx"
-#include "pivot/graphics/types/Material.hpp"
+#include "pivot/graphics/types/Material.hxx"
 #include "pivot/graphics/types/UniformBufferObject.hxx"
 #include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"

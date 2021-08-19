@@ -44,7 +44,7 @@ void Camera::updateCameraVectors()
 
 void Camera::processKeyboard(Movement direction)
 {
-    auto velocity = 50;
+    auto velocity = movementSpeed;
     switch (direction) {
         case Movement::FORWARD: {
             position.x += front.x * velocity;
@@ -63,7 +63,7 @@ void Camera::processKeyboard(Movement direction)
             position.z -= right.z * velocity;
         } break;
         case Movement::UP: {
-            position.y += 50;
+            position.y += jumpHeight;
         } break;
         case Movement::DOWN: position.y -= velocity; break;
     }

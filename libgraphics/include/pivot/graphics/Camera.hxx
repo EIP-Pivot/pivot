@@ -30,7 +30,7 @@ public:
                                    float fCloseClippingPlane = 0.1,
                                    float fFarClippingPlane = MAX_PROJECTION_LIMIT) const;
     void processKeyboard(Movement direction);
-    void processMouseMovement(float xoffset, float yoffset, bool bConstrainPitch);
+    void processMouseMovement(float xoffset, float yoffset, bool bConstrainPitch = true);
 
 protected:
     void updateCameraVectors();
@@ -44,4 +44,8 @@ public:
 
     float yaw;
     float pitch;
+
+    float movementSpeed = SPEED;
+    float jumpHeight = JUMP;
+    float mouseSensitivity = SENSITIVITY;
 };

@@ -59,6 +59,8 @@ public:
     size_t loadTexturess(const std::vector<std::filesystem::path> &);
 
 private:
+    void postInitialization();
+    void recreateSwapchain();
     std::vector<DrawBatch> buildDrawBatch(std::vector<RenderObject> &object);
     void buildIndirectBuffers(const std::vector<DrawBatch> &scene, Frame &frame);
 
@@ -79,8 +81,6 @@ private:
 
     void pushModelsToGPU();
     void pushTexturesToGPU();
-
-private:
     void createInstance();
     void createDebugMessenger();
     void createAllocator();

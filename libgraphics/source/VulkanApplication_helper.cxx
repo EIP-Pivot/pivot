@@ -56,18 +56,6 @@ AllocatedBuffer VulkanApplication::createBuffer(uint32_t allocSize, VkBufferUsag
     return newBuffer;
 }
 
-void VulkanApplication::copyBuffer(const VkBuffer &srcBuffer, VkBuffer &dstBuffer, VkDeviceSize &size)
-{
-    immediateCommand([=](VkCommandBuffer &cmd) {
-        VkBufferCopy copyRegion{
-            .srcOffset = 0,
-            .dstOffset = 0,
-            .size = size,
-        };
-        vkCmdCopyBuffer(cmd, srcBuffer, dstBuffer, 1, &copyRegion);
-    });
-}
-
 void VulkanApplication::immediateCommand(std::function<void(VkCommandBuffer &)> &&function)
 {
     VkCommandBufferAllocateInfo cmdAllocInfo{
@@ -250,9 +238,21 @@ void VulkanApplication::generateMipmaps(VkImage &image, VkFormat imageFormat, Vk
     });
 }
 
+void VulkanApplication::copyBufferToBuffer(const VkBuffer &srcBuffer, VkBuffer &dstBuffer, VkDeviceSize &size)
+{
+    immediateCommand([=, this](VkCommandBuffer &cmd) {
+        VkBufferCopy copyRegion{
+            .srcOffset = 0,
+            .dstOffset = 0,
+            .size = size,
+        };
+        vkCmdCopyBuffer(cmd, srcBuffer, dstBuffer, 1, &copyRegion);
+    });
+}
+
 void VulkanApplication::copyBufferToImage(const VkBuffer &srcBuffer, VkImage &dstImage, const VkExtent3D &extent)
 {
-    immediateCommand([=](VkCommandBuffer &cmd) {
+    immediateCommand([=, this](VkCommandBuffer &cmd) {
         VkBufferImageCopy region{
             .bufferOffset = 0,
             .bufferRowLength = 0,

@@ -18,6 +18,13 @@
 
 namespace vk_utils
 {
+template <typename T>
+concept is_copyable = requires
+{
+    std::is_standard_layout_v<T>;
+    typename std::vector<T>;
+};
+
 std::vector<std::byte> readFile(const std::string &filename);
 VkShaderModule createShaderModule(const VkDevice &device, const std::vector<std::byte> &code);
 VkFormat findSupportedFormat(VkPhysicalDevice &gpu, const std::vector<VkFormat> &candidates, VkImageTiling tiling,

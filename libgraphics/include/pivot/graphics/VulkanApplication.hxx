@@ -17,6 +17,7 @@
 #include "pivot/graphics/types/Material.hxx"
 #include "pivot/graphics/types/Mesh.hxx"
 #include "pivot/graphics/types/RenderObject.hxx"
+#include "pivot/graphics/vk_utils.hxx"
 
 #define MAX_OBJECT 1000
 #define MAX_TEXTURES 1000
@@ -66,15 +67,16 @@ private:
 
     void initVulkanRessources();
 
-    template <typename T>
+    template <vk_utils::is_copyable T>
     void copyBuffer(AllocatedBuffer &buffer, const std::vector<T> &data);
-    template <typename T>
+    template <vk_utils::is_copyable T>
     void copyBuffer(AllocatedBuffer &buffer, const T *data, size_t size);
 
-    void copyBuffer(const VkBuffer &srcBuffer, VkBuffer &dstBuffer, VkDeviceSize &size);
     AllocatedBuffer createBuffer(uint32_t allocSize, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage);
     void immediateCommand(std::function<void(VkCommandBuffer &)> &&function);
     void copyBufferToImage(const VkBuffer &srcBuffer, VkImage &dstImage, const VkExtent3D &extent);
+    void copyBufferToBuffer(const VkBuffer &srcBuffer, VkBuffer &dstBuffer, VkDeviceSize &size);
+
     void transitionImageLayout(VkImage &image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout,
                                uint32_t mipLevels = 1);
     void generateMipmaps(VkImage &image, VkFormat imageFormat, VkExtent3D size, uint32_t mipLevel);
@@ -175,7 +177,7 @@ protected:
 #ifndef VULKAN_APPLICATION_IMPLEMENTATION
 #define VULKAN_APPLICATION_IMPLEMENTATION
 
-template <typename T>
+template <vk_utils::is_copyable T>
 void VulkanApplication::copyBuffer(AllocatedBuffer &buffer, const T *data, size_t size)
 {
     void *mapped = nullptr;
@@ -184,7 +186,7 @@ void VulkanApplication::copyBuffer(AllocatedBuffer &buffer, const T *data, size_
     vmaUnmapMemory(allocator, buffer.memory);
 }
 
-template <typename T>
+template <vk_utils::is_copyable T>
 void VulkanApplication::copyBuffer(AllocatedBuffer &buffer, const std::vector<T> &data)
 {
     VkDeviceSize size = sizeof(data[0]) * data.size();

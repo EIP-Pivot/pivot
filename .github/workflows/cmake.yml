@@ -3,34 +3,35 @@ name: CMake
 on: push
 
 env:
-  BUILD_TYPE: Release
+    BUILD_TYPE: Release
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        compiler:
-          - cc: gcc-10
-            cxx: g++-10
-          - cc: clang
-            cxx: clang++
-    env:
-      CC: ${{ matrix.compiler.cc }}
-      CXX: ${{ matrix.compiler.cxx }}
-    steps:
-      - name: install dependencies
-        run: |
-          wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
-          sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.2.176-focal.list https://packages.lunarg.com/vulkan/1.2.176/lunarg-vulkan-1.2.176-focal.list
-          sudo apt update
-          sudo apt install vulkan-sdk libpthread-stubs0-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev xorg-dev
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - name: Print compiler version
-        run: $CC -v && $CXX -v
-      - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-      - name: Build
-        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+    build:
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                compiler:
+                    - cc: gcc-10
+                      cxx: g++-10
+                    - cc: clang
+                      cxx: clang++
+        env:
+            CC: ${{ matrix.compiler.cc }}
+            CXX: ${{ matrix.compiler.cxx }}
+        steps:
+            - name: install dependencies
+              run: |
+                  wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+                  sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.2.176-focal.list https://packages.lunarg.com/vulkan/1.2.176/lunarg-vulkan-1.2.176-focal.list
+                  sudo apt update
+                  sudo apt install vulkan-sdk libpthread-stubs0-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev xorg-dev
+            - uses: actions/checkout@v2
+              with:
+                  submodules: recursive
+            - name: Print compiler version
+              run: $CC -v && $CXX -v
+            - name: Configure CMake
+              run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+            - name: Build
+              run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}

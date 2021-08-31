@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.20)
 project(pivot)
 
 option(BUILD_DOCUMENTATION "Build the HTML documentation" OFF)

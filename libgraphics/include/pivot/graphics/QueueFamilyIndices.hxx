@@ -4,27 +4,21 @@
 #include <cstdint>
 #include <optional>
 #include <vector>
-#include <vulkan/vulkan_core.h>
+#include <vulkan/vulkan.hpp>
 
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
     std::optional<uint32_t> presentFamily;
 
-    inline bool isComplete() { return graphicsFamily.has_value() && presentFamily.has_value(); }
-    static QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice &device, const VkSurfaceKHR &surface)
+    constexpr bool isComplete() { return graphicsFamily.has_value() && presentFamily.has_value(); }
+    static QueueFamilyIndices findQueueFamilies(const vk::PhysicalDevice &device, const vk::SurfaceKHR &surface)
     {
         QueueFamilyIndices indices;
-        uint32_t uFamilyCount = 0;
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &uFamilyCount, nullptr);
-        std::vector<VkQueueFamilyProperties> family_property_list(uFamilyCount);
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &uFamilyCount, family_property_list.data());
+        auto family_property_list = device.getQueueFamilyProperties();
 
-        for (uint32_t i = 0; i < uFamilyCount; ++i) {
-            if (family_property_list.at(i).queueFlags & VK_QUEUE_GRAPHICS_BIT) indices.graphicsFamily = i;
-
-            VkBool32 presentSupport = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
-            if (presentSupport) indices.presentFamily = i;
+        for (uint32_t i = 0; i < family_property_list.size() && !indices.isComplete(); ++i) {
+            if (family_property_list.at(i).queueFlags & vk::QueueFlagBits::eGraphics) indices.graphicsFamily = i;
+            if (device.getSurfaceSupportKHR(i, surface)) indices.presentFamily = i;
         }
         return indices;
     }

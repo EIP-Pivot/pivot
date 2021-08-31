@@ -1,11 +1,18 @@
 #pragma once
 
-#include "pivot/graphics/types/AllocatedBuffer.hxx"
 #include "pivot/graphics/types/Vertex.hxx"
+#include <vector>
+
+#include <vulkan/vulkan.hpp>
+
+struct CPUMesh {
+    std::vector<Vertex> verticies;
+    std::vector<uint32_t> indices;
+};
 
 struct GPUMesh {
-    VkDeviceSize verticiesOffset = 0;
-    VkDeviceSize verticiesSize = 0;
-    VkDeviceSize indicesOffset = 0;
-    VkDeviceSize indicesSize = 0;
+    vk::DeviceSize verticiesOffset = 0;
+    vk::DeviceSize verticiesSize = 0;
+    vk::DeviceSize indicesOffset = 0;
+    vk::DeviceSize indicesSize = 0;
 };

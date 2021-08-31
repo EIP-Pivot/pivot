@@ -1,14 +1,15 @@
 #pragma once
 
-#include <vk_mem_alloc.h>
+#include <vk_mem_alloc.hpp>
+#include <vulkan/vulkan.hpp>
 
 struct AllocatedBuffer {
-    VkBuffer buffer = VK_NULL_HANDLE;
-    VmaAllocation memory = VK_NULL_HANDLE;
+    vk::Buffer buffer = VK_NULL_HANDLE;
+    vma::Allocation memory = VK_NULL_HANDLE;
 };
 
 struct AllocatedImage {
-    VkImage image = VK_NULL_HANDLE;
-    VkImageView imageView = VK_NULL_HANDLE;
-    VmaAllocation memory = VK_NULL_HANDLE;
+    vk::Image image = VK_NULL_HANDLE;
+    vk::ImageView imageView = VK_NULL_HANDLE;
+    vma::Allocation memory = VK_NULL_HANDLE;
 };

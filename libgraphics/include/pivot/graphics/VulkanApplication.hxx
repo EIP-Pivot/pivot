@@ -5,14 +5,15 @@
 #include <optional>
 #include <unordered_map>
 #include <vector>
-#include <vulkan/vulkan_core.h>
+#include <vk_mem_alloc.hpp>
+#include <vulkan/vulkan.hpp>
 
 #include "pivot/graphics/Camera.hxx"
 #include "pivot/graphics/DeletionQueue.hxx"
 #include "pivot/graphics/Swapchain.hxx"
 #include "pivot/graphics/VulkanLoader.hxx"
+#include "pivot/graphics/Window.hxx"
 #include "pivot/graphics/interface/I3DScene.hxx"
-#include "pivot/graphics/interface/IWindow.hxx"
 #include "pivot/graphics/types/Frame.hxx"
 #include "pivot/graphics/types/Material.hxx"
 #include "pivot/graphics/types/Mesh.hxx"
@@ -53,36 +54,47 @@ public:
     VulkanApplication();
     ~VulkanApplication();
 
-    void init(IWindow &win);
+    void init();
     void draw(const I3DScene &scene, const Camera &camera, float fElapsedTime);
 
     size_t load3DModels(const std::vector<std::filesystem::path> &);
     size_t loadTexturess(const std::vector<std::filesystem::path> &);
 
 private:
-    void postInitialization();
-    void recreateSwapchain();
-    std::vector<DrawBatch> buildDrawBatch(std::vector<RenderObject> &object);
-    void buildIndirectBuffers(const std::vector<DrawBatch> &scene, Frame &frame);
-
-    void initVulkanRessources();
+    void pushModelsToGPU();
+    void pushTexturesToGPU();
 
     template <vk_utils::is_copyable T>
     void copyBuffer(AllocatedBuffer &buffer, const std::vector<T> &data);
     template <vk_utils::is_copyable T>
     void copyBuffer(AllocatedBuffer &buffer, const T *data, size_t size);
 
-    AllocatedBuffer createBuffer(uint32_t allocSize, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage);
-    void immediateCommand(std::function<void(VkCommandBuffer &)> &&function);
-    void copyBufferToImage(const VkBuffer &srcBuffer, VkImage &dstImage, const VkExtent3D &extent);
-    void copyBufferToBuffer(const VkBuffer &srcBuffer, VkBuffer &dstBuffer, VkDeviceSize &size);
+    void immediateCommand(std::function<void(vk::CommandBuffer &)> &&function);
+    void copyBufferToImage(const vk::Buffer &srcBuffer, vk::Image &dstImage, const vk::Extent3D &extent);
+    void copyBufferToBuffer(const vk::Buffer &srcBuffer, vk::Buffer &dstBuffer, const vk::DeviceSize &size);
+    void transitionImageLayout(vk::Image &image, vk::Format format, vk::ImageLayout oldLayout,
+                               vk::ImageLayout newLayout, uint32_t mipLevels = 1);
+    void generateMipmaps(vk::Image &image, vk::Format imageFormat, vk::Extent3D size, uint32_t mipLevel);
 
-    void transitionImageLayout(VkImage &image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout,
-                               uint32_t mipLevels = 1);
-    void generateMipmaps(VkImage &image, VkFormat imageFormat, VkExtent3D size, uint32_t mipLevel);
+    static bool checkValiationLayerSupport();
+    static uint32_t debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                                  VkDebugUtilsMessageTypeFlagsEXT messageType,
+                                  const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *);
+    static void framebufferResizeCallback(GLFWwindow *, int, int);
+    static vk::SampleCountFlagBits getMexUsableSampleCount(vk::PhysicalDevice &physical_device);
+    static bool isDeviceSuitable(const vk::PhysicalDevice &gpu, const vk::SurfaceKHR &surface);
+    static uint32_t rateDeviceSuitability(const vk::PhysicalDevice &device);
+    static bool checkDeviceExtensionSupport(const vk::PhysicalDevice &device);
 
-    void pushModelsToGPU();
-    void pushTexturesToGPU();
+    std::vector<DrawBatch> buildDrawBatch(std::vector<RenderObject> &object);
+    void buildIndirectBuffers(const std::vector<DrawBatch> &scene, Frame &frame);
+
+    void postInitialization();
+    void recreateSwapchain();
+    void initVulkanRessources();
+
+    AllocatedBuffer createBuffer(uint32_t allocSize, vk::BufferUsageFlags usage, vma::MemoryUsage memoryUsage);
+
     void createInstance();
     void createDebugMessenger();
     void createAllocator();
@@ -92,7 +104,9 @@ private:
     void createUniformBuffers();
     void createSyncStructure();
 
-    void createDescriptorSetsLayout();
+    void createDescriptorSetLayout();
+    void createTextureDescriptorSetLayout();
+
     void createDescriptorPool();
     void createDescriptorSets();
     void createTextureDescriptorSets();
@@ -106,20 +120,12 @@ private:
     void createTextureSampler();
     void createFramebuffers();
 
-private:
-    bool checkDeviceExtensionSupport(const VkPhysicalDevice &device);
-    bool isDeviceSuitable(const VkPhysicalDevice &gpu, const VkSurfaceKHR &surface);
-
-    static uint32_t debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT, VkDebugUtilsMessageTypeFlagsEXT,
-                                  const VkDebugUtilsMessengerCallbackDataEXT *, void *);
-    static bool checkValiationLayerSupport();
-
 protected:
-    std::optional<std::reference_wrapper<IWindow>> window;
-
+    Window window;
+    bool framebufferResized = false;
     struct {
         std::unordered_map<std::string, std::vector<std::byte>> loadedTextures;
-        std::unordered_map<std::string, VkExtent3D> loadedTexturesSize;
+        std::unordered_map<std::string, vk::Extent3D> loadedTexturesSize;
         std::vector<Vertex> vertexBuffer;
         std::vector<uint32_t> indexBuffer;
     } cpuStorage;
@@ -128,50 +134,49 @@ protected:
     std::unordered_map<std::string, AllocatedImage> loadedTextures;
 
     uint32_t mipLevels = 0;
-    // VkSampleCountFlagBits maxMsaaSample = VK_SAMPLE_COUNT_1_BIT;
+    vk::SampleCountFlagBits maxMsaaSample = vk::SampleCountFlagBits::e1;
 
     AllocatedBuffer vertexBuffers;
     AllocatedBuffer indicesBuffers;
 
     struct {
-        VkFence uploadFence = VK_NULL_HANDLE;
-        VkCommandPool commandPool = VK_NULL_HANDLE;
+        vk::Fence uploadFence = VK_NULL_HANDLE;
+        vk::CommandPool commandPool = VK_NULL_HANDLE;
     } uploadContext = {};
 
     DeletionQueue mainDeletionQueue;
     DeletionQueue swapchainDeletionQueue;
-    VkDebugUtilsMessengerEXT debugUtilsMessenger = VK_NULL_HANDLE;
-    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
-    VkDevice device = VK_NULL_HANDLE;
-    VmaAllocator allocator = VK_NULL_HANDLE;
+    vk::DebugUtilsMessengerEXT debugUtilsMessenger = VK_NULL_HANDLE;
+    vk::PhysicalDevice physical_device = VK_NULL_HANDLE;
+    vma::Allocator allocator = VK_NULL_HANDLE;
     Swapchain swapchain;
-    VkSurfaceKHR surface = VK_NULL_HANDLE;
+    vk::SurfaceKHR surface = VK_NULL_HANDLE;
 
     //  Queues
-    VkQueue graphicsQueue = VK_NULL_HANDLE;
-    VkQueue presentQueue = VK_NULL_HANDLE;
+    vk::Queue graphicsQueue = VK_NULL_HANDLE;
+    vk::Queue presentQueue = VK_NULL_HANDLE;
 
     uint8_t currentFrame = 0;
     Frame frames[MAX_FRAME_FRAME_IN_FLIGHT];
 
-    VkRenderPass renderPass = VK_NULL_HANDLE;
-    VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
-    VkDescriptorSetLayout texturesSetLayout = VK_NULL_HANDLE;
-    VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
-    VkDescriptorSet texturesSet = VK_NULL_HANDLE;
+    vk::RenderPass renderPass = VK_NULL_HANDLE;
+    vk::DescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
+    vk::DescriptorSetLayout texturesSetLayout = VK_NULL_HANDLE;
+    vk::DescriptorPool descriptorPool = VK_NULL_HANDLE;
+    vk::DescriptorSet texturesSet = VK_NULL_HANDLE;
 
-    VkSampler textureSampler = VK_NULL_HANDLE;
+    vk::Sampler textureSampler = VK_NULL_HANDLE;
 
-    VkCommandPool commandPool = VK_NULL_HANDLE;
-    std::vector<VkCommandBuffer> commandBuffers;
+    vk::CommandPool commandPool = VK_NULL_HANDLE;
+    std::vector<vk::CommandBuffer> commandBuffers;
 
     AllocatedImage depthResources = {};
     AllocatedImage colorImage = {};
 
-    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-    VkPipeline graphicsPipeline = VK_NULL_HANDLE;
+    vk::PipelineLayout pipelineLayout = VK_NULL_HANDLE;
+    vk::Pipeline graphicsPipeline = VK_NULL_HANDLE;
 
-    std::vector<VkFramebuffer> swapChainFramebuffers;
+    std::vector<vk::Framebuffer> swapChainFramebuffers;
 };
 
 #ifndef VULKAN_APPLICATION_IMPLEMENTATION
@@ -189,7 +194,7 @@ void VulkanApplication::copyBuffer(AllocatedBuffer &buffer, const T *data, size_
 template <vk_utils::is_copyable T>
 void VulkanApplication::copyBuffer(AllocatedBuffer &buffer, const std::vector<T> &data)
 {
-    VkDeviceSize size = sizeof(data[0]) * data.size();
+    vk::DeviceSize size = sizeof(data[0]) * data.size();
     void *mapped = nullptr;
     vmaMapMemory(allocator, buffer.memory, &mapped);
     std::memcpy(mapped, data.data(), size);

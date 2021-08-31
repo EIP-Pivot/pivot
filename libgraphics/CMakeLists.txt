@@ -6,9 +6,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(Vulkan REQUIRED)
 
 include(shaders/CMakeRule.txt)
-
-
 include(FetchContent)
+
+option(CLANG_TIME_TRACE "Enable clang profiling." OFF)
+if(CLANG_TIME_TRACE)
+    message(STATUS "Clang profiling - enabled")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftime-trace")
+endif()
 
 FetchContent_Declare(
     glfw
@@ -20,8 +24,8 @@ if (NOT glfw_POPULATED)
     FetchContent_Populate(glfw)
     add_subdirectory(${glfw_SOURCE_DIR} ${glfw_BINARY_DIR})
     target_compile_definitions(glfw INTERFACE
-        -DGLFW_INCLUDE_NONE
-        -DGLFW_INCLUDE_VULKAN
+        GLFW_INCLUDE_NONE
+        GLFW_INCLUDE_VULKAN
     )
 endif()
 
@@ -35,10 +39,10 @@ if (NOT glm_POPULATED)
     FetchContent_Populate(glm)
     add_subdirectory(${glm_SOURCE_DIR} ${glm_BINARY_DIR})
     target_compile_definitions(glm INTERFACE
-        -DGLM_FORCE_INLINE
-        -DGLM_FORCE_RADIANS
-        -DGLM_FORCE_DEPTH_ZERO_TO_ONE
-        -DGLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+        GLM_FORCE_INLINE
+        GLM_FORCE_RADIANS
+        GLM_FORCE_DEPTH_ZERO_TO_ONE
+        GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
     )
 endif()
 
@@ -99,24 +103,36 @@ if (NOT logger_POPULATED)
     FetchContent_Populate(logger)
     add_subdirectory(${logger_SOURCE_DIR} ${logger_BINARY_DIR})
     target_compile_definitions(logger INTERFACE
-        -DLOGGER_EXTERN_DECLARATION_PTR
+        LOGGER_EXTERN_DECLARATION_PTR
     )
 endif()
 
-add_library(${PROJECT_NAME} source/vk_utils.cxx
-                            source/vk_init.cxx
-                            source/Camera.cxx
-                            source/Swapchain.cxx
-                            source/PipelineBuilder.cxx
-                            source/VulkanLoader.cxx
-                            source/UniformBufferObject.cxx
-                            source/VulkanException.cxx
-                            source/VulkanApplication.cxx
-                            source/VulkanApplication_init.cxx
-                            source/VulkanApplication_static.cxx
-                            source/VulkanApplication_helper.cxx
-                            source/VulkanApplication_loader.cxx
+add_library(${PROJECT_NAME} STATIC source/lib.cxx
+                                   source/Window.cxx
+                                   source/vk_utils.cxx
+                                   source/vk_init.cxx
+                                   source/Camera.cxx
+                                   source/Swapchain.cxx
+                                   source/PipelineBuilder.cxx
+                                   source/VulkanLoader.cxx
+                                   source/UniformBufferObject.cxx
+                                   source/VulkanApplication.cxx
+                                   source/VulkanApplication_init.cxx
+                                   source/VulkanApplication_static.cxx
+                                   source/VulkanApplication_helper.cxx
+                                   source/VulkanApplication_loader.cxx
 )
+
+target_precompile_headers(${PROJECT_NAME} PRIVATE <Logger.hpp> <unordered_map> <vector> <pivot/graphics/DeletionQueue.hxx>
+                                                  <vulkan/vulkan.hpp> <glm/glm.hpp> <pivot/graphics/VulkanApplication.hxx>
+                                                  <vk_mem_alloc.hpp>
+)
+
+target_compile_definitions(${PROJECT_NAME} PUBLIC
+  VULKAN_HPP_NO_CONSTRUCTORS
+  VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1
+)
+
 add_shader(${PROJECT_NAME} triangle.vert)
 add_shader(${PROJECT_NAME} triangle.frag)
 

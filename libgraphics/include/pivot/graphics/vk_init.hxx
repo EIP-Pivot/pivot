@@ -3,42 +3,36 @@
 #include <cstddef>
 #include <stdint.h>
 #include <vector>
-#include <vulkan/vk_platform.h>
-#include <vulkan/vulkan_core.h>
+#include <vulkan/vulkan.hpp>
 
 namespace vk_init
 {
-VkInstanceCreateInfo populateVkInstanceCreateInfo(VkApplicationInfo &appCreateInfo,
-                                                  const std::vector<const char *> &vExtentions,
-                                                  const std::vector<const char *> &vLayers);
-VkDebugUtilsMessengerCreateInfoEXT populateDebugUtilsMessengerCreateInfoEXT(
-    VKAPI_ATTR VkBool32 VKAPI_CALL (*)(VkDebugUtilsMessageSeverityFlagBitsEXT, VkDebugUtilsMessageTypeFlagsEXT,
-                                       const VkDebugUtilsMessengerCallbackDataEXT *, void *));
-VkDeviceQueueCreateInfo populateDeviceQueueCreateInfo(const uint32_t, const uint32_t, const float &);
-VkImageViewCreateInfo populateVkImageViewCreateInfo(VkImage &image, VkFormat format, uint32_t mipLevel = 1);
-VkShaderModuleCreateInfo populateVkShaderModuleCreateInfo(const std::vector<std::byte> &code);
+vk::InstanceCreateInfo populateVkInstanceCreateInfo(vk::ApplicationInfo &appCreateInfo,
+                                                    const std::vector<const char *> &vExtentions,
+                                                    const std::vector<const char *> &vLayers);
 
-VkPipelineShaderStageCreateInfo populateVkPipelineShaderStageCreateInfo(VkShaderStageFlagBits stage,
-                                                                        VkShaderModule &module,
-                                                                        const char *entryPoint = "main");
-VkPipelineVertexInputStateCreateInfo
-populateVkPipelineVertexInputStateCreateInfo(const std::vector<VkVertexInputBindingDescription> &binding,
-                                             const std::vector<VkVertexInputAttributeDescription> &attribute);
-VkPipelineInputAssemblyStateCreateInfo populateVkPipelineInputAssemblyCreateInfo(VkPrimitiveTopology,
-                                                                                 VkBool32 = VK_FALSE);
-VkPipelineRasterizationStateCreateInfo populateVkPipelineRasterizationStateCreateInfo(VkPolygonMode);
-VkPipelineMultisampleStateCreateInfo
-populateVkPipelineMultisampleStateCreateInfo(VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT);
-VkPipelineColorBlendAttachmentState populateVkPipelineColorBlendAttachmentState();
+vk::DebugUtilsMessengerCreateInfoEXT
+populateDebugUtilsMessengerCreateInfoEXT(PFN_vkDebugUtilsMessengerCallbackEXT callback);
+vk::DeviceQueueCreateInfo populateDeviceQueueCreateInfo(const uint32_t, const uint32_t, const float &);
+vk::ImageViewCreateInfo populateVkImageViewCreateInfo(vk::Image &image, vk::Format format, uint32_t mipLevel = 1);
+vk::ShaderModuleCreateInfo populateVkShaderModuleCreateInfo(const std::vector<std::byte> &code);
 
-VkPipelineLayoutCreateInfo populateVkPipelineLayoutCreateInfo(const std::vector<VkDescriptorSetLayout> &setLayout,
-                                                              const std::vector<VkPushConstantRange> &pushLayout);
+vk::PipelineShaderStageCreateInfo populateVkPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits stage,
+                                                                          vk::ShaderModule &module,
+                                                                          const char *entryPoint = "main");
+vk::PipelineVertexInputStateCreateInfo
+populateVkPipelineVertexInputStateCreateInfo(const std::vector<vk::VertexInputBindingDescription> &binding,
+                                             const std::vector<vk::VertexInputAttributeDescription> &attribute);
+vk::PipelineInputAssemblyStateCreateInfo populateVkPipelineInputAssemblyCreateInfo(vk::PrimitiveTopology,
+                                                                                   vk::Bool32 = VK_FALSE);
+vk::PipelineRasterizationStateCreateInfo populateVkPipelineRasterizationStateCreateInfo(vk::PolygonMode);
+vk::PipelineMultisampleStateCreateInfo
+populateVkPipelineMultisampleStateCreateInfo(vk::SampleCountFlagBits msaaSamples = vk::SampleCountFlagBits::e1);
+vk::PipelineColorBlendAttachmentState populateVkPipelineColorBlendAttachmentState();
 
-VkPipelineDepthStencilStateCreateInfo populateVkPipelineDepthStencilStateCreateInfo();
-VkPushConstantRange populateVkPushConstantRange(VkShaderStageFlags stage, uint32_t size, uint32_t offset = 0);
+vk::PipelineLayoutCreateInfo populateVkPipelineLayoutCreateInfo(const std::vector<vk::DescriptorSetLayout> &setLayout,
+                                                                const std::vector<vk::PushConstantRange> &pushLayout);
 
-namespace empty
-{
-    VkPipelineLayoutCreateInfo populateVkPipelineLayoutCreateInfo();
-}
+vk::PipelineDepthStencilStateCreateInfo populateVkPipelineDepthStencilStateCreateInfo();
+vk::PushConstantRange populateVkPushConstantRange(vk::ShaderStageFlags stage, uint32_t size, uint32_t offset = 0);
 }    // namespace vk_init

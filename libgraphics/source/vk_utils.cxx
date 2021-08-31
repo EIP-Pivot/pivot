@@ -1,11 +1,19 @@
 #include "pivot/graphics/vk_utils.hxx"
 
 #include <fstream>
+#include <stdexcept>
 
 #include "pivot/graphics/vk_init.hxx"
 
 namespace vk_utils
 {
+void vk_try(vk::Result res)
+{
+    if (res < vk::Result::eSuccess) { throw VulkanException(res); }
+}
+
+void vk_try(VkResult res) { vk_try(vk::Result(res)); }
+
 std::vector<std::byte> readFile(const std::string &filename)
 {
     size_t fileSize = 0;
@@ -21,38 +29,34 @@ std::vector<std::byte> readFile(const std::string &filename)
     return fileContent;
 }
 
-VkShaderModule createShaderModule(const VkDevice &device, const std::vector<std::byte> &code)
+vk::ShaderModule createShaderModule(const vk::Device &device, const std::vector<std::byte> &code)
 {
     auto createInfo = vk_init::populateVkShaderModuleCreateInfo(code);
-    VkShaderModule shader = VK_NULL_HANDLE;
-    VK_TRY(vkCreateShaderModule(device, &createInfo, nullptr, &shader));
-    return shader;
+    return device.createShaderModule(createInfo);
 }
 
-VkFormat findSupportedFormat(VkPhysicalDevice &gpu, const std::vector<VkFormat> &candidates, VkImageTiling tiling,
-                             VkFormatFeatureFlags features)
+vk::Format findSupportedFormat(vk::PhysicalDevice &gpu, const std::vector<vk::Format> &candidates,
+                               vk::ImageTiling tiling, vk::FormatFeatureFlags features)
 {
-    for (VkFormat format: candidates) {
-        VkFormatProperties props;
-        vkGetPhysicalDeviceFormatProperties(gpu, format, &props);
-        if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
+    for (vk::Format format: candidates) {
+        vk::FormatProperties props = gpu.getFormatProperties(format);
+        if (tiling == vk::ImageTiling::eLinear && (props.linearTilingFeatures & features) == features) {
             return format;
-        } else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
+        } else if (tiling == vk::ImageTiling::eOptimal && (props.optimalTilingFeatures & features) == features) {
             return format;
         }
     }
     throw std::runtime_error("failed to find supported format");
 }
 
-bool hasStencilComponent(VkFormat format)
+bool hasStencilComponent(vk::Format format)
 {
-    return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
+    return format == vk::Format::eD32SfloatS8Uint || format == vk::Format::eD24UnormS8Uint;
 }
 
-uint32_t findMemoryType(VkPhysicalDevice &physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties)
+uint32_t findMemoryType(vk::PhysicalDevice &physicalDevice, uint32_t typeFilter, vk::MemoryPropertyFlags properties)
 {
-    VkPhysicalDeviceMemoryProperties memProperties;
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+    vk::PhysicalDeviceMemoryProperties memProperties = physicalDevice.getMemoryProperties();
 
     for (uint32_t i = 0; i < memProperties.memoryTypeCount; ++i) {
         if (typeFilter & (1 << i) && (memProperties.memoryTypes[i].propertyFlags & properties)) { return i; }
@@ -60,52 +64,42 @@ uint32_t findMemoryType(VkPhysicalDevice &physicalDevice, uint32_t typeFilter, V
     throw VulkanException("failed to find suitable memory type !");
 }
 
-std::vector<VkPhysicalDevice> getPhysicalDevices(VkInstance &instance)
-{
-    uint32_t deviceCount = 0;
-    vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
-    std::vector<VkPhysicalDevice> devices(deviceCount);
-    vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
-    if (devices.empty()) throw VulkanException("failed to find GPUs with Vulkan support");
-    return devices;
-}
-
 namespace tools
 {
-    const std::string to_string(VkSampleCountFlagBits count)
+    const std::string to_string(vk::SampleCountFlagBits count)
     {
         switch (count) {
-            case VK_SAMPLE_COUNT_1_BIT: return "No MSAA";
-            case VK_SAMPLE_COUNT_2_BIT: return "2X MSAA";
-            case VK_SAMPLE_COUNT_4_BIT: return "4X MSAA";
-            case VK_SAMPLE_COUNT_8_BIT: return "8X MSAA";
-            case VK_SAMPLE_COUNT_16_BIT: return "16X MSAA";
-            case VK_SAMPLE_COUNT_32_BIT: return "32X MSAA";
-            case VK_SAMPLE_COUNT_64_BIT: return "64X MSAA";
+            case vk::SampleCountFlagBits::e1: return "No MSAA";
+            case vk::SampleCountFlagBits::e2: return "2X MSAA";
+            case vk::SampleCountFlagBits::e4: return "4X MSAA";
+            case vk::SampleCountFlagBits::e8: return "8X MSAA";
+            case vk::SampleCountFlagBits::e16: return "16X MSAA";
+            case vk::SampleCountFlagBits::e32: return "32X MSAA";
+            case vk::SampleCountFlagBits::e64: return "64X MSAA";
             default: return "Unknown";
         }
     }
-    const std::string to_string(VkCullModeFlags count)
+    const std::string to_string(vk::CullModeFlagBits count)
     {
         switch (count) {
-            case VK_CULL_MODE_NONE: return "No culling";
-            case VK_CULL_MODE_BACK_BIT: return "Back culling";
-            case VK_CULL_MODE_FRONT_BIT: return "Front culling";
-            case VK_CULL_MODE_FRONT_AND_BACK: return "Both side culling";
+            case vk::CullModeFlagBits::eNone: return "No culling";
+            case vk::CullModeFlagBits::eBack: return "Back culling";
+            case vk::CullModeFlagBits::eFront: return "Front culling";
+            case vk::CullModeFlagBits::eFrontAndBack: return "Both side culling";
             default: return "Unknown";
         }
     }
 
-    std::string physicalDeviceTypeString(VkPhysicalDeviceType type)
+    std::string physicalDeviceTypeString(vk::PhysicalDeviceType type)
     {
         switch (type) {
 #define STR(r) \
-    case VK_PHYSICAL_DEVICE_TYPE_##r: return #r
-            STR(OTHER);
-            STR(INTEGRATED_GPU);
-            STR(DISCRETE_GPU);
-            STR(VIRTUAL_GPU);
-            STR(CPU);
+    case vk::PhysicalDeviceType::e##r: return #r
+            STR(Other);
+            STR(IntegratedGpu);
+            STR(DiscreteGpu);
+            STR(VirtualGpu);
+            STR(Cpu);
 #undef STR
             default: return "UNKNOWN_DEVICE_TYPE";
         }

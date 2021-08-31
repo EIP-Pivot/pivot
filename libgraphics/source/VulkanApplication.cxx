@@ -1,47 +1,50 @@
 #include "pivot/graphics/VulkanApplication.hxx"
+#include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/vk_utils.hxx"
-
 #include <Logger.hpp>
 #include <algorithm>
 
-VulkanApplication::VulkanApplication() {}
+VulkanApplication::VulkanApplication(): VulkanLoader(), window("Vulkan", 800, 600)
+{
+    DEBUG_FUNCTION
+    window.setUserPointer(this);
+    window.setResizeCallback(framebufferResizeCallback);
+}
 
 VulkanApplication::~VulkanApplication()
 {
-    if (device != VK_NULL_HANDLE) vkDeviceWaitIdle(device);
-    swapchain.destroy();
+    DEBUG_FUNCTION
+    if (device) device.waitIdle();
+    if (swapchain) swapchain.destroy();
     swapchainDeletionQueue.flush();
     mainDeletionQueue.flush();
 }
 
-void VulkanApplication::init(IWindow &win)
-{
-    window = win;
-    initVulkanRessources();
-}
+void VulkanApplication::init() { initVulkanRessources(); }
 
 void VulkanApplication::draw(const I3DScene &scene, const Camera &camera, float fElapsedTime)
-{
+try {
     auto &frame = frames[currentFrame];
     uint32_t imageIndex;
+    vk::Result result;
 
-    VK_TRY(vkWaitForFences(device, 1, &frame.inFlightFences, VK_TRUE, UINT64_MAX));
+    VK_TRY(device.waitForFences(frame.inFlightFences, VK_TRUE, UINT64_MAX));
+    std::tie(result, imageIndex) =
+        device.acquireNextImageKHR(swapchain.getSwapchain(), UINT64_MAX, frame.imageAvailableSemaphore);
 
-    auto result = vkAcquireNextImageKHR(device, swapchain.getSwapchain(), UINT64_MAX, frame.imageAvailableSemaphore,
-                                        nullptr, &imageIndex);
-    if (vk_utils::isSwapchainInvalid(result, VK_ERROR_OUT_OF_DATE_KHR)) { return recreateSwapchain(); }
+    if (framebufferResized) return recreateSwapchain();
 
+    vk_utils::vk_try(result);
     auto &cmd = commandBuffers[imageIndex];
 
-    VK_TRY(vkResetFences(device, 1, &frame.inFlightFences));
-    VK_TRY(vkResetCommandBuffer(cmd, 0));
-    VkSemaphore waitSemaphores[] = {frame.imageAvailableSemaphore};
-    VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-    VkSemaphore signalSemaphores[] = {frame.renderFinishedSemaphore};
+    device.resetFences(frame.inFlightFences);
+    cmd.reset();
 
-    VkSubmitInfo submitInfo{
-        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-        .pNext = nullptr,
+    vk::Semaphore waitSemaphores[] = {frame.imageAvailableSemaphore};
+    vk::PipelineStageFlags waitStages[] = {vk::PipelineStageFlagBits::eColorAttachmentOutput};
+    vk::Semaphore signalSemaphores[] = {frame.renderFinishedSemaphore};
+
+    vk::SubmitInfo submitInfo{
         .waitSemaphoreCount = 1,
         .pWaitSemaphores = waitSemaphores,
         .pWaitDstStageMask = waitStages,
@@ -51,20 +54,12 @@ void VulkanApplication::draw(const I3DScene &scene, const Camera &camera, float 
         .pSignalSemaphores = signalSemaphores,
     };
 
-    VkCommandBufferBeginInfo beginInfo{
-        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-        .pNext = nullptr,
-        .flags = 0,
-        .pInheritanceInfo = nullptr,
-    };
+    const std::array<float, 4> vClearColor = {0.0f, 0.0f, 0.0f, 1.0f};
+    std::array<vk::ClearValue, 2> clearValues{};
+    clearValues.at(0).color = vk::ClearColorValue{vClearColor};
+    clearValues.at(1).depthStencil = vk::ClearDepthStencilValue{1.0f, 0};
 
-    std::array<VkClearValue, 2> clearValues{};
-    clearValues.at(0).color = {{0.0f, 0.0f, 0.0f, 0.0f}};
-    clearValues.at(1).depthStencil = {1.0f, 0};
-
-    VkDeviceSize offsets = 0;
-    VkRenderPassBeginInfo renderPassInfo{
-        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+    vk::RenderPassBeginInfo renderPassInfo{
         .renderPass = renderPass,
         .framebuffer = swapChainFramebuffers[imageIndex],
         .renderArea =
@@ -75,8 +70,7 @@ void VulkanApplication::draw(const I3DScene &scene, const Camera &camera, float 
         .clearValueCount = static_cast<uint32_t>(clearValues.size()),
         .pClearValues = clearValues.data(),
     };
-    auto gpuCamera = camera.getGPUCameraData(80, swapchain.getAspectRatio());
-
+    auto gpuCamera = camera.getGPUCameraData(80.0f, swapchain.getAspectRatio(), 0.1f, 100.0f);
     auto sceneInformation = scene.getSceneInformations();
     auto drawBatch = buildDrawBatch(sceneInformation);
     buildIndirectBuffers(drawBatch, frame);
@@ -86,35 +80,36 @@ void VulkanApplication::draw(const I3DScene &scene, const Camera &camera, float 
                    [](const auto &i) { return gpuObject::UniformBufferObject(i.objectInformation); });
 
     void *objectData = nullptr;
-    vmaMapMemory(allocator, frame.data.uniformBuffers.memory, &objectData);
+    allocator.mapMemory(frame.data.uniformBuffers.memory, &objectData);
     auto *objectSSBI = (gpuObject::UniformBufferObject *)objectData;
     for (unsigned i = 0; i < sceneData.size(); i++) { objectSSBI[i] = sceneData.at(i); }
-    vmaUnmapMemory(allocator, frame.data.uniformBuffers.memory);
+    allocator.unmapMemory(frame.data.uniformBuffers.memory);
 
-    VK_TRY(vkBeginCommandBuffer(cmd, &beginInfo));
-    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &frame.data.objectDescriptor, 0,
-                            nullptr);
-    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 1, 1, &texturesSet, 0, nullptr);
-    vkCmdPushConstants(cmd, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
-                       sizeof(gpuCamera), &gpuCamera);
-    vkCmdBindVertexBuffers(cmd, 0, 1, &vertexBuffers.buffer, &offsets);
-    vkCmdBindIndexBuffer(cmd, indicesBuffers.buffer, 0, VK_INDEX_TYPE_UINT32);
-    vkCmdBeginRenderPass(cmd, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    vk::CommandBufferBeginInfo beginInfo{
+        .pInheritanceInfo = nullptr,
+    };
+    VK_TRY(cmd.begin(&beginInfo));
+    cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
+    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, frame.data.objectDescriptor, nullptr);
+    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, texturesSet, nullptr);
+    cmd.pushConstants<Camera::GPUCameraData>(
+        pipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, gpuCamera);
+
+    vk::DeviceSize offset = 0;
+    cmd.bindVertexBuffers(0, vertexBuffers.buffer, offset);
+    cmd.bindIndexBuffer(indicesBuffers.buffer, 0, vk::IndexType::eUint32);
+    cmd.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
     {
         for (const auto &draw: drawBatch) {
-            VkDeviceSize indirectOffset = draw.first * sizeof(VkDrawIndexedIndirectCommand);
-            uint32_t draw_stride = sizeof(VkDrawIndexedIndirectCommand);
-            vkCmdDrawIndexedIndirect(cmd, frame.indirectBuffer.buffer, indirectOffset, draw.count, draw_stride);
+            cmd.drawIndexedIndirect(frame.indirectBuffer.buffer, draw.first * sizeof(vk::DrawIndexedIndirectCommand),
+                                    draw.count, sizeof(vk::DrawIndexedIndirectCommand));
         }
     }
-    vkCmdEndRenderPass(cmd);
-    VK_TRY(vkEndCommandBuffer(cmd));
-    VK_TRY(vkQueueSubmit(graphicsQueue, 1, &submitInfo, frame.inFlightFences));
+    cmd.endRenderPass();
+    cmd.end();
+    graphicsQueue.submit(submitInfo, frame.inFlightFences);
 
-    VkPresentInfoKHR presentInfo{
-        .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
-        .pNext = nullptr,
+    vk::PresentInfoKHR presentInfo{
         .waitSemaphoreCount = 1,
         .pWaitSemaphores = signalSemaphores,
         .swapchainCount = 1,
@@ -122,12 +117,12 @@ void VulkanApplication::draw(const I3DScene &scene, const Camera &camera, float 
         .pImageIndices = &imageIndex,
         .pResults = nullptr,
     };
-    result = vkQueuePresentKHR(presentQueue, &presentInfo);
 
-    if (vk_utils::isSwapchainInvalid(result, VK_ERROR_OUT_OF_DATE_KHR, VK_SUBOPTIMAL_KHR)) {
-        return recreateSwapchain();
-    }
+    vk_utils::vk_try(presentQueue.presentKHR(presentInfo));
     currentFrame = (currentFrame + 1) % MAX_FRAME_FRAME_IN_FLIGHT;
+
+} catch (const vk::OutOfDateKHRError &se) {
+    return recreateSwapchain();
 }
 
 std::vector<VulkanApplication::DrawBatch> VulkanApplication::buildDrawBatch(std::vector<RenderObject> &object)
@@ -182,13 +177,14 @@ void VulkanApplication::initVulkanRessources()
     pickPhysicalDevice();
     createLogicalDevice();
 
-    swapchain.init(window->get().getSize(), physicalDevice, device, surface);
+    swapchain.init(window, physical_device, device, surface);
 
     createAllocator();
     createSyncStructure();
     createIndirectBuffer();
     createRenderPass();
-    createDescriptorSetsLayout();
+    createDescriptorSetLayout();
+    createTextureDescriptorSetLayout();
     createPipeline();
     createCommandPool();
     createDepthResources();
@@ -217,10 +213,10 @@ void VulkanApplication::postInitialization()
 {
     void *materialData = nullptr;
     for (auto &frame: frames) {
-        vmaMapMemory(allocator, frame.data.materialBuffer.memory, &materialData);
+        allocator.mapMemory(frame.data.materialBuffer.memory, &materialData);
         auto *objectSSBI = (gpuObject::Material *)materialData;
         for (unsigned i = 0; i < materials.size(); i++) { objectSSBI[i] = materials.at(i); }
-        vmaUnmapMemory(allocator, frame.data.materialBuffer.memory);
+        allocator.unmapMemory(frame.data.materialBuffer.memory);
     }
 }
 
@@ -239,7 +235,7 @@ void VulkanApplication::recreateSwapchain()
     vkDeviceWaitIdle(device);
     swapchainDeletionQueue.flush();
 
-    swapchain.recreate(window->get().getSize(), physicalDevice, device, surface);
+    swapchain.recreate(window, physical_device, device, surface);
     createRenderPass();
     createPipeline();
     createColorResources();

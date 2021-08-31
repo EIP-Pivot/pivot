@@ -1,25 +1,24 @@
 #pragma once
 
 #include <vector>
-#include <vulkan/vulkan.h>
-#include <vulkan/vulkan_core.h>
+#include <vulkan/vulkan.hpp>
 
 class PipelineBuilder
 {
 public:
     PipelineBuilder() = default;
     ~PipelineBuilder() = default;
-    VkPipeline build(VkDevice &, VkRenderPass &);
+    vk::Pipeline build(vk::Device &, vk::RenderPass &);
 
 public:
-    std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
-    VkPipelineVertexInputStateCreateInfo vertexInputInfo;
-    VkPipelineInputAssemblyStateCreateInfo inputAssembly;
-    VkViewport viewport;
-    VkRect2D scissor;
-    VkPipelineRasterizationStateCreateInfo rasterizer;
-    VkPipelineColorBlendAttachmentState colorBlendAttachment;
-    VkPipelineMultisampleStateCreateInfo multisampling;
-    VkPipelineLayout pipelineLayout;
-    VkPipelineDepthStencilStateCreateInfo depthStencil;
+    std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
+    vk::PipelineVertexInputStateCreateInfo vertexInputInfo;
+    vk::PipelineInputAssemblyStateCreateInfo inputAssembly;
+    vk::Viewport viewport;
+    vk::Rect2D scissor;
+    vk::PipelineRasterizationStateCreateInfo rasterizer;
+    vk::PipelineColorBlendAttachmentState colorBlendAttachment;
+    vk::PipelineMultisampleStateCreateInfo multisampling;
+    vk::PipelineLayout pipelineLayout;
+    vk::PipelineDepthStencilStateCreateInfo depthStencil;
 };

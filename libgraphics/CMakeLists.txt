@@ -8,22 +8,6 @@ find_package(Vulkan REQUIRED)
 include(shaders/CMakeRule.txt)
 
 
-add_library(${PROJECT_NAME} source/lib.cxx
-                            source/vk_utils.cxx
-                            source/vk_init.cxx
-                            source/Camera.cxx
-                            source/Swapchain.cxx
-                            source/PipelineBuilder.cxx
-                            source/VulkanLoader.cxx
-                            source/UniformBufferObject.cxx
-                            source/VulkanException.cxx
-                            source/VulkanApplication.cxx
-                            source/VulkanApplication_init.cxx
-                            source/VulkanApplication_static.cxx
-                            source/VulkanApplication_helper.cxx
-                            source/VulkanApplication_loader.cxx
-)
-
 include(FetchContent)
 
 FetchContent_Declare(
@@ -60,14 +44,20 @@ endif()
 
 FetchContent_Declare(
     vma
-    GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
-    GIT_TAG b0fce340b6c581d2bb75ca6c8c6e55235a52d8e2
+    GIT_REPOSITORY https://github.com/malte-v/VulkanMemoryAllocator-Hpp.git
+    GIT_TAG 3a61240a5354ce56c222969a69825aabb6ba0a21
 )
 if (NOT vma_POPULATED)
     message(STATUS "Populating vma")
     FetchContent_Populate(vma)
-    set(VMA_USE_STL_CONTAINERS ON)
-    add_subdirectory(${vma_SOURCE_DIR} ${vma_BINARY_DIR})
+    add_library(VulkanMemoryAllocator STATIC ${vma_SOURCE_DIR}/vk_mem_alloc.h)
+    set_source_files_properties(
+        ${vma_SOURCE_DIR}/vk_mem_alloc.h PROPERTIES
+        LANGUAGE CXX
+    )
+    target_include_directories(VulkanMemoryAllocator PUBLIC ${vma_SOURCE_DIR})
+    target_compile_definitions(VulkanMemoryAllocator PRIVATE VMA_IMPLEMENTATION VMA_USE_STL_CONTAINERS)
+    set_target_properties(VulkanMemoryAllocator PROPERTIES LINKER_LANGUAGE CXX)
 endif()
 
 FetchContent_Declare(
@@ -78,7 +68,14 @@ FetchContent_Declare(
 if (NOT stb_POPULATED)
     message(STATUS "Populating stb")
     FetchContent_Populate(stb)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${stb_SOURCE_DIR})
+    add_library(stb STATIC ${stb_SOURCE_DIR}/stb_image.h)
+    set_source_files_properties(
+        ${stb_SOURCE_DIR}/stb_image.h PROPERTIES
+        LANGUAGE C
+    )
+    target_compile_definitions(stb PRIVATE STB_IMAGE_IMPLEMENTATION)
+    target_include_directories(stb PUBLIC ${stb_SOURCE_DIR})
+    set_target_properties(stb PROPERTIES LINKER_LANGUAGE C)
 endif()
 
 FetchContent_Declare(
@@ -106,13 +103,24 @@ if (NOT logger_POPULATED)
     )
 endif()
 
+add_library(${PROJECT_NAME} source/vk_utils.cxx
+                            source/vk_init.cxx
+                            source/Camera.cxx
+                            source/Swapchain.cxx
+                            source/PipelineBuilder.cxx
+                            source/VulkanLoader.cxx
+                            source/UniformBufferObject.cxx
+                            source/VulkanException.cxx
+                            source/VulkanApplication.cxx
+                            source/VulkanApplication_init.cxx
+                            source/VulkanApplication_static.cxx
+                            source/VulkanApplication_helper.cxx
+                            source/VulkanApplication_loader.cxx
+)
 add_shader(${PROJECT_NAME} triangle.vert)
 add_shader(${PROJECT_NAME} triangle.frag)
 
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
-
-# Apparently, VMA does not add its include path to the target
-target_include_directories(${PROJECT_NAME} PUBLIC ${vma_SOURCE_DIR}/include)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan::Vulkan
                                       PUBLIC logger
@@ -120,4 +128,5 @@ target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan::Vulkan
                                       PUBLIC glm
                                       PUBLIC VulkanMemoryAllocator
                                       PUBLIC tinyobjloader
+                                      PUBLIC stb
 )

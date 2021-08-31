@@ -1,6 +1,17 @@
-#include "pivot/graphics/VulkanApplication.hxx"
-
 #include <Logger.hpp>
+#include <ostream>
+#include <set>
+#include <stdint.h>
+#include <string.h>
+#include <string>
+#include <vector>
+#include <vulkan/vulkan.hpp>
+
+#include "pivot/graphics/Camera.hxx"
+#include "pivot/graphics/DebugMacros.hxx"
+#include "pivot/graphics/QueueFamilyIndices.hxx"
+#include "pivot/graphics/SwapChainSupportDetails.hxx"
+#include "pivot/graphics/VulkanApplication.hxx"
 
 static const char *to_string_message_type(VkDebugUtilsMessageTypeFlagsEXT s)
 {
@@ -39,12 +50,31 @@ uint32_t VulkanApplication::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT
     return VK_FALSE;
 }
 
+void VulkanApplication::framebufferResizeCallback(GLFWwindow *window, int, int)
+{
+    auto app = reinterpret_cast<VulkanApplication *>(glfwGetWindowUserPointer(window));
+    app->framebufferResized = true;
+}
+
+vk::SampleCountFlagBits VulkanApplication::getMexUsableSampleCount(vk::PhysicalDevice &physical_device)
+{
+    vk::PhysicalDeviceProperties physicalDeviceProperties = physical_device.getProperties();
+
+    vk::SampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts &
+                                  physicalDeviceProperties.limits.framebufferDepthSampleCounts;
+    if (counts & vk::SampleCountFlagBits::e64) { return vk::SampleCountFlagBits::e64; }
+    if (counts & vk::SampleCountFlagBits::e32) { return vk::SampleCountFlagBits::e32; }
+    if (counts & vk::SampleCountFlagBits::e16) { return vk::SampleCountFlagBits::e16; }
+    if (counts & vk::SampleCountFlagBits::e8) { return vk::SampleCountFlagBits::e8; }
+    if (counts & vk::SampleCountFlagBits::e4) { return vk::SampleCountFlagBits::e4; }
+    if (counts & vk::SampleCountFlagBits::e2) { return vk::SampleCountFlagBits::e2; }
+
+    return vk::SampleCountFlagBits::e1;
+}
+
 bool VulkanApplication::checkValiationLayerSupport()
 {
-    uint32_t layerCount;
-    vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
-    std::vector<VkLayerProperties> availableLayers(layerCount);
-    vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+    auto availableLayers = vk::enumerateInstanceLayerProperties();
 
     for (const char *layerName: validationLayers) {
         bool layerFound = false;
@@ -58,4 +88,44 @@ bool VulkanApplication::checkValiationLayerSupport()
         if (!layerFound) return false;
     }
     return true;
+}
+
+bool VulkanApplication::isDeviceSuitable(const vk::PhysicalDevice &gpu, const vk::SurfaceKHR &surface)
+{
+    DEBUG_FUNCTION
+    auto indices = QueueFamilyIndices::findQueueFamilies(gpu, surface);
+    bool extensionsSupported = checkDeviceExtensionSupport(gpu);
+    vk::PhysicalDeviceProperties deviceProperties = gpu.getProperties();
+    vk::PhysicalDeviceFeatures deviceFeatures = gpu.getFeatures();
+
+    bool swapChainAdequate = false;
+    if (extensionsSupported) {
+        auto swapChainSupport = SwapChainSupportDetails::querySwapChainSupport(gpu, surface);
+        swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
+    }
+    return indices.isComplete() && extensionsSupported && swapChainAdequate && deviceFeatures.samplerAnisotropy &&
+           deviceProperties.limits.maxPushConstantsSize >= sizeof(Camera::GPUCameraData);
+}
+
+uint32_t VulkanApplication::rateDeviceSuitability(const vk::PhysicalDevice &gpu)
+{
+    vk::PhysicalDeviceProperties deviceProperties = gpu.getProperties();
+    // vk::PhysicalDeviceFeatures deviceFeatures = gpu.getFeatures();
+    int32_t score = 0;
+
+    if (deviceProperties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu) score += 1000;
+
+    score += deviceProperties.limits.maxPushConstantsSize;
+    score += deviceProperties.limits.maxImageDimension2D;
+    return score;
+}
+
+bool VulkanApplication::checkDeviceExtensionSupport(const vk::PhysicalDevice &device)
+{
+    DEBUG_FUNCTION
+    auto availableExtensions = device.enumerateDeviceExtensionProperties();
+
+    std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
+    for (const auto &extension: availableExtensions) { requiredExtensions.erase(extension.extensionName); }
+    return requiredExtensions.empty();
 }

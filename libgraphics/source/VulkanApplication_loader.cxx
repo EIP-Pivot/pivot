@@ -114,16 +114,18 @@ void VulkanApplication::pushModelsToGPU()
     logger->info("GPU") << "Loading Models onto the GPU";
     LOGGER_ENDL;
     auto vertexSize = cpuStorage.vertexBuffer.size() * sizeof(Vertex);
-    auto stagingVertex = createBuffer(vertexSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
-    vertexBuffers = createBuffer(vertexSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                                 VMA_MEMORY_USAGE_GPU_ONLY);
+    auto stagingVertex = createBuffer(vertexSize, vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);
+    vertexBuffers =
+        createBuffer(vertexSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
+                     vma::MemoryUsage::eGpuOnly);
     copyBuffer(stagingVertex, cpuStorage.vertexBuffer);
     copyBufferToBuffer(stagingVertex.buffer, vertexBuffers.buffer, vertexSize);
 
     auto indexSize = cpuStorage.indexBuffer.size() * sizeof(uint32_t);
-    auto stagingIndex = createBuffer(indexSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
-    indicesBuffers = createBuffer(indexSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-                                  VMA_MEMORY_USAGE_GPU_ONLY);
+    auto stagingIndex = createBuffer(indexSize, vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);
+    indicesBuffers =
+        createBuffer(indexSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
+                     vma::MemoryUsage::eGpuOnly);
     copyBuffer(stagingIndex, cpuStorage.indexBuffer);
     copyBufferToBuffer(stagingIndex.buffer, indicesBuffers.buffer, indexSize);
 
@@ -149,7 +151,7 @@ void VulkanApplication::pushTexturesToGPU()
         LOGGER_ENDL;
 
         AllocatedBuffer stagingBuffer =
-            createBuffer(texture.size(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
+            createBuffer(texture.size(), vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);
         copyBuffer(stagingBuffer, texture);
 
         mipLevels =
@@ -157,33 +159,30 @@ void VulkanApplication::pushTexturesToGPU()
                                                                 cpuStorage.loadedTexturesSize.at(name).height)))) +
             1;
         AllocatedImage image{};
-        VkImageCreateInfo imageInfo{
-            .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = 0,
-            .imageType = VK_IMAGE_TYPE_2D,
-            .format = VK_FORMAT_R8G8B8A8_SRGB,
+        vk::ImageCreateInfo imageInfo{
+            .imageType = vk::ImageType::e2D,
+            .format = vk::Format::eR8G8B8A8Srgb,
             .extent = cpuStorage.loadedTexturesSize.at(name),
             .mipLevels = mipLevels,
             .arrayLayers = 1,
-            .samples = VK_SAMPLE_COUNT_1_BIT,
-            .tiling = VK_IMAGE_TILING_OPTIMAL,
-            .usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-            .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-            .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+            .samples = vk::SampleCountFlagBits::e1,
+            .tiling = vk::ImageTiling::eOptimal,
+            .usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc |
+                     vk::ImageUsageFlagBits::eSampled,
+            .sharingMode = vk::SharingMode::eExclusive,
+            .initialLayout = vk::ImageLayout::eUndefined,
         };
-        VmaAllocationCreateInfo allocInfo{
-            .usage = VMA_MEMORY_USAGE_GPU_ONLY,
-        };
-        VK_TRY(vmaCreateImage(allocator, &imageInfo, &allocInfo, &image.image, &image.memory, nullptr));
-        auto createInfo = vk_init::populateVkImageViewCreateInfo(image.image, VK_FORMAT_R8G8B8A8_SRGB, mipLevels);
-        VK_TRY(vkCreateImageView(device, &createInfo, nullptr, &image.imageView));
+        vma::AllocationCreateInfo allocInfo;
+        allocInfo.usage = vma::MemoryUsage::eGpuOnly;
+        std::tie(image.image, image.memory) = allocator.createImage(imageInfo, allocInfo);
+        auto createInfo = vk_init::populateVkImageViewCreateInfo(image.image, vk::Format::eR8G8B8A8Srgb, mipLevels);
+        image.imageView = device.createImageView(createInfo);
 
-        transitionImageLayout(image.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED,
-                              VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels);
+        transitionImageLayout(image.image, vk::Format::eR8G8B8A8Srgb, vk::ImageLayout::eUndefined,
+                              vk::ImageLayout::eTransferDstOptimal, mipLevels);
         copyBufferToImage(stagingBuffer.buffer, image.image, cpuStorage.loadedTexturesSize.at(name));
         vmaDestroyBuffer(allocator, stagingBuffer.buffer, stagingBuffer.memory);
-        generateMipmaps(image.image, VK_FORMAT_R8G8B8A8_SRGB, cpuStorage.loadedTexturesSize.at(name), mipLevels);
+        generateMipmaps(image.image, vk::Format::eR8G8B8A8Srgb, cpuStorage.loadedTexturesSize.at(name), mipLevels);
         loadedTextures.insert({name, std::move(image)});
         ++bar;
     }

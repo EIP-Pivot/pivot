@@ -2,9 +2,10 @@
 
 #include <stdint.h>
 #include <vector>
-#include <vulkan/vulkan_core.h>
+#include <vulkan/vulkan.hpp>
 
 #include "pivot/graphics/DeletionQueue.hxx"
+#include "pivot/graphics/Window.hxx"
 
 class Swapchain
 {
@@ -12,21 +13,21 @@ public:
     Swapchain();
     ~Swapchain();
 
-    void init(const VkExtent2D &windowExtent, VkPhysicalDevice &gpu, VkDevice &device, VkSurfaceKHR &surface);
+    void init(Window &win, vk::PhysicalDevice &gpu, vk::Device &device, vk::SurfaceKHR &surface);
     void destroy();
-    void recreate(const VkExtent2D &windowExtent, VkPhysicalDevice &gpu, VkDevice &device, VkSurfaceKHR &surface);
+    void recreate(Window &win, vk::PhysicalDevice &gpu, vk::Device &device, vk::SurfaceKHR &surface);
     uint32_t nbOfImage() const;
 
-    inline const VkSwapchainKHR &getSwapchain() const { return swapChain; }
-    inline float getAspectRatio() const
+    constexpr const vk::SwapchainKHR &getSwapchain() const noexcept { return swapChain; }
+    constexpr float getAspectRatio() const noexcept
     {
         return static_cast<float>(swapChainExtent.width) / static_cast<float>(swapChainExtent.height);
     }
-    inline VkImage &getSwapchainImage(const unsigned index) { return swapChainImages.at(index); }
-    inline VkImageView &getSwapchainImageView(const unsigned index) { return swapChainImageViews.at(index); }
-    inline const VkFormat &getSwapchainFormat() const { return swapChainImageFormat; }
-    inline const VkExtent2D &getSwapchainExtent() const { return swapChainExtent; }
-    inline const VkExtent3D getSwapchainExtent3D(uint32_t depth = 1) const
+    inline vk::Image &getSwapchainImage(const unsigned index) { return swapChainImages.at(index); }
+    inline vk::ImageView &getSwapchainImageView(const unsigned index) { return swapChainImageViews.at(index); }
+    constexpr const vk::Format &getSwapchainFormat() const noexcept { return swapChainImageFormat; }
+    constexpr const vk::Extent2D &getSwapchainExtent() const noexcept { return swapChainExtent; }
+    constexpr const vk::Extent3D getSwapchainExtent3D(uint32_t depth = 1) const noexcept
     {
         return {
             .width = swapChainExtent.width,
@@ -35,18 +36,19 @@ public:
         };
     }
 
+    inline operator bool() const { return swapChain; }
+
 private:
-    void createSwapchain(const VkExtent2D &windowExtent, VkPhysicalDevice &gpu, VkDevice &device,
-                         VkSurfaceKHR &surface);
-    void getImages(VkDevice &device);
-    void createImageViews(VkDevice &device);
+    void createSwapchain(Window &win, vk::PhysicalDevice &gpu, vk::Device &device, vk::SurfaceKHR &surface);
+    void getImages(vk::Device &device);
+    void createImageViews(vk::Device &device);
 
 private:
     DeletionQueue chainDeletionQueue;
-    VkExtent2D swapChainExtent = {.width = 0, .height = 0};
-    VkFormat swapChainImageFormat;
+    vk::Extent2D swapChainExtent;
+    vk::Format swapChainImageFormat;
 
-    VkSwapchainKHR swapChain = VK_NULL_HANDLE;
-    std::vector<VkImage> swapChainImages;
-    std::vector<VkImageView> swapChainImageViews;
+    vk::SwapchainKHR swapChain = VK_NULL_HANDLE;
+    std::vector<vk::Image> swapChainImages;
+    std::vector<vk::ImageView> swapChainImageViews;
 };

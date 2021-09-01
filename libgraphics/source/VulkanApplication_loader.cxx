@@ -1,3 +1,4 @@
+#include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/VulkanApplication.hxx"
 #include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"
@@ -8,6 +9,7 @@
 
 size_t VulkanApplication::loadTexturess(const std::vector<std::filesystem::path> &textures)
 {
+    DEBUG_FUNCTION
     auto &bar = logger->newProgressBar("Textures", textures.size());
     for (const auto &f: textures) {
         ++bar;
@@ -38,6 +40,7 @@ size_t VulkanApplication::loadTexturess(const std::vector<std::filesystem::path>
 
 size_t VulkanApplication::load3DModels(const std::vector<std::filesystem::path> &models)
 {
+    DEBUG_FUNCTION
     std::vector<Vertex> vertexStagingBuffer;
     std::vector<uint32_t> indexStagingBuffer;
     auto &bar = logger->newProgressBar("Models", models.size());
@@ -111,6 +114,7 @@ size_t VulkanApplication::load3DModels(const std::vector<std::filesystem::path> 
 
 void VulkanApplication::pushModelsToGPU()
 {
+    DEBUG_FUNCTION
     logger->info("GPU") << "Loading Models onto the GPU";
     LOGGER_ENDL;
     auto vertexSize = cpuStorage.vertexBuffer.size() * sizeof(Vertex);
@@ -129,8 +133,8 @@ void VulkanApplication::pushModelsToGPU()
     copyBuffer(stagingIndex, cpuStorage.indexBuffer);
     copyBufferToBuffer(stagingIndex.buffer, indicesBuffers.buffer, indexSize);
 
-    vmaDestroyBuffer(allocator, stagingVertex.buffer, stagingVertex.memory);
-    vmaDestroyBuffer(allocator, stagingIndex.buffer, stagingIndex.memory);
+    allocator.destroyBuffer(stagingVertex.buffer, stagingVertex.memory);
+    allocator.destroyBuffer(stagingIndex.buffer, stagingIndex.memory);
 
     // clear CPU storage, as it is not needed anymore
     cpuStorage.vertexBuffer.clear();
@@ -138,13 +142,14 @@ void VulkanApplication::pushModelsToGPU()
     cpuStorage.indexBuffer.clear();
     cpuStorage.indexBuffer.shrink_to_fit();
     mainDeletionQueue.push([&] {
-        vmaDestroyBuffer(allocator, vertexBuffers.buffer, vertexBuffers.memory);
-        vmaDestroyBuffer(allocator, indicesBuffers.buffer, indicesBuffers.memory);
+        allocator.destroyBuffer(vertexBuffers.buffer, vertexBuffers.memory);
+        allocator.destroyBuffer(indicesBuffers.buffer, indicesBuffers.memory);
     });
 }
 
 void VulkanApplication::pushTexturesToGPU()
 {
+    DEBUG_FUNCTION
     auto &bar = logger->newProgressBar("GPU Textures", cpuStorage.loadedTextures.size());
     for (const auto &[name, texture]: cpuStorage.loadedTextures) {
         logger->info("GPU") << "Loading Textures onto the GPU";
@@ -181,15 +186,15 @@ void VulkanApplication::pushTexturesToGPU()
         transitionImageLayout(image.image, vk::Format::eR8G8B8A8Srgb, vk::ImageLayout::eUndefined,
                               vk::ImageLayout::eTransferDstOptimal, mipLevels);
         copyBufferToImage(stagingBuffer.buffer, image.image, cpuStorage.loadedTexturesSize.at(name));
-        vmaDestroyBuffer(allocator, stagingBuffer.buffer, stagingBuffer.memory);
+        allocator.destroyBuffer(stagingBuffer.buffer, stagingBuffer.memory);
         generateMipmaps(image.image, vk::Format::eR8G8B8A8Srgb, cpuStorage.loadedTexturesSize.at(name), mipLevels);
         loadedTextures.insert({name, std::move(image)});
         ++bar;
     }
     mainDeletionQueue.push([&] {
         for (auto &[_, i]: loadedTextures) {
-            vkDestroyImageView(device, i.imageView, nullptr);
-            vmaDestroyImage(allocator, i.image, i.memory);
+            device.destroy(i.imageView);
+            allocator.destroyImage(i.image, i.memory);
         }
     });
     logger->deleteProgressBar(bar);

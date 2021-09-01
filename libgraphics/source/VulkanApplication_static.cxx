@@ -50,12 +50,6 @@ uint32_t VulkanApplication::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT
     return VK_FALSE;
 }
 
-void VulkanApplication::framebufferResizeCallback(GLFWwindow *window, int, int)
-{
-    auto app = reinterpret_cast<VulkanApplication *>(glfwGetWindowUserPointer(window));
-    app->framebufferResized = true;
-}
-
 vk::SampleCountFlagBits VulkanApplication::getMexUsableSampleCount(vk::PhysicalDevice &physical_device)
 {
     vk::PhysicalDeviceProperties physicalDeviceProperties = physical_device.getProperties();

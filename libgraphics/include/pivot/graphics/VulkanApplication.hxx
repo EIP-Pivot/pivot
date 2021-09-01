@@ -80,7 +80,6 @@ private:
     static uint32_t debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
                                   VkDebugUtilsMessageTypeFlagsEXT messageType,
                                   const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *);
-    static void framebufferResizeCallback(GLFWwindow *, int, int);
     static vk::SampleCountFlagBits getMexUsableSampleCount(vk::PhysicalDevice &physical_device);
     static bool isDeviceSuitable(const vk::PhysicalDevice &gpu, const vk::SurfaceKHR &surface);
     static uint32_t rateDeviceSuitability(const vk::PhysicalDevice &device);
@@ -122,7 +121,6 @@ private:
 
 protected:
     Window window;
-    bool framebufferResized = false;
     struct {
         std::unordered_map<std::string, std::vector<std::byte>> loadedTextures;
         std::unordered_map<std::string, vk::Extent3D> loadedTexturesSize;

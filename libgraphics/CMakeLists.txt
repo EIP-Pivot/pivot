@@ -1,12 +1,9 @@
 project(pivot-graphics)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-find_package(Vulkan REQUIRED)
-
 include(shaders/CMakeRule.txt)
 include(FetchContent)
+
+find_package(Vulkan REQUIRED)
 
 option(CLANG_TIME_TRACE "Enable clang profiling." OFF)
 if(CLANG_TIME_TRACE)

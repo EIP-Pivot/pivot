@@ -8,7 +8,6 @@ VulkanApplication::VulkanApplication(): VulkanLoader(), window("Vulkan", 800, 60
 {
     DEBUG_FUNCTION
     window.setUserPointer(this);
-    window.setResizeCallback(framebufferResizeCallback);
 }
 
 VulkanApplication::~VulkanApplication()
@@ -31,8 +30,6 @@ try {
     VK_TRY(device.waitForFences(frame.inFlightFences, VK_TRUE, UINT64_MAX));
     std::tie(result, imageIndex) =
         device.acquireNextImageKHR(swapchain.getSwapchain(), UINT64_MAX, frame.imageAvailableSemaphore);
-
-    if (framebufferResized) return recreateSwapchain();
 
     vk_utils::vk_try(result);
     auto &cmd = commandBuffers[imageIndex];
@@ -78,12 +75,7 @@ try {
     std::vector<gpuObject::UniformBufferObject> sceneData;
     std::transform(sceneInformation.begin(), sceneInformation.end(), std::back_inserter(sceneData),
                    [](const auto &i) { return gpuObject::UniformBufferObject(i.objectInformation); });
-
-    void *objectData = nullptr;
-    allocator.mapMemory(frame.data.uniformBuffers.memory, &objectData);
-    auto *objectSSBI = (gpuObject::UniformBufferObject *)objectData;
-    for (unsigned i = 0; i < sceneData.size(); i++) { objectSSBI[i] = sceneData.at(i); }
-    allocator.unmapMemory(frame.data.uniformBuffers.memory);
+    copyBuffer(frame.data.uniformBuffers, sceneData);
 
     vk::CommandBufferBeginInfo beginInfo{
         .pInheritanceInfo = nullptr,
@@ -120,7 +112,6 @@ try {
 
     vk_utils::vk_try(presentQueue.presentKHR(presentInfo));
     currentFrame = (currentFrame + 1) % MAX_FRAME_FRAME_IN_FLIGHT;
-
 } catch (const vk::OutOfDateKHRError &se) {
     return recreateSwapchain();
 }
@@ -171,6 +162,7 @@ void VulkanApplication::buildIndirectBuffers(const std::vector<DrawBatch> &packe
 
 void VulkanApplication::initVulkanRessources()
 {
+    DEBUG_FUNCTION
     createInstance();
     createDebugMessenger();
     createSurface();
@@ -211,6 +203,7 @@ void VulkanApplication::initVulkanRessources()
 
 void VulkanApplication::postInitialization()
 {
+    DEBUG_FUNCTION
     void *materialData = nullptr;
     for (auto &frame: frames) {
         allocator.mapMemory(frame.data.materialBuffer.memory, &materialData);
@@ -222,6 +215,7 @@ void VulkanApplication::postInitialization()
 
 void VulkanApplication::recreateSwapchain()
 {
+    DEBUG_FUNCTION
     // int width = 0, height = 0;
     // glfwGetFramebufferSize(window.getWindow(), &width, &height);
     // while (width == 0 || height == 0) {
@@ -232,7 +226,7 @@ void VulkanApplication::recreateSwapchain()
     logger->info("Swapchain") << "Recreaing swapchain...";
     LOGGER_ENDL;
 
-    vkDeviceWaitIdle(device);
+    device.waitIdle();
     swapchainDeletionQueue.flush();
 
     swapchain.recreate(window, physical_device, device, surface);
@@ -241,6 +235,7 @@ void VulkanApplication::recreateSwapchain()
     createColorResources();
     createDepthResources();
     createFramebuffers();
+    createUniformBuffers();
     createDescriptorPool();
     createDescriptorSets();
     createTextureDescriptorSets();

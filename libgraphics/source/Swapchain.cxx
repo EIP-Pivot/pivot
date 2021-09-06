@@ -6,7 +6,6 @@
 
 #include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/QueueFamilyIndices.hxx"
-#include "pivot/graphics/SwapChainSupportDetails.hxx"
 #include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
@@ -45,7 +44,7 @@ void Swapchain::createSwapchain(Window &window, vk::PhysicalDevice &gpu, vk::Dev
     DEBUG_FUNCTION
     auto indices = QueueFamilyIndices::findQueueFamilies(gpu, surface);
 
-    auto swapChainSupport = SwapChainSupportDetails::querySwapChainSupport(gpu, surface);
+    auto swapChainSupport = SupportDetails::querySwapChainSupport(gpu, surface);
     auto surfaceFormat = swapChainSupport.chooseSwapSurfaceFormat();
     auto presentMode = swapChainSupport.chooseSwapPresentMode();
     auto extent = swapChainSupport.chooseSwapExtent(window);

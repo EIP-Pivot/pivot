@@ -10,6 +10,18 @@
 class Swapchain
 {
 public:
+    struct SupportDetails {
+        vk::SurfaceCapabilitiesKHR capabilities;
+        std::vector<vk::SurfaceFormatKHR> formats;
+        std::vector<vk::PresentModeKHR> presentModes;
+
+        vk::SurfaceFormatKHR chooseSwapSurfaceFormat() noexcept;
+        vk::PresentModeKHR chooseSwapPresentMode() noexcept;
+        vk::Extent2D chooseSwapExtent(Window &window) noexcept;
+        static SupportDetails querySwapChainSupport(const vk::PhysicalDevice &device, const vk::SurfaceKHR &surface);
+    };
+
+public:
     Swapchain();
     ~Swapchain();
 
@@ -36,7 +48,7 @@ public:
         };
     }
 
-    inline operator bool() const { return swapChain; }
+    inline operator bool() const noexcept { return swapChain; }
 
 private:
     void createSwapchain(Window &win, vk::PhysicalDevice &gpu, vk::Device &device, vk::SurfaceKHR &surface);

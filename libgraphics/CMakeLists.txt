@@ -110,6 +110,7 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/vk_init.cxx
                                    source/Camera.cxx
                                    source/Swapchain.cxx
+                                   source/SwapchainSupportDetails.cxx
                                    source/PipelineBuilder.cxx
                                    source/VulkanLoader.cxx
                                    source/UniformBufferObject.cxx

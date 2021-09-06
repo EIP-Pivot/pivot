@@ -17,7 +17,7 @@ size_t VulkanApplication::loadTexturess(const std::vector<std::filesystem::path>
         LOGGER_ENDL;
 
         int texWidth, texHeight, texChannels;
-        stbi_uc *pixels = stbi_load(reinterpret_cast<const char *>(f.c_str()), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+        stbi_uc *pixels = stbi_load(f.string().c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
         VkDeviceSize imageSize = texWidth * texHeight * 4;
 
         if (!pixels) throw std::runtime_error("failed to load texture image");
@@ -57,7 +57,7 @@ size_t VulkanApplication::load3DModels(const std::vector<std::filesystem::path> 
         std::vector<tinyobj::material_t> materials;
         std::string warn, err;
 
-        tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, reinterpret_cast<const char *>(f.c_str()), nullptr);
+        tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, f.string().c_str(), nullptr);
         if (!warn.empty()) {
             logger->warn("LOADING_OBJ") << warn;
             LOGGER_ENDL;

@@ -59,6 +59,7 @@ if (NOT vma_POPULATED)
     target_include_directories(VulkanMemoryAllocator PUBLIC ${vma_SOURCE_DIR})
     target_compile_definitions(VulkanMemoryAllocator PRIVATE VMA_IMPLEMENTATION VMA_USE_STL_CONTAINERS)
     set_target_properties(VulkanMemoryAllocator PROPERTIES LINKER_LANGUAGE CXX)
+    target_link_libraries(VulkanMemoryAllocator PUBLIC Vulkan::Vulkan)
 endif()
 
 FetchContent_Declare(
@@ -93,7 +94,7 @@ endif()
 FetchContent_Declare(
     logger
     GIT_REPOSITORY https://github.com/zcorniere/logger-cpp.git
-    GIT_TAG v0.4
+    GIT_TAG v0.5
 )
 if (NOT logger_POPULATED)
     message(STATUS "Populating logger")

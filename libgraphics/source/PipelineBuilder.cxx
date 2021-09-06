@@ -1,4 +1,5 @@
 #include "pivot/graphics/PipelineBuilder.hxx"
+#include "pivot/graphics/DebugMacros.hxx"
 #include <Logger.hpp>
 
 vk::Pipeline PipelineBuilder::build(vk::Device &device, vk::RenderPass &pass)

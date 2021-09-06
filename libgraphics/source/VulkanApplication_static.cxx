@@ -10,7 +10,6 @@
 #include "pivot/graphics/Camera.hxx"
 #include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/QueueFamilyIndices.hxx"
-#include "pivot/graphics/SwapChainSupportDetails.hxx"
 #include "pivot/graphics/VulkanApplication.hxx"
 
 static const char *to_string_message_type(VkDebugUtilsMessageTypeFlagsEXT s)
@@ -94,7 +93,7 @@ bool VulkanApplication::isDeviceSuitable(const vk::PhysicalDevice &gpu, const vk
 
     bool swapChainAdequate = false;
     if (extensionsSupported) {
-        auto swapChainSupport = SwapChainSupportDetails::querySwapChainSupport(gpu, surface);
+        auto swapChainSupport = Swapchain::SupportDetails::querySwapChainSupport(gpu, surface);
         swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
     }
     return indices.isComplete() && extensionsSupported && swapChainAdequate && deviceFeatures.samplerAnisotropy &&

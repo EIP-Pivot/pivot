@@ -127,6 +127,7 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE <Logger.hpp> <unordered_map> <
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC
   VULKAN_HPP_NO_CONSTRUCTORS
+  VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
   VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1
 )
 

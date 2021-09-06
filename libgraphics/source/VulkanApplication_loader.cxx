@@ -17,7 +17,7 @@ size_t VulkanApplication::loadTexturess(const std::vector<std::filesystem::path>
         LOGGER_ENDL;
 
         int texWidth, texHeight, texChannels;
-        stbi_uc *pixels = stbi_load(f.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+        stbi_uc *pixels = stbi_load(reinterpret_cast<const char *>(f.c_str()), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
         VkDeviceSize imageSize = texWidth * texHeight * 4;
 
         if (!pixels) throw std::runtime_error("failed to load texture image");
@@ -25,14 +25,14 @@ size_t VulkanApplication::loadTexturess(const std::vector<std::filesystem::path>
         std::vector<std::byte> image(imageSize);
         std::memcpy(image.data(), pixels, imageSize);
         cpuStorage.loadedTexturesSize.insert({
-            f.stem(),
+            f.stem().string(),
             {
                 .width = static_cast<uint32_t>(texWidth),
                 .height = static_cast<uint32_t>(texHeight),
                 .depth = 1,
             },
         });
-        cpuStorage.loadedTextures.insert({f.stem(), std::move(image)});
+        cpuStorage.loadedTextures.insert({f.stem().string(), std::move(image)});
     }
     logger->deleteProgressBar(bar);
     return cpuStorage.loadedTextures.size();
@@ -57,7 +57,7 @@ size_t VulkanApplication::load3DModels(const std::vector<std::filesystem::path> 
         std::vector<tinyobj::material_t> materials;
         std::string warn, err;
 
-        tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, f.c_str(), nullptr);
+        tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, reinterpret_cast<const char *>(f.c_str()), nullptr);
         if (!warn.empty()) {
             logger->warn("LOADING_OBJ") << warn;
             LOGGER_ENDL;
@@ -104,7 +104,7 @@ size_t VulkanApplication::load3DModels(const std::vector<std::filesystem::path> 
         }
         mesh.indicesSize = indexStagingBuffer.size() - mesh.indicesOffset;
         mesh.verticiesSize = vertexStagingBuffer.size() - mesh.verticiesOffset;
-        loadedMeshes[f.stem()] = mesh;
+        loadedMeshes[f.stem().string()] = mesh;
     }
     cpuStorage.vertexBuffer.swap(vertexStagingBuffer);
     cpuStorage.indexBuffer.swap(indexStagingBuffer);

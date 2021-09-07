@@ -1,7 +1,6 @@
 project(pivot-graphics)
 
 include(shaders/CMakeRule.txt)
-include(FetchContent)
 
 find_package(Vulkan REQUIRED)
 
@@ -23,23 +22,6 @@ if (NOT glfw_POPULATED)
     target_compile_definitions(glfw INTERFACE
         GLFW_INCLUDE_NONE
         GLFW_INCLUDE_VULKAN
-    )
-endif()
-
-FetchContent_Declare(
-    glm
-    GIT_REPOSITORY https://github.com/g-truc/glm.git
-    GIT_TAG 06ed280db4e274fa5e1f36d5ea4f7dfd654ff9b0
-)
-if (NOT glm_POPULATED)
-    message(STATUS "Populating glm")
-    FetchContent_Populate(glm)
-    add_subdirectory(${glm_SOURCE_DIR} ${glm_BINARY_DIR})
-    target_compile_definitions(glm INTERFACE
-        GLM_FORCE_INLINE
-        GLM_FORCE_RADIANS
-        GLM_FORCE_DEPTH_ZERO_TO_ONE
-        GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
     )
 endif()
 
@@ -89,20 +71,6 @@ if (NOT tinyobjloader_POPULATED)
     message(STATUS "Populating tinyobjloader")
     FetchContent_Populate(tinyobjloader)
     add_subdirectory(${tinyobjloader_SOURCE_DIR} ${tinyobjloader_BINARY_DIR})
-endif()
-
-FetchContent_Declare(
-    logger
-    GIT_REPOSITORY https://github.com/zcorniere/logger-cpp.git
-    GIT_TAG v0.5
-)
-if (NOT logger_POPULATED)
-    message(STATUS "Populating logger")
-    FetchContent_Populate(logger)
-    add_subdirectory(${logger_SOURCE_DIR} ${logger_BINARY_DIR})
-    target_compile_definitions(logger INTERFACE
-        LOGGER_EXTERN_DECLARATION_PTR
-    )
 endif()
 
 add_library(${PROJECT_NAME} STATIC source/lib.cxx

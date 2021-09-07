@@ -1,4 +1,10 @@
 project(pivot-ecs)
 
-add_library(${PROJECT_NAME} source/lib.cxx)
+include(FetchContent)
+
+add_library(${PROJECT_NAME} source/lib.cxx
+                            source/PhysicsSystem.cxx
+)
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
+
+target_link_libraries(${PROJECT_NAME} PUBLIC glm)

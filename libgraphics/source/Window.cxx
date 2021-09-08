@@ -21,7 +21,7 @@ vk::SurfaceKHR Window::createSurface(const vk::Instance &instance)
     return surface;
 }
 
-void Window::initWindow()
+void Window::initWindow() noexcept
 {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -30,19 +30,10 @@ void Window::initWindow()
     window = glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);
 }
 
-void Window::setKeyCallback(GLFWkeyfun &&f) { glfwSetKeyCallback(window, f); }
-void Window::setCursorPosCallback(GLFWcursorposfun &&f) { glfwSetCursorPosCallback(window, f); }
-void Window::setResizeCallback(void(&&f)(GLFWwindow *, int, int)) { glfwSetFramebufferSizeCallback(window, f); }
-void Window::unsetKeyCallback()
-{
-    glfwSetKeyCallback(window, [](GLFWwindow *, int, int, int, int) {});
-}
-void Window::unsetCursorPosCallback()
-{
-    glfwSetCursorPosCallback(window, [](GLFWwindow *, double, double) {});
-}
-
-void Window::captureCursor(bool capture)
+void Window::setKeyCallback(GLFWkeyfun &&f) noexcept { glfwSetKeyCallback(window, f); }
+void Window::setCursorPosCallback(GLFWcursorposfun &&f) noexcept { glfwSetCursorPosCallback(window, f); }
+void Window::setResizeCallback(GLFWwindowsizefun &&f) noexcept { glfwSetFramebufferSizeCallback(window, f); }
+void Window::captureCursor(bool capture) noexcept
 {
     if (capture) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -51,9 +42,9 @@ void Window::captureCursor(bool capture)
     }
 }
 
-void Window::setUserPointer(void *ptr) { glfwSetWindowUserPointer(window, ptr); }
+void Window::setUserPointer(void *ptr) noexcept { glfwSetWindowUserPointer(window, ptr); }
 
-void Window::setTitle(const std::string &t)
+void Window::setTitle(const std::string &t) noexcept
 {
     windowName = t;
     glfwSetWindowTitle(window, windowName.c_str());

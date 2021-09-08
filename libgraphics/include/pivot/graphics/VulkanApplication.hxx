@@ -111,6 +111,9 @@ private:
     void createTextureDescriptorSets();
     void createCommandPool();
     void createCommandBuffers();
+
+    void createPipelineCache();
+    void createPipelineLayout();
     void createPipeline();
     void createDepthResources();
     void createColorResources();
@@ -171,6 +174,7 @@ protected:
     AllocatedImage depthResources = {};
     AllocatedImage colorImage = {};
 
+    vk::PipelineCache pipelineCache = VK_NULL_HANDLE;
     vk::PipelineLayout pipelineLayout = VK_NULL_HANDLE;
     vk::Pipeline graphicsPipeline = VK_NULL_HANDLE;
 

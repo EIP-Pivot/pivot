@@ -8,7 +8,7 @@ class PipelineBuilder
 public:
     PipelineBuilder() = default;
     ~PipelineBuilder() = default;
-    vk::Pipeline build(vk::Device &, vk::RenderPass &);
+    vk::Pipeline build(vk::Device device, vk::RenderPass renderPass, vk::PipelineCache pipelineCache = VK_NULL_HANDLE);
 
 public:
     std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;

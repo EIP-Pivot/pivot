@@ -2,7 +2,7 @@
 #include "pivot/graphics/DebugMacros.hxx"
 #include <Logger.hpp>
 
-vk::Pipeline PipelineBuilder::build(vk::Device &device, vk::RenderPass &pass)
+vk::Pipeline PipelineBuilder::build(vk::Device device, vk::RenderPass pass, vk::PipelineCache pipelineCache)
 {
     vk::PipelineViewportStateCreateInfo viewportState{
         .viewportCount = 1,
@@ -36,7 +36,7 @@ vk::Pipeline PipelineBuilder::build(vk::Device &device, vk::RenderPass &pass)
 
     vk::Pipeline newPipeline{};
     vk::Result result;
-    std::tie(result, newPipeline) = device.createGraphicsPipeline(VK_NULL_HANDLE, pipelineInfo);
+    std::tie(result, newPipeline) = device.createGraphicsPipeline(pipelineCache, pipelineInfo);
     if (result != vk::Result::eSuccess) {
         logger->err(__PRETTY_FUNCTION__) << "failed to create pipeline" << std::endl;
         return VK_NULL_HANDLE;

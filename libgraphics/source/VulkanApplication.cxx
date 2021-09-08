@@ -77,17 +77,14 @@ try {
                    [](const auto &i) { return gpuObject::UniformBufferObject(i.objectInformation); });
     copyBuffer(frame.data.uniformBuffers, sceneData);
 
-    vk::CommandBufferBeginInfo beginInfo{
-        .pInheritanceInfo = nullptr,
-    };
+    vk::DeviceSize offset = 0;
+    vk::CommandBufferBeginInfo beginInfo;
     VK_TRY(cmd.begin(&beginInfo));
     cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
     cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, frame.data.objectDescriptor, nullptr);
     cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, texturesSet, nullptr);
     cmd.pushConstants<Camera::GPUCameraData>(
         pipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, gpuCamera);
-
-    vk::DeviceSize offset = 0;
     cmd.bindVertexBuffers(0, vertexBuffers.buffer, offset);
     cmd.bindIndexBuffer(indicesBuffers.buffer, 0, vk::IndexType::eUint32);
     cmd.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
@@ -107,9 +104,7 @@ try {
         .swapchainCount = 1,
         .pSwapchains = &(swapchain.getSwapchain()),
         .pImageIndices = &imageIndex,
-        .pResults = nullptr,
     };
-
     vk_utils::vk_try(presentQueue.presentKHR(presentInfo));
     currentFrame = (currentFrame + 1) % MAX_FRAME_FRAME_IN_FLIGHT;
 } catch (const vk::OutOfDateKHRError &se) {
@@ -168,22 +163,24 @@ void VulkanApplication::initVulkanRessources()
     createSurface();
     pickPhysicalDevice();
     createLogicalDevice();
-
-    swapchain.init(window, physical_device, device, surface);
-
     createAllocator();
     createSyncStructure();
     createIndirectBuffer();
-    createRenderPass();
     createDescriptorSetLayout();
     createTextureDescriptorSetLayout();
-    createPipeline();
+    createPipelineCache();
+    createPipelineLayout();
     createCommandPool();
+    createDescriptorPool();
+
+    swapchain.init(window, physical_device, device, surface);
+
+    createUniformBuffers();
+    createRenderPass();
+    createPipeline();
     createDepthResources();
     createColorResources();
     createFramebuffers();
-    createUniformBuffers();
-    createDescriptorPool();
     createDescriptorSets();
 
     this->pushModelsToGPU();
@@ -235,10 +232,6 @@ void VulkanApplication::recreateSwapchain()
     createColorResources();
     createDepthResources();
     createFramebuffers();
-    createUniformBuffers();
-    createDescriptorPool();
-    createDescriptorSets();
-    createTextureDescriptorSets();
     createCommandBuffers();
     logger->info("Swapchain") << "Swapchain recreation complete... { height=" << swapchain.getSwapchainExtent().height
                               << ", width =" << swapchain.getSwapchainExtent().width

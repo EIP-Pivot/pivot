@@ -150,10 +150,10 @@ void VulkanApplication::pushModelsToGPU()
 void VulkanApplication::pushTexturesToGPU()
 {
     DEBUG_FUNCTION
+    logger->info("GPU") << "Loading Textures onto the GPU";
+    LOGGER_ENDL;
     auto &bar = logger->newProgressBar("GPU Textures", cpuStorage.loadedTextures.size());
     for (const auto &[name, texture]: cpuStorage.loadedTextures) {
-        logger->info("GPU") << "Loading Textures onto the GPU";
-        LOGGER_ENDL;
 
         AllocatedBuffer stagingBuffer =
             createBuffer(texture.size(), vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);
@@ -163,7 +163,7 @@ void VulkanApplication::pushTexturesToGPU()
             static_cast<uint32_t>(std::floor(std::log2(std::max(cpuStorage.loadedTexturesSize.at(name).width,
                                                                 cpuStorage.loadedTexturesSize.at(name).height)))) +
             1;
-        AllocatedImage image{};
+        AllocatedImage image;
         vk::ImageCreateInfo imageInfo{
             .imageType = vk::ImageType::e2D,
             .format = vk::Format::eR8G8B8A8Srgb,

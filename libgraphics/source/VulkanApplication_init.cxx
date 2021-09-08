@@ -218,6 +218,7 @@ void VulkanApplication::createRenderPass()
 
     swapchainDeletionQueue.push([&] { device.destroy(renderPass); });
 }
+
 void VulkanApplication::createPipelineCache()
 {
     DEBUG_FUNCTION
@@ -420,7 +421,7 @@ void VulkanApplication::createUniformBuffers()
         f.data.materialBuffer = createBuffer(sizeof(gpuObject::Material) * MAX_MATERIALS,
                                              vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
     }
-    swapchainDeletionQueue.push([&] {
+    mainDeletionQueue.push([&] {
         for (auto &f: frames) {
             allocator.destroyBuffer(f.data.uniformBuffers.buffer, f.data.uniformBuffers.memory);
             allocator.destroyBuffer(f.data.materialBuffer.buffer, f.data.materialBuffer.memory);
@@ -452,7 +453,7 @@ void VulkanApplication::createDescriptorPool()
         },
         {
             .type = vk::DescriptorType::eCombinedImageSampler,
-            .descriptorCount = 100,
+            .descriptorCount = MAX_TEXTURES,
         },
     };
 
@@ -463,7 +464,7 @@ void VulkanApplication::createDescriptorPool()
         .pPoolSizes = poolSize,
     };
     descriptorPool = device.createDescriptorPool(poolInfo);
-    swapchainDeletionQueue.push([&] { device.destroy(descriptorPool); });
+    mainDeletionQueue.push([&] { device.destroy(descriptorPool); });
 }
 
 void VulkanApplication::createDescriptorSets()

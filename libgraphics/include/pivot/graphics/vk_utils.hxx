@@ -23,12 +23,6 @@ concept is_copyable = requires
     std::is_standard_layout_v<T>;
     typename std::vector<T>;
 };
-std::vector<std::byte> readFile(const std::string &filename);
-vk::ShaderModule createShaderModule(const vk::Device &device, const std::vector<std::byte> &code);
-vk::Format findSupportedFormat(vk::PhysicalDevice &gpu, const std::vector<vk::Format> &candidates,
-                               vk::ImageTiling tiling, vk::FormatFeatureFlags features);
-bool hasStencilComponent(vk::Format format);
-uint32_t findMemoryType(vk::PhysicalDevice &physicalDevice, uint32_t typeFilter, vk::MemoryPropertyFlags properties);
 
 void vk_try(vk::Result res);
 void vk_try(VkResult res);
@@ -43,11 +37,17 @@ bool vk_try_mutiple(const vk::Result result, const FailedValue... failedResult)
     }
 }
 
+std::vector<std::byte> readFile(const std::string &filename);
+vk::ShaderModule createShaderModule(const vk::Device &device, const std::vector<std::byte> &code);
+vk::Format findSupportedFormat(vk::PhysicalDevice &gpu, const std::vector<vk::Format> &candidates,
+                               vk::ImageTiling tiling, vk::FormatFeatureFlags features);
+bool hasStencilComponent(vk::Format format) noexcept;
+
 namespace tools
 {
-    const std::string to_string(vk::SampleCountFlagBits count);
-    const std::string to_string(vk::CullModeFlagBits count);
+    const std::string to_string(vk::SampleCountFlagBits count) noexcept;
+    const std::string to_string(vk::CullModeFlagBits count) noexcept;
 
-    std::string physicalDeviceTypeString(vk::PhysicalDeviceType type);
+    std::string physicalDeviceTypeString(vk::PhysicalDeviceType type) noexcept;
 }    // namespace tools
 }    // namespace vk_utils

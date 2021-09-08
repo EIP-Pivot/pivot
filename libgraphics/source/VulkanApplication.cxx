@@ -118,8 +118,8 @@ try {
 
 std::vector<VulkanApplication::DrawBatch> VulkanApplication::buildDrawBatch(std::vector<RenderObject> &object)
 {
-    std::sort(object.begin(), object.end(),
-              [](const auto &first, const auto &second) { return first.meshID == second.meshID; });
+    // std::sort(object.begin(), object.end(),
+    //           [](const auto &first, const auto &second) { return first.meshID == second.meshID; });
 
     std::vector<DrawBatch> packedDraws;
     packedDraws.push_back({
@@ -129,15 +129,15 @@ std::vector<VulkanApplication::DrawBatch> VulkanApplication::buildDrawBatch(std:
     });
 
     for (uint32_t i = 1; i < object.size(); i++) {
-        if (object[i].meshID == packedDraws.back().meshId) {
-            packedDraws.back().count++;
-        } else {
-            packedDraws.push_back({
-                .meshId = object.at(i).meshID,
-                .first = i,
-                .count = 1,
-            });
-        }
+        // if (object[i].meshID == packedDraws.back().meshId) {
+        //     packedDraws.back().count++;
+        // } else {
+        packedDraws.push_back({
+            .meshId = object.at(i).meshID,
+            .first = i,
+            .count = 1,
+        });
+        //}
     }
     return packedDraws;
 }

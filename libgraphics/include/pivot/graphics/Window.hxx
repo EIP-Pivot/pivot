@@ -11,26 +11,26 @@ public:
     Window(Window &) = delete;
     Window(const Window &) = delete;
     ~Window();
-    GLFWwindow *getWindow() { return window; }
-    inline bool shouldClose() const { return glfwWindowShouldClose(window); }
-    inline void pollEvent() { glfwPollEvents(); }
+    constexpr GLFWwindow *getWindow() noexcept { return window; }
+    inline bool shouldClose() const noexcept { return glfwWindowShouldClose(window); }
+    inline void pollEvent() noexcept { glfwPollEvents(); }
     vk::SurfaceKHR createSurface(const vk::Instance &);
     inline bool isKeyPressed(unsigned key) const { return glfwGetKey(this->window, key) == GLFW_PRESS; }
 
-    void setKeyCallback(GLFWkeyfun &&f);
-    void setCursorPosCallback(GLFWcursorposfun &&f);
-    void setResizeCallback(void(&&)(GLFWwindow *, int, int));
+    void setKeyCallback(GLFWkeyfun &&f) noexcept;
+    void setCursorPosCallback(GLFWcursorposfun &&f) noexcept;
+    void setResizeCallback(GLFWwindowsizefun &&f) noexcept;
 
-    void unsetKeyCallback();
-    void unsetCursorPosCallback();
-    void captureCursor(bool);
-    void setUserPointer(void *ptr);
-    void setTitle(const std::string &t);
-    const std::string &getTitle() const { return windowName; }
+    void unsetKeyCallback() noexcept;
+    void unsetCursorPosCallback() noexcept;
+    void captureCursor(bool) noexcept;
+    void setUserPointer(void *ptr) noexcept;
+    void setTitle(const std::string &t) noexcept;
+    constexpr const std::string &getTitle() const noexcept { return windowName; }
 
-    unsigned getWidth() const { return width; }
-    unsigned getHeight() const { return height; }
-    vk::Extent2D getSize() const
+    constexpr unsigned getWidth() const noexcept { return width; }
+    constexpr unsigned getHeight() const noexcept { return height; }
+    constexpr vk::Extent2D getSize() const noexcept
     {
         return {
             .width = width,
@@ -41,7 +41,7 @@ public:
     static std::vector<const char *> getRequiredExtensions();
 
 private:
-    void initWindow();
+    void initWindow() noexcept;
 
 private:
     unsigned width;

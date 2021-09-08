@@ -218,6 +218,26 @@ void VulkanApplication::createRenderPass()
 
     swapchainDeletionQueue.push([&] { device.destroy(renderPass); });
 }
+void VulkanApplication::createPipelineCache()
+{
+    DEBUG_FUNCTION
+    vk::PipelineCacheCreateInfo createInfo;
+    pipelineCache = device.createPipelineCache(createInfo);
+    mainDeletionQueue.push([&] { device.destroy(pipelineCache); });
+}
+
+void VulkanApplication::createPipelineLayout()
+{
+    DEBUG_FUNCTION
+    std::vector<vk::PushConstantRange> pipelinePushConstant = {vk_init::populateVkPushConstantRange(
+        vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, sizeof(Camera::GPUCameraData))};
+
+    std::vector<vk::DescriptorSetLayout> setLayout = {descriptorSetLayout, texturesSetLayout};
+    auto pipelineLayoutCreateInfo = vk_init::populateVkPipelineLayoutCreateInfo(setLayout, pipelinePushConstant);
+    pipelineLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
+    mainDeletionQueue.push([&] { device.destroy(pipelineLayout); });
+}
+
 void VulkanApplication::createPipeline()
 {
     DEBUG_FUNCTION
@@ -226,13 +246,6 @@ void VulkanApplication::createPipeline()
 
     auto vertShaderModule = vk_utils::createShaderModule(device, vertShaderCode);
     auto fragShaderModule = vk_utils::createShaderModule(device, fragShaderCode);
-
-    std::vector<vk::PushConstantRange> pipelinePushConstant = {vk_init::populateVkPushConstantRange(
-        vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, sizeof(Camera::GPUCameraData))};
-
-    std::vector<vk::DescriptorSetLayout> setLayout = {descriptorSetLayout, texturesSetLayout};
-    auto pipelineLayoutCreateInfo = vk_init::populateVkPipelineLayoutCreateInfo(setLayout, pipelinePushConstant);
-    pipelineLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
 
     std::vector<vk::VertexInputBindingDescription> binding = {Vertex::getBindingDescription()};
     std::vector<vk::VertexInputAttributeDescription> attribute = Vertex::getAttributeDescriptons();
@@ -260,14 +273,11 @@ void VulkanApplication::createPipeline()
     builder.rasterizer = vk_init::populateVkPipelineRasterizationStateCreateInfo(vk::PolygonMode::eFill);
     builder.rasterizer.cullMode = vk::CullModeFlagBits::eNone;
     builder.rasterizer.frontFace = vk::FrontFace::eCounterClockwise;
-    graphicsPipeline = builder.build(device, renderPass);
+    graphicsPipeline = builder.build(device, renderPass, pipelineCache);
 
-    vkDestroyShaderModule(device, fragShaderModule, nullptr);
-    vkDestroyShaderModule(device, vertShaderModule, nullptr);
-    swapchainDeletionQueue.push([&] {
-        device.destroy(graphicsPipeline);
-        device.destroy(pipelineLayout);
-    });
+    device.destroy(fragShaderModule);
+    device.destroy(vertShaderModule);
+    swapchainDeletionQueue.push([&] { device.destroy(graphicsPipeline); });
 }
 
 void VulkanApplication::createFramebuffers()

@@ -91,9 +91,10 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
 )
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE <Logger.hpp> <unordered_map> <vector> <pivot/graphics/DeletionQueue.hxx>
-                                                 <glm/glm.hpp> <vk_mem_alloc.hpp>
+                                                  <glm/glm.hpp> <vk_mem_alloc.hpp> <vulkan/vulkan.hpp>
 )
-target_precompile_headers(${PROJECT_NAME} PUBLIC <vulkan/vulkan.hpp> <pivot/graphics/VulkanApplication.hxx>)
+
+target_precompile_headers(${PROJECT_NAME} PUBLIC <pivot/graphics/VulkanApplication.hxx>)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC
   VULKAN_HPP_NO_CONSTRUCTORS

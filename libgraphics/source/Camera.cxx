@@ -15,7 +15,7 @@ Camera::Camera(float posX, float posY, float posZ, float upX, float upY, float u
     updateCameraVectors();
 }
 
-glm::mat4 Camera::getViewMatrix() const { return glm::lookAt(position, position + front, up); }
+glm::mat4 Camera::getViewMatrix() const noexcept { return glm::lookAt(position, position + front, up); }
 
 Camera::GPUCameraData Camera::getGPUCameraData(float fFOV, float fAspectRatio, float fCloseClippingPlane,
                                                float fFarClippingPlane) const
@@ -42,7 +42,7 @@ void Camera::updateCameraVectors()
     up = glm::normalize(glm::cross(right, tmpFront));
 }
 
-void Camera::processKeyboard(Movement direction)
+void Camera::processKeyboard(Movement direction) noexcept
 {
     auto velocity = movementSpeed;
     switch (direction) {

@@ -25,11 +25,11 @@ public:
     Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
            float yaw = Camera::YAW, float pitch = Camera::PITCH);
     Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch);
-    glm::mat4 getViewMatrix() const;
+    glm::mat4 getViewMatrix() const noexcept;
     GPUCameraData getGPUCameraData(float fFOV = 70.f, float fAspectRatio = 1700.f / 900.f,
                                    float fCloseClippingPlane = 0.1,
                                    float fFarClippingPlane = MAX_PROJECTION_LIMIT) const;
-    void processKeyboard(Movement direction);
+    void processKeyboard(Movement direction) noexcept;
     void processMouseMovement(float xoffset, float yoffset, bool bConstrainPitch = true);
 
 protected:

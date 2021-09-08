@@ -16,9 +16,7 @@ if (NOT logger_POPULATED)
     message(STATUS "Populating logger")
     FetchContent_Populate(logger)
     add_subdirectory(${logger_SOURCE_DIR} ${logger_BINARY_DIR})
-    target_compile_definitions(logger INTERFACE
-        LOGGER_EXTERN_DECLARATION_PTR
-    )
+    target_compile_definitions(logger PUBLIC LOGGER_EXTERN_DECLARATION_PTR)
 endif()
 
 FetchContent_Declare(

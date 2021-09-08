@@ -67,7 +67,7 @@ try {
         .clearValueCount = static_cast<uint32_t>(clearValues.size()),
         .pClearValues = clearValues.data(),
     };
-    auto gpuCamera = camera.getGPUCameraData(80.0f, swapchain.getAspectRatio(), 0.1f, 100.0f);
+    auto gpuCamera = camera.getGPUCameraData(80.0f, swapchain.getAspectRatio(), 0.1f);
     auto sceneInformation = scene.getSceneInformations();
     auto drawBatch = buildDrawBatch(sceneInformation);
     buildIndirectBuffers(drawBatch, frame);

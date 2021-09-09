@@ -76,6 +76,7 @@ endif()
 
 add_subdirectory(libecs/)
 add_subdirectory(libgraphics/)
+target_link_libraries(pivot-ecs PUBLIC pivot-graphics)
 
 target_compile_options(pivot-ecs PRIVATE
      $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:

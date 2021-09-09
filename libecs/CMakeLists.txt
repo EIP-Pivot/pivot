@@ -3,6 +3,7 @@ project(pivot-ecs)
 include(FetchContent)
 
 add_library(${PROJECT_NAME} source/PhysicsSystem.cxx
+                            source/ControlSystem.cxx
 )
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 

@@ -9,7 +9,7 @@ extern Coordinator gCoordinator;
 
 void ControlSystem::Init()
 {
-	gCoordinator.AddEventListener(METHOD_LISTENER(Events::Window::INPUT, ControlSystem::InputListener));
+	gCoordinator.AddEventListener(Events::Window::INPUT, std::bind(&ControlSystem::InputListener, this, std::placeholders::_1));
 }
 
 void ControlSystem::Update(float dt)

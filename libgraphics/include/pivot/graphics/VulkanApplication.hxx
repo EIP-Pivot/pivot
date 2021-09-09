@@ -20,11 +20,21 @@
 #include "pivot/graphics/types/RenderObject.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
-#define MAX_OBJECT 1000
-#define MAX_TEXTURES 1000
+#ifndef MAX_OBJECT
+#define MAX_OBJECT 5000
+#endif
 
-#define MAX_COMMANDS 100
+#ifndef MAX_TEXTURES
+#define MAX_TEXTURES 1000
+#endif
+
+#ifndef MAX_COMMANDS
+#define MAX_COMMANDS MAX_OBJECT
+#endif
+
+#ifndef MAX_MATERIALS
 #define MAX_MATERIALS 100
+#endif
 
 const std::vector<const char *> validationLayers = {
     "VK_LAYER_KHRONOS_validation",

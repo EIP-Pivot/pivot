@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pivot/ecs/Core/ComponentArray.hxx"
+#include "pivot/ecs/Core/EcsException.hxx"
 #include "pivot/ecs/Core/types.hxx"
 #include <any>
 #include <memory>
@@ -13,7 +14,8 @@ public:
     {
         const char *typeName = typeid(T).name();
 
-        assert(mComponentTypes.find(typeName) == mComponentTypes.end() && "Registering component type more than once.");
+        if (mComponentTypes.contains(typeName))
+            throw EcsException("Registering component type more than once.");
 
         mComponentTypes.insert({typeName, mNextComponentType});
         mComponentArrays.insert({typeName, std::make_shared<ComponentArray<T>>()});
@@ -25,8 +27,8 @@ public:
     ComponentType GetComponentType()
     {
         const char *typeName = typeid(T).name();
-
-        assert(mComponentTypes.find(typeName) != mComponentTypes.end() && "Component not registered before use.");
+        if (!mComponentTypes.contains(typeName))
+            throw EcsException("Component not registered before use.");
 
         return mComponentTypes[typeName];
     }
@@ -67,8 +69,8 @@ private:
     std::shared_ptr<ComponentArray<T>> GetComponentArray()
     {
         const char *typeName = typeid(T).name();
-
-        assert(mComponentTypes.find(typeName) != mComponentTypes.end() && "Component not registered before use.");
+        if (!mComponentTypes.contains(typeName))
+            throw EcsException("Component not registered before use.");
 
         return std::static_pointer_cast<ComponentArray<T>>(mComponentArrays[typeName]);
     }

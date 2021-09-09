@@ -1,9 +1,9 @@
 #pragma once
 
 #include "pivot/ecs/Core/types.hxx"
+#include "pivot/ecs/Core/EcsException.hxx"
 #include <queue>
 #include <array>
-#include <cassert>
 
 class EntityManager
 {
@@ -15,7 +15,8 @@ public:
 
     Entity CreateEntity()
     {
-        assert(mLivingEntityCount < MAX_ENTITIES && "Too many entities in existence.");
+        if (mLivingEntityCount >= MAX_ENTITIES)
+            throw EcsException("Too many entities in existence.");
 
         Entity id = mAvailableEntities.front();
         mAvailableEntities.pop();
@@ -26,7 +27,8 @@ public:
 
     void DestroyEntity(Entity entity)
     {
-        assert(entity < MAX_ENTITIES && "Entity out of range.");
+        if (entity >= MAX_ENTITIES)
+            throw EcsException("Entity out of range.");
 
         mSignatures[entity].reset();
         mAvailableEntities.push(entity);
@@ -35,14 +37,16 @@ public:
 
     void SetSignature(Entity entity, Signature signature)
     {
-        assert(entity < MAX_ENTITIES && "Entity out of range.");
+        if (entity >= MAX_ENTITIES)
+            throw EcsException("Entity out of range.");
 
         mSignatures[entity] = signature;
     }
 
     Signature GetSignature(Entity entity)
     {
-        assert(entity < MAX_ENTITIES && "Entity out of range.");
+        if (entity >= MAX_ENTITIES)
+            throw EcsException("Entity out of range.");
 
         return mSignatures[entity];
     }

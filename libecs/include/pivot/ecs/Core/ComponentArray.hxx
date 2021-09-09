@@ -1,7 +1,7 @@
 #pragma once
 
 #include "pivot/ecs/Core/types.hxx"
-#include <cassert>
+#include "pivot/ecs/Core/EcsException.hxx"
 #include <array>
 #include <unordered_map>
 
@@ -18,8 +18,8 @@ class ComponentArray : public IComponentArray
 public:
     void InsertData(Entity entity, T component)
     {
-        assert(mEntityToIndexMap.find(entity) == mEntityToIndexMap.end() &&
-               "Component added to same entity more than once.");
+        if (mEntityToIndexMap.contains(entity))
+            throw EcsException("Component added to same entity more than once.");
 
         // Put new entry at end
         size_t newIndex = mSize;
@@ -31,7 +31,8 @@ public:
 
     void RemoveData(Entity entity)
     {
-        assert(mEntityToIndexMap.find(entity) != mEntityToIndexMap.end() && "Removing non-existent component.");
+        if (!mEntityToIndexMap.contains(entity))
+            throw EcsException("Removing non-existent component.");
 
         // Copy element at end into deleted element's place to maintain density
         size_t indexOfRemovedEntity = mEntityToIndexMap[entity];
@@ -51,7 +52,8 @@ public:
 
     T &GetData(Entity entity)
     {
-        assert(mEntityToIndexMap.find(entity) != mEntityToIndexMap.end() && "Retrieving non-existent component.");
+        if (!mEntityToIndexMap.contains(entity))
+            throw EcsException("Retrieving non-existent component.");
 
         return mComponentArray[mEntityToIndexMap[entity]];
     }

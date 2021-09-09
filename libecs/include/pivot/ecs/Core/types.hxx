@@ -23,7 +23,7 @@ using Signature = std::bitset<MAX_COMPONENTS>;
 using EventId = std::uint32_t;
 using ParamId = std::uint32_t;
 
-enum class InputButtons
+enum InputButtons: std::size_t
 {
 	W,
 	A,

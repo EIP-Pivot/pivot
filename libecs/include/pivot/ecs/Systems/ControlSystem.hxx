@@ -3,10 +3,6 @@
 #include "pivot/ecs/Core/System.hxx"
 #include "pivot/ecs/Core/Event.hxx"
 
-
-class Event;
-
-
 class ControlSystem : public System
 {
 public:

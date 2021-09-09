@@ -2,7 +2,7 @@
 
 #include "pivot/ecs/Core/types.hxx"
 #include "pivot/ecs/Core/System.hxx"
-#include <cassert>
+#include "pivot/ecs/Core/EcsException.hxx"
 #include <memory>
 #include <unordered_map>
 
@@ -13,8 +13,8 @@ public:
     std::shared_ptr<T> RegisterSystem()
     {
         const char *typeName = typeid(T).name();
-
-        assert(mSystems.find(typeName) == mSystems.end() && "Registering system more than once.");
+        if (mSystems.contains(typeName))
+            throw EcsException("Registering system more than once.");
 
         auto system = std::make_shared<T>();
         mSystems.insert({typeName, system});
@@ -25,8 +25,8 @@ public:
     void SetSignature(Signature signature)
     {
         const char *typeName = typeid(T).name();
-
-        assert(mSystems.find(typeName) != mSystems.end() && "System used before registered.");
+        if (!mSystems.contains(typeName))
+            throw EcsException("System used before registered.");
 
         mSignatures.insert({typeName, signature});
     }

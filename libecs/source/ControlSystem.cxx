@@ -14,37 +14,44 @@ void ControlSystem::Init()
 
 void ControlSystem::Update(float dt)
 {
-    for (auto& entity : mEntities)
-	{
-		auto& transform = gCoordinator.GetComponent<Transform>(entity);
+    try
+    {
+        for (auto& entity : mEntities)
+        {
+            auto& transform = gCoordinator.GetComponent<Transform>(entity);
+
+            if (button.test(static_cast<std::size_t>(InputButtons::W)))
+            {
+                std::cout << "W" << std::endl;
+                // transform.position.z += (dt * 10.0f);
+            }
+            else if (button.test(static_cast<std::size_t>(InputButtons::S)))
+            {
+                std::cout << "S" << std::endl;
+                // transform.position.z -= (dt * 10.0f);
+            }
 
 
-		if (mButtons == InputButtons::W)
-		{
-            std::cout << "W" << std::endl;
-			// transform.position.z += (dt * 10.0f);
-		}
-		else if (mButtons == InputButtons::S)
-		{
-            std::cout << "S" << std::endl;
-			// transform.position.z -= (dt * 10.0f);
-		}
-
-
-		if (mButtons == InputButtons::A)
-		{
-            std::cout << "A" << std::endl;
-			// transform.position.x += (dt * 10.0f);
-		}
-		else if (mButtons == InputButtons::D)
-		{
-            std::cout << "D" << std::endl;
-			// transform.position.x -= (dt * 10.0f);
-		}
-	}
+            if (button.test(static_cast<std::size_t>(InputButtons::A)))
+            {
+                std::cout << "A" << std::endl;
+                // transform.position.x += (dt * 10.0f);
+            }
+            else if (button.test(static_cast<std::size_t>(InputButtons::D)))
+            {
+                std::cout << "D" << std::endl;
+                // transform.position.x -= (dt * 10.0f);
+            }
+        }
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << std::endl;
+    }
+    
 }
 
 void ControlSystem::InputListener(Event& event)
 {
-	mButtons = event.GetParam<InputButtons>(Events::Window::Input::INPUT);
+	button = event.GetParam<std::bitset<8>>(Events::Window::Input::INPUT);
 }

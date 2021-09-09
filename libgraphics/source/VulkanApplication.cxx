@@ -116,6 +116,7 @@ std::vector<VulkanApplication::DrawBatch> VulkanApplication::buildDrawBatch(std:
     // std::sort(object.begin(), object.end(),
     //           [](const auto &first, const auto &second) { return first.meshID == second.meshID; });
     if (object.empty()) return {};
+    if (object.size() >= MAX_OBJECT) throw TooManyObjectInSceneError();
 
     std::vector<DrawBatch> packedDraws;
     packedDraws.push_back({

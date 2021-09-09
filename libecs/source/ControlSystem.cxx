@@ -1,7 +1,6 @@
 #include "pivot/ecs/Systems/ControlSystem.hxx"
 
-#include "pivot/ecs/Components/Gravity.hxx"
-#include "pivot/ecs/Components/RigidBody.hxx"
+#include "pivot/graphics/Camera.hxx"
 #include "pivot/ecs/Components/Transform.hxx"
 #include "pivot/ecs/Core/Coordinator.hxx"
 
@@ -19,27 +18,39 @@ void ControlSystem::Update(float dt)
         for (auto& entity : mEntities)
         {
             auto& transform = gCoordinator.GetComponent<Transform>(entity);
+            auto& camera = gCoordinator.GetComponent<Camera>(entity);
 
             if (button.test(static_cast<std::size_t>(InputButtons::W)))
             {
-                std::cout << "W" << std::endl;
+                camera.processKeyboard(Camera::FORWARD);
                 // transform.position.z += (dt * 10.0f);
             }
             else if (button.test(static_cast<std::size_t>(InputButtons::S)))
             {
-                std::cout << "S" << std::endl;
+                camera.processKeyboard(Camera::BACKWARD);
                 // transform.position.z -= (dt * 10.0f);
             }
 
 
             if (button.test(static_cast<std::size_t>(InputButtons::A)))
             {
-                std::cout << "A" << std::endl;
+                camera.processKeyboard(Camera::LEFT);
                 // transform.position.x += (dt * 10.0f);
             }
             else if (button.test(static_cast<std::size_t>(InputButtons::D)))
             {
-                std::cout << "D" << std::endl;
+                camera.processKeyboard(Camera::RIGHT);
+                // transform.position.x -= (dt * 10.0f);
+            }
+
+            if (button.test(static_cast<std::size_t>(InputButtons::SPACE)))
+            {
+                camera.processKeyboard(Camera::UP);
+                // transform.position.x += (dt * 10.0f);
+            }
+            else if (button.test(static_cast<std::size_t>(InputButtons::LEFT_SHIFT)))
+            {
+                camera.processKeyboard(Camera::DOWN);
                 // transform.position.x -= (dt * 10.0f);
             }
         }

@@ -19,24 +19,24 @@ void ControlSystem::Update(float dt)
 		auto& transform = gCoordinator.GetComponent<Transform>(entity);
 
 
-		if (mButtons.test(static_cast<std::size_t>(InputButtons::W)))
+		if (mButtons == InputButtons::W)
 		{
             std::cout << "W" << std::endl;
 			// transform.position.z += (dt * 10.0f);
 		}
-		else if (mButtons.test(static_cast<std::size_t>(InputButtons::S)))
+		else if (mButtons == InputButtons::S)
 		{
             std::cout << "S" << std::endl;
 			// transform.position.z -= (dt * 10.0f);
 		}
 
 
-		if (mButtons.test(static_cast<std::size_t>(InputButtons::A)))
+		if (mButtons == InputButtons::A)
 		{
             std::cout << "A" << std::endl;
 			// transform.position.x += (dt * 10.0f);
 		}
-		else if (mButtons.test(static_cast<std::size_t>(InputButtons::D)))
+		else if (mButtons == InputButtons::D)
 		{
             std::cout << "D" << std::endl;
 			// transform.position.x -= (dt * 10.0f);
@@ -46,5 +46,5 @@ void ControlSystem::Update(float dt)
 
 void ControlSystem::InputListener(Event& event)
 {
-	mButtons = event.GetParam<std::bitset<8>>(Events::Window::Input::INPUT);
+	mButtons = event.GetParam<InputButtons>(Events::Window::Input::INPUT);
 }

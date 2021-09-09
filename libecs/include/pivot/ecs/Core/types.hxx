@@ -29,8 +29,8 @@ enum class InputButtons
 	A,
 	S,
 	D,
-	Q,
-	E
+	SPACE,
+	LEFT_SHIFT
 };
 
 namespace Events::Window {

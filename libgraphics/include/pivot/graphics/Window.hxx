@@ -7,7 +7,7 @@
 class Window
 {
 public:
-    Window(std::string, unsigned, unsigned);
+    explicit Window(std::string, unsigned, unsigned);
     Window(Window &) = delete;
     Window(const Window &) = delete;
     ~Window();
@@ -16,6 +16,7 @@ public:
     inline void pollEvent() noexcept { glfwPollEvents(); }
     vk::SurfaceKHR createSurface(const vk::Instance &);
     inline bool isKeyPressed(unsigned key) const { return glfwGetKey(this->window, key) == GLFW_PRESS; }
+    inline bool isKeyReleased(unsigned key) const { return glfwGetKey(this->window, key) == GLFW_RELEASE; }
 
     void setKeyCallback(GLFWkeyfun &&f) noexcept;
     void setCursorPosCallback(GLFWcursorposfun &&f) noexcept;

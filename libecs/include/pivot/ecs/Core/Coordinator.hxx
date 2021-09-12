@@ -10,25 +10,12 @@
 class Coordinator
 {
 public:
-    void Init()
-    {
-        mComponentManager = std::make_unique<ComponentManager>();
-        mEntityManager = std::make_unique<EntityManager>();
-        mEventManager = std::make_unique<EventManager>();
-        mSystemManager = std::make_unique<SystemManager>();
-    }
+    void Init();
 
     // Entity methods
-    Entity CreateEntity() { return mEntityManager->CreateEntity(); }
+    Entity CreateEntity();
 
-    void DestroyEntity(Entity entity)
-    {
-        mEntityManager->DestroyEntity(entity);
-
-        mComponentManager->EntityDestroyed(entity);
-
-        mSystemManager->EntityDestroyed(entity);
-    }
+    void DestroyEntity(Entity entity);
 
     // Component methods
     template <typename T>
@@ -87,14 +74,11 @@ public:
     }
 
     // Event methods
-    void AddEventListener(EventId eventId, std::function<void(Event &)> const &listener)
-    {
-        mEventManager->AddListener(eventId, listener);
-    }
+    void AddEventListener(EventId eventId, std::function<void(Event &)> const &listener);
 
-    void SendEvent(Event &event) { mEventManager->SendEvent(event); }
+    void SendEvent(Event &event);
 
-    void SendEvent(EventId eventId) { mEventManager->SendEvent(eventId); }
+    void SendEvent(EventId eventId);
 
 private:
     std::unique_ptr<ComponentManager> mComponentManager;

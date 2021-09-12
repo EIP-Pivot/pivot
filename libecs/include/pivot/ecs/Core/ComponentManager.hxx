@@ -51,14 +51,7 @@ public:
         return GetComponentArray<T>()->GetData(entity);
     }
 
-    void EntityDestroyed(Entity entity)
-    {
-        for (auto const &pair: mComponentArrays) {
-            auto const &component = pair.second;
-
-            component->EntityDestroyed(entity);
-        }
-    }
+    void EntityDestroyed(Entity entity);
 
 private:
     std::unordered_map<const char *, ComponentType> mComponentTypes{};

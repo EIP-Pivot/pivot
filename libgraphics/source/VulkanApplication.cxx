@@ -74,7 +74,9 @@ try {
 
     std::vector<gpuObject::UniformBufferObject> sceneData;
     std::transform(sceneInformation.begin(), sceneInformation.end(), std::back_inserter(sceneData),
-                   [](const auto &i) { return gpuObject::UniformBufferObject(i.objectInformation); });
+                   [this](const auto &i) {
+                       return gpuObject::UniformBufferObject(i.objectInformation, loadedTextures, materials);
+                   });
     copyBuffer(frame.data.uniformBuffers, sceneData);
 
     vk::DeviceSize offset = 0;
@@ -192,24 +194,23 @@ void VulkanApplication::initVulkanRessources()
     createTextureDescriptorSets();
     createCommandBuffers();
 
-    materials.push_back({
+    materials["white"] = {
         .ambientColor = {1.0f, 1.0f, 1.0f, 1.0f},
         .diffuse = {1.0f, 1.0f, 1.0f, 1.0f},
         .specular = {1.0f, 1.0f, 1.0f, 1.0f},
-    });
+    };
     postInitialization();
 }
 
 void VulkanApplication::postInitialization()
 {
     DEBUG_FUNCTION
-    void *materialData = nullptr;
-    for (auto &frame: frames) {
-        allocator.mapMemory(frame.data.materialBuffer.memory, &materialData);
-        auto *objectSSBI = (gpuObject::Material *)materialData;
-        for (unsigned i = 0; i < materials.size(); i++) { objectSSBI[i] = materials.at(i); }
-        allocator.unmapMemory(frame.data.materialBuffer.memory);
-    }
+
+    std::vector<gpuObject::Material> materialStor;
+    std::transform(materials.begin(), materials.end(), std::back_inserter(materialStor),
+                   [this](const auto &i) { return i.second; });
+
+    for (auto &frame: frames) { copyBuffer(frame.data.materialBuffer, materialStor); }
 }
 
 void VulkanApplication::recreateSwapchain()

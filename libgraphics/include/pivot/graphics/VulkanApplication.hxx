@@ -18,6 +18,7 @@
 #include "pivot/graphics/types/Material.hxx"
 #include "pivot/graphics/types/Mesh.hxx"
 #include "pivot/graphics/types/RenderObject.hxx"
+#include "pivot/graphics/types/vk_types.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
 #ifndef MAX_OBJECT
@@ -140,9 +141,9 @@ protected:
         std::vector<Vertex> vertexBuffer;
         std::vector<uint32_t> indexBuffer;
     } cpuStorage;
-    std::vector<gpuObject::Material> materials;
-    std::unordered_map<std::string, GPUMesh> loadedMeshes;
-    std::unordered_map<std::string, AllocatedImage> loadedTextures;
+    MaterialStorage materials;
+    MeshStorage loadedMeshes;
+    ImageStorage loadedTextures;
 
     uint32_t mipLevels = 0;
     vk::SampleCountFlagBits maxMsaaSample = vk::SampleCountFlagBits::e1;

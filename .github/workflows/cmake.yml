@@ -21,7 +21,7 @@ jobs:
           wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
           sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.2.182-focal.list https://packages.lunarg.com/vulkan/1.2.182/lunarg-vulkan-1.2.182-focal.list
           sudo apt update
-          sudo apt install vulkan-sdk libpthread-stubs0-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev xorg-dev
+          sudo apt install vulkan-sdk libpthread-stubs0-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev xorg-dev doxygen
 
       - uses: actions/checkout@v2
         with:
@@ -34,3 +34,11 @@ jobs:
 
       - name: Build lib
         run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}}
+
+      - name: Build doc
+        run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -- doc
+      - uses: actions/upload-artifact@v2
+        with:
+          name: doc
+          path: ${{github.workspace}}/build/html
+          retention-days: 7

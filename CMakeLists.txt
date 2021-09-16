@@ -39,6 +39,21 @@ if (NOT glm_POPULATED)
     )
 endif()
 
+option(BUILD_DOCUMENTATION "Build the HTML documentation" ON)
+if (BUILD_DOCUMENTATION)
+    find_package(Doxygen)
+    if (DOXYGEN_FOUND)
+        set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
+        doxygen_add_docs(doc
+            libgraphics/include
+            libecs/include
+            README.md)
+    else()
+        message(SEND_ERROR "Doxygen needs to be installed to build the documentation")
+    endif()
+endif()
+
+
 add_subdirectory(libecs/)
 add_subdirectory(libgraphics/)
 

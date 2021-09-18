@@ -13,7 +13,7 @@ endif()
 FetchContent_Declare(
     glfw
     GIT_REPOSITORY https://github.com/glfw/glfw.git
-    GIT_TAG 201400b974b63eb7f23eb7d8563589df9c699d7c
+    GIT_TAG 814b7929c5add4b0541ccad26fb81f28b71dc4d8
 )
 if (NOT glfw_POPULATED)
     message(STATUS "Populating glfw")
@@ -47,7 +47,7 @@ endif()
 FetchContent_Declare(
     stb
     GIT_REPOSITORY https://github.com/nothings/stb.git
-    GIT_TAG 3a1174060a7dd4eb652d4e6854bc4cd98c159200
+    GIT_TAG af1a5bc352164740c1cc1354942b1c6b72eacb8a
 )
 if (NOT stb_POPULATED)
     message(STATUS "Populating stb")
@@ -65,7 +65,7 @@ endif()
 FetchContent_Declare(
     tinyobjloader
     GIT_REPOSITORY https://github.com/tinyobjloader/tinyobjloader.git
-    GIT_TAG 51908fb967baad5b98973796b32c57989915d910
+    GIT_TAG 95fe4ef41de28ce6b0aef00bfdd7b788641a15a6
 )
 if (NOT tinyobjloader_POPULATED)
     message(STATUS "Populating tinyobjloader")

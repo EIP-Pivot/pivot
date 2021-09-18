@@ -10,7 +10,7 @@
 size_t VulkanApplication::loadTexturess(const std::vector<std::filesystem::path> &textures)
 {
     DEBUG_FUNCTION
-    auto &bar = logger->newProgressBar("Textures", textures.size());
+    auto bar = logger->newProgressBar("Textures", textures.size());
     for (const auto &f: textures) {
         ++bar;
         logger->info("LOADING") << "Loading texture: " << f;
@@ -43,7 +43,7 @@ size_t VulkanApplication::load3DModels(const std::vector<std::filesystem::path> 
     DEBUG_FUNCTION
     std::vector<Vertex> vertexStagingBuffer;
     std::vector<uint32_t> indexStagingBuffer;
-    auto &bar = logger->newProgressBar("Models", models.size());
+    auto bar = logger->newProgressBar("Models", models.size());
     for (const auto &f: models) {
         logger->info("LOADING") << "Loading object: " << f;
         LOGGER_ENDL;
@@ -152,7 +152,7 @@ void VulkanApplication::pushTexturesToGPU()
     DEBUG_FUNCTION
     logger->info("GPU") << "Loading Textures onto the GPU";
     LOGGER_ENDL;
-    auto &bar = logger->newProgressBar("GPU Textures", cpuStorage.loadedTextures.size());
+    auto bar = logger->newProgressBar("GPU Textures", cpuStorage.loadedTextures.size());
     for (const auto &[name, texture]: cpuStorage.loadedTextures) {
 
         AllocatedBuffer stagingBuffer =

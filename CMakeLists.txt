@@ -10,7 +10,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 FetchContent_Declare(
     logger
     GIT_REPOSITORY https://github.com/zcorniere/logger-cpp.git
-    GIT_TAG v0.5.1
+    GIT_TAG v0.6
 )
 if (NOT logger_POPULATED)
     message(STATUS "Populating logger")
@@ -22,12 +22,15 @@ endif()
 FetchContent_Declare(
     glm
     GIT_REPOSITORY https://github.com/g-truc/glm.git
-    GIT_TAG 06ed280db4e274fa5e1f36d5ea4f7dfd654ff9b0
+    GIT_TAG 6ad79aae3eb5bf809c30bf1168171e9e55857e45
 )
 if (NOT glm_POPULATED)
     message(STATUS "Populating glm")
     FetchContent_Populate(glm)
     add_subdirectory(${glm_SOURCE_DIR} ${glm_BINARY_DIR})
+    set(GLFW_BUILD_DOCS OFF)
+    set(GLFW_BUILD_TESTS OFF)
+    set(GLFW_BUILD_EXAMPLES OFF)
     target_compile_definitions(glm INTERFACE
         GLM_FORCE_INLINE
         GLM_FORCE_RADIANS

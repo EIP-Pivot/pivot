@@ -7,7 +7,7 @@
 #include <stb_image.h>
 #include <tiny_obj_loader.h>
 
-size_t VulkanApplication::loadTexturess(const std::vector<std::filesystem::path> &textures)
+size_t VulkanApplication::loadTextures(const std::vector<std::filesystem::path> &textures)
 {
     DEBUG_FUNCTION
     auto bar = logger->newProgressBar("Textures", textures.size());

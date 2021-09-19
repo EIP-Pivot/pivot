@@ -3,7 +3,8 @@
 #include <deque>
 #include <functional>
 
-class DeletionQueue {
+class DeletionQueue
+{
 public:
     inline void push(std::function<void()> &&function) { deletor.push_back(function); }
 

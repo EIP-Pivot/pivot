@@ -7,7 +7,7 @@
 
 /// @class I3DScene
 ///
-/// A interface representing the 3D scene to be rendered by the engine
+/// @brief A interface representing the 3D scene to be rendered by the engine
 class I3DScene
 {
 public:

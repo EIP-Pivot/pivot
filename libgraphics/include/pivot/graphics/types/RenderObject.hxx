@@ -5,7 +5,7 @@
 
 /// @class RenderObject
 ///
-/// Structure representing a 3D object
+/// @brief Structure representing a 3D object
 struct RenderObject {
     /// Id of the mesh to use. The id is the stem of the file
     std::string meshID;

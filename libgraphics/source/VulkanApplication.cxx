@@ -78,7 +78,7 @@ try {
                    [this](const auto &i) {
                        return gpuObject::UniformBufferObject(i.objectInformation, loadedTextures, materials);
                    });
-    copyBuffer(frame.data.uniformBuffers, sceneData);
+    copyBuffer(frame.data.uniformBuffer, sceneData);
 
     vk::DeviceSize offset = 0;
     vk::CommandBufferBeginInfo beginInfo;

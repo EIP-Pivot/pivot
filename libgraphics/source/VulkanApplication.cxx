@@ -6,8 +6,9 @@
 
 VulkanApplication::VulkanApplication(): VulkanLoader(), window("Vulkan", 800, 600)
 {
-    DEBUG_FUNCTION
-    window.setUserPointer(this);
+    DEBUG_FUNCTION window.setKeyEventCallback(
+        Window::Key::ESCAPE,
+        [](Window &window, const Window::Key key, const Window::KeyAction action) { window.shouldClose(true); });
 }
 
 VulkanApplication::~VulkanApplication()

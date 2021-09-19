@@ -26,13 +26,7 @@ vk::Extent2D Swapchain::SupportDetails::chooseSwapExtent(Window &window) noexcep
     if (capabilities.currentExtent.width != UINT32_MAX) {
         return capabilities.currentExtent;
     } else {
-        int width, height;
-        glfwGetFramebufferSize(window.getWindow(), &width, &height);
-
-        vk::Extent2D actualExtent{
-            .width = static_cast<uint32_t>(width),
-            .height = static_cast<uint32_t>(height),
-        };
+        auto actualExtent = window.getSize();
 
         actualExtent.width =
             std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);

@@ -6,7 +6,12 @@
 #include <string>
 
 /// @class ObjectInformation
+///
+/// @brief Hold the information of the 3D object, on the CPU-side
 struct ObjectInformation {
+    /// @struct Transform
+    ///
+    /// @brief Contain the position, rotation and scale of the 3D object
     struct Transform {
         /// The object position in 3D space
         glm::vec3 translation;
@@ -23,17 +28,38 @@ struct ObjectInformation {
 
 namespace gpuObject
 {
+/// @struct Transform
+///
+/// @brief Hold the model matrices
 struct Transform {
+    /// Constructor from the CPU-side transform
+    ///
+    /// @param cpuTransform The CPU side of the model transformation
     Transform(const ObjectInformation::Transform &cpuTransform);
+    /// The translation matrix
     glm::mat4 translation;
+    /// The rotation matrix
     glm::mat4 rotation;
+    /// The scale matrix
     glm::mat4 scale;
 };
 
+/// @struct UniformBufferObject
+///
+/// @brief Hold all the information of the 3D object
 struct UniformBufferObject {
-    UniformBufferObject(const ObjectInformation &info, const ImageStorage &stor, const MaterialStorage &mat);
+    /// Constructor from the CPU-side object information
+    ///
+    /// @param info The CPU object information
+    /// @param imageStor The texture storage, used to resolve the name of the texture
+    /// @param materialStor The material storage, used to resolve material name
+    UniformBufferObject(const ObjectInformation &info, const ImageStorage &imageStor,
+                        const MaterialStorage &materialStor);
+    /// The GPU transformation matrices
     Transform transform;
+    /// The index of the texture in the buffer
     alignas(16) uint32_t textureIndex = 0;
+    /// The index of the material in the buffer
     uint32_t materialIndex = 0;
 };
 }    // namespace gpuObject

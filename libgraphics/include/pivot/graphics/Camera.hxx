@@ -6,9 +6,15 @@
 #define MAX_PROJECTION_LIMIT 100.0f
 #endif
 
+/// @class Camera
+///
+/// @brief Represent a Camera in 3D space
 class Camera
 {
 public:
+    /// @struct GPUCameraData
+    ///
+    /// @brief Hold the camera data, ready to be send to the GPU
     struct GPUCameraData {
         glm::vec4 position;
         glm::mat4 viewproj;

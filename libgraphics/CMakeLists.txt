@@ -55,11 +55,11 @@ if (NOT stb_POPULATED)
     add_library(stb STATIC ${stb_SOURCE_DIR}/stb_image.h)
     set_source_files_properties(
         ${stb_SOURCE_DIR}/stb_image.h PROPERTIES
-        LANGUAGE C
+        LANGUAGE CXX
     )
     target_compile_definitions(stb PRIVATE STB_IMAGE_IMPLEMENTATION)
     target_include_directories(stb PUBLIC ${stb_SOURCE_DIR})
-    set_target_properties(stb PROPERTIES LINKER_LANGUAGE C)
+    set_target_properties(stb PROPERTIES LINKER_LANGUAGE CXX)
 endif()
 
 FetchContent_Declare(
@@ -71,6 +71,7 @@ if (NOT tinyobjloader_POPULATED)
     message(STATUS "Populating tinyobjloader")
     FetchContent_Populate(tinyobjloader)
     add_subdirectory(${tinyobjloader_SOURCE_DIR} ${tinyobjloader_BINARY_DIR})
+    set(TINYOBJLOADER_USE_DOUBLE ON)
 endif()
 
 add_library(${PROJECT_NAME} STATIC source/lib.cxx
@@ -90,9 +91,7 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/VulkanApplication_loader.cxx
 )
 
-target_precompile_headers(${PROJECT_NAME} PRIVATE <Logger.hpp> <unordered_map> <vector> <pivot/graphics/DeletionQueue.hxx>
-                                                  <glm/glm.hpp> <vk_mem_alloc.hpp> <vulkan/vulkan.hpp>
-)
+target_precompile_headers(${PROJECT_NAME} PRIVATE <Logger.hpp> <glm/glm.hpp> <vulkan/vulkan.hpp>)
 
 target_precompile_headers(${PROJECT_NAME} PUBLIC <pivot/graphics/VulkanApplication.hxx>)
 

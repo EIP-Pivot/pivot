@@ -11,6 +11,9 @@ Window::~Window()
     glfwTerminate();
 }
 
+bool Window::shouldClose() const noexcept { return glfwWindowShouldClose(window); }
+void Window::shouldClose(bool bClose) const noexcept { glfwSetWindowShouldClose(window, bClose); }
+
 vk::SurfaceKHR Window::createSurface(const vk::Instance &instance)
 {
     DEBUG_FUNCTION
@@ -21,22 +24,13 @@ vk::SurfaceKHR Window::createSurface(const vk::Instance &instance)
     return surface;
 }
 
+void Window::setKeyEventCallback(Window::Key key, Window::KeyEvent event) { keyEventMap.insert({key, event}); }
+void Window::setMouseMovementCallback(Window::MouseEvent event) { mouseCallback = event; }
+
 void Window::setTitle(const std::string &t) noexcept
 {
     windowName = t;
     glfwSetWindowTitle(window, windowName.c_str());
-}
-
-void Window::initWindow() noexcept
-{
-    glfwInit();
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-
-    window = glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);
-    this->setUserPointer(this);
-    this->setKeyCallback(keyboard_callback);
-    this->setCursorPosCallback(cursor_callback);
 }
 
 void Window::captureCursor(bool capture) noexcept
@@ -46,6 +40,27 @@ void Window::captureCursor(bool capture) noexcept
     } else {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     }
+}
+
+int Window::getWidth() const noexcept
+{
+    updateSize();
+    return width;
+}
+
+int Window::getHeight() const noexcept
+{
+    updateSize();
+    return height;
+}
+
+vk::Extent2D Window::getSize() const noexcept
+{
+    updateSize();
+    return {
+        .width = static_cast<uint32_t>(width),
+        .height = static_cast<uint32_t>(height),
+    };
 }
 
 bool Window::captureCursor() noexcept { return glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED; }
@@ -65,6 +80,20 @@ void Window::setCursorPosCallback(GLFWcursorposfun &&f) noexcept { glfwSetCursor
 void Window::setResizeCallback(GLFWwindowsizefun &&f) noexcept { glfwSetFramebufferSizeCallback(window, f); }
 
 void Window::setUserPointer(void *ptr) noexcept { glfwSetWindowUserPointer(window, ptr); }
+
+void Window::initWindow() noexcept
+{
+    glfwInit();
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+    window = glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);
+    this->setUserPointer(this);
+    this->setKeyCallback(keyboard_callback);
+    this->setCursorPosCallback(cursor_callback);
+}
+
+void Window::updateSize() const noexcept { glfwGetFramebufferSize(window, &width, &height); };
 
 void cursor_callback(GLFWwindow *win, double xpos, double ypos)
 {

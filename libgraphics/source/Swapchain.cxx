@@ -6,10 +6,8 @@
 
 #include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/QueueFamilyIndices.hxx"
+#include "pivot/graphics/Window.hxx"
 #include "pivot/graphics/vk_init.hxx"
-#include "pivot/graphics/vk_utils.hxx"
-
-class Window;
 
 Swapchain::Swapchain() {}
 

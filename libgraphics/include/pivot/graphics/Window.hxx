@@ -64,36 +64,21 @@ public:
     Window(const Window &) = delete;
     ~Window();
     constexpr GLFWwindow *getWindow() noexcept { return window; }
-    inline bool shouldClose() const noexcept { return glfwWindowShouldClose(window); }
-    inline void shouldClose(bool bClose) const noexcept { glfwSetWindowShouldClose(window, bClose); }
+    bool shouldClose() const noexcept;
+    void shouldClose(bool bClose) const noexcept;
     inline void pollEvent() noexcept { glfwPollEvents(); }
     vk::SurfaceKHR createSurface(const vk::Instance &);
     inline bool isKeyPressed(unsigned key) const { return glfwGetKey(this->window, key) == GLFW_PRESS; }
     inline bool isKeyReleased(unsigned key) const { return glfwGetKey(this->window, key) == GLFW_RELEASE; }
-    void setKeyEventCallback(Key key, KeyEvent event = {}) { keyEventMap.insert({key, event}); }
-    void setMouseMovementCallback(MouseEvent event = {}) { mouseCallback = event; }
+    void setKeyEventCallback(Key key, KeyEvent event = {});
+    void setMouseMovementCallback(MouseEvent event = {});
 
     void setTitle(const std::string &t) noexcept;
     constexpr const std::string &getTitle() const noexcept { return windowName; }
 
-    inline int getWidth() const noexcept
-    {
-        updateSize();
-        return width;
-    }
-    inline int getHeight() const noexcept
-    {
-        updateSize();
-        return height;
-    }
-    inline vk::Extent2D getSize() const noexcept
-    {
-        updateSize();
-        return {
-            .width = static_cast<uint32_t>(width),
-            .height = static_cast<uint32_t>(height),
-        };
-    }
+    int getWidth() const noexcept;
+    int getHeight() const noexcept;
+    vk::Extent2D getSize() const noexcept;
 
     void captureCursor(bool) noexcept;
     bool captureCursor() noexcept;
@@ -106,7 +91,7 @@ private:
     void setResizeCallback(GLFWwindowsizefun &&f) noexcept;
     void setUserPointer(void *ptr) noexcept;
     void initWindow() noexcept;
-    inline void updateSize() const noexcept { glfwGetFramebufferSize(window, &width, &height); };
+    void updateSize() const noexcept;
 
     friend void cursor_callback(GLFWwindow *win, double xpos, double ypos);
     friend void keyboard_callback(GLFWwindow *win, int key, int, int action, int);

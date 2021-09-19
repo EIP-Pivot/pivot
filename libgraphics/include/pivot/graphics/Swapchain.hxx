@@ -5,7 +5,8 @@
 #include <vulkan/vulkan.hpp>
 
 #include "pivot/graphics/DeletionQueue.hxx"
-#include "pivot/graphics/Window.hxx"
+
+class Window;
 
 class Swapchain
 {

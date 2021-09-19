@@ -8,9 +8,15 @@
 
 class Window;
 
+/// @class Swapchain
+///
+/// @brief Utility class to ease the creation of Vulkan swapchains
 class Swapchain
 {
 public:
+    /// @struct SupportDetails
+    ///
+    /// @brief Helper class to gather all information required for swapchain creation
     struct SupportDetails {
         vk::SurfaceCapabilitiesKHR capabilities;
         std::vector<vk::SurfaceFormatKHR> formats;

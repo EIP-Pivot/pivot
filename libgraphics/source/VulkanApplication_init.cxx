@@ -416,14 +416,14 @@ void VulkanApplication::createUniformBuffers()
 {
     DEBUG_FUNCTION
     for (auto &f: frames) {
-        f.data.uniformBuffers = createBuffer(sizeof(gpuObject::UniformBufferObject) * MAX_OBJECT,
-                                             vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
+        f.data.uniformBuffer = createBuffer(sizeof(gpuObject::UniformBufferObject) * MAX_OBJECT,
+                                            vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
         f.data.materialBuffer = createBuffer(sizeof(gpuObject::Material) * MAX_MATERIALS,
                                              vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
     }
     mainDeletionQueue.push([&] {
         for (auto &f: frames) {
-            allocator.destroyBuffer(f.data.uniformBuffers.buffer, f.data.uniformBuffers.memory);
+            allocator.destroyBuffer(f.data.uniformBuffer.buffer, f.data.uniformBuffer.memory);
             allocator.destroyBuffer(f.data.materialBuffer.buffer, f.data.materialBuffer.memory);
         }
     });
@@ -480,7 +480,7 @@ void VulkanApplication::createDescriptorSets()
         f.data.objectDescriptor = device.allocateDescriptorSets(allocInfo).front();
 
         vk::DescriptorBufferInfo bufferInfo{
-            .buffer = f.data.uniformBuffers.buffer,
+            .buffer = f.data.uniformBuffer.buffer,
             .offset = 0,
             .range = sizeof(gpuObject::UniformBufferObject) * MAX_OBJECT,
         };

@@ -166,7 +166,7 @@ void VulkanApplication::generateMipmaps(vk::Image &image, vk::Format imageFormat
     DEBUG_FUNCTION
     vk::FormatProperties formatProperties = physical_device.getFormatProperties(imageFormat);
     if (!(formatProperties.optimalTilingFeatures & vk::FormatFeatureFlagBits::eSampledImageFilterLinear)) {
-        throw std::runtime_error("texture image format does not support linear blitting!");
+        throw std::runtime_error("texture image format does not support linear tilting!");
     }
 
     immediateCommand([&](vk::CommandBuffer &cmd) {

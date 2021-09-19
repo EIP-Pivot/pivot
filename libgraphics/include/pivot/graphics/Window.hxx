@@ -63,7 +63,6 @@ public:
     Window(Window &) = delete;
     Window(const Window &) = delete;
     ~Window();
-    constexpr GLFWwindow *getWindow() noexcept { return window; }
     bool shouldClose() const noexcept;
     void shouldClose(bool bClose) const noexcept;
     inline void pollEvent() noexcept { glfwPollEvents(); }

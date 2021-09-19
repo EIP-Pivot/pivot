@@ -22,7 +22,7 @@ VulkanApplication::~VulkanApplication()
 
 void VulkanApplication::init() { initVulkanRessources(); }
 
-void VulkanApplication::draw(const I3DScene &scene, const Camera &camera, float fElapsedTime)
+void VulkanApplication::draw(const I3DScene &scene, const Camera &camera)
 try {
     auto &frame = frames[currentFrame];
     uint32_t imageIndex;

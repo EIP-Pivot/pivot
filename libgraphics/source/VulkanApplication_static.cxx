@@ -65,7 +65,7 @@ vk::SampleCountFlagBits VulkanApplication::getMexUsableSampleCount(vk::PhysicalD
     return vk::SampleCountFlagBits::e1;
 }
 
-bool VulkanApplication::checkValiationLayerSupport()
+bool VulkanApplication::checkValidationLayerSupport()
 {
     auto availableLayers = vk::enumerateInstanceLayerProperties();
 

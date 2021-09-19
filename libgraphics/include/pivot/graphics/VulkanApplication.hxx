@@ -47,9 +47,18 @@ const std::vector<const char *> deviceExtensions = {
 
 constexpr uint8_t MAX_FRAME_FRAME_IN_FLIGHT = 3;
 
+/// @class VulkanApplication
+/// @brief Main class of the graphics engine
+///
+/// To use it, you need to first load the textures and the 3D models using the appropriate methods
+///
+/// Then you will call the init() method, to initialise the Vulkan ressources
+///
+/// You can now call the draw() method when you are ready to render a new frame
+
 class VulkanApplication : public VulkanLoader
 {
-public:
+private:
 #ifdef NDEBUG
     const bool bEnableValidationLayers = false;
 #else
@@ -62,14 +71,35 @@ public:
     };
 
 public:
+    /// Default constructor
     VulkanApplication();
+    /// Default destructor
     ~VulkanApplication();
 
+    /// @brief Initialise the Vulkan ressources
+    ///
+    /// @throw VulkanException if something went awry
     void init();
-    void draw(const I3DScene &scene, const Camera &camera, float fElapsedTime);
 
-    size_t load3DModels(const std::vector<std::filesystem::path> &);
-    size_t loadTexturess(const std::vector<std::filesystem::path> &);
+    /// @brief draw the next frame
+    ///
+    /// @arg scene The 3D scene to draw
+    /// @arg camera The information about the camera
+    ///
+    /// You must have already loaded your models and texture !
+    void draw(const I3DScene &scene, const Camera &camera);
+
+    /// @brief load the 3D models into CPU memory
+    ///
+    /// @arg paths the path for all individual file to load
+    /// @return the number of file successfully loaded
+    size_t load3DModels(const std::vector<std::filesystem::path> &paths);
+
+    /// @brief load the Textures into CPU memory
+    ///
+    /// @arg paths the path for all individual file to load
+    /// @return the number of file successfully loaded
+    size_t loadTextures(const std::vector<std::filesystem::path> &);
 
 private:
     void pushModelsToGPU();
@@ -87,7 +117,7 @@ private:
                                vk::ImageLayout newLayout, uint32_t mipLevels = 1);
     void generateMipmaps(vk::Image &image, vk::Format imageFormat, vk::Extent3D size, uint32_t mipLevel);
 
-    static bool checkValiationLayerSupport();
+    static bool checkValidationLayerSupport();
     static uint32_t debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
                                   VkDebugUtilsMessageTypeFlagsEXT messageType,
                                   const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *);
@@ -133,7 +163,7 @@ private:
     void createTextureSampler();
     void createFramebuffers();
 
-protected:
+private:
     Window window;
     struct {
         std::unordered_map<std::string, std::vector<std::byte>> loadedTextures;

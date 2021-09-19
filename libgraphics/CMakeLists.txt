@@ -106,6 +106,7 @@ add_shader(${PROJECT_NAME} triangle.frag)
 
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 
+
 target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan::Vulkan
                                       PUBLIC logger
                                       PUBLIC glfw

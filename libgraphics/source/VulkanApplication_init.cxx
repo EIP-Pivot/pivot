@@ -18,7 +18,7 @@
 void VulkanApplication::createInstance()
 {
     DEBUG_FUNCTION
-    if (bEnableValidationLayers && !checkValiationLayerSupport()) {
+    if (bEnableValidationLayers && !checkValidationLayerSupport()) {
         throw std::runtime_error("validation layers requested, but not available!");
     }
     auto debugInfo = vk_init::populateDebugUtilsMessengerCreateInfoEXT(&VulkanApplication::debugCallback);

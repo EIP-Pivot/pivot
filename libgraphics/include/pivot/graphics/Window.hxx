@@ -7,9 +7,29 @@
 #include <unordered_map>
 #include <vulkan/vulkan.hpp>
 
+/// @class Window
+///
+/// @brief A class allowing some abstaction over the GLFW library
+///
+/// This class is designed to be used in conjuction with Vulkan API
+/// @code
+/// // Declare and create a new window
+/// Window window("Test window", 200, 200);
+///
+/// // Set a callback on the Escape key
+/// window.setKeyEventCallback(Window::Key::Escape,
+///                            [](Window &window, const Window::Key key, const Window::KeyAction action) {
+///                                 window.shouldClose(true);
+///                             });
+///
+/// while(window.shouldClose()) {
+///     window.pollEvent();
+/// }
+/// @endcode
 class Window
 {
 public:
+    /// Enum of the different key input
     enum class Key {
         A = GLFW_KEY_A,
         Z = GLFW_KEY_Z,
@@ -50,38 +70,100 @@ public:
         RIGHT = GLFW_KEY_RIGHT,
         LEFT = GLFW_KEY_LEFT,
     };
+    /// Enum of the different key state
     enum class KeyAction {
         Pressed = GLFW_PRESS,
         Release = GLFW_RELEASE,
     };
 
+    /// Keyboard event callback signature
     using KeyEvent = std::function<void(Window &window, const Key key, const KeyAction action)>;
+    /// Mouse movement event callback signature
     using MouseEvent = std::function<void(Window &window, const glm::dvec2 pos)>;
 
 public:
-    explicit Window(std::string, unsigned, unsigned);
+    /// Create a new Window
+    ///
+    /// @param windowName
+    /// @param width
+    /// @param height
+    explicit Window(std::string windowName, unsigned width, unsigned height);
     Window(Window &) = delete;
     Window(const Window &) = delete;
+    /// Destructor
     ~Window();
+
+    /// Return wether or not the window should be closed
     bool shouldClose() const noexcept;
+    /// Mark the window as ready to be closed
     void shouldClose(bool bClose) const noexcept;
+
+    /// Poll new events
+    ///
+    /// - Should be called once per tick
     inline void pollEvent() noexcept { glfwPollEvents(); }
-    vk::SurfaceKHR createSurface(const vk::Instance &);
-    inline bool isKeyPressed(unsigned key) const { return glfwGetKey(this->window, key) == GLFW_PRESS; }
-    inline bool isKeyReleased(unsigned key) const { return glfwGetKey(this->window, key) == GLFW_RELEASE; }
+
+    /// Create a Vulkan surface
+    ///
+    /// @param instance a valid Vulkan instance, must have the required extention enabled, see
+    /// Window::getRequiredExtensions()
+    ///
+    /// @return a valid vulkan surface, ready to be used. The Window class does not retain ownership of the surface
+    vk::SurfaceKHR createSurface(const vk::Instance &instance);
+
+    /// Tell wether or not a key is pressed
+    ///
+    /// @return true if the key is pressed, otherwise false
+    inline bool isKeyPressed(Key key) const noexcept
+    {
+        return glfwGetKey(this->window, static_cast<unsigned>(key)) == GLFW_PRESS;
+    }
+    /// Tell wether or not a key is not pressed
+    ///
+    /// @return true if the key is not pressed, otherwise false
+    inline bool isKeyReleased(Key key) const noexcept
+    {
+        return glfwGetKey(this->window, static_cast<unsigned>(key)) == GLFW_RELEASE;
+    }
+
+    /// Setup a callback function for provided key
+    ///
+    /// @param key Which key this callback is listening to
+    /// @param event The callback function to call when an event occur
+    ///
+    /// @see KeyEvent
     void setKeyEventCallback(Key key, KeyEvent event = {});
+
+    /// Setup a callback function for mouse movement
+    /// @param event The callback function to call when the cursor move
+    ///
+    /// @see MouseEvent
     void setMouseMovementCallback(MouseEvent event = {});
 
-    void setTitle(const std::string &t) noexcept;
+    /// Set the title of the window
+    /// @param title New title for the window
+    void setTitle(const std::string &title) noexcept;
+
+    /// Get the title of the window
+    /// @return The title of the window
     constexpr const std::string &getTitle() const noexcept { return windowName; }
 
+    /// get the width of the window
     int getWidth() const noexcept;
+    /// get the height of the window
     int getHeight() const noexcept;
+    /// get the size of the window
     vk::Extent2D getSize() const noexcept;
 
+    /// Whether or not the window should capture the user's cursor
+    /// @param capturing the window will capture the cursor if true
     void captureCursor(bool) noexcept;
+    /// Whether or not the window is capturing the user's cursor
+    /// @return true if the cursor is captured, false otherwise
     bool captureCursor() noexcept;
 
+    /// Easy way to get the all the Vulkan extension required by GLFW
+    /// @return a list of extension name required
     static std::vector<const char *> getRequiredExtensions();
 
 private:

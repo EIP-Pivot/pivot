@@ -36,7 +36,10 @@ jobs:
         run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}}
 
       - name: Build doc
-        run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} -- doc
+        run: cmake -B ${{github.workspace}}/build -DBUILD_DOCUMENTATION=ON
+          &&  cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} --target doc
+
+
       - uses: actions/upload-artifact@v2
         with:
           name: doc

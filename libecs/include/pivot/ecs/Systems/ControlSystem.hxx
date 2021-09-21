@@ -12,7 +12,7 @@ public:
 	void Update(float dt);
 
 private:
-	std::bitset<8> button;
+	std::bitset<UINT16_MAX> button;
 
 	void InputListener(Event& event);
 };

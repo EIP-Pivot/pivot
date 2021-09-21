@@ -64,5 +64,5 @@ void ControlSystem::Update(float dt)
 
 void ControlSystem::InputListener(Event& event)
 {
-	button = event.GetParam<std::bitset<8>>(Events::Window::Input::INPUT);
+    button = event.GetParam<std::bitset<UINT16_MAX>>(Events::Window::Input::INPUT);
 }

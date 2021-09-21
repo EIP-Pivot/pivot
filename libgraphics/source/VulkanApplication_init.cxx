@@ -133,7 +133,7 @@ void VulkanApplication::createAllocator()
     allocatorInfo.physicalDevice = physical_device;
     allocatorInfo.device = device;
     allocatorInfo.instance = instance;
-    allocatorInfo.vulkanApiVersion = VK_API_VERSION_1_2;
+    allocatorInfo.vulkanApiVersion = 0;
     allocatorInfo.frameInUseCount = MAX_FRAME_FRAME_IN_FLIGHT;
 
     allocator = vma::createAllocator(allocatorInfo);

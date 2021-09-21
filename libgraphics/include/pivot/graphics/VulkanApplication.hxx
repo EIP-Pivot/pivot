@@ -163,7 +163,7 @@ private:
     void createTextureSampler();
     void createFramebuffers();
 
-private:
+public:
     Window window;
     struct {
         std::unordered_map<std::string, std::vector<std::byte>> loadedTextures;
@@ -175,6 +175,7 @@ private:
     MeshStorage loadedMeshes;
     ImageStorage loadedTextures;
 
+private:
     uint32_t mipLevels = 0;
     vk::SampleCountFlagBits maxMsaaSample = vk::SampleCountFlagBits::e1;
 

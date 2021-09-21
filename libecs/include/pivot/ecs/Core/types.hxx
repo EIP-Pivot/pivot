@@ -23,16 +23,6 @@ using Signature = std::bitset<MAX_COMPONENTS>;
 using EventId = std::uint32_t;
 using ParamId = std::uint32_t;
 
-enum InputButtons: std::size_t
-{
-	W,
-	A,
-	S,
-	D,
-	SPACE,
-	LEFT_SHIFT
-};
-
 namespace Events::Window {
 const EventId INPUT = "Events::Window::INPUT"_hash;
 }

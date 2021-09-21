@@ -20,35 +20,35 @@ void ControlSystem::Update(float dt)
             auto& transform = gCoordinator.GetComponent<Transform>(entity);
             auto& camera = gCoordinator.GetComponent<Camera>(entity);
 
-            if (button.test(InputButtons::W))
+            if (button.test(Window::Key::W))
             {
                 camera.processKeyboard(Camera::FORWARD);
                 // transform.position.z += (dt * 10.0f);
             }
-            else if (button.test(InputButtons::S))
+            else if (button.test(Window::Key::S))
             {
                 camera.processKeyboard(Camera::BACKWARD);
                 // transform.position.z -= (dt * 10.0f);
             }
 
 
-            if (button.test(InputButtons::A))
+            if (button.test(Window::Key::A))
             {
                 camera.processKeyboard(Camera::LEFT);
                 // transform.position.x += (dt * 10.0f);
             }
-            else if (button.test(InputButtons::D))
+            else if (button.test(Window::Key::D))
             {
                 camera.processKeyboard(Camera::RIGHT);
                 // transform.position.x -= (dt * 10.0f);
             }
 
-            if (button.test(InputButtons::SPACE))
+            if (button.test(Window::Key::SPACE))
             {
                 camera.processKeyboard(Camera::UP);
                 // transform.position.x += (dt * 10.0f);
             }
-            else if (button.test(InputButtons::LEFT_SHIFT))
+            else if (button.test(Window::Key::LEFT_SHIFT))
             {
                 camera.processKeyboard(Camera::DOWN);
                 // transform.position.x -= (dt * 10.0f);

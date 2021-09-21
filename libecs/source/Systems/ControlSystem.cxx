@@ -20,35 +20,35 @@ void ControlSystem::Update(float dt)
             auto& transform = gCoordinator.GetComponent<Transform>(entity);
             auto& camera = gCoordinator.GetComponent<Camera>(entity);
 
-            if (button.test(Window::Key::W))
+            if (button.test(static_cast<std::size_t>(Window::Key::W)))
             {
                 camera.processKeyboard(Camera::FORWARD);
                 // transform.position.z += (dt * 10.0f);
             }
-            else if (button.test(Window::Key::S))
+            else if (button.test(static_cast<std::size_t>(Window::Key::S)))
             {
                 camera.processKeyboard(Camera::BACKWARD);
                 // transform.position.z -= (dt * 10.0f);
             }
 
 
-            if (button.test(Window::Key::A))
+            if (button.test(static_cast<std::size_t>(Window::Key::A)))
             {
                 camera.processKeyboard(Camera::LEFT);
                 // transform.position.x += (dt * 10.0f);
             }
-            else if (button.test(Window::Key::D))
+            else if (button.test(static_cast<std::size_t>(Window::Key::D)))
             {
                 camera.processKeyboard(Camera::RIGHT);
                 // transform.position.x -= (dt * 10.0f);
             }
 
-            if (button.test(Window::Key::SPACE))
+            if (button.test(static_cast<std::size_t>(Window::Key::SPACE)))
             {
                 camera.processKeyboard(Camera::UP);
                 // transform.position.x += (dt * 10.0f);
             }
-            else if (button.test(Window::Key::LEFT_SHIFT))
+            else if (button.test(static_cast<std::size_t>(Window::Key::LEFT_SHIFT)))
             {
                 camera.processKeyboard(Camera::DOWN);
                 // transform.position.x -= (dt * 10.0f);

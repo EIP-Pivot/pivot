@@ -3,7 +3,13 @@ project(pivot)
 
 include(FetchContent)
 
-set(CMAKE_CXX_STANDARD 20)
+if(MSVC)
+    # see https://gitlab.kitware.com/cmake/cmake/-/issues/22606
+    set(CMAKE_CXX_STANDARD 23)
+else()
+    set(CMAKE_CXX_STANDARD 20)
+endif()
+
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 

@@ -2,6 +2,7 @@
 
 #include "pivot/ecs/Core/System.hxx"
 #include "pivot/ecs/Core/Event.hxx"
+#include "pivot/graphics/Window.hxx"
 
 class ControlSystem : public System
 {

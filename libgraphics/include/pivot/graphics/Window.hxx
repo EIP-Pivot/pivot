@@ -30,7 +30,7 @@ class Window
 {
 public:
     /// Enum of the different key input
-    enum class Key {
+    enum class Key : std::size_t {
         A = GLFW_KEY_A,
         Z = GLFW_KEY_Z,
         E = GLFW_KEY_E,
@@ -71,7 +71,7 @@ public:
         LEFT = GLFW_KEY_LEFT,
     };
     /// Enum of the different key state
-    enum class KeyAction {
+    enum class KeyAction : std::uint8_t {
         Pressed = GLFW_PRESS,
         Release = GLFW_RELEASE,
     };

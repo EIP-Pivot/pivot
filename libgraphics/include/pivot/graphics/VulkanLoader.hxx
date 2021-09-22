@@ -20,7 +20,9 @@ protected:
     void createLogicalDevice(vk::PhysicalDevice &gpu, vk::DeviceCreateInfo &info);
 
 protected:
+    /// @cond
     vk::DynamicLoader loader;
     vk::Instance instance = VK_NULL_HANDLE;
     vk::Device device = VK_NULL_HANDLE;
+    /// @endcond
 };

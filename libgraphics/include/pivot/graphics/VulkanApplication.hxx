@@ -164,25 +164,32 @@ private:
     void createFramebuffers();
 
 public:
+    /// The Window used to render 3D objects
     Window window;
+
+    /// This will the store the textures, 3D models before behind uploaded to the GPU
     struct {
         std::unordered_map<std::string, std::vector<std::byte>> loadedTextures;
         std::unordered_map<std::string, vk::Extent3D> loadedTexturesSize;
         std::vector<Vertex> vertexBuffer;
         std::vector<uint32_t> indexBuffer;
     } cpuStorage;
+    /// Internal storage for the material
     MaterialStorage materials;
+    /// Internal storage for the meshes
     MeshStorage loadedMeshes;
+    /// Internal storage for the textures
     ImageStorage loadedTextures;
 
 private:
+    /// @cond
     uint32_t mipLevels = 0;
     vk::SampleCountFlagBits maxMsaaSample = vk::SampleCountFlagBits::e1;
 
     AllocatedBuffer vertexBuffers;
     AllocatedBuffer indicesBuffers;
 
-    struct {
+    struct UploadContex {
         vk::Fence uploadFence = VK_NULL_HANDLE;
         vk::CommandPool commandPool = VK_NULL_HANDLE;
     } uploadContext = {};
@@ -221,6 +228,7 @@ private:
     vk::Pipeline graphicsPipeline = VK_NULL_HANDLE;
 
     std::vector<vk::Framebuffer> swapChainFramebuffers;
+    /// @endcond
 };
 
 #ifndef VULKAN_APPLICATION_IMPLEMENTATION

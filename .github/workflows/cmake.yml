@@ -1,31 +1,61 @@
 name: CMake
-
 on: push
 
-env:
-  BUILD_TYPE: Release
-  CC: clang-11
-  CXX: clang++-11
-
 jobs:
-  build:
+  build-linux:
     runs-on: ubuntu-latest
 
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Debug, Release]
+        cxx_compiler: [g++-10, clang++-11, clang++-12]
+
     steps:
-    - name: install dependencies
-      run: |
-        wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
-        sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.2.176-focal.list https://packages.lunarg.com/vulkan/1.2.176/lunarg-vulkan-1.2.176-focal.list
-        sudo apt update
-        sudo apt install vulkan-sdk libpthread-stubs0-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev xorg-dev
+      - name: Install dependencies
+        run: |
+          wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+          sudo wget -qP /etc/apt/sources.list.d https://packages.lunarg.com/vulkan/lunarg-vulkan-focal.list
+          sudo apt-get update
+          sudo apt-get install vulkan-sdk xorg-dev
 
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
 
-    - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      - name: Configure CMake
+        run: cmake
+          -B ${{github.workspace}}/build
+          -D CMAKE_CXX_COMPILER=${{matrix.cxx_compiler}}
 
-    - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      - name: Build lib
+        run: cmake
+          --build ${{github.workspace}}/build
+          --config ${{matrix.build_type}}
 
+  build-windows:
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Debug, Release]
+
+    steps:
+      - name: Install dependencies
+        run: |
+          iwr https://sdk.lunarg.com/sdk/download/latest/windows/vulkan-sdk.exe -outfile vulkan-sdk.exe
+          ./vulkan-sdk install --accept-licenses --confirm-command
+
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Configure CMake
+        run: cmake
+          -B ${{github.workspace}}/build
+
+      - name: Build lib
+        run: cmake
+          --build ${{github.workspace}}/build
+          --config ${{matrix.build_type}}

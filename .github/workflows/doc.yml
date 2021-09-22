@@ -2,7 +2,6 @@ name: Documentation
 
 on: [push, workflow_dispatch]
 
-
 env:
   refsDocSaved: |
     refs/heads/main
@@ -13,12 +12,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: install dependencies
+      - name: Install dependencies
         run: |
           wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
-          sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.2.182-focal.list https://packages.lunarg.com/vulkan/1.2.182/lunarg-vulkan-1.2.182-focal.list
-          sudo apt update
-          sudo apt install vulkan-sdk libpthread-stubs0-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev xorg-dev doxygen
+          sudo wget -qP /etc/apt/sources.list.d https://packages.lunarg.com/vulkan/lunarg-vulkan-focal.list
+          sudo apt-get update
+          sudo apt-get install vulkan-sdk xorg-dev doxygen
 
       - uses: actions/checkout@v2
         with:
@@ -27,7 +26,7 @@ jobs:
       - name: Configure CMake
         run: cmake
           -B ${{github.workspace}}/build
-          -DBUILD_DOCUMENTATION=ON
+          -D BUILD_DOCUMENTATION=ON
 
       - name: Build doc
         run: cmake

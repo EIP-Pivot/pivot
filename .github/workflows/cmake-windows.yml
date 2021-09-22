@@ -1,0 +1,36 @@
+name: CMake Windows
+
+on: push
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Debug, Release]
+        cxx_compiler: [cl, g++, clang++]
+
+    steps:
+      - name: Install dependencies
+        run: |
+          iwr https://sdk.lunarg.com/sdk/download/latest/windows/vulkan-sdk.exe -outfile vulkan-sdk.exe
+          ./vulkan-sdk --accept-licenses --default-answer --confirm-command install
+
+      - name: Set up Visual C++ environment
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Configure CMake
+        run: cmake
+          -B ${{github.workspace}}/build
+          -D CMAKE_CXX_COMPILER=${{matrix.cxx_compiler}}
+
+      - name: Build lib
+        run: cmake
+          --build ${{github.workspace}}/build
+          --config ${{matrix.build_type}}

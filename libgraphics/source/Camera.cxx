@@ -7,14 +7,6 @@ Camera::Camera(glm::vec3 pos, glm::vec3 up, float yaw, float pitch)
     updateCameraVectors();
 }
 
-Camera::Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch)
-    : front(glm::vec3(0.0f, 0.0f, -1.0f)), yaw(yaw), pitch(pitch)
-{
-    position = glm::vec3(posX, posY, posZ);
-    worldUp = glm::vec3(upX, upY, upZ);
-    updateCameraVectors();
-}
-
 glm::mat4 Camera::getViewMatrix() const noexcept { return glm::lookAt(position, position + front, up); }
 
 Camera::GPUCameraData Camera::getGPUCameraData(float fFOV, float fAspectRatio, float fCloseClippingPlane,

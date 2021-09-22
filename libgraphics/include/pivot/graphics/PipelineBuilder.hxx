@@ -18,6 +18,7 @@ public:
     vk::Pipeline build(vk::Device device, vk::RenderPass renderPass, vk::PipelineCache pipelineCache = VK_NULL_HANDLE);
 
 public:
+    /// @cond
     std::vector<vk::PipelineShaderStageCreateInfo> shaderStages{};
     vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
     vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
@@ -28,4 +29,5 @@ public:
     vk::PipelineMultisampleStateCreateInfo multisampling{};
     vk::PipelineLayout pipelineLayout{};
     vk::PipelineDepthStencilStateCreateInfo depthStencil{};
+    /// @endcond
 };

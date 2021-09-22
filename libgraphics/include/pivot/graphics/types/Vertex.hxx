@@ -70,10 +70,12 @@ namespace std
 /// @brief Specialization of std::hash for the Vertex structure
 template <>
 struct hash<Vertex> {
+    /// @cond
     size_t operator()(Vertex const &vertex) const
     {
         return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^
                (hash<glm::vec3>()(vertex.color) ^ (hash<glm::vec2>()(vertex.texCoord) << 1));
     }
+    /// @endcond
 };
 }    // namespace std

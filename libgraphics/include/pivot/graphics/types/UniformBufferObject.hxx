@@ -9,8 +9,6 @@
 ///
 /// @brief Hold the information of the 3D object, on the CPU-side
 struct ObjectInformation {
-    /// @struct Transform
-    ///
     /// @brief Contain the position, rotation and scale of the 3D object
     struct Transform {
         /// The object position in 3D space
@@ -19,7 +17,9 @@ struct ObjectInformation {
         glm::vec3 rotation;
         /// The scale of the object
         glm::vec3 scale;
-    } transform;
+    };
+    /// The object transform
+    Transform transform;
     /// The name of the texture to apply on the object
     std::string textureIndex;
     /// The name of the material to use on the object

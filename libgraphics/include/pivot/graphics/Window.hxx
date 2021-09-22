@@ -156,8 +156,8 @@ public:
     vk::Extent2D getSize() const noexcept;
 
     /// Whether or not the window should capture the user's cursor
-    /// @param capturing the window will capture the cursor if true
-    void captureCursor(bool) noexcept;
+    /// @param bCapturing the window will capture the cursor if true
+    void captureCursor(bool bCapturing) noexcept;
     /// Whether or not the window is capturing the user's cursor
     /// @return true if the cursor is captured, false otherwise
     bool captureCursor() noexcept;

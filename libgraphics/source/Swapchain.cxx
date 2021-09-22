@@ -11,7 +11,7 @@
 
 Swapchain::Swapchain() {}
 
-Swapchain::~Swapchain() {}
+Swapchain::~Swapchain() { this->destroy(); }
 
 void Swapchain::init(Window &win, vk::PhysicalDevice &gpu, vk::Device &device, vk::SurfaceKHR &surface)
 {
@@ -33,7 +33,7 @@ void Swapchain::recreate(Window &win, vk::PhysicalDevice &gpu, vk::Device &devic
 uint32_t Swapchain::nbOfImage() const
 {
     if (swapChainImages.size() != swapChainImageViews.size()) [[unlikely]]
-        throw std::length_error("swapchain has different ammout of vk::Image and vk::ImageView");
+        throw std::length_error("swapchain has different amount of vk::Image and vk::ImageView");
     return swapChainImages.size();
 }
 

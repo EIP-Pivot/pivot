@@ -45,6 +45,7 @@ if (BUILD_DOCUMENTATION)
     find_package(Doxygen)
     if (DOXYGEN_FOUND)
         set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
+        set(DOXYGEN_WARN_LOGFILE ${CMAKE_BINARY_DIR}/doxygen-warnings.log)
         doxygen_add_docs(doc
             libgraphics/include
             libecs/include

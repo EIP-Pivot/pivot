@@ -1,6 +1,12 @@
 name: Documentation
 
-on: push
+on: [push, workflow_dispatch]
+
+
+env:
+  refsDocSaved: |
+    refs/heads/main
+    refs/heads/dev
 
 jobs:
   build-doc:
@@ -29,10 +35,15 @@ jobs:
           --target doc
 
       - name: Check no warnings
+        if: ${{github.event_name != 'workflow_dispatch'}}
         run: '! test -s ${{github.workspace}}/build/doxygen-warnings.log'
 
       - uses: actions/upload-artifact@v2
+        if: ${{contains(env.refsDocSaved, github.ref)
+          || github.event_name == 'workflow_dispatch'}}
         with:
           name: doc
-          path: ${{github.workspace}}/build/html
-          retention-days: 7
+          path: |
+            ${{github.workspace}}/build/html
+            ${{github.workspace}}/build/doxygen-warnings.log
+          retention-days: 1

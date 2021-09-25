@@ -13,6 +13,19 @@ endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+option(COMPILER_PROFILING "Enable clang profiling" OFF)
+if(COMPILER_PROFILING)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        message(STATUS "Clang profiling - enabled")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftime-trace")
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        message(STATUS "GNU profiling - enabled")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftime-report")
+    else()
+        message(WARNING "Compiler does not support profiling")
+    endif()
+endif()
+
 FetchContent_Declare(
     logger
     GIT_REPOSITORY https://github.com/zcorniere/logger-cpp.git

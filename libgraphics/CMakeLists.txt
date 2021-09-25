@@ -4,12 +4,6 @@ include(shaders/CMakeRule.txt)
 
 find_package(Vulkan REQUIRED)
 
-option(CLANG_TIME_TRACE "Enable clang profiling." OFF)
-if(CLANG_TIME_TRACE)
-    message(STATUS "Clang profiling - enabled")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftime-trace")
-endif()
-
 FetchContent_Declare(
     glfw
     GIT_REPOSITORY https://github.com/glfw/glfw.git

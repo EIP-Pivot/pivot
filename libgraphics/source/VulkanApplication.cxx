@@ -6,9 +6,14 @@
 
 VulkanApplication::VulkanApplication(): VulkanLoader(), window("Vulkan", 800, 600)
 {
-    DEBUG_FUNCTION window.setKeyEventCallback(
-        Window::Key::ESCAPE,
-        [](Window &window, const Window::Key key, const Window::KeyAction action) { window.shouldClose(true); });
+    DEBUG_FUNCTION;
+    if (bEnableValidationLayers && !checkValidationLayerSupport()) {
+        logger->warn("Vulkan Instance") << "Validation layers requested, but not available!";
+        LOGGER_ENDL;
+        bEnableValidationLayers = false;
+    }
+    window.setKeyEventCallback(Window::Key::ESCAPE, [](Window &window, const Window::Key key,
+                                                       const Window::KeyAction action) { window.shouldClose(true); });
 }
 
 VulkanApplication::~VulkanApplication()

@@ -8,12 +8,12 @@
 #include <vk_mem_alloc.hpp>
 #include <vulkan/vulkan.hpp>
 
-#include "pivot/graphics/Camera.hxx"
 #include "pivot/graphics/DeletionQueue.hxx"
 #include "pivot/graphics/Swapchain.hxx"
 #include "pivot/graphics/VulkanLoader.hxx"
 #include "pivot/graphics/Window.hxx"
 #include "pivot/graphics/interface/I3DScene.hxx"
+#include "pivot/graphics/interface/ICamera.hxx"
 #include "pivot/graphics/types/Frame.hxx"
 #include "pivot/graphics/types/Material.hxx"
 #include "pivot/graphics/types/Mesh.hxx"
@@ -60,9 +60,9 @@ class VulkanApplication : public VulkanLoader
 {
 private:
 #ifdef NDEBUG
-    const bool bEnableValidationLayers = false;
+    bool bEnableValidationLayers = false;
 #else
-    const bool bEnableValidationLayers = true;
+    bool bEnableValidationLayers = true;
 #endif
     struct DrawBatch {
         std::string meshId;
@@ -87,7 +87,7 @@ public:
     /// @arg camera The information about the camera
     ///
     /// You must have already loaded your models and texture !
-    void draw(const I3DScene &scene, const Camera &camera);
+    void draw(const I3DScene &scene, const ICamera &camera);
 
     /// @brief load the 3D models into CPU memory
     ///

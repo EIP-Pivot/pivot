@@ -1,27 +1,15 @@
 #pragma once
 
-#include <glm/glm.hpp>
+#include "pivot/graphics/interface/ICamera.hxx"
 
-#ifndef MAX_PROJECTION_LIMIT
-#define MAX_PROJECTION_LIMIT 100.0f
-#endif
+#include <glm/vec3.hpp>
 
 /// @class Camera
 ///
 /// @brief Represent a Camera in 3D space
-class Camera
+class Camera : public ICamera
 {
 public:
-    /// @struct GPUCameraData
-    ///
-    /// @brief Hold the camera data, ready to be send to the GPU
-    struct GPUCameraData {
-        /// @brief Position of the camera.
-        /// This is a vec4 for easier alignment
-        glm::vec4 position;
-        /// The camera projected view matrix
-        glm::mat4 viewproj;
-    };
     /// @cond
     enum Movement { FORWARD, BACKWARD, LEFT, RIGHT, UP, DOWN };
     static constexpr const float YAW = -90.0f;
@@ -42,7 +30,7 @@ public:
     /// Return the expected data required by the shaders
     GPUCameraData getGPUCameraData(float fFOV = 70.f, float fAspectRatio = 1700.f / 900.f,
                                    float fCloseClippingPlane = 0.1,
-                                   float fFarClippingPlane = MAX_PROJECTION_LIMIT) const;
+                                   float fFarClippingPlane = MAX_PROJECTION_LIMIT) const final;
 
     /// @cond
     void processKeyboard(Movement direction) noexcept;

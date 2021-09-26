@@ -6,6 +6,8 @@
 #include <any>
 #include <memory>
 
+/*! \cond
+ */
 class ComponentManager
 {
 public:
@@ -68,3 +70,5 @@ private:
         return std::static_pointer_cast<ComponentArray<T>>(mComponentArrays[typeName]);
     }
 };
+/*! \endcond
+ */

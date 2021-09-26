@@ -4,6 +4,8 @@
 #include <any>
 #include <unordered_map>
 
+/*! \cond
+ */
 class Event
 {
 public:
@@ -12,13 +14,13 @@ public:
     explicit Event(EventId type): mType(type) {}
 
     template <typename T>
-    void SetParam(EventId id, T value)
+    void SetParam(ParamId id, T value)
     {
         mData[id] = value;
     }
 
     template <typename T>
-    T GetParam(EventId id)
+    T GetParam(ParamId id)
     {
         return std::any_cast<T>(mData[id]);
     }
@@ -29,3 +31,5 @@ private:
     EventId mType{};
     std::unordered_map<EventId, std::any> mData{};
 };
+/*! \endcond
+ */

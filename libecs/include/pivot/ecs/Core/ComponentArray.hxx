@@ -5,6 +5,8 @@
 #include <array>
 #include <unordered_map>
 
+/*! \cond
+ */
 class IComponentArray
 {
 public:
@@ -69,3 +71,5 @@ private:
     std::unordered_map<size_t, Entity> mIndexToEntityMap{};
     size_t mSize{};
 };
+/*! \endcond
+ */

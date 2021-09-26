@@ -27,7 +27,7 @@ VulkanApplication::~VulkanApplication()
 
 void VulkanApplication::init() { initVulkanRessources(); }
 
-void VulkanApplication::draw(const I3DScene &scene, const Camera &camera)
+void VulkanApplication::draw(const I3DScene &scene, const ICamera &camera)
 try {
     auto &frame = frames[currentFrame];
     uint32_t imageIndex;
@@ -91,7 +91,7 @@ try {
     cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
     cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, frame.data.objectDescriptor, nullptr);
     cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, texturesSet, nullptr);
-    cmd.pushConstants<Camera::GPUCameraData>(
+    cmd.pushConstants<ICamera::GPUCameraData>(
         pipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, gpuCamera);
     cmd.bindVertexBuffers(0, vertexBuffers.buffer, offset);
     cmd.bindIndexBuffer(indicesBuffers.buffer, 0, vk::IndexType::eUint32);

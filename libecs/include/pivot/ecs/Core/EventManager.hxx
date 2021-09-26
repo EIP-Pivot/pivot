@@ -6,6 +6,8 @@
 #include <list>
 #include <unordered_map>
 
+/*! \cond
+ */
 class EventManager
 {
 public:
@@ -16,3 +18,5 @@ public:
 private:
     std::unordered_map<EventId, std::list<std::function<void(Event &)>>> listeners;
 };
+/*! \endcond
+ */

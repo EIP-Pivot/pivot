@@ -5,6 +5,8 @@
 #include <queue>
 #include <array>
 
+/*! \cond
+ */
 class EntityManager
 {
 public:
@@ -19,3 +21,5 @@ private:
     std::array<Signature, MAX_ENTITIES> mSignatures{};
     uint32_t mLivingEntityCount{};
 };
+/*! \endcond
+ */

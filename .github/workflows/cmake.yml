@@ -35,6 +35,8 @@ jobs:
 
   build-windows:
     runs-on: windows-latest
+    env:
+      VULKAN_SDK: C:/VulkanSDK
 
     strategy:
       fail-fast: false
@@ -45,7 +47,7 @@ jobs:
       - name: Install dependencies
         run: |
           iwr https://sdk.lunarg.com/sdk/download/latest/windows/vulkan-sdk.exe -outfile vulkan-sdk.exe
-          ./vulkan-sdk install --accept-licenses --confirm-command
+          ./vulkan-sdk install --accept-licenses --confirm-command --root $env:VULKAN_SDK
 
       - uses: actions/checkout@v2
         with:

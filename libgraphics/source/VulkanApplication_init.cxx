@@ -1,8 +1,8 @@
-#include "pivot/graphics/Camera.hxx"
 #include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/PipelineBuilder.hxx"
 #include "pivot/graphics/QueueFamilyIndices.hxx"
 #include "pivot/graphics/VulkanApplication.hxx"
+#include "pivot/graphics/interface/ICamera.hxx"
 #include "pivot/graphics/types/Material.hxx"
 #include "pivot/graphics/types/UniformBufferObject.hxx"
 #include "pivot/graphics/vk_init.hxx"
@@ -228,7 +228,7 @@ void VulkanApplication::createPipelineLayout()
 {
     DEBUG_FUNCTION
     std::vector<vk::PushConstantRange> pipelinePushConstant = {vk_init::populateVkPushConstantRange(
-        vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, sizeof(Camera::GPUCameraData))};
+        vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, sizeof(ICamera::GPUCameraData))};
 
     std::vector<vk::DescriptorSetLayout> setLayout = {descriptorSetLayout, texturesSetLayout};
     auto pipelineLayoutCreateInfo = vk_init::populateVkPipelineLayoutCreateInfo(setLayout, pipelinePushConstant);

@@ -79,6 +79,8 @@ void Window::setKeyCallback(GLFWkeyfun &&f) noexcept { glfwSetKeyCallback(window
 void Window::setCursorPosCallback(GLFWcursorposfun &&f) noexcept { glfwSetCursorPosCallback(window, f); }
 void Window::setResizeCallback(GLFWwindowsizefun &&f) noexcept { glfwSetFramebufferSizeCallback(window, f); }
 
+void Window::setErrorCallback(GLFWerrorfun &&f) noexcept { glfwSetErrorCallback(f); }
+
 void Window::setUserPointer(void *ptr) noexcept { glfwSetWindowUserPointer(window, ptr); }
 
 void Window::initWindow() noexcept
@@ -87,6 +89,7 @@ void Window::initWindow() noexcept
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
+    this->setErrorCallback(error_callback);
     window = glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);
     this->setUserPointer(this);
     this->setKeyCallback(keyboard_callback);
@@ -94,6 +97,12 @@ void Window::initWindow() noexcept
 }
 
 void Window::updateSize() const noexcept { glfwGetFramebufferSize(window, &width, &height); };
+
+void Window::error_callback(int code, const char *msg) noexcept
+{
+    logger->err("Window") << msg;
+    LOGGER_ENDL;
+}
 
 void cursor_callback(GLFWwindow *win, double xpos, double ypos)
 {

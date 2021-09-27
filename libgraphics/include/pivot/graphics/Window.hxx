@@ -170,10 +170,13 @@ private:
     void setKeyCallback(GLFWkeyfun &&f) noexcept;
     void setCursorPosCallback(GLFWcursorposfun &&f) noexcept;
     void setResizeCallback(GLFWwindowsizefun &&f) noexcept;
+    void setErrorCallback(GLFWerrorfun &&f) noexcept;
+
     void setUserPointer(void *ptr) noexcept;
     void initWindow() noexcept;
     void updateSize() const noexcept;
 
+    static void error_callback(int code, const char *msg) noexcept;
     friend void cursor_callback(GLFWwindow *win, double xpos, double ypos);
     friend void keyboard_callback(GLFWwindow *win, int key, int, int action, int);
 

@@ -3,7 +3,7 @@
 #include "pivot/graphics/DebugMacros.hxx"
 #include <stdexcept>
 
-Window::Window(std::string n, unsigned w, unsigned h): width(w), height(h), windowName(n) { initWindow(); }
+Window::Window(std::string n, unsigned w, unsigned h): windowName(n) { initWindow(w, h); }
 
 Window::~Window()
 {
@@ -33,6 +33,15 @@ void Window::setTitle(const std::string &t) noexcept
     glfwSetWindowTitle(window, windowName.c_str());
 }
 
+vk::Extent2D Window::getSize() const noexcept
+{
+    auto s = updateSize();
+    return {
+        .width = static_cast<uint32_t>(s.x),
+        .height = static_cast<uint32_t>(s.y),
+    };
+}
+
 void Window::captureCursor(bool capture) noexcept
 {
     if (capture) {
@@ -40,27 +49,6 @@ void Window::captureCursor(bool capture) noexcept
     } else {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     }
-}
-
-int Window::getWidth() const noexcept
-{
-    updateSize();
-    return width;
-}
-
-int Window::getHeight() const noexcept
-{
-    updateSize();
-    return height;
-}
-
-vk::Extent2D Window::getSize() const noexcept
-{
-    updateSize();
-    return {
-        .width = static_cast<uint32_t>(width),
-        .height = static_cast<uint32_t>(height),
-    };
 }
 
 bool Window::captureCursor() noexcept { return glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED; }
@@ -83,7 +71,7 @@ void Window::setErrorCallback(GLFWerrorfun &&f) noexcept { glfwSetErrorCallback(
 
 void Window::setUserPointer(void *ptr) noexcept { glfwSetWindowUserPointer(window, ptr); }
 
-void Window::initWindow() noexcept
+void Window::initWindow(const unsigned width, const unsigned height) noexcept
 {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -96,7 +84,12 @@ void Window::initWindow() noexcept
     this->setCursorPosCallback(cursor_callback);
 }
 
-void Window::updateSize() const noexcept { glfwGetFramebufferSize(window, &width, &height); };
+glm::ivec2 Window::updateSize() const noexcept
+{
+    glm::ivec2 size;
+    glfwGetFramebufferSize(window, &size.x, &size.y);
+    return size;
+};
 
 void Window::error_callback(int code, const char *msg) noexcept
 {

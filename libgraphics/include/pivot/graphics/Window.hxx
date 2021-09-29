@@ -149,9 +149,10 @@ public:
     constexpr const std::string &getTitle() const noexcept { return windowName; }
 
     /// get the width of the window
-    int getWidth() const noexcept;
+    inline int getWidth() const noexcept { return this->updateSize().x; }
     /// get the height of the window
-    int getHeight() const noexcept;
+    inline int getHeight() const noexcept { return this->updateSize().y; }
+
     /// get the size of the window
     vk::Extent2D getSize() const noexcept;
 
@@ -173,17 +174,14 @@ private:
     void setErrorCallback(GLFWerrorfun &&f) noexcept;
 
     void setUserPointer(void *ptr) noexcept;
-    void initWindow() noexcept;
-    void updateSize() const noexcept;
+    void initWindow(const unsigned width, const unsigned height) noexcept;
+    glm::ivec2 updateSize() const noexcept;
 
     static void error_callback(int code, const char *msg) noexcept;
     friend void cursor_callback(GLFWwindow *win, double xpos, double ypos);
     friend void keyboard_callback(GLFWwindow *win, int key, int, int action, int);
 
 private:
-    mutable int width;
-    mutable int height;
-
     std::optional<MouseEvent> mouseCallback = {};
     std::unordered_map<Key, KeyEvent> keyEventMap;
 

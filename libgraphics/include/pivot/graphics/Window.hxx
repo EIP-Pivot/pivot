@@ -94,9 +94,9 @@ public:
     ~Window();
 
     /// Return wether or not the window should be closed
-    bool shouldClose() const noexcept;
+    inline bool shouldClose() const noexcept { return glfwWindowShouldClose(window); }
     /// Mark the window as ready to be closed
-    void shouldClose(bool bClose) const noexcept;
+    inline void shouldClose(bool bClose) const noexcept { glfwSetWindowShouldClose(window, bClose); }
 
     /// Poll new events
     ///

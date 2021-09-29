@@ -11,9 +11,6 @@ Window::~Window()
     glfwTerminate();
 }
 
-bool Window::shouldClose() const noexcept { return glfwWindowShouldClose(window); }
-void Window::shouldClose(bool bClose) const noexcept { glfwSetWindowShouldClose(window, bClose); }
-
 vk::SurfaceKHR Window::createSurface(const vk::Instance &instance)
 {
     DEBUG_FUNCTION

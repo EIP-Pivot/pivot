@@ -46,3 +46,15 @@ std::vector<RenderObject> Scene::getSceneInformations() const
 {
     return obj;
 }
+
+void Scene::setCamera(Entity camera)
+{
+    mCamera = camera;
+}
+
+Camera &Scene::getCamera()
+{
+    if (mCamera)
+        return mComponentManager->GetComponent<Camera>(mCamera.value());
+    throw EcsException("No camera set");
+}

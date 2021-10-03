@@ -6,8 +6,10 @@
 #include "pivot/ecs/Core/SystemManager.hxx"
 #include "pivot/ecs/Core/EventManager.hxx"
 #include <memory>
+#include <optional>
 
 #include <pivot/graphics/interface/I3DScene.hxx>
+#include "pivot/ecs/Components/Camera.hxx"
 
 /// @class Coordinator
 ///
@@ -156,10 +158,15 @@ public:
     virtual std::vector<RenderObject> getSceneInformations() const final;
     std::vector<RenderObject> obj;
 
+    // Camera
+    void setCamera(Entity camera);
+    Camera &getCamera();
+
 private:
     std::unique_ptr<ComponentManager> mComponentManager;
     std::unique_ptr<EntityManager> mEntityManager;
     std::unique_ptr<EventManager> mEventManager;
     std::unique_ptr<SystemManager> mSystemManager;
     std::vector<std::shared_ptr<System>> mSystems;
+    std::optional<Entity> mCamera;
 };

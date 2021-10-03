@@ -9,7 +9,7 @@ LevelId SceneManager::registerLevel() {
     // if (_levels.size() >= MAX_LEVELS)
     //     throw EcsException("SceneManager is already at max capacity. Delete a scene before registering a new one.");
 
-    _levels[_levels.size() + 1] = Scene();
+    _levels[_levels.size()] = Scene();
     return (_levels.size() - 1);
 }
 

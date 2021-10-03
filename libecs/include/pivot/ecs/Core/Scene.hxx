@@ -6,7 +6,6 @@
 #include "pivot/ecs/Core/SystemManager.hxx"
 #include "pivot/ecs/Core/EventManager.hxx"
 #include <memory>
-#include <optional>
 
 #include <pivot/graphics/interface/I3DScene.hxx>
 #include "pivot/ecs/Components/Camera.hxx"
@@ -21,6 +20,17 @@
 /// // (Temporary) The coordinator is declared as a global variables gCoordinator
 /// gCoordinator.Init();
 /// @endcode
+
+class IScene {
+public:
+
+protected:
+    virtual void OnCreate() {};
+    virtual void OnTick() {};
+    virtual void OnPause() {};
+    virtual void OnResume() {};
+    virtual void OnStop() {};
+};
 
 class Scene : public I3DScene, public IScene
 {
@@ -159,7 +169,8 @@ public:
     std::vector<RenderObject> obj;
 
     // Camera
-    void setCamera(Entity camera);
+    void setCamera(std::uint16_t camera);
+    void addCamera(Entity camera);
     Camera &getCamera();
 
 private:
@@ -168,5 +179,6 @@ private:
     std::unique_ptr<EventManager> mEventManager;
     std::unique_ptr<SystemManager> mSystemManager;
     std::vector<std::shared_ptr<System>> mSystems;
-    std::optional<Entity> mCamera;
+    std::vector<Entity> mCamera;
+    std::uint16_t mCurrentCamera;
 };

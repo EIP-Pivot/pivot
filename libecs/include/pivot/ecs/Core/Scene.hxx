@@ -171,7 +171,9 @@ public:
     // Camera
     void setCamera(std::uint16_t camera);
     void addCamera(Entity camera);
+    void switchCamera();
     Camera &getCamera();
+    std::vector<Entity> &getCameras();
 
 private:
     std::unique_ptr<ComponentManager> mComponentManager;

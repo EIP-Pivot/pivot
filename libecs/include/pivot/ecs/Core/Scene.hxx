@@ -20,7 +20,7 @@
 /// gCoordinator.Init();
 /// @endcode
 
-class Coordinator : public I3DScene
+class Scene : public I3DScene
 {
 public:
     void Init();

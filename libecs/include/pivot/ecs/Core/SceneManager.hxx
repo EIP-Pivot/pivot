@@ -1,7 +1,7 @@
 #pragma once
 
 #include "pivot/ecs/Core/EcsException.hxx"
-#include "pivot/ecs/Core/Coordinator.hxx"
+#include "pivot/ecs/Core/Scene.hxx"
 #include <string>
 
 using LevelId = std::uint16_t;
@@ -25,7 +25,7 @@ protected:
 
 };
 
-class LevelManager {
+class SceneManager {
 
 public:
     void Init();
@@ -36,9 +36,12 @@ public:
     LevelId getCurrentLevelId();
     void    setCurrentLevelId(LevelId newLevel);
 
-    Coordinator &getCurrentLevel();
+    Scene &getCurrentLevel();
+    Scene &getLevelById(LevelId idToGet);
+    Scene &operator[](LevelId id);
+
 
 private:
-    std::unordered_map<LevelId, Coordinator> _levels{};
+    std::unordered_map<LevelId, Scene> _levels{};
     LevelId _currentActiveLevel;
 };

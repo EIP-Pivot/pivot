@@ -1,15 +1,15 @@
 #include "pivot/ecs/Systems/ControlSystem.hxx"
 
 #include "pivot/ecs/Components/Transform.hxx"
-#include "pivot/ecs/Core/Coordinator.hxx"
+#include "pivot/ecs/Core/SceneManager.hxx"
 
-extern Coordinator gCoordinator;
+extern SceneManager gSceneManager;
 
 void ControlSystem::Init()
 {
-    gCoordinator.AddEventListener(Events::Window::INPUT,
+    gSceneManager.getCurrentLevel().AddEventListener(Events::Window::INPUT,
                                   std::bind(&ControlSystem::InputListener, this, std::placeholders::_1));
-    gCoordinator.AddEventListener(Events::Window::MOUSE,
+    gSceneManager.getCurrentLevel().AddEventListener(Events::Window::MOUSE,
                                   std::bind(&ControlSystem::MouseListener, this, std::placeholders::_1));
 }
 
@@ -17,8 +17,8 @@ void ControlSystem::Update(float dt)
 {
     try {
         for (auto &entity: mEntities) {
-            auto &transform = gCoordinator.GetComponent<Transform>(entity);
-            auto &camera = gCoordinator.GetComponent<Camera>(entity);
+            auto &transform = gSceneManager.getCurrentLevel().GetComponent<Transform>(entity);
+            auto &camera = gSceneManager.getCurrentLevel().GetComponent<Camera>(entity);
 
             if (button.test(static_cast<std::size_t>(Window::Key::W))) {
                 processKeyboard(camera, Camera::FORWARD);

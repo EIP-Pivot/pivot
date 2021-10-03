@@ -161,5 +161,5 @@ private:
     std::unique_ptr<EntityManager> mEntityManager;
     std::unique_ptr<EventManager> mEventManager;
     std::unique_ptr<SystemManager> mSystemManager;
-    std::vector<System> mSystems;
+    std::vector<std::shared_ptr<System>> mSystems;
 };

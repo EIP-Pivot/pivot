@@ -154,6 +154,7 @@ public:
     
     // I3DScene
     virtual std::vector<RenderObject> getSceneInformations() const final;
+    std::vector<RenderObject> obj;
 
 private:
     std::unique_ptr<ComponentManager> mComponentManager;
@@ -161,5 +162,4 @@ private:
     std::unique_ptr<EventManager> mEventManager;
     std::unique_ptr<SystemManager> mSystemManager;
     std::vector<System> mSystems;
-    std::vector<RenderObject> obj;
 };

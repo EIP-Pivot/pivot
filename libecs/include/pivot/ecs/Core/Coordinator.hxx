@@ -7,6 +7,8 @@
 #include "pivot/ecs/Core/EventManager.hxx"
 #include <memory>
 
+#include <pivot/graphics/interface/I3DScene.hxx>
+
 /// @class Coordinator
 ///
 /// @brief The main class of the ecs
@@ -17,7 +19,8 @@
 /// // (Temporary) The coordinator is declared as a global variables gCoordinator
 /// gCoordinator.Init();
 /// @endcode
-class Coordinator
+
+class Coordinator : public I3DScene
 {
 public:
     void Init();
@@ -144,10 +147,14 @@ public:
     /// gCoordinator.SendEvent({YourEventId});
     /// @endcode
     void SendEvent(EventId eventId);
+    
+    // I3DScene
+    virtual std::vector<RenderObject> getSceneInformations() const final;
 
 private:
     std::unique_ptr<ComponentManager> mComponentManager;
     std::unique_ptr<EntityManager> mEntityManager;
     std::unique_ptr<EventManager> mEventManager;
     std::unique_ptr<SystemManager> mSystemManager;
+    std::vector<RenderObject> obj;
 };

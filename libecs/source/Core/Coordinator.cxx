@@ -34,3 +34,8 @@ void Coordinator::SendEvent(EventId eventId)
 {
     mEventManager->SendEvent(eventId);
 }
+
+std::vector<RenderObject> Coordinator::getSceneInformations() const
+{
+    return obj;
+}

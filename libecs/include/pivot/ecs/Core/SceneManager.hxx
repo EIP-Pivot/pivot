@@ -7,7 +7,7 @@
 using LevelId = std::uint16_t;
 const LevelId MAX_LEVELS = UINT16_MAX; // 65535
 
-class ILevel {
+class IScene {
 public:
 
 protected:
@@ -16,13 +16,6 @@ protected:
     virtual void OnPause() {};
     virtual void OnResume() {};
     virtual void OnStop() {};
-};
-
-class Level : public ILevel {
-public:
-
-protected:
-
 };
 
 class SceneManager {

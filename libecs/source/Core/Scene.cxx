@@ -6,6 +6,7 @@ void Scene::Init()
     mEntityManager = std::make_unique<EntityManager>();
     mEventManager = std::make_unique<EventManager>();
     mSystemManager = std::make_unique<SystemManager>();
+    mCurrentCamera = 0;
 }
 
 Entity Scene::CreateEntity()

@@ -20,6 +20,7 @@ public:
 
     void Update(float dt);
 
+    static void processMouseMovement(Camera &cam, const glm::dvec2 &offset);
 private:
     std::bitset<UINT16_MAX> button;
     std::optional<glm::dvec2> offset;
@@ -28,5 +29,4 @@ private:
     void MouseListener(Event &event);
 
     static void processKeyboard(Camera &cam, const Camera::Movement direction) noexcept;
-    static void processMouseMovement(Camera &cam, const glm::dvec2 &offset);
 };

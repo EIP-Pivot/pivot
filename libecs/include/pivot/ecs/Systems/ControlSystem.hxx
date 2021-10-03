@@ -28,5 +28,5 @@ private:
     void InputListener(Event &event);
     void MouseListener(Event &event);
 
-    static void processKeyboard(Camera &cam, const Camera::Movement direction) noexcept;
+    static void processKeyboard(Camera &cam, const Camera::Movement direction, float dt) noexcept;
 };

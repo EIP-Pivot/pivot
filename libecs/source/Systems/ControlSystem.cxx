@@ -21,26 +21,26 @@ void ControlSystem::Update(float dt)
             auto &camera = gSceneManager.getCurrentLevel().GetComponent<Camera>(entity);
 
             if (button.test(static_cast<std::size_t>(Window::Key::W))) {
-                processKeyboard(camera, Camera::FORWARD);
+                processKeyboard(camera, Camera::FORWARD, dt);
                 // transform.position.z += (dt * 10.0f);
             } else if (button.test(static_cast<std::size_t>(Window::Key::S))) {
-                processKeyboard(camera, Camera::BACKWARD);
+                processKeyboard(camera, Camera::BACKWARD, dt);
                 // transform.position.z -= (dt * 10.0f);
             }
 
             if (button.test(static_cast<std::size_t>(Window::Key::A))) {
-                processKeyboard(camera, Camera::LEFT);
+                processKeyboard(camera, Camera::LEFT, dt);
                 // transform.position.x += (dt * 10.0f);
             } else if (button.test(static_cast<std::size_t>(Window::Key::D))) {
-                processKeyboard(camera, Camera::RIGHT);
+                processKeyboard(camera, Camera::RIGHT, dt);
                 // transform.position.x -= (dt * 10.0f);
             }
 
             if (button.test(static_cast<std::size_t>(Window::Key::SPACE))) {
-                processKeyboard(camera, Camera::UP);
+                processKeyboard(camera, Camera::UP, dt);
                 // transform.position.x += (dt * 10.0f);
             } else if (button.test(static_cast<std::size_t>(Window::Key::LEFT_SHIFT))) {
-                processKeyboard(camera, Camera::DOWN);
+                processKeyboard(camera, Camera::DOWN, dt);
                 // transform.position.x -= (dt * 10.0f);
             }
             if (offset) {
@@ -60,29 +60,29 @@ void ControlSystem::InputListener(Event &event)
 
 void ControlSystem::MouseListener(Event &event) { offset = event.GetParam<glm::dvec2>(Events::Window::Mouse::MOUSE); }
 
-void ControlSystem::processKeyboard(Camera &cam, const Camera::Movement direction) noexcept
+void ControlSystem::processKeyboard(Camera &cam, const Camera::Movement direction, float dt) noexcept
 {
     switch (direction) {
         case Camera::Movement::FORWARD: {
-            cam.position.x += cam.front.x * SPEED;
-            cam.position.z += cam.front.z * SPEED;
+            cam.position.x += cam.front.x * SPEED * (dt * 500);
+            cam.position.z += cam.front.z * SPEED * (dt * 500);
         } break;
         case Camera::Movement::BACKWARD: {
-            cam.position.x -= cam.front.x * SPEED;
-            cam.position.z -= cam.front.z * SPEED;
+            cam.position.x -= cam.front.x * SPEED * (dt * 500);
+            cam.position.z -= cam.front.z * SPEED * (dt * 500);
         } break;
         case Camera::Movement::RIGHT: {
-            cam.position.x += cam.right.x * SPEED;
-            cam.position.z += cam.right.z * SPEED;
+            cam.position.x += cam.right.x * SPEED * (dt * 500);
+            cam.position.z += cam.right.z * SPEED * (dt * 500);
         } break;
         case Camera::Movement::LEFT: {
-            cam.position.x -= cam.right.x * SPEED;
-            cam.position.z -= cam.right.z * SPEED;
+            cam.position.x -= cam.right.x * SPEED * (dt * 500);
+            cam.position.z -= cam.right.z * SPEED * (dt * 500);
         } break;
         case Camera::Movement::UP: {
-            cam.position.y += JUMP;
+            cam.position.y += JUMP * (dt * 500);
         } break;
-        case Camera::Movement::DOWN: cam.position.y -= SPEED; break;
+        case Camera::Movement::DOWN: cam.position.y -= SPEED * (dt * 500); break;
     }
 }
 

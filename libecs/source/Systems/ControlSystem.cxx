@@ -16,37 +16,34 @@ void ControlSystem::Init()
 void ControlSystem::Update(float dt)
 {
     try {
-        for (auto &entity: mEntities) {
-            auto &transform = gSceneManager.getCurrentLevel().GetComponent<Transform>(entity);
-            auto &camera = gSceneManager.getCurrentLevel().GetComponent<Camera>(entity);
+        auto &camera = gSceneManager.getCurrentLevel().getCamera();
 
-            if (button.test(static_cast<std::size_t>(Window::Key::W))) {
-                processKeyboard(camera, Camera::FORWARD, dt);
-                // transform.position.z += (dt * 10.0f);
-            } else if (button.test(static_cast<std::size_t>(Window::Key::S))) {
-                processKeyboard(camera, Camera::BACKWARD, dt);
-                // transform.position.z -= (dt * 10.0f);
-            }
+        if (button.test(static_cast<std::size_t>(Window::Key::W))) {
+            processKeyboard(camera, Camera::FORWARD, dt);
+            // transform.position.z += (dt * 10.0f);
+        } else if (button.test(static_cast<std::size_t>(Window::Key::S))) {
+            processKeyboard(camera, Camera::BACKWARD, dt);
+            // transform.position.z -= (dt * 10.0f);
+        }
 
-            if (button.test(static_cast<std::size_t>(Window::Key::A))) {
-                processKeyboard(camera, Camera::LEFT, dt);
-                // transform.position.x += (dt * 10.0f);
-            } else if (button.test(static_cast<std::size_t>(Window::Key::D))) {
-                processKeyboard(camera, Camera::RIGHT, dt);
-                // transform.position.x -= (dt * 10.0f);
-            }
+        if (button.test(static_cast<std::size_t>(Window::Key::A))) {
+            processKeyboard(camera, Camera::LEFT, dt);
+            // transform.position.x += (dt * 10.0f);
+        } else if (button.test(static_cast<std::size_t>(Window::Key::D))) {
+            processKeyboard(camera, Camera::RIGHT, dt);
+            // transform.position.x -= (dt * 10.0f);
+        }
 
-            if (button.test(static_cast<std::size_t>(Window::Key::SPACE))) {
-                processKeyboard(camera, Camera::UP, dt);
-                // transform.position.x += (dt * 10.0f);
-            } else if (button.test(static_cast<std::size_t>(Window::Key::LEFT_SHIFT))) {
-                processKeyboard(camera, Camera::DOWN, dt);
-                // transform.position.x -= (dt * 10.0f);
-            }
-            if (offset) {
-                ControlSystem::processMouseMovement(camera, *offset);
-                offset = std::nullopt;
-            }
+        if (button.test(static_cast<std::size_t>(Window::Key::SPACE))) {
+            processKeyboard(camera, Camera::UP, dt);
+            // transform.position.x += (dt * 10.0f);
+        } else if (button.test(static_cast<std::size_t>(Window::Key::LEFT_SHIFT))) {
+            processKeyboard(camera, Camera::DOWN, dt);
+            // transform.position.x -= (dt * 10.0f);
+        }
+        if (offset) {
+            ControlSystem::processMouseMovement(camera, *offset);
+            offset = std::nullopt;
         }
     } catch (const std::exception &e) {
         std::cerr << e.what() << std::endl;

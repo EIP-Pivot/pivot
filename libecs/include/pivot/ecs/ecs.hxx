@@ -1,5 +1,5 @@
 #pragma once
 
-#include "pivot/ecs/Core/Coordinator.hxx"
+#include "pivot/ecs/Core/SceneManager.hxx"
 
-Coordinator gCoordinator;
+SceneManager gSceneManager;

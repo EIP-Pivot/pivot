@@ -3,20 +3,20 @@
 #include "pivot/ecs/Components/Gravity.hxx"
 #include "pivot/ecs/Components/RigidBody.hxx"
 #include "pivot/ecs/Components/Transform.hxx"
-#include "pivot/ecs/Core/Coordinator.hxx"
+#include "pivot/ecs/Core/SceneManager.hxx"
 
-extern Coordinator gCoordinator;
+extern SceneManager gSceneManager;
 
 void PhysicsSystem::Init() {}
 
 void PhysicsSystem::Update(float dt)
 {
     for (auto const &entity: mEntities) {
-        auto &rigidBody = gCoordinator.GetComponent<RigidBody>(entity);
-        auto &transform = gCoordinator.GetComponent<Transform>(entity);
+        auto &rigidBody = gSceneManager.getCurrentLevel().GetComponent<RigidBody>(entity);
+        auto &transform = gSceneManager.getCurrentLevel().GetComponent<Transform>(entity);
 
         // Forces
-        auto const &gravity = gCoordinator.GetComponent<Gravity>(entity);
+        auto const &gravity = gSceneManager.getCurrentLevel().GetComponent<Gravity>(entity);
 
         transform.position += rigidBody.velocity * dt;
 

@@ -1,6 +1,6 @@
-#include "pivot/ecs/Core/Coordinator.hxx"
+#include "pivot/ecs/Core/Scene.hxx"
 
-void Coordinator::Init()
+void Scene::Init()
 {
     mComponentManager = std::make_unique<ComponentManager>();
     mEntityManager = std::make_unique<EntityManager>();
@@ -8,34 +8,34 @@ void Coordinator::Init()
     mSystemManager = std::make_unique<SystemManager>();
 }
 
-Entity Coordinator::CreateEntity()
+Entity Scene::CreateEntity()
 {
     return mEntityManager->CreateEntity();
 }
 
-void Coordinator::DestroyEntity(Entity entity)
+void Scene::DestroyEntity(Entity entity)
 {
     mEntityManager->DestroyEntity(entity);
     mComponentManager->EntityDestroyed(entity);
     mSystemManager->EntityDestroyed(entity);
 }
 
-void Coordinator::AddEventListener(EventId eventId, std::function<void(Event &)> const &listener)
+void Scene::AddEventListener(EventId eventId, std::function<void(Event &)> const &listener)
 {
     mEventManager->AddListener(eventId, listener);
 }
 
-void Coordinator::SendEvent(Event &event)
+void Scene::SendEvent(Event &event)
 {
     mEventManager->SendEvent(event);
 }
 
-void Coordinator::SendEvent(EventId eventId)
+void Scene::SendEvent(EventId eventId)
 {
     mEventManager->SendEvent(eventId);
 }
 
-std::vector<RenderObject> Coordinator::getSceneInformations() const
+std::vector<RenderObject> Scene::getSceneInformations() const
 {
     return obj;
 }

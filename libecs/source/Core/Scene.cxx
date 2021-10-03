@@ -22,8 +22,8 @@ void Scene::DestroyEntity(Entity entity)
 
 void Scene::Update(float dt)
 {
-    for (System system: mSystems) {
-        system.Update(dt);
+    for (std::shared_ptr<System> system: mSystems) {
+        system->Update(dt);
     }
 }
 

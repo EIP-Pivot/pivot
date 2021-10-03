@@ -20,6 +20,13 @@ void Scene::DestroyEntity(Entity entity)
     mSystemManager->EntityDestroyed(entity);
 }
 
+void Scene::Update(float dt)
+{
+    for (System system: mSystems) {
+        system.Update(dt);
+    }
+}
+
 void Scene::AddEventListener(EventId eventId, std::function<void(Event &)> const &listener)
 {
     mEventManager->AddListener(eventId, listener);

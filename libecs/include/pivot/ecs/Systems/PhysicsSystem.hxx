@@ -7,5 +7,5 @@ class PhysicsSystem : public System
 public:
     void Init();
 
-    void Update(float dt);
+    virtual void Update(float dt);
 };

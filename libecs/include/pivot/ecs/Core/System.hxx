@@ -8,6 +8,7 @@
 class System
 {
 public:
+    virtual void Update(float dt) {};
     std::set<Entity> mEntities;
 };
 /*! \endcond

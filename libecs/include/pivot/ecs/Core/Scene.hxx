@@ -108,7 +108,9 @@ public:
     template <typename T>
     std::shared_ptr<T> RegisterSystem()
     {
-        return mSystemManager->RegisterSystem<T>();
+        auto system = mSystemManager->RegisterSystem<T>();
+        mSystems.push_back(system);
+        return system;
     }
 
     /// Set a signature on your System to get the good list of entity.
@@ -124,6 +126,8 @@ public:
     {
         mSystemManager->SetSignature<T>(signature);
     }
+
+    void Update(float dt);
 
     // Event methods
 
@@ -156,5 +160,6 @@ private:
     std::unique_ptr<EntityManager> mEntityManager;
     std::unique_ptr<EventManager> mEventManager;
     std::unique_ptr<SystemManager> mSystemManager;
+    std::vector<System> mSystems;
     std::vector<RenderObject> obj;
 };

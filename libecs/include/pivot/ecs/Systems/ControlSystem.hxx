@@ -18,7 +18,7 @@ public:
 public:
     void Init();
 
-    void Update(float dt);
+    virtual void Update(float dt);
 
     static void processMouseMovement(Camera &cam, const glm::dvec2 &offset);
 private:

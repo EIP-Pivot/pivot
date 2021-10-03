@@ -9,6 +9,7 @@ add_library(${PROJECT_NAME} source/Systems/PhysicsSystem.cxx
                             source/Core/EntityManager.cxx
                             source/Core/EventManager.cxx
                             source/Core/SystemManager.cxx
+                            source/Core/LevelManager.cxx
 )
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 

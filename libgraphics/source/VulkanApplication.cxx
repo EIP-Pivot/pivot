@@ -1,5 +1,6 @@
 #include "pivot/graphics/VulkanApplication.hxx"
 #include "pivot/graphics/DebugMacros.hxx"
+#include "pivot/graphics/culling.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 #include <Logger.hpp>
 #include <algorithm>
@@ -75,7 +76,7 @@ try {
     };
     auto gpuCamera = camera.getGPUCameraData(80.0f, swapchain.getAspectRatio(), 0.1f);
     auto sceneInformation = scene.getSceneInformations();
-    auto drawBatch = buildDrawBatch(sceneInformation);
+    auto drawBatch = buildDrawBatch(sceneInformation, gpuCamera);
     buildIndirectBuffers(drawBatch, frame);
 
     std::vector<gpuObject::UniformBufferObject> sceneData;
@@ -119,30 +120,22 @@ try {
     return recreateSwapchain();
 }
 
-std::vector<VulkanApplication::DrawBatch> VulkanApplication::buildDrawBatch(std::vector<RenderObject> &object)
+std::vector<VulkanApplication::DrawBatch> VulkanApplication::buildDrawBatch(std::vector<RenderObject> &object,
+                                                                            const ICamera::GPUCameraData &camera)
 {
-    // std::sort(object.begin(), object.end(),
-    //           [](const auto &first, const auto &second) { return first.meshID == second.meshID; });
     if (object.empty()) return {};
     if (object.size() >= MAX_OBJECT) throw TooManyObjectInSceneError();
 
     std::vector<DrawBatch> packedDraws;
-    packedDraws.push_back({
-        .meshId = object.at(0).meshID,
-        .first = 0,
-        .count = 1,
-    });
 
-    for (uint32_t i = 1; i < object.size(); i++) {
-        // if (object[i].meshID == packedDraws.back().meshId) {
-        //     packedDraws.back().count++;
-        // } else {
-        packedDraws.push_back({
-            .meshId = object.at(i).meshID,
-            .first = i,
-            .count = 1,
-        });
-        //}
+    for (uint32_t i = 0; i < object.size(); i++) {
+        if (culling::should_object_be_rendered(object[i], camera)) {
+            packedDraws.push_back({
+                .meshId = object.at(i).meshID,
+                .first = i,
+                .count = 1,
+            });
+        }
     }
     return packedDraws;
 }

@@ -126,7 +126,7 @@ private:
     static uint32_t rateDeviceSuitability(const vk::PhysicalDevice &device);
     static bool checkDeviceExtensionSupport(const vk::PhysicalDevice &device);
 
-    std::vector<DrawBatch> buildDrawBatch(std::vector<RenderObject> &object);
+    std::vector<DrawBatch> buildDrawBatch(std::vector<RenderObject> &object, const ICamera::GPUCameraData &camera);
     void buildIndirectBuffers(const std::vector<DrawBatch> &scene, Frame &frame);
 
     void postInitialization();

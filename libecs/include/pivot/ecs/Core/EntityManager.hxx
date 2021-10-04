@@ -15,6 +15,7 @@ public:
     void DestroyEntity(Entity entity);
     void SetSignature(Entity entity, Signature signature);
     Signature GetSignature(Entity entity);
+    uint32_t getLivingEntityCount();
 
 private:
     std::queue<Entity> mAvailableEntities{};

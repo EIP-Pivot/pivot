@@ -9,6 +9,7 @@
 
 #include <pivot/graphics/interface/I3DScene.hxx>
 #include "pivot/ecs/Components/Camera.hxx"
+#include "pivot/ecs/Components/Tag.hxx"
 
 /// @class Coordinator
 ///
@@ -45,6 +46,8 @@ public:
 
     /// @param[in] entity  Entity to remove.
     void DestroyEntity(Entity entity);
+
+    Signature getSignature(Entity entity);
 
     // Component methods
 

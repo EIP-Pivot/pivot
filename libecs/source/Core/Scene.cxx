@@ -6,12 +6,17 @@ void Scene::Init()
     mEntityManager = std::make_unique<EntityManager>();
     mEventManager = std::make_unique<EventManager>();
     mSystemManager = std::make_unique<SystemManager>();
+    mComponentManager->RegisterComponent<Tag>();
     mCurrentCamera = 0;
 }
 
 Entity Scene::CreateEntity()
 {
-    return mEntityManager->CreateEntity();
+    Entity newEntity = mEntityManager->CreateEntity();
+    mComponentManager->AddComponent<Tag>(newEntity, {
+        .name = "Default",
+    });
+    return newEntity;
 }
 
 void Scene::DestroyEntity(Entity entity)
@@ -19,6 +24,11 @@ void Scene::DestroyEntity(Entity entity)
     mEntityManager->DestroyEntity(entity);
     mComponentManager->EntityDestroyed(entity);
     mSystemManager->EntityDestroyed(entity);
+}
+
+Signature Scene::getSignature(Entity entity)
+{
+    return mEntityManager->GetSignature(entity);
 }
 
 void Scene::Update(float dt)

@@ -49,6 +49,8 @@ public:
 
     Signature getSignature(Entity entity);
 
+    uint32_t getLivingEntityCount();
+
     // Component methods
 
     /// Register a new component before its usage

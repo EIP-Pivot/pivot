@@ -31,6 +31,11 @@ Signature Scene::getSignature(Entity entity)
     return mEntityManager->GetSignature(entity);
 }
 
+uint32_t Scene::getLivingEntityCount()
+{
+    return mEntityManager->getLivingEntityCount();
+}
+
 void Scene::Update(float dt)
 {
     for (std::shared_ptr<System> system: mSystems) {

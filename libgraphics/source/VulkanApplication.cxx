@@ -248,6 +248,7 @@ void VulkanApplication::recreateSwapchain()
     createDepthResources();
     createFramebuffers();
     createCommandBuffers();
+    initDearImgui();
     logger->info("Swapchain") << "Swapchain recreation complete... { height=" << swapchain.getSwapchainExtent().height
                               << ", width =" << swapchain.getSwapchainExtent().width
                               << ", numberOfImage = " << swapchain.nbOfImage() << " }";

@@ -673,7 +673,7 @@ void VulkanApplication::initDearImgui()
     init_info.Device = device;
     init_info.QueueFamily = indices.graphicsFamily.value();
     init_info.Queue = graphicsQueue;
-    init_info.PipelineCache = VK_NULL_HANDLE;
+    init_info.PipelineCache = pipelineCache;
     init_info.DescriptorPool = imguiPool;
     init_info.MinImageCount = swapchain.nbOfImage();
     init_info.ImageCount = swapchain.nbOfImage();

@@ -163,6 +163,10 @@ public:
     /// @return true if the cursor is captured, false otherwise
     bool captureCursor() noexcept;
 
+    /// Return the raw GLFW window pointer
+    /// @return a glfw window pointer
+    constexpr GLFWwindow *getWindow() noexcept { return window; }
+
     /// Easy way to get the all the Vulkan extension required by GLFW
     /// @return a list of extension name required
     static std::vector<const char *> getRequiredExtensions();

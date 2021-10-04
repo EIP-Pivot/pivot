@@ -67,6 +67,28 @@ if (NOT tinyobjloader_POPULATED)
     set(TINYOBJLOADER_USE_DOUBLE ON)
 endif()
 
+FetchContent_Declare(
+    imgui
+    GIT_REPOSITORY https://github.com/ocornut/imgui.git
+    GIT_TAG v1.84.2
+)
+if (NOT imgui_POPULATED)
+    message(STATUS "Populating imgui")
+    FetchContent_Populate(imgui)
+    add_library(imgui ${imgui_SOURCE_DIR}/imgui.cpp
+                    ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+
+                    ${imgui_SOURCE_DIR}/imgui_draw.cpp
+                    ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+                    ${imgui_SOURCE_DIR}/imgui_tables.cpp
+
+                    ${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
+                    ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
+    )
+    target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR}/)
+    target_link_libraries(imgui PRIVATE Vulkan::Vulkan glfw)
+endif()
+
 add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/Window.cxx
                                    source/vk_utils.cxx
@@ -100,11 +122,12 @@ add_shader(${PROJECT_NAME} triangle.frag)
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 
 
-target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan::Vulkan
-                                      PUBLIC logger
+target_link_libraries(${PROJECT_NAME} PUBLIC logger
+                                      PUBLIC VulkanMemoryAllocator
+                                      PUBLIC imgui
                                       PUBLIC glfw
                                       PUBLIC glm
-                                      PUBLIC VulkanMemoryAllocator
                                       PUBLIC tinyobjloader
                                       PUBLIC stb
+                                      PUBLIC Vulkan::Vulkan
 )

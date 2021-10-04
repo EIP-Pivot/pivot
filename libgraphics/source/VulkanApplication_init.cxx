@@ -9,6 +9,8 @@
 #include "pivot/graphics/vk_utils.hxx"
 
 #include <Logger.hpp>
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_vulkan.h>
 
 #include <map>
 #include <numeric>
@@ -631,5 +633,61 @@ void VulkanApplication::createColorResources()
     swapchainDeletionQueue.push([&] {
         device.destroy(colorImage.imageView);
         allocator.destroyImage(colorImage.image, colorImage.memory);
+    });
+}
+
+void VulkanApplication::initDearImgui()
+{
+    DEBUG_FUNCTION
+    auto indices = QueueFamilyIndices::findQueueFamilies(physical_device, surface);
+
+    vk::DescriptorPoolSize pool_sizes[] = {{vk::DescriptorType::eSampler, 1000},
+                                           {vk::DescriptorType::eCombinedImageSampler, 1000},
+                                           {vk::DescriptorType::eSampledImage, 1000},
+                                           {vk::DescriptorType::eStorageImage, 1000},
+                                           {vk::DescriptorType::eUniformTexelBuffer, 1000},
+                                           {vk::DescriptorType::eStorageTexelBuffer, 1000},
+                                           {vk::DescriptorType::eUniformBuffer, 1000},
+                                           {vk::DescriptorType::eStorageBuffer, 1000},
+                                           {vk::DescriptorType::eUniformBufferDynamic, 1000},
+                                           {vk::DescriptorType::eStorageBufferDynamic, 1000},
+                                           {vk::DescriptorType::eInputAttachment, 1000}};
+
+    vk::DescriptorPoolCreateInfo pool_info = {
+        .flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
+        .maxSets = 1000,
+        .poolSizeCount = std::size(pool_sizes),
+        .pPoolSizes = pool_sizes,
+    };
+
+    vk::DescriptorPool imguiPool;
+    imguiPool = device.createDescriptorPool(pool_info);
+
+    ImGui::CreateContext();
+    ImGui_ImplGlfw_InitForVulkan(window.getWindow(), true);
+
+    ImGui_ImplVulkan_InitInfo init_info{};
+
+    init_info.Instance = instance;
+    init_info.PhysicalDevice = physical_device;
+    init_info.Device = device;
+    init_info.QueueFamily = indices.graphicsFamily.value();
+    init_info.Queue = graphicsQueue;
+    init_info.PipelineCache = VK_NULL_HANDLE;
+    init_info.DescriptorPool = imguiPool;
+    init_info.MinImageCount = swapchain.nbOfImage();
+    init_info.ImageCount = swapchain.nbOfImage();
+    init_info.MSAASamples = static_cast<VkSampleCountFlagBits>(maxMsaaSample);
+    init_info.CheckVkResultFn = vk_utils::vk_try;
+
+    ImGui_ImplVulkan_Init(&init_info, renderPass);
+
+    immediateCommand([&](vk::CommandBuffer cmd) { ImGui_ImplVulkan_CreateFontsTexture(cmd); });
+    ImGui_ImplVulkan_DestroyFontUploadObjects();
+
+    swapchainDeletionQueue.push([imguiPool, this] {
+        vkDestroyDescriptorPool(device, imguiPool, nullptr);
+        ImGui_ImplVulkan_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
     });
 }

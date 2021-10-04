@@ -1,7 +1,11 @@
 #include "pivot/graphics/VulkanApplication.hxx"
 #include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/vk_utils.hxx"
+
 #include <Logger.hpp>
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_vulkan.h>
+
 #include <algorithm>
 
 VulkanApplication::VulkanApplication(): VulkanLoader(), window("Vulkan", 800, 600)
@@ -101,6 +105,7 @@ try {
             cmd.drawIndexedIndirect(frame.indirectBuffer.buffer, draw.first * sizeof(vk::DrawIndexedIndirectCommand),
                                     draw.count, sizeof(vk::DrawIndexedIndirectCommand));
         }
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
     }
     cmd.endRenderPass();
     cmd.end();
@@ -199,6 +204,7 @@ void VulkanApplication::initVulkanRessources()
     createTextureSampler();
     createTextureDescriptorSets();
     createCommandBuffers();
+    initDearImgui();
 
     materials["white"] = {
         .ambientColor = {1.0f, 1.0f, 1.0f, 1.0f},
@@ -214,7 +220,7 @@ void VulkanApplication::postInitialization()
 
     std::vector<gpuObject::Material> materialStor;
     std::transform(materials.begin(), materials.end(), std::back_inserter(materialStor),
-                   [this](const auto &i) { return i.second; });
+                   [](const auto &i) { return i.second; });
 
     for (auto &frame: frames) { copyBuffer(frame.data.materialBuffer, materialStor); }
 }

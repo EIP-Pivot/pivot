@@ -162,6 +162,7 @@ private:
     void createIndirectBuffer();
     void createTextureSampler();
     void createFramebuffers();
+    void initDearImgui();
 
 public:
     /// The Window used to render 3D objects

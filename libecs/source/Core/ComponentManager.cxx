@@ -8,3 +8,8 @@ void ComponentManager::EntityDestroyed(Entity entity)
         component->EntityDestroyed(entity);
     }
 }
+
+std::unordered_map<const char *, ComponentType> ComponentManager::getComponentsTypes()
+{
+    return mComponentTypes;
+}

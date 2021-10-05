@@ -116,6 +116,8 @@ public:
         return mComponentManager->GetComponentType<T>();
     }
 
+    std::unordered_map<const char *, ComponentType> getComponentsTypes();
+
     // System methods
 
     /// Register a system before its usage

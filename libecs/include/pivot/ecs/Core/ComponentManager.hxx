@@ -35,6 +35,8 @@ public:
         return mComponentTypes[typeName];
     }
 
+    std::unordered_map<const char *, ComponentType> getComponentsTypes();
+
     template <typename T>
     void AddComponent(Entity entity, T component)
     {

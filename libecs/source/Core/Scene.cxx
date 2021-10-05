@@ -36,6 +36,11 @@ uint32_t Scene::getLivingEntityCount()
     return mEntityManager->getLivingEntityCount();
 }
 
+std::unordered_map<const char *, ComponentType> Scene::getComponentsTypes()
+{
+    return mComponentManager->getComponentsTypes();
+}
+
 void Scene::Update(float dt)
 {
     for (std::shared_ptr<System> system: mSystems) {

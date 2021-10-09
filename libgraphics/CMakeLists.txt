@@ -89,6 +89,24 @@ if (NOT imgui_POPULATED)
     target_link_libraries(imgui PRIVATE Vulkan::Vulkan glfw)
 endif()
 
+FetchContent_Declare(
+    imguizmo
+    GIT_REPOSITORY https://github.com/CedricGuillemet/ImGuizmo.git
+    GIT_TAG 1.83
+)
+if (NOT imguizmo_POPULATED)
+    message(STATUS "Populating imguizmo")
+    FetchContent_Populate(imguizmo)
+    add_library(imguizmo ${imguizmo_SOURCE_DIR}/ImGuizmo.cpp
+                    ${imguizmo_SOURCE_DIR}/ImCurveEdit.cpp
+                    ${imguizmo_SOURCE_DIR}/GraphEditor.cpp
+                    ${imguizmo_SOURCE_DIR}/ImGradient.cpp
+                    ${imguizmo_SOURCE_DIR}/ImSequencer.cpp
+    )
+    target_include_directories(imguizmo PUBLIC ${imguizmo_SOURCE_DIR}/)
+    target_link_libraries(imguizmo PRIVATE imgui)
+endif()
+
 add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/Window.cxx
                                    source/vk_utils.cxx

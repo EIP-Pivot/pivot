@@ -44,9 +44,9 @@ public:
     void updateCameraVectors()
     {
         glm::vec3 tmpFront;
-        tmpFront.x = std::cos(glm::radians(yaw)) * std::cos(glm::radians(pitch));
-        tmpFront.y = std::sin(glm::radians(pitch));
-        tmpFront.z = std::sin(glm::radians(yaw)) * std::cos(glm::radians(pitch));
+        tmpFront.x = static_cast<float>(std::cos(glm::radians(yaw)) * std::cos(glm::radians(pitch)));
+        tmpFront.y = static_cast<float>(std::sin(glm::radians(pitch)));
+        tmpFront.z = static_cast<float>(std::sin(glm::radians(yaw)) * std::cos(glm::radians(pitch)));
 
         front = glm::normalize(tmpFront);
         right = glm::normalize(glm::cross(tmpFront, worldUp));

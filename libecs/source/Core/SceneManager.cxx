@@ -2,15 +2,15 @@
 
 void SceneManager::Init() {
     _levels.clear();
-    _currentActiveLevel = -1;
+    _currentActiveLevel = LevelId(-1);
 }
 
 LevelId SceneManager::registerLevel() {
     // if (_levels.size() >= MAX_LEVELS)
     //     throw EcsException("SceneManager is already at max capacity. Delete a scene before registering a new one.");
 
-    _levels[_levels.size()] = Scene();
-    return (_levels.size() - 1);
+    _levels[LevelId(_levels.size())] = Scene();
+    return (LevelId(_levels.size() - 1));
 }
 
 void SceneManager::unregisterLevel(LevelId toDelete) {

@@ -10,9 +10,9 @@
 class ControlSystem : public System
 {
 public:
-    static constexpr const double SPEED = 2.5;
-    static constexpr const double JUMP = 2.5;
-    static constexpr const double SENSITIVITY = 0.5;
+    static constexpr const float SPEED = 2.5f;
+    static constexpr const float JUMP = 2.5f;
+    static constexpr const float SENSITIVITY = 0.5f;
     static constexpr const bool CONSTRAIN_PITCH = true;
 
 public:

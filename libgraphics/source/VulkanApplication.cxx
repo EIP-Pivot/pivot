@@ -228,12 +228,13 @@ void VulkanApplication::postInitialization()
 void VulkanApplication::recreateSwapchain()
 {
     DEBUG_FUNCTION
-    // int width = 0, height = 0;
-    // glfwGetFramebufferSize(window.getWindow(), &width, &height);
-    // while (width == 0 || height == 0) {
-    //     glfwGetFramebufferSize(window.getWindow(), &width, &height);
-    //     glfwWaitEvents();
-    // }
+
+    /// do not recreate the swapchain if the window size is 0
+    vk::Extent2D size;
+    do {
+        size = window.getSize();
+        window.pollEvent();
+    } while (size.width == 0 || size.height == 0);
 
     logger->info("Swapchain") << "Recreaing swapchain...";
     LOGGER_ENDL;

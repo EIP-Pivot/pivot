@@ -77,7 +77,7 @@ public:
     };
 
     /// Keyboard event callback signature
-    using KeyEvent = std::function<void(Window &window, const Key key, const KeyAction action)>;
+    using KeyEvent = std::function<void(Window &window, const Key key)>;
     /// Mouse movement event callback signature
     using MouseEvent = std::function<void(Window &window, const glm::dvec2 pos)>;
 
@@ -126,13 +126,21 @@ public:
         return glfwGetKey(this->window, static_cast<unsigned>(key)) == GLFW_RELEASE;
     }
 
-    /// Setup a callback function for provided key
+    /// Setup a callback function for provided key when it is pressed
     ///
     /// @param key Which key this callback is listening to
     /// @param event The callback function to call when an event occur
     ///
     /// @see KeyEvent
-    void setKeyEventCallback(Key key, KeyEvent event = {});
+    void setKeyPressCallback(Key key, KeyEvent event = {});
+
+    /// Setup a callback function for provided key when it is release
+    ///
+    /// @param key Which key this callback is listening to
+    /// @param event The callback function to call when an event occur
+    ///
+    /// @see KeyEvent
+    void setKeyReleaseCallback(Key key, KeyEvent event = {});
 
     /// Setup a callback function for mouse movement
     /// @param event The callback function to call when the cursor move
@@ -187,7 +195,8 @@ private:
 
 private:
     std::optional<MouseEvent> mouseCallback = {};
-    std::unordered_map<Key, KeyEvent> keyEventMap;
+    std::unordered_map<Key, KeyEvent> keyPressMap;
+    std::unordered_map<Key, KeyEvent> keyReleaseMap;
 
     std::string windowName;
     GLFWwindow *window = nullptr;

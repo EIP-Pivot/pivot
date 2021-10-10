@@ -16,8 +16,8 @@ VulkanApplication::VulkanApplication(): VulkanLoader(), window("Vulkan", 800, 60
         LOGGER_ENDL;
         bEnableValidationLayers = false;
     }
-    window.setKeyEventCallback(Window::Key::ESCAPE, [](Window &window, const Window::Key key,
-                                                       const Window::KeyAction action) { window.shouldClose(true); });
+    window.setKeyPressCallback(Window::Key::ESCAPE,
+                               [](Window &window, const Window::Key) { window.shouldClose(true); });
 }
 
 VulkanApplication::~VulkanApplication()

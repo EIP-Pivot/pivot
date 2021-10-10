@@ -21,7 +21,8 @@ vk::SurfaceKHR Window::createSurface(const vk::Instance &instance)
     return surface;
 }
 
-void Window::setKeyEventCallback(Window::Key key, Window::KeyEvent event) { keyEventMap.insert({key, event}); }
+void Window::setKeyPressCallback(Window::Key key, Window::KeyEvent event) { keyPressMap.insert({key, event}); }
+void Window::setKeyReleaseCallback(Window::Key key, Window::KeyEvent event) { keyReleaseMap.insert({key, event}); }
 void Window::setMouseMovementCallback(Window::MouseEvent event) { mouseCallback = event; }
 
 void Window::setTitle(const std::string &t) noexcept
@@ -104,7 +105,14 @@ void keyboard_callback(GLFWwindow *win, int key, int, int action, int)
 {
     auto window = (Window *)glfwGetWindowUserPointer(win);
     auto _key = static_cast<Window::Key>(key);
-    auto _action = static_cast<Window::KeyAction>(action);
 
-    if (window->keyEventMap.contains(_key)) window->keyEventMap.at(_key)(*window, _key, _action);
+    switch (action) {
+        case GLFW_PRESS:
+            if (window->keyPressMap.contains(_key)) window->keyPressMap.at(_key)(*window, _key);
+            break;
+        case GLFW_RELEASE:
+            if (window->keyReleaseMap.contains(_key)) window->keyReleaseMap.at(_key)(*window, _key);
+            break;
+        default: break;
+    }
 }

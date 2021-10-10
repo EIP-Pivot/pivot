@@ -87,7 +87,8 @@ public:
     /// @arg camera The information about the camera
     ///
     /// You must have already loaded your models and texture !
-    void draw(const I3DScene &scene, const ICamera &camera);
+    void draw(const I3DScene &scene, const ICamera &camera,
+              const std::optional<std::reference_wrapper<const ICamera>> cullingCamera = std::nullopt);
 
     /// @brief load the 3D models into CPU memory
     ///

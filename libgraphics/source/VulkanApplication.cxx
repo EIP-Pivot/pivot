@@ -28,7 +28,8 @@ VulkanApplication::~VulkanApplication()
 
 void VulkanApplication::init() { initVulkanRessources(); }
 
-void VulkanApplication::draw(const I3DScene &scene, const ICamera &camera)
+void VulkanApplication::draw(const I3DScene &scene, const ICamera &camera,
+                             const std::optional<std::reference_wrapper<const ICamera>> cullingCamera)
 try {
     auto &frame = frames[currentFrame];
     uint32_t imageIndex;
@@ -76,7 +77,9 @@ try {
     };
     auto gpuCamera = camera.getGPUCameraData(80.0f, swapchain.getAspectRatio(), 0.1f);
     auto sceneInformation = scene.getSceneInformations();
-    auto drawBatch = buildDrawBatch(sceneInformation, gpuCamera);
+    auto cullingGPUCamera =
+        cullingCamera.value_or(std::ref(camera)).get().getGPUCameraData(80.0f, swapchain.getAspectRatio(), 0.1f);
+    auto drawBatch = buildDrawBatch(sceneInformation, cullingGPUCamera);
     buildIndirectBuffers(drawBatch, frame);
 
     std::vector<gpuObject::UniformBufferObject> sceneData;

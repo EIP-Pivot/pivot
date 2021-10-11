@@ -70,6 +70,11 @@ private:
         uint32_t count;
     };
 
+    struct SceneObjectsGPUData {
+        std::vector<DrawBatch> objectDrawBatches;
+        std::vector<gpuObject::UniformBufferObject> objectGPUData;
+    };
+
 public:
     /// Default constructor
     VulkanApplication();
@@ -87,7 +92,12 @@ public:
     /// @arg camera The information about the camera
     ///
     /// You must have already loaded your models and texture !
-    void draw(const I3DScene &scene, const ICamera &camera);
+    void draw(const I3DScene &scene, const ICamera &camera
+#ifndef NDEBUG
+              ,
+              const std::optional<std::reference_wrapper<const ICamera>> cullingCamera = std::nullopt
+#endif
+    );
 
     /// @brief load the 3D models into CPU memory
     ///
@@ -126,7 +136,8 @@ private:
     static uint32_t rateDeviceSuitability(const vk::PhysicalDevice &device);
     static bool checkDeviceExtensionSupport(const vk::PhysicalDevice &device);
 
-    std::vector<DrawBatch> buildDrawBatch(std::vector<RenderObject> &object);
+    SceneObjectsGPUData buildSceneObjectsGPUData(std::vector<RenderObject> &objects,
+                                                 const ICamera::GPUCameraData &camera);
     void buildIndirectBuffers(const std::vector<DrawBatch> &scene, Frame &frame);
 
     void postInitialization();
@@ -179,6 +190,8 @@ public:
     MaterialStorage materials;
     /// Internal storage for the meshes
     MeshStorage loadedMeshes;
+    /// Internal storage for the meshes' bounding boxes
+    MeshBoundingBoxStorage meshesBoundingBoxes;
     /// Internal storage for the textures
     ImageStorage loadedTextures;
 

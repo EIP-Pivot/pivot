@@ -1,5 +1,6 @@
 #include "pivot/graphics/VulkanApplication.hxx"
 #include "pivot/graphics/DebugMacros.hxx"
+#include "pivot/graphics/culling.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
 #include <Logger.hpp>
@@ -31,7 +32,12 @@ VulkanApplication::~VulkanApplication()
 
 void VulkanApplication::init() { initVulkanRessources(); }
 
-void VulkanApplication::draw(const I3DScene &scene, const ICamera &camera)
+void VulkanApplication::draw(const I3DScene &scene, const ICamera &camera
+#ifndef NDEBUG
+                             ,
+                             const std::optional<std::reference_wrapper<const ICamera>> cullingCamera
+#endif
+)
 try {
     auto &frame = frames[currentFrame];
     uint32_t imageIndex;
@@ -79,15 +85,17 @@ try {
     };
     auto gpuCamera = camera.getGPUCameraData(80.0f, swapchain.getAspectRatio(), 0.1f);
     auto sceneInformation = scene.getSceneInformations();
-    auto drawBatch = buildDrawBatch(sceneInformation);
-    buildIndirectBuffers(drawBatch, frame);
+#ifdef NDEBUG
+    auto cullingGPUCamera = gpuCamera;
+#else
+    auto cullingGPUCamera =
+        cullingCamera.value_or(std::ref(camera)).get().getGPUCameraData(80.0f, swapchain.getAspectRatio(), 0.1f);
+#endif
 
-    std::vector<gpuObject::UniformBufferObject> sceneData;
-    std::transform(sceneInformation.begin(), sceneInformation.end(), std::back_inserter(sceneData),
-                   [this](const auto &i) {
-                       return gpuObject::UniformBufferObject(i.objectInformation, loadedTextures, materials);
-                   });
-    copyBuffer(frame.data.uniformBuffer, sceneData);
+    auto sceneObjectGPUData = buildSceneObjectsGPUData(sceneInformation, cullingGPUCamera);
+    buildIndirectBuffers(sceneObjectGPUData.objectDrawBatches, frame);
+
+    copyBuffer(frame.data.uniformBuffer, sceneObjectGPUData.objectGPUData);
 
     vk::DeviceSize offset = 0;
     vk::CommandBufferBeginInfo beginInfo;
@@ -101,7 +109,7 @@ try {
     cmd.bindIndexBuffer(indicesBuffers.buffer, 0, vk::IndexType::eUint32);
     cmd.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
     {
-        for (const auto &draw: drawBatch) {
+        for (const auto &draw: sceneObjectGPUData.objectDrawBatches) {
             cmd.drawIndexedIndirect(frame.indirectBuffer.buffer, draw.first * sizeof(vk::DrawIndexedIndirectCommand),
                                     draw.count, sizeof(vk::DrawIndexedIndirectCommand));
         }
@@ -124,32 +132,29 @@ try {
     return recreateSwapchain();
 }
 
-std::vector<VulkanApplication::DrawBatch> VulkanApplication::buildDrawBatch(std::vector<RenderObject> &object)
+VulkanApplication::SceneObjectsGPUData VulkanApplication::buildSceneObjectsGPUData(std::vector<RenderObject> &objects,
+                                                                                   const ICamera::GPUCameraData &camera)
 {
-    // std::sort(object.begin(), object.end(),
-    //           [](const auto &first, const auto &second) { return first.meshID == second.meshID; });
-    if (object.empty()) return {};
-    if (object.size() >= MAX_OBJECT) throw TooManyObjectInSceneError();
+    if (objects.empty()) return {};
+    if (objects.size() >= MAX_OBJECT) throw TooManyObjectInSceneError();
 
     std::vector<DrawBatch> packedDraws;
-    packedDraws.push_back({
-        .meshId = object.at(0).meshID,
-        .first = 0,
-        .count = 1,
-    });
+    std::vector<gpuObject::UniformBufferObject> objectGPUData;
+    unsigned drawCount = 0;
 
-    for (uint32_t i = 1; i < object.size(); i++) {
-        // if (object[i].meshID == packedDraws.back().meshId) {
-        //     packedDraws.back().count++;
-        // } else {
-        packedDraws.push_back({
-            .meshId = object.at(i).meshID,
-            .first = i,
-            .count = 1,
-        });
-        //}
+    for (auto &object: objects) {
+        auto boundingBox = meshesBoundingBoxes.at(object.meshID);
+        if (pivot::graphics::culling::should_object_be_rendered(object, boundingBox, camera)) {
+            packedDraws.push_back({
+                .meshId = object.meshID,
+                .first = drawCount++,
+                .count = 1,
+            });
+            objectGPUData.push_back(
+                gpuObject::UniformBufferObject(object.objectInformation, loadedTextures, materials));
+        }
     }
-    return packedDraws;
+    return {packedDraws, objectGPUData};
 }
 
 void VulkanApplication::buildIndirectBuffers(const std::vector<DrawBatch> &packedDraws, Frame &frame)

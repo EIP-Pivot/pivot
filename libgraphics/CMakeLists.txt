@@ -104,6 +104,7 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/VulkanApplication_static.cxx
                                    source/VulkanApplication_helper.cxx
                                    source/VulkanApplication_loader.cxx
+                                   source/culling.cxx
 )
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE <Logger.hpp> <glm/glm.hpp> <vulkan/vulkan.hpp>)

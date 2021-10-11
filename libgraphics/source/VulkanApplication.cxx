@@ -137,7 +137,8 @@ std::vector<VulkanApplication::DrawBatch> VulkanApplication::buildDrawBatch(std:
     std::vector<DrawBatch> packedDraws;
 
     for (uint32_t i = 0; i < object.size(); i++) {
-        if (culling::should_object_be_rendered(object[i], camera)) {
+        auto boundingBox = meshesBoundingBoxes.at(object.at(i).meshID);
+        if (culling::should_object_be_rendered(object[i], boundingBox, camera)) {
             packedDraws.push_back({
                 .meshId = object.at(i).meshID,
                 .first = i,

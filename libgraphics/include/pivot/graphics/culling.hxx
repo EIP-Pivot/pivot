@@ -4,7 +4,7 @@
 #include <pivot/graphics/Camera.hxx>
 #include <pivot/graphics/types/RenderObject.hxx>
 
-namespace culling
+namespace pivot::graphics::culling
 {
 bool should_object_be_rendered(const RenderObject &object, const MeshBoundingBox &box,
                                const ICamera::GPUCameraData &camera);

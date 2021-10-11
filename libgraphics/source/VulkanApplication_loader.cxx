@@ -56,7 +56,7 @@ size_t VulkanApplication::load3DModels(const std::vector<std::filesystem::path> 
         std::vector<tinyobj::shape_t> shapes;
         std::vector<tinyobj::material_t> materials;
         std::string warn, err;
-        MeshBoundingBox boundingBox;
+        MeshBoundingBox boundingBox{{0, 0, 0}, {0, 0, 0}};
 
         tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, f.string().c_str(), nullptr);
         if (!warn.empty()) {

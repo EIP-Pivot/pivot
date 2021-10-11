@@ -70,6 +70,11 @@ private:
         uint32_t count;
     };
 
+    struct SceneObjectsGPUData {
+        std::vector<DrawBatch> objectDrawBatches;
+        std::vector<gpuObject::UniformBufferObject> objectGPUData;
+    };
+
 public:
     /// Default constructor
     VulkanApplication();
@@ -127,7 +132,8 @@ private:
     static uint32_t rateDeviceSuitability(const vk::PhysicalDevice &device);
     static bool checkDeviceExtensionSupport(const vk::PhysicalDevice &device);
 
-    std::vector<DrawBatch> buildDrawBatch(std::vector<RenderObject> &object, const ICamera::GPUCameraData &camera);
+    SceneObjectsGPUData buildSceneObjectsGPUData(std::vector<RenderObject> &objects,
+                                                 const ICamera::GPUCameraData &camera);
     void buildIndirectBuffers(const std::vector<DrawBatch> &scene, Frame &frame);
 
     void postInitialization();

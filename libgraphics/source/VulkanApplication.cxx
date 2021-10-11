@@ -79,15 +79,10 @@ try {
     auto sceneInformation = scene.getSceneInformations();
     auto cullingGPUCamera =
         cullingCamera.value_or(std::ref(camera)).get().getGPUCameraData(80.0f, swapchain.getAspectRatio(), 0.1f);
-    auto drawBatch = buildDrawBatch(sceneInformation, cullingGPUCamera);
-    buildIndirectBuffers(drawBatch, frame);
+    auto sceneObjectGPUData = buildSceneObjectsGPUData(sceneInformation, cullingGPUCamera);
+    buildIndirectBuffers(sceneObjectGPUData.objectDrawBatches, frame);
 
-    std::vector<gpuObject::UniformBufferObject> sceneData;
-    std::transform(sceneInformation.begin(), sceneInformation.end(), std::back_inserter(sceneData),
-                   [this](const auto &i) {
-                       return gpuObject::UniformBufferObject(i.objectInformation, loadedTextures, materials);
-                   });
-    copyBuffer(frame.data.uniformBuffer, sceneData);
+    copyBuffer(frame.data.uniformBuffer, sceneObjectGPUData.objectGPUData);
 
     vk::DeviceSize offset = 0;
     vk::CommandBufferBeginInfo beginInfo;
@@ -101,7 +96,7 @@ try {
     cmd.bindIndexBuffer(indicesBuffers.buffer, 0, vk::IndexType::eUint32);
     cmd.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
     {
-        for (const auto &draw: drawBatch) {
+        for (const auto &draw: sceneObjectGPUData.objectDrawBatches) {
             cmd.drawIndexedIndirect(frame.indirectBuffer.buffer, draw.first * sizeof(vk::DrawIndexedIndirectCommand),
                                     draw.count, sizeof(vk::DrawIndexedIndirectCommand));
         }
@@ -123,25 +118,29 @@ try {
     return recreateSwapchain();
 }
 
-std::vector<VulkanApplication::DrawBatch> VulkanApplication::buildDrawBatch(std::vector<RenderObject> &object,
-                                                                            const ICamera::GPUCameraData &camera)
+VulkanApplication::SceneObjectsGPUData VulkanApplication::buildSceneObjectsGPUData(std::vector<RenderObject> &objects,
+                                                                                   const ICamera::GPUCameraData &camera)
 {
-    if (object.empty()) return {};
-    if (object.size() >= MAX_OBJECT) throw TooManyObjectInSceneError();
+    if (objects.empty()) return {};
+    if (objects.size() >= MAX_OBJECT) throw TooManyObjectInSceneError();
 
     std::vector<DrawBatch> packedDraws;
+    std::vector<gpuObject::UniformBufferObject> objectGPUData;
+    unsigned drawCount = 0;
 
-    for (uint32_t i = 0; i < object.size(); i++) {
-        auto boundingBox = meshesBoundingBoxes.at(object.at(i).meshID);
-        if (culling::should_object_be_rendered(object[i], boundingBox, camera)) {
+    for (auto &object: objects) {
+        auto boundingBox = meshesBoundingBoxes.at(object.meshID);
+        if (culling::should_object_be_rendered(object, boundingBox, camera)) {
             packedDraws.push_back({
-                .meshId = object.at(i).meshID,
-                .first = i,
+                .meshId = object.meshID,
+                .first = drawCount++,
                 .count = 1,
             });
+            objectGPUData.push_back(
+                gpuObject::UniformBufferObject(object.objectInformation, loadedTextures, materials));
         }
     }
-    return packedDraws;
+    return {packedDraws, objectGPUData};
 }
 
 void VulkanApplication::buildIndirectBuffers(const std::vector<DrawBatch> &packedDraws, Frame &frame)

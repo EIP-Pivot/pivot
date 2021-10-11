@@ -130,7 +130,7 @@ VulkanApplication::SceneObjectsGPUData VulkanApplication::buildSceneObjectsGPUDa
 
     for (auto &object: objects) {
         auto boundingBox = meshesBoundingBoxes.at(object.meshID);
-        if (culling::should_object_be_rendered(object, boundingBox, camera)) {
+        if (pivot::graphics::culling::should_object_be_rendered(object, boundingBox, camera)) {
             packedDraws.push_back({
                 .meshId = object.meshID,
                 .first = drawCount++,

@@ -2,7 +2,7 @@
 
 #include <pivot/graphics/culling.hxx>
 
-namespace culling
+namespace pivot::graphics::culling
 {
 
 bool should_object_be_rendered(const RenderObject &object, const MeshBoundingBox &box,

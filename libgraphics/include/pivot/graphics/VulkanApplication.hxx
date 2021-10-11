@@ -179,6 +179,8 @@ public:
     MaterialStorage materials;
     /// Internal storage for the meshes
     MeshStorage loadedMeshes;
+    /// Internal storage for the meshes' bounding boxes
+    MeshBoundingBoxStorage meshesBoundingBoxes;
     /// Internal storage for the textures
     ImageStorage loadedTextures;
 

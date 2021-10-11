@@ -8,6 +8,7 @@
 
 using ImageStorage = std::unordered_map<std::string, AllocatedImage>;
 using MeshStorage = std::unordered_map<std::string, GPUMesh>;
+using MeshBoundingBoxStorage = std::unordered_map<std::string, MeshBoundingBox>;
 using MaterialStorage = std::unordered_map<std::string, gpuObject::Material>;
 
 /// @namespace gpuObject

@@ -28,3 +28,29 @@ struct GPUMesh {
     /// Number of indice for the mesh
     vk::DeviceSize indicesSize = 0;
 };
+
+/// @struct MeshBoundingBox
+///
+/// @brief Represents the cubic bounding box of a mesh
+struct MeshBoundingBox {
+    /// Lowest point of the bouding box
+    glm::vec3 low;
+    /// Highest point of the bounding box
+    glm::vec3 high;
+
+    /// Returns an array of the 8 vertices of the bounding box
+    std::array<glm::vec3, 8> vertices() const
+    {
+        return {
+            low,
+            {high.x, low.y, low.z},
+            {low.x, high.y, low.z},
+            {low.x, low.y, high.z},
+            {high.x, high.y, low.z},
+            {high.x, low.y, high.z},
+            {low.x, high.y, high.z},
+            high,
+
+        };
+    }
+};

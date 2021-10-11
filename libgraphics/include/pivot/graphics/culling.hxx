@@ -6,7 +6,8 @@
 
 namespace culling
 {
-bool should_object_be_rendered(const RenderObject &object, const ICamera::GPUCameraData &camera);
+bool should_object_be_rendered(const RenderObject &object, const MeshBoundingBox &box,
+                               const ICamera::GPUCameraData &camera);
 }
 
 #endif    // PIVOT_ENGINE_GRAPHICS_CULLING_HXX

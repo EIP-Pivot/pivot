@@ -3,13 +3,6 @@
 #include <glm/gtx/quaternion.hpp>
 #include <iterator>
 
-gpuObject::Transform::Transform(const ObjectInformation::Transform &transform)
-    : translation(glm::translate(glm::mat4(1), transform.translation)),
-      rotation(glm::toMat4(glm::quat(transform.rotation))),
-      scale(glm::scale(glm::mat4(1), transform.scale))
-{
-}
-
 gpuObject::UniformBufferObject::UniformBufferObject(const ObjectInformation &info, const ImageStorage &stor,
                                                     const MaterialStorage &mat)
     : transform(info.transform),

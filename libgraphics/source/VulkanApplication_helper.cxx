@@ -12,6 +12,7 @@
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
+float VulkanApplication::getAspectRatio() const { return swapchain.getAspectRatio(); }
 void VulkanApplication::copyBufferToBuffer(const vk::Buffer &srcBuffer, vk::Buffer &dstBuffer,
                                            const vk::DeviceSize &size)
 {

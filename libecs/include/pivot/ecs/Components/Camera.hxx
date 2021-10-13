@@ -28,20 +28,6 @@ public:
     double yaw = YAW;
     double pitch = PITCH;
 
-    GPUCameraData getGPUCameraData(float fFOV = 70.f, float fAspectRatio = 1700.f / 900.f,
-                                   float fCloseClippingPlane = 0.1,
-                                   float fFarClippingPlane = MAX_PROJECTION_LIMIT) const final
-    {
-        auto projection = getProjection();
-        projection[1][1] *= -1;
-        auto view = getView();
-        GPUCameraData data{
-            .position = glm::vec4(position, 1.0f),
-            .viewproj = projection * view,
-        };
-        return data;
-    }
-
     glm::mat4 getProjection(float fFOV = 70.f, float fAspectRatio = 1700.f / 900.f, float fCloseClippingPlane = 0.1,
                             float fFarClippingPlane = MAX_PROJECTION_LIMIT)
     {
@@ -51,6 +37,20 @@ public:
     glm::mat4 getView()
     {
         return glm::lookAt(position, position + front, up);
+    }
+
+    GPUCameraData getGPUCameraData(float fFOV = 70.f, float fAspectRatio = 1700.f / 900.f,
+                                   float fCloseClippingPlane = 0.1,
+                                   float fFarClippingPlane = MAX_PROJECTION_LIMIT) const final
+    {
+        auto projection = getProjection(fFOV, fAspectRatio, fCloseClippingPlane, fFarClippingPlane);
+        projection[1][1] *= -1;
+        auto view = getView();
+        GPUCameraData data{
+            .position = glm::vec4(position, 1.0f),
+            .viewproj = projection * view,
+        };
+        return data;
     }
 
     void updateCameraVectors()

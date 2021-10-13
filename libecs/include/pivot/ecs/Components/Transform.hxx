@@ -2,9 +2,12 @@
 
 #include <glm/glm.hpp>
 
-struct Transform
+namespace pivot::ecs::component
 {
-	glm::vec3 position;
-    glm::vec3 rotation;
-    glm::vec3 scale;
-};
+    struct Transform
+    {
+        glm::vec3 position;
+        glm::vec3 rotation;
+        glm::vec3 scale;
+    };
+}

@@ -49,7 +49,7 @@ Transform::DecomposedMatrix Transform::decomposeMatrix(const glm::mat4 &modelMat
 {
     DecomposedMatrix ret;
 
-    if (glm::decompose(modelMatrix, ret.scale, ret.orientation, ret.translation, ret.skew, ret.perspective)) {
+    if (!glm::decompose(modelMatrix, ret.scale, ret.orientation, ret.translation, ret.skew, ret.perspective)) {
         throw std::runtime_error("Error while decomposing matrix");
     }
     return ret;

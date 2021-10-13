@@ -1,11 +1,20 @@
 #pragma once
 
-#include "pivot/graphics/interface/ICamera.hxx"
+#include <pivot/graphics/types/vk_types.hxx>
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
-class Camera : public ICamera
+#ifndef MAX_PROJECTION_LIMIT
+#define MAX_PROJECTION_LIMIT 100.0f
+#endif
+
+#ifndef MIN_PROJECTION_LIMIT
+#define MIN_PROJECTION_LIMIT 0.1f
+#endif
+
+class Camera
 {
 public:
     /// @cond
@@ -34,19 +43,16 @@ public:
         return glm::perspective(glm::radians(fFOV), fAspectRatio, fCloseClippingPlane, fFarClippingPlane);
     }
 
-    glm::mat4 getView() const
-    {
-        return glm::lookAt(position, position + front, up);
-    }
+    glm::mat4 getView() const { return glm::lookAt(position, position + front, up); }
 
-    GPUCameraData getGPUCameraData(float fFOV = 70.f, float fAspectRatio = 1700.f / 900.f,
-                                   float fCloseClippingPlane = 0.1,
-                                   float fFarClippingPlane = MAX_PROJECTION_LIMIT) const final
+    gpuObject::CameraData getGPUCameraData(float fFOV = 70.f, float fAspectRatio = 1700.f / 900.f,
+                                           float fCloseClippingPlane = 0.1,
+                                           float fFarClippingPlane = MAX_PROJECTION_LIMIT) const
     {
         auto projection = getProjection(fFOV, fAspectRatio, fCloseClippingPlane, fFarClippingPlane);
         projection[1][1] *= -1;
         auto view = getView();
-        GPUCameraData data{
+        gpuObject::CameraData data{
             .position = glm::vec4(position, 1.0f),
             .viewproj = projection * view,
         };

@@ -1,13 +1,13 @@
 #ifndef PIVOT_ENGINE_GRAPHICS_CULLING_HXX
 #define PIVOT_ENGINE_GRAPHICS_CULLING_HXX
 
-#include <pivot/graphics/interface/ICamera.hxx>
 #include <pivot/graphics/types/RenderObject.hxx>
+#include <pivot/graphics/types/vk_types.hxx>
 
 namespace pivot::graphics::culling
 {
 bool should_object_be_rendered(const RenderObject &object, const MeshBoundingBox &box,
-                               const ICamera::GPUCameraData &camera);
+                               const gpuObject::CameraData &camera);
 }
 
 #endif    // PIVOT_ENGINE_GRAPHICS_CULLING_HXX

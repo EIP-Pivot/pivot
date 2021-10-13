@@ -1,7 +1,6 @@
 #include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/QueueFamilyIndices.hxx"
 #include "pivot/graphics/VulkanApplication.hxx"
-#include "pivot/graphics/interface/ICamera.hxx"
 
 #include <Logger.hpp>
 #include <ostream>
@@ -97,7 +96,7 @@ bool VulkanApplication::isDeviceSuitable(const vk::PhysicalDevice &gpu, const vk
         swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
     }
     return indices.isComplete() && extensionsSupported && swapChainAdequate && deviceFeatures.samplerAnisotropy &&
-           deviceProperties.limits.maxPushConstantsSize >= sizeof(ICamera::GPUCameraData);
+           deviceProperties.limits.maxPushConstantsSize >= sizeof(gpuObject::CameraData);
 }
 
 uint32_t VulkanApplication::rateDeviceSuitability(const vk::PhysicalDevice &gpu)

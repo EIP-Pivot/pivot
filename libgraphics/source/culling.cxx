@@ -6,7 +6,7 @@ namespace pivot::graphics::culling
 {
 
 bool should_object_be_rendered(const RenderObject &object, const MeshBoundingBox &box,
-                               const ICamera::GPUCameraData &camera)
+                               const gpuObject::CameraData &camera)
 {
     bool result = false;
     for (const auto &point: box.vertices()) {

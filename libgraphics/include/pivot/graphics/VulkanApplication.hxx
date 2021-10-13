@@ -12,7 +12,6 @@
 #include "pivot/graphics/Swapchain.hxx"
 #include "pivot/graphics/VulkanLoader.hxx"
 #include "pivot/graphics/Window.hxx"
-#include "pivot/graphics/interface/I3DScene.hxx"
 #include "pivot/graphics/interface/ICamera.hxx"
 #include "pivot/graphics/types/Frame.hxx"
 #include "pivot/graphics/types/Material.hxx"
@@ -92,7 +91,7 @@ public:
     /// @arg camera The information about the camera
     ///
     /// You must have already loaded your models and texture !
-    void draw(const I3DScene &scene, const ICamera &camera
+    void draw(const std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
 #ifndef NDEBUG
               ,
               const std::optional<std::reference_wrapper<const ICamera>> cullingCamera = std::nullopt
@@ -139,8 +138,8 @@ private:
     static uint32_t rateDeviceSuitability(const vk::PhysicalDevice &device);
     static bool checkDeviceExtensionSupport(const vk::PhysicalDevice &device);
 
-    SceneObjectsGPUData buildSceneObjectsGPUData(std::vector<RenderObject> &objects,
                                                  const ICamera::GPUCameraData &camera);
+    SceneObjectsGPUData buildSceneObjectsGPUData(const std::vector<std::reference_wrapper<const RenderObject>> &objects,
     void buildIndirectBuffers(const std::vector<DrawBatch> &scene, Frame &frame);
 
     void postInitialization();

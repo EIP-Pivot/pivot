@@ -7,7 +7,6 @@
 #include "pivot/ecs/Core/EventManager.hxx"
 #include <memory>
 
-#include <pivot/graphics/interface/I3DScene.hxx>
 #include "pivot/ecs/Components/Camera.hxx"
 #include "pivot/ecs/Components/Tag.hxx"
 
@@ -33,7 +32,7 @@ protected:
     virtual void OnStop() {};
 };
 
-class Scene : public I3DScene, public IScene
+class Scene : public IScene
 {
 public:
     void Init();
@@ -170,10 +169,6 @@ public:
     /// gCoordinator.SendEvent({YourEventId});
     /// @endcode
     void SendEvent(EventId eventId);
-    
-    // I3DScene
-    virtual std::vector<RenderObject> getSceneInformations() const final;
-    std::vector<RenderObject> obj;
 
     // Camera
     void setCamera(std::uint16_t camera);

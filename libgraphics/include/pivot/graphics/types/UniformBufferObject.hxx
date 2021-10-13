@@ -21,6 +21,8 @@ private:
     };
 
 public:
+    /// Default constructor
+    Transform() = default;
     /// Constructor from vector
     Transform(const glm::vec3 &translation, const glm::vec3 &rotation, const glm::vec3 &scale);
 

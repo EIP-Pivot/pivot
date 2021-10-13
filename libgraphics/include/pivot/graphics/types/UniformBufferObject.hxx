@@ -21,7 +21,10 @@ private:
     };
 
 public:
-    /// Constructor
+    /// Constructor from vector
+    Transform(const glm::vec3 &translation, const glm::vec3 &rotation, const glm::vec3 &scale);
+
+    /// Constructor from matrices
     Transform(const glm::mat4 &translation, const glm::mat4 &rotation, const glm::mat4 &scale);
 
     /// Get a reference of the model matrix

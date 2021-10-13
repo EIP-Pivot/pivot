@@ -13,6 +13,12 @@ gpuObject::UniformBufferObject::UniformBufferObject(const ObjectInformation &inf
 {
 }
 
+Transform::Transform(const glm::vec3 &translation, const glm::vec3 &rotation, const glm::vec3 &scale)
+    : Transform(glm::translate(glm::mat4(1.0f), translation), glm::toMat4(glm::quat(rotation)),
+                glm::scale(glm::mat4(1.0f), scale))
+{
+}
+
 Transform::Transform(const glm::mat4 &translation, const glm::mat4 &rotation, const glm::mat4 &scale)
     : modelMatrix(translation * rotation * scale)
 {

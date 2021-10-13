@@ -29,12 +29,12 @@ public:
     double pitch = PITCH;
 
     glm::mat4 getProjection(float fFOV = 70.f, float fAspectRatio = 1700.f / 900.f, float fCloseClippingPlane = 0.1,
-                            float fFarClippingPlane = MAX_PROJECTION_LIMIT)
+                            float fFarClippingPlane = MAX_PROJECTION_LIMIT) const
     {
         return glm::perspective(glm::radians(fFOV), fAspectRatio, fCloseClippingPlane, fFarClippingPlane);
     }
 
-    glm::mat4 getView()
+    glm::mat4 getView() const
     {
         return glm::lookAt(position, position + front, up);
     }

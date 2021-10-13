@@ -32,11 +32,11 @@ VulkanApplication::~VulkanApplication()
 
 void VulkanApplication::init() { initVulkanRessources(); }
 
-                             const ICamera &camera
 void VulkanApplication::draw(const std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
+                             const gpuObject::CameraData &gpuCamera
 #ifndef NDEBUG
                              ,
-                             const std::optional<std::reference_wrapper<const ICamera>> cullingCamera
+                             const std::optional<std::reference_wrapper<const gpuObject::CameraData>> cullingCamera
 #endif
 )
 try {
@@ -84,12 +84,10 @@ try {
         .clearValueCount = static_cast<uint32_t>(clearValues.size()),
         .pClearValues = clearValues.data(),
     };
-    auto gpuCamera = camera.getGPUCameraData(80.0f, swapchain.getAspectRatio(), 0.1f);
 #ifdef NDEBUG
     auto cullingGPUCamera = gpuCamera;
 #else
-    auto cullingGPUCamera =
-        cullingCamera.value_or(std::ref(camera)).get().getGPUCameraData(80.0f, swapchain.getAspectRatio(), 0.1f);
+    auto cullingGPUCamera = cullingCamera.value_or(std::ref(gpuCamera)).get();
 #endif
 
     auto sceneObjectGPUData = buildSceneObjectsGPUData(sceneInformation, cullingGPUCamera);
@@ -103,7 +101,7 @@ try {
     cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
     cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, frame.data.objectDescriptor, nullptr);
     cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, texturesSet, nullptr);
-    cmd.pushConstants<ICamera::GPUCameraData>(
+    cmd.pushConstants<gpuObject::CameraData>(
         pipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, gpuCamera);
     cmd.bindVertexBuffers(0, vertexBuffers.buffer, offset);
     cmd.bindIndexBuffer(indicesBuffers.buffer, 0, vk::IndexType::eUint32);
@@ -133,8 +131,8 @@ try {
 }
 
 VulkanApplication::SceneObjectsGPUData
-                                            const ICamera::GPUCameraData &camera)
 VulkanApplication::buildSceneObjectsGPUData(const std::vector<std::reference_wrapper<const RenderObject>> &objects,
+                                            const gpuObject::CameraData &camera)
 {
     if (objects.empty()) return {};
     if (objects.size() >= MAX_OBJECT) throw TooManyObjectInSceneError();

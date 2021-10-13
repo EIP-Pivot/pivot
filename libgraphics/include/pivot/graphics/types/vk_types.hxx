@@ -18,4 +18,15 @@ using MaterialStorage = std::unordered_map<std::string, gpuObject::Material>;
 /// really important. As such, they need to be separated to avoid misuse
 namespace gpuObject
 {
-}
+/// @struct CameraData
+///
+/// @brief Hold the camera data, ready to be send to the GPU
+struct CameraData {
+    /// @brief Position of the camera.
+    ///
+    /// This is a vec4 for easier alignment
+    glm::vec4 position;
+    /// The camera projected view matrix
+    glm::mat4 viewproj;
+};
+}    // namespace gpuObject

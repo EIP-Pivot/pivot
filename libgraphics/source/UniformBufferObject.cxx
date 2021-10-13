@@ -47,7 +47,9 @@ void Transform::setScale(const glm::vec3 &scale)
 
 void Transform::addPosition(const glm::vec3 &position)
 {
-    modelMatrix = glm::translate(modelMatrix, position);
+    auto tmp = decomposeMatrix(modelMatrix);
+    tmp.translation += position;
+    modelMatrix = recomposeMatrix(tmp);
 }
 
 Transform::DecomposedMatrix Transform::decomposeMatrix(const glm::mat4 &modelMatrix)

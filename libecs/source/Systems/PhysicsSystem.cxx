@@ -13,7 +13,7 @@ void PhysicsSystem::Update(float dt)
 {
     for (auto const &entity: mEntities) {
         auto &rigidBody = gSceneManager.getCurrentLevel().GetComponent<RigidBody>(entity);
-        auto &transform = gSceneManager.getCurrentLevel().GetComponent<Transform>(entity);
+        auto &transform = gSceneManager.getCurrentLevel().GetComponent<pivot::ecs::component::Transform>(entity);
 
         // Forces
         auto const &gravity = gSceneManager.getCurrentLevel().GetComponent<Gravity>(entity);

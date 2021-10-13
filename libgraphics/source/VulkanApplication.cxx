@@ -32,7 +32,8 @@ VulkanApplication::~VulkanApplication()
 
 void VulkanApplication::init() { initVulkanRessources(); }
 
-void VulkanApplication::draw(const I3DScene &scene, const ICamera &camera
+                             const ICamera &camera
+void VulkanApplication::draw(const std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
 #ifndef NDEBUG
                              ,
                              const std::optional<std::reference_wrapper<const ICamera>> cullingCamera
@@ -84,7 +85,6 @@ try {
         .pClearValues = clearValues.data(),
     };
     auto gpuCamera = camera.getGPUCameraData(80.0f, swapchain.getAspectRatio(), 0.1f);
-    auto sceneInformation = scene.getSceneInformations();
 #ifdef NDEBUG
     auto cullingGPUCamera = gpuCamera;
 #else
@@ -132,8 +132,9 @@ try {
     return recreateSwapchain();
 }
 
-VulkanApplication::SceneObjectsGPUData VulkanApplication::buildSceneObjectsGPUData(std::vector<RenderObject> &objects,
-                                                                                   const ICamera::GPUCameraData &camera)
+VulkanApplication::SceneObjectsGPUData
+                                            const ICamera::GPUCameraData &camera)
+VulkanApplication::buildSceneObjectsGPUData(const std::vector<std::reference_wrapper<const RenderObject>> &objects,
 {
     if (objects.empty()) return {};
     if (objects.size() >= MAX_OBJECT) throw TooManyObjectInSceneError();
@@ -142,16 +143,16 @@ VulkanApplication::SceneObjectsGPUData VulkanApplication::buildSceneObjectsGPUDa
     std::vector<gpuObject::UniformBufferObject> objectGPUData;
     unsigned drawCount = 0;
 
-    for (auto &object: objects) {
-        auto boundingBox = meshesBoundingBoxes.at(object.meshID);
+    for (const auto &object: objects) {
+        auto boundingBox = meshesBoundingBoxes.at(object.get().meshID);
         if (pivot::graphics::culling::should_object_be_rendered(object, boundingBox, camera)) {
             packedDraws.push_back({
-                .meshId = object.meshID,
+                .meshId = object.get().meshID,
                 .first = drawCount++,
                 .count = 1,
             });
             objectGPUData.push_back(
-                gpuObject::UniformBufferObject(object.objectInformation, loadedTextures, materials));
+                gpuObject::UniformBufferObject(object.get().objectInformation, loadedTextures, materials));
         }
     }
     return {packedDraws, objectGPUData};

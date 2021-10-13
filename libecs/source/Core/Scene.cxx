@@ -63,10 +63,6 @@ void Scene::SendEvent(EventId eventId)
     mEventManager->SendEvent(eventId);
 }
 
-std::vector<RenderObject> Scene::getSceneInformations() const
-{
-    return obj;
-}
 
 void Scene::setCamera(std::uint16_t camera)
 {

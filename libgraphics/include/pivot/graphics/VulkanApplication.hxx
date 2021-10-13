@@ -111,6 +111,9 @@ public:
     /// @return the number of file successfully loaded
     size_t loadTextures(const std::vector<std::filesystem::path> &);
 
+    /// @brief get Swapchain aspect ratio
+    float getAspectRatio() const;
+
 private:
     void pushModelsToGPU();
     void pushTexturesToGPU();

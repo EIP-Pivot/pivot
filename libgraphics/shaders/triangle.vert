@@ -13,14 +13,9 @@ layout(location = 3) out vec2 fragTextCoords;
 layout(location = 4) out uint textureIndex;
 layout(location = 5) out uint materialIndex;
 
-struct Transform {
-    mat4 translation;
-    mat4 rotation;
-    mat4 scale;
-};
 
 struct UniformBufferObject {
-    Transform transform;
+    mat4 modelMatrix;
     uint textureIndex;
     uint materialIndex;
 };
@@ -36,14 +31,11 @@ layout (push_constant) uniform constants {
 
 
 void main() {
-    Transform ubo = objectBuffer.objects[gl_BaseInstance].transform;
-    mat4 modelMatrix = ubo.translation * ubo.rotation  * ubo.scale;
-
-    gl_Position = cameraData.viewproj * modelMatrix * vec4(inPosition, 1.0);
+    gl_Position = cameraData.viewproj * objectBuffer.objects[gl_BaseInstance].modelMatrix * vec4(inPosition, 1.0);
 
     fragColor = inColor;
-    fragPosition = vec3(modelMatrix * vec4(inPosition, 1.0));
-    fragNormal = mat3(transpose(inverse(modelMatrix))) * inNormal;
+    fragPosition = vec3(objectBuffer.objects[gl_BaseInstance].modelMatrix * vec4(inPosition, 1.0));
+    fragNormal = mat3(transpose(inverse(objectBuffer.objects[gl_BaseInstance].modelMatrix))) * inNormal;
     fragTextCoords = inTextCoords;
     textureIndex = objectBuffer.objects[gl_BaseInstance].textureIndex;
     materialIndex = objectBuffer.objects[gl_BaseInstance].materialIndex;

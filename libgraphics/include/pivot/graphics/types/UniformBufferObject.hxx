@@ -4,28 +4,52 @@
 
 #include <glm/mat4x4.hpp>
 #include <string>
+#include <variant>
 
-namespace gpuObject
-{
 /// @struct Transform
 ///
-/// @brief Hold the model matrices
-struct Transform {
-    /// The translation matrix
-    glm::mat4 translation;
-    /// The rotation matrix
-    glm::mat4 rotation;
-    /// The scale matrix
-    glm::mat4 scale;
+/// @brief Hold the model matrix
+class Transform
+{
+private:
+    struct DecomposedMatrix {
+        glm::vec3 scale;
+        glm::quat orientation;
+        glm::vec3 translation;
+        glm::vec3 skew;
+        glm::vec4 perspective;
+    };
+
+public:
+    /// Constructor
+    Transform(const glm::mat4 &translation, const glm::mat4 &rotation, const glm::mat4 &scale);
+
+    /// Get a reference of the model matrix
+    inline glm::mat4 &getModelMatrix() noexcept { return modelMatrix; }
+    /// Get a constant reference of the model matrix
+    inline const glm::mat4 &getModelMatrix() const noexcept { return modelMatrix; }
+
+    /// Set the rotation of the model matrix;
+    void setRotation(const glm::vec3 &rotation);
+    /// Set the position of the model matrix;
+    void setPosition(const glm::vec3 &position);
+    /// Set the scale of the model matrix;
+    void setScale(const glm::vec3 &scale);
+
+private:
+    static DecomposedMatrix decomposeMatrix(const glm::mat4 &modelMatrix);
+    static glm::mat4 recomposeMatrix(const DecomposedMatrix &modelMatrix);
+
+private:
+    glm::mat4 modelMatrix;
 };
-}    // namespace gpuObject
 
 /// @class ObjectInformation
 ///
 /// @brief Hold the information of the 3D object, on the CPU-side
 struct ObjectInformation {
     /// The object transform
-    gpuObject::Transform transform;
+    Transform transform;
     /// The name of the texture to apply on the object
     std::string textureIndex;
     /// The name of the material to use on the object
@@ -44,8 +68,8 @@ struct UniformBufferObject {
     /// @param materialStor The material storage, used to resolve material name
     UniformBufferObject(const ObjectInformation &info, const ImageStorage &imageStor,
                         const MaterialStorage &materialStor);
-    /// The GPU transformation matrices
-    Transform transform;
+    /// The model matrix
+    glm::mat4 modelMatrix;
     /// The index of the texture in the buffer
     alignas(16) uint32_t textureIndex = 0;
     /// The index of the material in the buffer

@@ -2,8 +2,7 @@ project(pivot-ecs)
 
 include(FetchContent)
 
-add_library(${PROJECT_NAME} source/Systems/PhysicsSystem.cxx
-                            source/Systems/ControlSystem.cxx
+add_library(${PROJECT_NAME} source/Systems/ControlSystem.cxx
                             source/Core/ComponentManager.cxx
                             source/Core/Scene.cxx
                             source/Core/EntityManager.cxx

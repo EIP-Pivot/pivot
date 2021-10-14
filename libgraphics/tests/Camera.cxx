@@ -1,0 +1,78 @@
+#include "Camera.hxx"
+#include <glm/gtc/matrix_transform.hpp>
+
+Camera::Camera(glm::vec3 pos, glm::vec3 up, float yaw, float pitch)
+    : position(pos), front(glm::vec3(0.0f, 0.0f, -1.0f)), worldUp(up), yaw(yaw), pitch(pitch)
+{
+    updateCameraVectors();
+}
+
+glm::mat4 Camera::getViewMatrix() const noexcept { return glm::lookAt(position, position + front, up); }
+
+gpuObject::CameraData Camera::getGPUCameraData(float fFOV, float fAspectRatio, float fCloseClippingPlane,
+                                               float fFarClippingPlane) const
+{
+    auto projection = glm::perspective(glm::radians(fFOV), fAspectRatio, fCloseClippingPlane, fFarClippingPlane);
+    projection[1][1] *= -1;
+    auto view = this->getViewMatrix();
+    gpuObject::CameraData data{
+        .position = glm::vec4(position, 1.0f),
+        .viewproj = projection * view,
+    };
+    return data;
+}
+
+void Camera::updateCameraVectors()
+{
+    glm::vec3 tmpFront;
+    tmpFront.x = std::cos(glm::radians(yaw)) * std::cos(glm::radians(pitch));
+    tmpFront.y = std::sin(glm::radians(pitch));
+    tmpFront.z = std::sin(glm::radians(yaw)) * std::cos(glm::radians(pitch));
+
+    front = glm::normalize(tmpFront);
+    right = glm::normalize(glm::cross(tmpFront, worldUp));
+    up = glm::normalize(glm::cross(right, tmpFront));
+}
+
+void Camera::processKeyboard(Movement direction) noexcept
+{
+    auto velocity = movementSpeed;
+    switch (direction) {
+        case Movement::FORWARD: {
+            position.x += front.x * velocity;
+            position.z += front.z * velocity;
+        } break;
+        case Movement::BACKWARD: {
+            position.x -= front.x * velocity;
+            position.z -= front.z * velocity;
+        } break;
+        case Movement::RIGHT: {
+            position.x += right.x * velocity;
+            position.z += right.z * velocity;
+        } break;
+        case Movement::LEFT: {
+            position.x -= right.x * velocity;
+            position.z -= right.z * velocity;
+        } break;
+        case Movement::UP: {
+            position.y += jumpHeight;
+        } break;
+        case Movement::DOWN: position.y -= velocity; break;
+    }
+}
+
+void Camera::processMouseMovement(float xoffset, float yoffset, bool bConstrainPitch)
+{
+    xoffset *= SENSITIVITY;
+    yoffset *= SENSITIVITY;
+
+    yaw += xoffset;
+    pitch += yoffset;
+
+    if (bConstrainPitch) {
+        if (pitch > 89.0f) pitch = 89.0f;
+        if (pitch < -89.0f) pitch = -89.0f;
+    }
+
+    updateCameraVectors();
+}

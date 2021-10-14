@@ -157,5 +157,6 @@ set(TEST_NAME ${PROJECT_NAME}_test)
 add_executable(${TEST_NAME}
   tests/main.cxx
   tests/culling.cxx
+  tests/Camera.cxx
 )
 target_link_libraries(${TEST_NAME} Catch2 ${PROJECT_NAME})

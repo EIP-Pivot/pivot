@@ -39,6 +39,11 @@ void Scene::DestroyEntity(Entity entity)
 
 Signature Scene::getSignature(Entity entity) { return mEntityManager->GetSignature(entity); }
 
+std::string &Scene::getEntityName(Entity entity)
+{
+    return mComponentManager->GetComponent<Tag>(entity).name;
+}
+
 uint32_t Scene::getLivingEntityCount() { return mEntityManager->getLivingEntityCount(); }
 
 std::unordered_map<const char *, ComponentType> Scene::getComponentsTypes()

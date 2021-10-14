@@ -59,6 +59,8 @@ public:
 
     Signature getSignature(Entity entity);
 
+    std::string &getEntityName(Entity entity);
+
     uint32_t getLivingEntityCount();
 
     // Component methods

@@ -143,7 +143,8 @@ VulkanApplication::buildSceneObjectsGPUData(const std::vector<std::reference_wra
 
     for (const auto &object: objects) {
         auto boundingBox = meshesBoundingBoxes.at(object.get().meshID);
-        if (pivot::graphics::culling::should_object_be_rendered(object, boundingBox, camera)) {
+        if (pivot::graphics::culling::should_object_be_rendered(object.get().objectInformation.transform, boundingBox,
+                                                                camera)) {
             packedDraws.push_back({
                 .meshId = object.get().meshID,
                 .first = drawCount++,

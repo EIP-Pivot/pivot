@@ -35,7 +35,10 @@ protected:
 class Scene : public IScene
 {
 public:
+    Scene(std::string sceneName = "Scene"): name(sceneName){};
     void Init();
+
+    std::string getName();
 
     // Entity methods
 
@@ -178,6 +181,7 @@ public:
     std::vector<Entity> &getCameras();
 
 private:
+    std::string name;
     std::unique_ptr<ComponentManager> mComponentManager;
     std::unique_ptr<EntityManager> mEntityManager;
     std::unique_ptr<EventManager> mEventManager;

@@ -34,7 +34,9 @@ struct GPUMesh {
 /// @brief Represents the cubic bounding box of a mesh
 struct MeshBoundingBox {
     MeshBoundingBox() = delete;
+    /// New bounding box for a model with only one point
     explicit MeshBoundingBox(glm::vec3 initialPoint): low(initialPoint), high(initialPoint){};
+    /// New bounding box with explicitely set low and high point
     MeshBoundingBox(glm::vec3 low, glm::vec3 high): low(low), high(high){};
 
     /// Lowest point of the bouding box

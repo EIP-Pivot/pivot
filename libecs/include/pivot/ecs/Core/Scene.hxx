@@ -73,6 +73,12 @@ public:
         mComponentManager->RegisterComponent<T>();
     }
 
+    template <typename T>
+    bool isRegister()
+    {
+        return mComponentManager->isRegister<T>();
+    }
+
     /// Add a component to Entity
     /// @code
     /// gCoordinator.AddComponent<{YourComponent}>({YourEntity});

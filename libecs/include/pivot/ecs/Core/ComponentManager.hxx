@@ -26,6 +26,13 @@ public:
     }
 
     template <typename T>
+    bool isRegister()
+    {
+        const char *typeName = typeid(T).name();
+        return mComponentTypes.contains(typeName);
+    }
+
+    template <typename T>
     ComponentType GetComponentType()
     {
         const char *typeName = typeid(T).name();

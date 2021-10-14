@@ -10,6 +10,11 @@ void Scene::Init()
     mCurrentCamera = 0;
 }
 
+std::string Scene::getName()
+{
+    return name;
+}
+
 Entity Scene::CreateEntity()
 {
     Entity newEntity = mEntityManager->CreateEntity();

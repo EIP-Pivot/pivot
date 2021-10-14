@@ -12,6 +12,7 @@ class SceneManager {
 public:
     void Init();
 
+    LevelId registerLevel(std::string name);
     LevelId registerLevel();
     void    unregisterLevel(LevelId toDelete);
 
@@ -22,7 +23,7 @@ public:
     Scene &getLevelById(LevelId idToGet);
     Scene &operator[](LevelId id);
 
-
+    std::size_t getLivingScene();
 private:
     std::unordered_map<LevelId, Scene> _levels{};
     LevelId _currentActiveLevel;

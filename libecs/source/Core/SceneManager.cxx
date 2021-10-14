@@ -5,11 +5,15 @@ void SceneManager::Init() {
     _currentActiveLevel = LevelId(-1);
 }
 
-LevelId SceneManager::registerLevel() {
-    // if (_levels.size() >= MAX_LEVELS)
-    //     throw EcsException("SceneManager is already at max capacity. Delete a scene before registering a new one.");
+LevelId SceneManager::registerLevel(std::string name)
+{
+    _levels[LevelId(_levels.size())] = Scene(name);
+    return (LevelId(_levels.size() - 1));
+}
 
-    _levels[LevelId(_levels.size())] = Scene();
+LevelId SceneManager::registerLevel()
+{
+    _levels[LevelId(_levels.size())] = Scene("Scene " + std::to_string(LevelId(_levels.size())));
     return (LevelId(_levels.size() - 1));
 }
 
@@ -47,4 +51,9 @@ Scene &SceneManager::getLevelById(LevelId idToGet) {
 
 Scene &SceneManager::operator[](LevelId id) {
     return getLevelById(id);
+}
+
+std::size_t SceneManager::getLivingScene()
+{
+    return _levels.size();
 }

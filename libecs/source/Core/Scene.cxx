@@ -10,17 +10,23 @@ void Scene::Init()
     mCurrentCamera = 0;
 }
 
-std::string Scene::getName()
-{
-    return name;
-}
+std::string Scene::getName() { return name; }
 
 Entity Scene::CreateEntity()
 {
     Entity newEntity = mEntityManager->CreateEntity();
     mComponentManager->AddComponent<Tag>(newEntity, {
-        .name = "Default",
-    });
+                                                        .name = "Entity " + std::to_string(newEntity),
+                                                    });
+    return newEntity;
+}
+
+Entity Scene::CreateEntity(std::string name)
+{
+    Entity newEntity = mEntityManager->CreateEntity();
+    mComponentManager->AddComponent<Tag>(newEntity, {
+                                                        .name = name,
+                                                    });
     return newEntity;
 }
 
@@ -31,15 +37,9 @@ void Scene::DestroyEntity(Entity entity)
     mSystemManager->EntityDestroyed(entity);
 }
 
-Signature Scene::getSignature(Entity entity)
-{
-    return mEntityManager->GetSignature(entity);
-}
+Signature Scene::getSignature(Entity entity) { return mEntityManager->GetSignature(entity); }
 
-uint32_t Scene::getLivingEntityCount()
-{
-    return mEntityManager->getLivingEntityCount();
-}
+uint32_t Scene::getLivingEntityCount() { return mEntityManager->getLivingEntityCount(); }
 
 std::unordered_map<const char *, ComponentType> Scene::getComponentsTypes()
 {
@@ -48,9 +48,7 @@ std::unordered_map<const char *, ComponentType> Scene::getComponentsTypes()
 
 void Scene::Update(float dt)
 {
-    for (std::shared_ptr<System> system: mSystems) {
-        system->Update(dt);
-    }
+    for (std::shared_ptr<System> system: mSystems) { system->Update(dt); }
 }
 
 void Scene::AddEventListener(EventId eventId, std::function<void(Event &)> const &listener)
@@ -58,40 +56,20 @@ void Scene::AddEventListener(EventId eventId, std::function<void(Event &)> const
     mEventManager->AddListener(eventId, listener);
 }
 
-void Scene::SendEvent(Event &event)
-{
-    mEventManager->SendEvent(event);
-}
+void Scene::SendEvent(Event &event) { mEventManager->SendEvent(event); }
 
-void Scene::SendEvent(EventId eventId)
-{
-    mEventManager->SendEvent(eventId);
-}
+void Scene::SendEvent(EventId eventId) { mEventManager->SendEvent(eventId); }
 
+void Scene::setCamera(std::uint16_t camera) { mCurrentCamera = camera; }
 
-void Scene::setCamera(std::uint16_t camera)
-{
-    mCurrentCamera = camera;
-}
+void Scene::addCamera(Entity camera) { mCamera.push_back(camera); }
 
-void Scene::addCamera(Entity camera)
-{
-    mCamera.push_back(camera);
-}
-
-void Scene::switchCamera()
-{
-    mCurrentCamera = (mCurrentCamera + 1) % mCamera.size();
-}
+void Scene::switchCamera() { mCurrentCamera = (mCurrentCamera + 1) % mCamera.size(); }
 
 Camera &Scene::getCamera()
 {
-    if (mCamera.size() == 0)
-        throw EcsException("No camera set");
+    if (mCamera.size() == 0) throw EcsException("No camera set");
     return mComponentManager->GetComponent<Camera>(mCamera[mCurrentCamera]);
 }
 
-std::vector<Entity> &Scene::getCameras()
-{
-    return mCamera;
-}
+std::vector<Entity> &Scene::getCameras() { return mCamera; }

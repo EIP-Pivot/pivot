@@ -158,5 +158,7 @@ add_executable(${TEST_NAME}
   tests/main.cxx
   tests/culling.cxx
   tests/Camera.cxx
+  tests/bounding_box.cxx
 )
+target_include_directories(${TEST_NAME} PRIVATE tests/)
 target_link_libraries(${TEST_NAME} Catch2 ${PROJECT_NAME})

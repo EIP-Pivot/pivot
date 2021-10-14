@@ -15,17 +15,17 @@ std::string Scene::getName() { return name; }
 Entity Scene::CreateEntity()
 {
     Entity newEntity = mEntityManager->CreateEntity();
-    mComponentManager->AddComponent<Tag>(newEntity, {
-                                                        .name = "Entity " + std::to_string(newEntity),
-                                                    });
+    AddComponent<Tag>(newEntity, {
+                                     .name = "Entity " + std::to_string(newEntity),
+                                 });
     return newEntity;
 }
 
-Entity Scene::CreateEntity(std::string name)
+Entity Scene::CreateEntity(std::string newName)
 {
     Entity newEntity = mEntityManager->CreateEntity();
     mComponentManager->AddComponent<Tag>(newEntity, {
-                                                        .name = name,
+                                                        .name = newName,
                                                     });
     return newEntity;
 }

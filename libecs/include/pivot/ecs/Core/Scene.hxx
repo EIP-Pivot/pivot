@@ -45,10 +45,17 @@ public:
     /// Create a new entity
     /// @return Entity New entity
     Entity CreateEntity();
-    Entity CreateEntity(std::string name);
+    Entity CreateEntity(std::string newName);
 
     /// @param[in] entity  Entity to remove.
     void DestroyEntity(Entity entity);
+
+    template <typename T>
+    bool hasComponent(Entity entity)
+    {
+        Signature entitySignature = mEntityManager->GetSignature(entity);
+        return entitySignature.test(mComponentManager->GetComponentType<T>());
+    }
 
     Signature getSignature(Entity entity);
 

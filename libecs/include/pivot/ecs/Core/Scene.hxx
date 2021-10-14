@@ -54,7 +54,7 @@ public:
     bool hasComponent(Entity entity)
     {
         Signature entitySignature = mEntityManager->GetSignature(entity);
-        return entitySignature.test(mComponentManager->GetComponentType<T>());
+        return isRegister<T>() && entitySignature.test(mComponentManager->GetComponentType<T>());
     }
 
     Signature getSignature(Entity entity);

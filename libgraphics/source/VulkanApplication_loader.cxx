@@ -56,7 +56,7 @@ size_t VulkanApplication::load3DModels(const std::vector<std::filesystem::path> 
         std::vector<tinyobj::shape_t> shapes;
         std::vector<tinyobj::material_t> materials;
         std::string warn, err;
-        MeshBoundingBox boundingBox{{0, 0, 0}, {0, 0, 0}};
+        std::optional<MeshBoundingBox> bounding_box;
 
         tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, f.string().c_str(), nullptr);
         if (!warn.empty()) {
@@ -103,18 +103,17 @@ size_t VulkanApplication::load3DModels(const std::vector<std::filesystem::path> 
                 indexStagingBuffer.push_back(uniqueVertices.at(vertex));
 
                 // Update bounding box if point is outside of it
-                boundingBox.high.x = std::max(vertex.pos.x, boundingBox.high.x);
-                boundingBox.high.y = std::max(vertex.pos.y, boundingBox.high.y);
-                boundingBox.high.z = std::max(vertex.pos.z, boundingBox.high.z);
-                boundingBox.low.x = std::min(vertex.pos.x, boundingBox.low.x);
-                boundingBox.low.y = std::min(vertex.pos.y, boundingBox.low.y);
-                boundingBox.low.z = std::min(vertex.pos.z, boundingBox.low.z);
+                if (!bounding_box) {
+                    bounding_box = std::make_optional(MeshBoundingBox(vertex.pos));
+                } else {
+                    bounding_box->addPoint(vertex.pos);
+                }
             }
         }
         mesh.indicesSize = indexStagingBuffer.size() - mesh.indicesOffset;
         mesh.verticiesSize = vertexStagingBuffer.size() - mesh.verticiesOffset;
         loadedMeshes[f.stem().string()] = mesh;
-        meshesBoundingBoxes[f.stem().string()] = boundingBox;
+        meshesBoundingBoxes.insert({f.stem().string(), bounding_box.value()});
     }
     cpuStorage.vertexBuffer.swap(vertexStagingBuffer);
     cpuStorage.indexBuffer.swap(indexStagingBuffer);

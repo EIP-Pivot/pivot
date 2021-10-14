@@ -84,6 +84,7 @@ if (NOT imgui_POPULATED)
 
                     ${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
                     ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
+                    ${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp
     )
     target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR}/)
     target_link_libraries(imgui PRIVATE Vulkan::Vulkan glfw)

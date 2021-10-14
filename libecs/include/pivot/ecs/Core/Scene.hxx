@@ -45,6 +45,7 @@ public:
     /// Create a new entity
     /// @return Entity New entity
     Entity CreateEntity();
+    Entity CreateEntity(std::string name);
 
     /// @param[in] entity  Entity to remove.
     void DestroyEntity(Entity entity);

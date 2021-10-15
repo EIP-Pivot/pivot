@@ -32,7 +32,21 @@ public:
 
         mSignatures.insert({typeName, signature});
     }
-    
+
+    template <typename T>
+    void setEntityToSystem(Entity entity)
+    {
+        const char *typeName = typeid(T).name();
+        mSystems[typeName]->mEntities.insert(entity);
+    }
+
+    template <typename T>
+    bool hasSystem()
+    {
+        const char *typeName = typeid(T).name();
+        return mSystems.contains(typeName);
+    }
+
     void EntityDestroyed(Entity entity);
     void EntitySignatureChanged(Entity entity, Signature entitySignature);
 

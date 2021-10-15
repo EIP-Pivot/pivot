@@ -162,6 +162,16 @@ public:
     void SetSystemSignature(Signature signature)
     {
         mSystemManager->SetSignature<T>(signature);
+        for (Entity entity = 0; entity < getLivingEntityCount(); entity++) {
+            if ( (getSignature(entity) & signature) == signature)
+                mSystemManager->setEntityToSystem<T>(entity);
+        }
+    }
+
+    template <typename T>
+    bool hasSystem()
+    {
+        return mSystemManager->hasSystem<T>();
     }
 
     void Update(float dt);

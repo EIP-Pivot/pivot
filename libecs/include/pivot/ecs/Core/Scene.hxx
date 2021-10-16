@@ -10,46 +10,54 @@
 #include "pivot/ecs/Components/Camera.hxx"
 #include "pivot/ecs/Components/Tag.hxx"
 
-/// @class Coordinator
+/// @class IScene
 ///
-/// @brief The main class of the ecs
-///
-/// You only need this class to manage all the Entity component syteme
-/// @code
-/// // Initializes the coordinator before its use
-/// // (Temporary) The coordinator is declared as a global variables gCoordinator
-/// gCoordinator.Init();
-/// @endcode
-
+/// @brief Scene interface for transitional event
 class IScene {
-public:
-
 protected:
+    /// Called when scene is create
     virtual void OnCreate() {};
+    /// Called every frame
     virtual void OnTick() {};
+    /// Called when scene is set to pause
     virtual void OnPause() {};
+    /// Called when scene is resume
     virtual void OnResume() {};
+    /// Called when scene is delete
     virtual void OnStop() {};
 };
 
+/// @class Scene
+///
+/// @brief Coordinates the manager together
 class Scene : public IScene
 {
 public:
+    /// Default constructor, if no name specified it will generate a name like Scene 1
     Scene(std::string sceneName = "Scene"): name(sceneName){};
+
+    /// Init manager
     void Init();
 
+    /// Get scene name
     std::string getName();
+
+    /// Set scene name
+    void setName(std::string newName){ name = newName; }
 
     // Entity methods
 
     /// Create a new entity
     /// @return Entity New entity
     Entity CreateEntity();
+
+    /// Create e named entity
     Entity CreateEntity(std::string newName);
 
     /// @param[in] entity  Entity to remove.
     void DestroyEntity(Entity entity);
 
+    /// Check if entity get a component
     template <typename T>
     bool hasComponent(Entity entity)
     {
@@ -57,10 +65,13 @@ public:
         return isRegister<T>() && entitySignature.test(mComponentManager->GetComponentType<T>());
     }
 
+    /// Get signature of an entity
     Signature getSignature(Entity entity);
 
+    /// Get name of an entity
     std::string &getEntityName(Entity entity);
 
+    /// Get the number of entity in the scene
     uint32_t getLivingEntityCount();
 
     // Component methods
@@ -75,6 +86,7 @@ public:
         mComponentManager->RegisterComponent<T>();
     }
 
+    /// Check if the component is register in the scene
     template <typename T>
     bool isRegister()
     {
@@ -134,6 +146,7 @@ public:
         return mComponentManager->GetComponentType<T>();
     }
 
+    /// Get the list of component type use in signature
     std::unordered_map<const char *, ComponentType> getComponentsTypes();
 
     // System methods
@@ -168,12 +181,14 @@ public:
         }
     }
 
+    /// Check if a system is register in a scene
     template <typename T>
     bool hasSystem()
     {
         return mSystemManager->hasSystem<T>();
     }
 
+    /// Update registered systems
     void Update(float dt);
 
     // Event methods
@@ -200,10 +215,15 @@ public:
     void SendEvent(EventId eventId);
 
     // Camera
+    /// Set camera to use
     void setCamera(std::uint16_t camera);
+    /// Add camera to scene camera list
     void addCamera(Entity camera);
+    /// Switch camera
     void switchCamera();
+    /// Get current camera
     Camera &getCamera();
+    /// Get camera list
     std::vector<Entity> &getCameras();
 
 private:

@@ -2,7 +2,8 @@
 
 #include <exception>
 #include <iostream>
- 
+
+/// @cond
 class EcsException: public std::exception
 {
 public:
@@ -14,9 +15,11 @@ public:
      {
          return _message.c_str();
      }
+
     virtual ~EcsException() throw()
     {}
  
 private:
     std::string _message;
 };
+/// @endcond

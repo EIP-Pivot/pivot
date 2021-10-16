@@ -14,6 +14,9 @@
 #define MIN_PROJECTION_LIMIT 0.1f
 #endif
 
+/// @class Camera
+///
+/// @brief Camera component (Component exemple)
 class Camera
 {
 public:
@@ -24,11 +27,13 @@ public:
     /// @endcond
 
 public:
+    /// Default Constructor, can be init with default position
     Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f))
         : position(position), up(up)
     {
     }
 
+    /// @cond
     glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 front = glm::vec3(0.0f, 0.0f, -1.0f);
     glm::vec3 up;
@@ -36,15 +41,19 @@ public:
     glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
     double yaw = YAW;
     double pitch = PITCH;
+    /// @endcond
 
+    /// Get camera projection
     glm::mat4 getProjection(float fFOV = 70.f, float fAspectRatio = 1700.f / 900.f, float fCloseClippingPlane = 0.1,
                             float fFarClippingPlane = MAX_PROJECTION_LIMIT) const
     {
         return glm::perspective(glm::radians(fFOV), fAspectRatio, fCloseClippingPlane, fFarClippingPlane);
     }
 
+    /// Get camera view
     glm::mat4 getView() const { return glm::lookAt(position, position + front, up); }
 
+    /// Get GpuObject of the camera
     gpuObject::CameraData getGPUCameraData(float fFOV = 70.f, float fAspectRatio = 1700.f / 900.f,
                                            float fCloseClippingPlane = 0.1,
                                            float fFarClippingPlane = MAX_PROJECTION_LIMIT) const
@@ -59,6 +68,7 @@ public:
         return data;
     }
 
+    /// @cond
     void updateCameraVectors()
     {
         glm::vec3 tmpFront;
@@ -70,4 +80,5 @@ public:
         right = glm::normalize(glm::cross(tmpFront, worldUp));
         up = glm::normalize(glm::cross(right, tmpFront));
     }
+    /// @endcond
 };

@@ -54,6 +54,9 @@ public:
     /// Create e named entity
     Entity CreateEntity(std::string newName);
 
+    /// Get entity list
+    std::unordered_map<Entity, Signature> getEntities();
+
     /// @param[in] entity  Entity to remove.
     void DestroyEntity(Entity entity);
 

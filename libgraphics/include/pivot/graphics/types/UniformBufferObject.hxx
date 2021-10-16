@@ -40,7 +40,7 @@ public:
     void setPosition(const glm::vec3 &position);
     /// Set the scale of the model matrix;
     void setScale(const glm::vec3 &scale);
-    /// Add @args position to the model matrix;
+    /// Add position to the model matrix;
     void addPosition(const glm::vec3 &position);
 
 private:

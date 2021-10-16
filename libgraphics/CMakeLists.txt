@@ -117,12 +117,14 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/PipelineBuilder.cxx
                                    source/VulkanLoader.cxx
                                    source/UniformBufferObject.cxx
+                                   source/Transform.cxx
                                    source/VulkanApplication.cxx
                                    source/VulkanApplication_init.cxx
                                    source/VulkanApplication_static.cxx
                                    source/VulkanApplication_helper.cxx
                                    source/VulkanApplication_loader.cxx
                                    source/culling.cxx
+                                   source/math.cxx
 )
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE <Logger.hpp> <glm/glm.hpp> <vulkan/vulkan.hpp>)

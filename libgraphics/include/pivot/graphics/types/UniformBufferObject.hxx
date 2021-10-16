@@ -1,55 +1,11 @@
 #pragma once
 
+#include "pivot/graphics/types/Transform.hxx"
 #include "pivot/graphics/types/vk_types.hxx"
 
 #include <glm/mat4x4.hpp>
 #include <string>
 #include <variant>
-
-/// @struct Transform
-///
-/// @brief Hold the model matrix
-class Transform
-{
-private:
-    struct DecomposedMatrix {
-        glm::vec3 scale;
-        glm::quat orientation;
-        glm::vec3 translation;
-        glm::vec3 skew;
-        glm::vec4 perspective;
-    };
-
-public:
-    /// Default constructor
-    Transform() = default;
-    /// Constructor from vector
-    Transform(const glm::vec3 &translation, const glm::vec3 &rotation, const glm::vec3 &scale);
-
-    /// Constructor from matrices
-    Transform(const glm::mat4 &translation, const glm::mat4 &rotation, const glm::mat4 &scale);
-
-    /// Get a reference of the model matrix
-    inline glm::mat4 &getModelMatrix() noexcept { return modelMatrix; }
-    /// Get a constant reference of the model matrix
-    inline const glm::mat4 &getModelMatrix() const noexcept { return modelMatrix; }
-
-    /// Set the rotation of the model matrix;
-    void setRotation(const glm::vec3 &rotation);
-    /// Set the position of the model matrix;
-    void setPosition(const glm::vec3 &position);
-    /// Set the scale of the model matrix;
-    void setScale(const glm::vec3 &scale);
-    /// Add position to the model matrix;
-    void addPosition(const glm::vec3 &position);
-
-private:
-    static DecomposedMatrix decomposeMatrix(const glm::mat4 &modelMatrix);
-    static glm::mat4 recomposeMatrix(const DecomposedMatrix &modelMatrix);
-
-private:
-    glm::mat4 modelMatrix;
-};
 
 /// @class ObjectInformation
 ///

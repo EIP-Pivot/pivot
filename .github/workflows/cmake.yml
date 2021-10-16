@@ -33,6 +33,9 @@ jobs:
           --build ${{github.workspace}}/build
           --config ${{matrix.build_type}}
 
+      - name: Run tests
+        run: ctest --test-dir build
+
   build-windows:
     runs-on: windows-latest
     env:
@@ -61,3 +64,6 @@ jobs:
         run: cmake
           --build ${{github.workspace}}/build
           --config ${{matrix.build_type}}
+
+      - name: Run tests
+        run: ctest --test-dir build -C ${{matrix.build_type}}

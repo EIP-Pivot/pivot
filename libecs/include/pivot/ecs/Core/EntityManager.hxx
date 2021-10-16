@@ -4,6 +4,7 @@
 #include "pivot/ecs/Core/EcsException.hxx"
 #include <queue>
 #include <array>
+#include <unordered_map>
 
 /*! \cond
  */
@@ -15,11 +16,12 @@ public:
     void DestroyEntity(Entity entity);
     void SetSignature(Entity entity, Signature signature);
     Signature GetSignature(Entity entity);
+    std::unordered_map<Entity, Signature> getEntities();
     uint32_t getLivingEntityCount();
 
 private:
     std::queue<Entity> mAvailableEntities{};
-    std::array<Signature, MAX_ENTITIES> mSignatures{};
+    std::unordered_map<Entity, Signature> mEntities;
     uint32_t mLivingEntityCount{};
 };
 /*! \endcond

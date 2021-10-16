@@ -30,6 +30,8 @@ Entity Scene::CreateEntity(std::string newName)
     return newEntity;
 }
 
+std::unordered_map<Entity, Signature> Scene::getEntities() { return mEntityManager->getEntities(); }
+
 void Scene::DestroyEntity(Entity entity)
 {
     mEntityManager->DestroyEntity(entity);
@@ -39,10 +41,7 @@ void Scene::DestroyEntity(Entity entity)
 
 Signature Scene::getSignature(Entity entity) { return mEntityManager->GetSignature(entity); }
 
-std::string &Scene::getEntityName(Entity entity)
-{
-    return mComponentManager->GetComponent<Tag>(entity).name;
-}
+std::string &Scene::getEntityName(Entity entity) { return mComponentManager->GetComponent<Tag>(entity).name; }
 
 uint32_t Scene::getLivingEntityCount() { return mEntityManager->getLivingEntityCount(); }
 

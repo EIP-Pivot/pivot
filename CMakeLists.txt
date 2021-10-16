@@ -59,17 +59,15 @@ if (NOT glm_POPULATED)
 endif()
 
 FetchContent_Declare(
-    Catch2
+    catch2
     GIT_REPOSITORY https://github.com/catchorg/Catch2.git
     GIT_TAG c4e3767e265808590986d5db6ca1b5532a7f3d13
 )
-FetchContent_MakeAvailable(Catch2)
-# if (NOT Catch2_POPULATED)
-#     message(STATUS "Populating Catch2")
-#     FetchContent_Populate(Catch2)
-#     add_library(Catch2 STATIC ${Catch2_SOURCE_DIR}/single_include/catch2/catch.hpp)
-#     target_include_directories(Catch2 PUBLIC ${Catch2_SOURCE_DIR}/single_include)
-# endif()
+if (NOT catch2_POPULATED)
+    message(STATUS "Populating Catch2")
+    FetchContent_Populate(catch2)
+    add_subdirectory(${catch2_SOURCE_DIR} ${catch2_BINARY_DIR})
+endif()
 
 option(BUILD_DOCUMENTATION "Build the HTML documentation" OFF)
 if (BUILD_DOCUMENTATION)

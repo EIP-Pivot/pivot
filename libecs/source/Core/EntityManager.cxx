@@ -12,6 +12,7 @@ Entity EntityManager::CreateEntity()
         throw EcsException("Too many entities in existence.");
 
     Entity id = mAvailableEntities.front();
+    mEntities.insert({id, Signature()});
     mAvailableEntities.pop();
     ++mLivingEntityCount;
 
@@ -23,8 +24,8 @@ void EntityManager::DestroyEntity(Entity entity)
     if (entity >= MAX_ENTITIES)
         throw EcsException("Entity out of range.");
 
-    mSignatures[entity].reset();
     mAvailableEntities.push(entity);
+    mEntities.erase(entity);
     --mLivingEntityCount;
 }
 
@@ -32,16 +33,19 @@ void EntityManager::SetSignature(Entity entity, Signature signature)
 {
     if (entity >= MAX_ENTITIES)
         throw EcsException("Entity out of range.");
-
-    mSignatures[entity] = signature;
+    mEntities[entity] = signature;
 }
 
 Signature EntityManager::GetSignature(Entity entity)
 {
     if (entity >= MAX_ENTITIES)
         throw EcsException("Entity out of range.");
+    return mEntities[entity];
+}
 
-    return mSignatures[entity];
+std::unordered_map<Entity, Signature> EntityManager::getEntities()
+{
+    return mEntities;
 }
 
 uint32_t EntityManager::getLivingEntityCount()

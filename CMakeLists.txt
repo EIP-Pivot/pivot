@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(pivot)
 
 include(FetchContent)
+include(CTest)
 
 if(MSVC)
     # see https://gitlab.kitware.com/cmake/cmake/-/issues/22606

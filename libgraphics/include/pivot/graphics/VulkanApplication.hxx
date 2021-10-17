@@ -18,6 +18,7 @@
 #include "pivot/graphics/types/RenderObject.hxx"
 #include "pivot/graphics/types/vk_types.hxx"
 #include "pivot/graphics/vk_utils.hxx"
+#include "pivot/graphics/config.hxx"
 
 #ifndef MAX_OBJECT
 #define MAX_OBJECT 5000
@@ -92,7 +93,7 @@ public:
     /// You must have already loaded your models and texture !
     void draw(const std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
               const gpuObject::CameraData &camera
-#ifndef NDEBUG
+#ifdef CULLING_DEBUG
               ,
               const std::optional<std::reference_wrapper<const gpuObject::CameraData>> cullingCamera = std::nullopt
 #endif

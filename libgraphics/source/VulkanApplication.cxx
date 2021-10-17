@@ -34,7 +34,7 @@ void VulkanApplication::init() { initVulkanRessources(); }
 
 void VulkanApplication::draw(const std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
                              const gpuObject::CameraData &gpuCamera
-#ifndef NDEBUG
+#ifdef CULLING_DEBUG
                              ,
                              const std::optional<std::reference_wrapper<const gpuObject::CameraData>> cullingCamera
 #endif
@@ -84,10 +84,10 @@ try {
         .clearValueCount = static_cast<uint32_t>(clearValues.size()),
         .pClearValues = clearValues.data(),
     };
-#ifdef NDEBUG
-    auto cullingGPUCamera = gpuCamera;
-#else
+#ifdef CULLING_DEBUG
     auto cullingGPUCamera = cullingCamera.value_or(std::ref(gpuCamera)).get();
+#else
+    auto cullingGPUCamera = gpuCamera;
 #endif
 
     auto sceneObjectGPUData = buildSceneObjectsGPUData(sceneInformation, cullingGPUCamera);

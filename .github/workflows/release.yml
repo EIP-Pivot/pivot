@@ -15,7 +15,7 @@ jobs:
           github_token: ${{ github.token }}
           version_scheme: semantic
 
-      - name: create release
+      - name: Create release
         uses: actions/create-release@v1
         with:
           tag_name: ${{ steps.compute_tag.outputs.next_tag }}

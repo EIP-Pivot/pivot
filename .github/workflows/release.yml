@@ -24,4 +24,3 @@ jobs:
             Automatic release of ${{ steps.compute_tag.outputs.next_tag }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
-

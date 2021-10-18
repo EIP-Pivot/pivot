@@ -11,8 +11,10 @@ class Transform
 private:
     struct DecomposedMatrix {
         glm::vec3 scale;
-        glm::vec3 orientation;
+        glm::quat orientation;
         glm::vec3 translation;
+        glm::vec3 skew;
+        glm::vec4 perspective;
     };
 
 public:
@@ -38,7 +40,6 @@ public:
     void setScale(const glm::vec3 &scale);
     /// Add position to the model matrix;
     void addPosition(const glm::vec3 &position);
-    /// Add scale to the model matrix;
 
 private:
     static DecomposedMatrix decomposeMatrix(const glm::mat4 &modelMatrix);

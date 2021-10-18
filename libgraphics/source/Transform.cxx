@@ -47,7 +47,7 @@ Transform::DecomposedMatrix Transform::decomposeMatrix(const glm::mat4 &modelMat
 {
     DecomposedMatrix ret;
 
-    if (!pivot::graphics::math::decomposeMatrix(modelMatrix, ret.scale, ret.orientation, ret.translation)) {
+    if (!glm::decompose(modelMatrix, ret.scale, ret.orientation, ret.translation, ret.skew, ret.perspective)) {
         throw std::runtime_error("Error while decomposing matrix");
     }
     return ret;
@@ -55,6 +55,6 @@ Transform::DecomposedMatrix Transform::decomposeMatrix(const glm::mat4 &modelMat
 
 glm::mat4 Transform::recomposeMatrix(const Transform::DecomposedMatrix &decom)
 {
-    return glm::translate(glm::mat4(1.0f), decom.translation) * glm::toMat4(glm::quat(decom.orientation)) *
+    return glm::translate(glm::mat4(1.0f), decom.translation) * glm::toMat4(decom.orientation) *
            glm::scale(glm::mat4(1.0f), decom.scale);
 }

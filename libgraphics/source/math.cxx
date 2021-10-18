@@ -1,5 +1,6 @@
 #include "pivot/graphics/math.hxx"
 
+// Not working
 bool pivot::graphics::math::decomposeMatrix(const glm::mat4 &transform, glm::vec3 &translation, glm::vec3 &rotation,
                                             glm::vec3 &scale)
 {

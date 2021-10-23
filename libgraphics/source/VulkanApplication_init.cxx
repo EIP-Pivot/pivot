@@ -312,7 +312,9 @@ void VulkanApplication::createCommandPool()
     };
     commandPool = device.createCommandPool(poolInfo);
     uploadContext.commandPool = device.createCommandPool(poolInfo);
+    imguiContext.cmdPool = device.createCommandPool(poolInfo);
     mainDeletionQueue.push([&] {
+        device.destroy(imguiContext.cmdPool);
         device.destroy(uploadContext.commandPool);
         device.destroy(commandPool);
     });
@@ -326,8 +328,26 @@ void VulkanApplication::createCommandBuffers()
         .level = vk::CommandBufferLevel::ePrimary,
         .commandBufferCount = static_cast<uint32_t>(swapchain.nbOfImage()),
     };
-    commandBuffers = device.allocateCommandBuffers(allocInfo);
-    swapchainDeletionQueue.push([&] { device.free(commandPool, commandBuffers); });
+    commandBuffersPrimary = device.allocateCommandBuffers(allocInfo);
+
+    vk::CommandBufferAllocateInfo drawInfo{
+        .commandPool = commandPool,
+        .level = vk::CommandBufferLevel::eSecondary,
+        .commandBufferCount = static_cast<uint32_t>(swapchain.nbOfImage()),
+    };
+    commandBuffersSecondary = device.allocateCommandBuffers(drawInfo);
+
+    vk::CommandBufferAllocateInfo imguiInfo{
+        .commandPool = imguiContext.cmdPool,
+        .level = vk::CommandBufferLevel::eSecondary,
+        .commandBufferCount = static_cast<uint32_t>(swapchain.nbOfImage()),
+    };
+    imguiContext.cmdBuffer = device.allocateCommandBuffers(imguiInfo);
+    swapchainDeletionQueue.push([&] {
+        device.free(commandPool, commandBuffersPrimary);
+        device.free(commandPool, commandBuffersSecondary);
+        device.free(imguiContext.cmdPool, imguiContext.cmdBuffer);
+    });
 }
 
 void VulkanApplication::createSyncStructure()
@@ -635,32 +655,36 @@ void VulkanApplication::createColorResources()
     });
 }
 
-void VulkanApplication::initDearImgui()
+void VulkanApplication::createImGuiDescriptorPool()
 {
-    DEBUG_FUNCTION
-    auto indices = QueueFamilyIndices::findQueueFamilies(physical_device, surface);
+    DEBUG_FUNCTION;
+    const vk::DescriptorPoolSize pool_sizes[]{{vk::DescriptorType::eSampler, 1000},
+                                              {vk::DescriptorType::eCombinedImageSampler, 1000},
+                                              {vk::DescriptorType::eSampledImage, 1000},
+                                              {vk::DescriptorType::eStorageImage, 1000},
+                                              {vk::DescriptorType::eUniformTexelBuffer, 1000},
+                                              {vk::DescriptorType::eStorageTexelBuffer, 1000},
+                                              {vk::DescriptorType::eUniformBuffer, 1000},
+                                              {vk::DescriptorType::eStorageBuffer, 1000},
+                                              {vk::DescriptorType::eUniformBufferDynamic, 1000},
+                                              {vk::DescriptorType::eStorageBufferDynamic, 1000},
+                                              {vk::DescriptorType::eInputAttachment, 1000}};
 
-    vk::DescriptorPoolSize pool_sizes[] = {{vk::DescriptorType::eSampler, 1000},
-                                           {vk::DescriptorType::eCombinedImageSampler, 1000},
-                                           {vk::DescriptorType::eSampledImage, 1000},
-                                           {vk::DescriptorType::eStorageImage, 1000},
-                                           {vk::DescriptorType::eUniformTexelBuffer, 1000},
-                                           {vk::DescriptorType::eStorageTexelBuffer, 1000},
-                                           {vk::DescriptorType::eUniformBuffer, 1000},
-                                           {vk::DescriptorType::eStorageBuffer, 1000},
-                                           {vk::DescriptorType::eUniformBufferDynamic, 1000},
-                                           {vk::DescriptorType::eStorageBufferDynamic, 1000},
-                                           {vk::DescriptorType::eInputAttachment, 1000}};
-
-    vk::DescriptorPoolCreateInfo pool_info = {
+    const vk::DescriptorPoolCreateInfo pool_info{
         .flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
         .maxSets = 1000,
         .poolSizeCount = std::size(pool_sizes),
         .pPoolSizes = pool_sizes,
     };
 
-    vk::DescriptorPool imguiPool;
-    imguiPool = device.createDescriptorPool(pool_info);
+    imguiContext.pool = device.createDescriptorPool(pool_info);
+    mainDeletionQueue.push([&] { device.destroy(imguiContext.pool); });
+}
+
+void VulkanApplication::initDearImGui()
+{
+    DEBUG_FUNCTION;
+    auto indices = QueueFamilyIndices::findQueueFamilies(physical_device, surface);
 
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForVulkan(window.getWindow(), true);
@@ -673,7 +697,7 @@ void VulkanApplication::initDearImgui()
     init_info.QueueFamily = indices.graphicsFamily.value();
     init_info.Queue = graphicsQueue;
     init_info.PipelineCache = pipelineCache;
-    init_info.DescriptorPool = imguiPool;
+    init_info.DescriptorPool = imguiContext.pool;
     init_info.MinImageCount = swapchain.nbOfImage();
     init_info.ImageCount = swapchain.nbOfImage();
     init_info.MSAASamples = static_cast<VkSampleCountFlagBits>(maxMsaaSample);
@@ -684,9 +708,9 @@ void VulkanApplication::initDearImgui()
     immediateCommand([&](vk::CommandBuffer cmd) { ImGui_ImplVulkan_CreateFontsTexture(cmd); });
     ImGui_ImplVulkan_DestroyFontUploadObjects();
 
-    swapchainDeletionQueue.push([imguiPool, this] {
-        vkDestroyDescriptorPool(device, imguiPool, nullptr);
+    swapchainDeletionQueue.push([&] {
         ImGui_ImplVulkan_Shutdown();
         ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
     });
 }

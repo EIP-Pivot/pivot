@@ -176,7 +176,9 @@ private:
     void createIndirectBuffer();
     void createTextureSampler();
     void createFramebuffers();
-    void initDearImgui();
+
+    void createImGuiDescriptorPool();
+    void initDearImGui();
 
 public:
     /// The Window used to render 3D objects
@@ -203,13 +205,19 @@ private:
     uint32_t mipLevels = 0;
     vk::SampleCountFlagBits maxMsaaSample = vk::SampleCountFlagBits::e1;
 
-    AllocatedBuffer vertexBuffers;
-    AllocatedBuffer indicesBuffers;
+    AllocatedBuffer vertexBuffers{};
+    AllocatedBuffer indicesBuffers{};
 
-    struct UploadContex {
+    struct UploadContext {
         vk::Fence uploadFence = VK_NULL_HANDLE;
         vk::CommandPool commandPool = VK_NULL_HANDLE;
     } uploadContext = {};
+
+    struct ImGuiContext {
+        vk::CommandPool cmdPool = VK_NULL_HANDLE;
+        std::vector<vk::CommandBuffer> cmdBuffer;
+        vk::DescriptorPool pool = VK_NULL_HANDLE;
+    } imguiContext;
 
     DeletionQueue mainDeletionQueue;
     DeletionQueue swapchainDeletionQueue;
@@ -235,7 +243,9 @@ private:
     vk::Sampler textureSampler = VK_NULL_HANDLE;
 
     vk::CommandPool commandPool = VK_NULL_HANDLE;
-    std::vector<vk::CommandBuffer> commandBuffers;
+
+    std::vector<vk::CommandBuffer> commandBuffersPrimary;
+    std::vector<vk::CommandBuffer> commandBuffersSecondary;
 
     AllocatedImage depthResources = {};
     AllocatedImage colorImage = {};

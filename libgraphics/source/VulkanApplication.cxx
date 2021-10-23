@@ -49,24 +49,18 @@ try {
         device.acquireNextImageKHR(swapchain.getSwapchain(), UINT64_MAX, frame.imageAvailableSemaphore);
 
     vk_utils::vk_try(result);
-    auto &cmd = commandBuffers[imageIndex];
+    auto &cmd = commandBuffersPrimary[imageIndex];
+    auto &drawCmd = commandBuffersSecondary[imageIndex];
+    auto &imguiCmd = imguiContext.cmdBuffer[imageIndex];
 
     device.resetFences(frame.inFlightFences);
     cmd.reset();
+    drawCmd.reset();
+    imguiCmd.reset();
 
     vk::Semaphore waitSemaphores[] = {frame.imageAvailableSemaphore};
     vk::PipelineStageFlags waitStages[] = {vk::PipelineStageFlagBits::eColorAttachmentOutput};
     vk::Semaphore signalSemaphores[] = {frame.renderFinishedSemaphore};
-
-    vk::SubmitInfo submitInfo{
-        .waitSemaphoreCount = 1,
-        .pWaitSemaphores = waitSemaphores,
-        .pWaitDstStageMask = waitStages,
-        .commandBufferCount = 1,
-        .pCommandBuffers = &cmd,
-        .signalSemaphoreCount = 1,
-        .pSignalSemaphores = signalSemaphores,
-    };
 
     const std::array<float, 4> vClearColor = {0.0f, 0.0f, 0.0f, 1.0f};
     std::array<vk::ClearValue, 2> clearValues{};
@@ -96,25 +90,56 @@ try {
     copyBuffer(frame.data.uniformBuffer, sceneObjectGPUData.objectGPUData);
 
     vk::DeviceSize offset = 0;
+
+    vk::CommandBufferInheritanceInfo inheritanceInfo{
+        .renderPass = renderPass,
+        .subpass = 0,
+        .framebuffer = swapChainFramebuffers.at(imageIndex),
+    };
+    vk::CommandBufferBeginInfo imguiBeginInfo{
+        .flags = vk::CommandBufferUsageFlagBits::eRenderPassContinue,
+        .pInheritanceInfo = &inheritanceInfo,
+    };
+    VK_TRY(imguiCmd.begin(&imguiBeginInfo));
+    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), imguiCmd);
+    imguiCmd.end();
+
+    vk::CommandBufferBeginInfo drawBeginInfo{
+        .flags = vk::CommandBufferUsageFlagBits::eRenderPassContinue,
+        .pInheritanceInfo = &inheritanceInfo,
+    };
+    VK_TRY(drawCmd.begin(&drawBeginInfo));
+    drawCmd.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
+    drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, frame.data.objectDescriptor,
+                               nullptr);
+    drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, texturesSet, nullptr);
+    drawCmd.pushConstants<gpuObject::CameraData>(
+        pipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, gpuCamera);
+    drawCmd.bindVertexBuffers(0, vertexBuffers.buffer, offset);
+    drawCmd.bindIndexBuffer(indicesBuffers.buffer, 0, vk::IndexType::eUint32);
+    for (const auto &draw: sceneObjectGPUData.objectDrawBatches) {
+        drawCmd.drawIndexedIndirect(frame.indirectBuffer.buffer, draw.first * sizeof(vk::DrawIndexedIndirectCommand),
+                                    draw.count, sizeof(vk::DrawIndexedIndirectCommand));
+    }
+    drawCmd.end();
+
+    std::array<vk::CommandBuffer, 2> secondaryBuffer{drawCmd, imguiCmd};
     vk::CommandBufferBeginInfo beginInfo;
     VK_TRY(cmd.begin(&beginInfo));
-    cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
-    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, frame.data.objectDescriptor, nullptr);
-    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, texturesSet, nullptr);
-    cmd.pushConstants<gpuObject::CameraData>(
-        pipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, gpuCamera);
-    cmd.bindVertexBuffers(0, vertexBuffers.buffer, offset);
-    cmd.bindIndexBuffer(indicesBuffers.buffer, 0, vk::IndexType::eUint32);
-    cmd.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
-    {
-        for (const auto &draw: sceneObjectGPUData.objectDrawBatches) {
-            cmd.drawIndexedIndirect(frame.indirectBuffer.buffer, draw.first * sizeof(vk::DrawIndexedIndirectCommand),
-                                    draw.count, sizeof(vk::DrawIndexedIndirectCommand));
-        }
-        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
-    }
+    cmd.beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
+    cmd.executeCommands(secondaryBuffer);
     cmd.endRenderPass();
     cmd.end();
+
+    const std::array<vk::CommandBuffer, 1> submitCmd{cmd};
+    vk::SubmitInfo submitInfo{
+        .waitSemaphoreCount = 1,
+        .pWaitSemaphores = waitSemaphores,
+        .pWaitDstStageMask = waitStages,
+        .signalSemaphoreCount = 1,
+        .pSignalSemaphores = signalSemaphores,
+    };
+    submitInfo.setCommandBuffers(submitCmd);
     graphicsQueue.submit(submitInfo, frame.inFlightFences);
 
     vk::PresentInfoKHR presentInfo{
@@ -192,6 +217,7 @@ void VulkanApplication::initVulkanRessources()
     createPipelineLayout();
     createCommandPool();
     createDescriptorPool();
+    createImGuiDescriptorPool();
 
     swapchain.init(window, physical_device, device, surface);
 
@@ -209,7 +235,7 @@ void VulkanApplication::initVulkanRessources()
     createTextureSampler();
     createTextureDescriptorSets();
     createCommandBuffers();
-    initDearImgui();
+    initDearImGui();
 
     materials["white"] = {
         .ambientColor = {1.0f, 1.0f, 1.0f, 1.0f},
@@ -254,7 +280,7 @@ void VulkanApplication::recreateSwapchain()
     createDepthResources();
     createFramebuffers();
     createCommandBuffers();
-    initDearImgui();
+    initDearImGui();
     logger->info("Swapchain") << "Swapchain recreation complete... { height=" << swapchain.getSwapchainExtent().height
                               << ", width =" << swapchain.getSwapchainExtent().width
                               << ", numberOfImage = " << swapchain.nbOfImage() << " }";

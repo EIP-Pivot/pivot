@@ -7,13 +7,6 @@
 
 namespace vk_utils
 {
-void vk_try(vk::Result res)
-{
-    if (res < vk::Result::eSuccess) { throw VulkanException(res); }
-}
-
-void vk_try(VkResult res) { vk_try(vk::Result(res)); }
-
 std::vector<std::byte> readFile(const std::string &filename)
 {
     size_t fileSize = 0;

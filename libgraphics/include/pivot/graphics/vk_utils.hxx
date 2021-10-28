@@ -24,15 +24,17 @@ concept is_copyable = requires
     typename std::vector<T>;
 };
 
-void vk_try(vk::Result res);
-void vk_try(VkResult res);
+constexpr void vk_try(vk::Result res) { VK_TRY(res); }
+
+constexpr void vk_try(VkResult res) { vk_try(vk::Result(res)); }
+
 template <class... FailedValue>
-bool vk_try_mutiple(const vk::Result result, const FailedValue... failedResult)
+constexpr bool vk_try_mutiple(const vk::Result result, const FailedValue... failedResult)
 {
     if (((result == failedResult) || ...)) {
         return true;
     } else {
-        VK_TRY(result);
+        vk_try(result);
         return false;
     }
 }

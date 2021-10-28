@@ -92,7 +92,7 @@ bool VulkanApplication::isDeviceSuitable(const vk::PhysicalDevice &gpu, const vk
 
     bool swapChainAdequate = false;
     if (extensionsSupported) {
-        auto swapChainSupport = Swapchain::SupportDetails::querySwapChainSupport(gpu, surface);
+        auto swapChainSupport = VulkanSwapchain::SupportDetails::querySwapChainSupport(gpu, surface);
         swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
     }
     return indices.isComplete() && extensionsSupported && swapChainAdequate && deviceFeatures.samplerAnisotropy &&

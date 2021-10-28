@@ -9,8 +9,8 @@
 #include <vulkan/vulkan.hpp>
 
 #include "pivot/graphics/DeletionQueue.hxx"
-#include "pivot/graphics/Swapchain.hxx"
 #include "pivot/graphics/VulkanLoader.hxx"
+#include "pivot/graphics/VulkanSwapchain.hxx"
 #include "pivot/graphics/Window.hxx"
 #include "pivot/graphics/types/Frame.hxx"
 #include "pivot/graphics/types/Material.hxx"
@@ -224,7 +224,7 @@ private:
     vk::DebugUtilsMessengerEXT debugUtilsMessenger = VK_NULL_HANDLE;
     vk::PhysicalDevice physical_device = VK_NULL_HANDLE;
     vma::Allocator allocator = VK_NULL_HANDLE;
-    Swapchain swapchain;
+    VulkanSwapchain swapchain;
     vk::SurfaceKHR surface = VK_NULL_HANDLE;
 
     //  Queues

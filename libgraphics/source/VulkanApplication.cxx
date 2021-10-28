@@ -41,14 +41,10 @@ void VulkanApplication::draw(const std::vector<std::reference_wrapper<const Rend
 )
 try {
     auto &frame = frames[currentFrame];
-    uint32_t imageIndex;
-    vk::Result result;
-
     VK_TRY(device.waitForFences(frame.inFlightFences, VK_TRUE, UINT64_MAX));
-    std::tie(result, imageIndex) =
-        device.acquireNextImageKHR(swapchain.getSwapchain(), UINT64_MAX, frame.imageAvailableSemaphore);
 
-    vk_utils::vk_try(result);
+    uint32_t imageIndex = swapchain.getNextImageIndex(UINT64_MAX, frame.imageAvailableSemaphore);
+
     auto &cmd = commandBuffersPrimary[imageIndex];
     auto &drawCmd = commandBuffersSecondary[imageIndex];
     auto &imguiCmd = imguiContext.cmdBuffer[imageIndex];
@@ -86,42 +82,48 @@ try {
 
     auto sceneObjectGPUData = buildSceneObjectsGPUData(sceneInformation, cullingGPUCamera);
     buildIndirectBuffers(sceneObjectGPUData.objectDrawBatches, frame);
-
     copyBuffer(frame.data.uniformBuffer, sceneObjectGPUData.objectGPUData);
-
-    vk::DeviceSize offset = 0;
 
     vk::CommandBufferInheritanceInfo inheritanceInfo{
         .renderPass = renderPass,
         .subpass = 0,
         .framebuffer = swapChainFramebuffers.at(imageIndex),
     };
-    vk::CommandBufferBeginInfo imguiBeginInfo{
-        .flags = vk::CommandBufferUsageFlagBits::eRenderPassContinue,
-        .pInheritanceInfo = &inheritanceInfo,
-    };
-    VK_TRY(imguiCmd.begin(&imguiBeginInfo));
-    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), imguiCmd);
-    imguiCmd.end();
 
-    vk::CommandBufferBeginInfo drawBeginInfo{
-        .flags = vk::CommandBufferUsageFlagBits::eRenderPassContinue,
-        .pInheritanceInfo = &inheritanceInfo,
-    };
-    VK_TRY(drawCmd.begin(&drawBeginInfo));
-    drawCmd.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
-    drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, frame.data.objectDescriptor,
-                               nullptr);
-    drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, texturesSet, nullptr);
-    drawCmd.pushConstants<gpuObject::CameraData>(
-        pipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, gpuCamera);
-    drawCmd.bindVertexBuffers(0, vertexBuffers.buffer, offset);
-    drawCmd.bindIndexBuffer(indicesBuffers.buffer, 0, vk::IndexType::eUint32);
-    for (const auto &draw: sceneObjectGPUData.objectDrawBatches) {
-        drawCmd.drawIndexedIndirect(frame.indirectBuffer.buffer, draw.first * sizeof(vk::DrawIndexedIndirectCommand),
-                                    draw.count, sizeof(vk::DrawIndexedIndirectCommand));
+    // ImGui draw
+    {
+        vk::CommandBufferBeginInfo imguiBeginInfo{
+            .flags = vk::CommandBufferUsageFlagBits::eRenderPassContinue,
+            .pInheritanceInfo = &inheritanceInfo,
+        };
+        VK_TRY(imguiCmd.begin(&imguiBeginInfo));
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), imguiCmd);
+        imguiCmd.end();
     }
-    drawCmd.end();
+
+    // Normal draw
+    {
+        vk::DeviceSize offset = 0;
+        vk::CommandBufferBeginInfo drawBeginInfo{
+            .flags = vk::CommandBufferUsageFlagBits::eRenderPassContinue,
+            .pInheritanceInfo = &inheritanceInfo,
+        };
+        VK_TRY(drawCmd.begin(&drawBeginInfo));
+        drawCmd.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
+        drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, frame.data.objectDescriptor,
+                                   nullptr);
+        drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, texturesSet, nullptr);
+        drawCmd.pushConstants<gpuObject::CameraData>(
+            pipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, gpuCamera);
+        drawCmd.bindVertexBuffers(0, vertexBuffers.buffer, offset);
+        drawCmd.bindIndexBuffer(indicesBuffers.buffer, 0, vk::IndexType::eUint32);
+        for (const auto &draw: sceneObjectGPUData.objectDrawBatches) {
+            drawCmd.drawIndexedIndirect(frame.indirectBuffer.buffer,
+                                        draw.first * sizeof(vk::DrawIndexedIndirectCommand), draw.count,
+                                        sizeof(vk::DrawIndexedIndirectCommand));
+        }
+        drawCmd.end();
+    }
 
     std::array<vk::CommandBuffer, 2> secondaryBuffer{drawCmd, imguiCmd};
     vk::CommandBufferBeginInfo beginInfo;
@@ -219,7 +221,8 @@ void VulkanApplication::initVulkanRessources()
     createDescriptorPool();
     createImGuiDescriptorPool();
 
-    swapchain.init(window, physical_device, device, surface);
+    auto size = window.getSize();
+    swapchain.create(size, physical_device, device, surface);
 
     createUniformBuffers();
     createRenderPass();
@@ -261,19 +264,19 @@ void VulkanApplication::recreateSwapchain()
     DEBUG_FUNCTION
 
     /// do not recreate the swapchain if the window size is 0
-    vk::Extent2D size;
-    do {
-        size = window.getSize();
+    vk::Extent2D size = window.getSize();
+    while (size.width == 0 || size.height == 0) {
         window.pollEvent();
-    } while (size.width == 0 || size.height == 0);
+        size = window.getSize();
+    }
 
-    logger->info("Swapchain") << "Recreaing swapchain...";
+    logger->info("VulkanSwapchain") << "Recreating swapchain...";
     LOGGER_ENDL;
 
     device.waitIdle();
     swapchainDeletionQueue.flush();
 
-    swapchain.recreate(window, physical_device, device, surface);
+    swapchain.recreate(size, physical_device, device, surface);
     createRenderPass();
     createPipeline();
     createColorResources();
@@ -281,9 +284,9 @@ void VulkanApplication::recreateSwapchain()
     createFramebuffers();
     createCommandBuffers();
     initDearImGui();
-    logger->info("Swapchain") << "Swapchain recreation complete... { height=" << swapchain.getSwapchainExtent().height
-                              << ", width =" << swapchain.getSwapchainExtent().width
-                              << ", numberOfImage = " << swapchain.nbOfImage() << " }";
+    logger->info("Swapchain recreation") << "New height = " << swapchain.getSwapchainExtent().height
+                                         << ", New width =" << swapchain.getSwapchainExtent().width
+                                         << ", numberOfImage = " << swapchain.nbOfImage();
     LOGGER_ENDL;
     postInitialization();
 }

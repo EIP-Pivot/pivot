@@ -1,4 +1,4 @@
-#include "pivot/graphics/Swapchain.hxx"
+#include "pivot/graphics/VulkanSwapchain.hxx"
 
 #include <optional>
 #include <stddef.h>
@@ -8,44 +8,62 @@
 #include "pivot/graphics/QueueFamilyIndices.hxx"
 #include "pivot/graphics/Window.hxx"
 #include "pivot/graphics/vk_init.hxx"
+#include "pivot/graphics/vk_utils.hxx"
 
-Swapchain::Swapchain() {}
+VulkanSwapchain::VulkanSwapchain() {}
 
-Swapchain::~Swapchain() { this->destroy(); }
-
-void Swapchain::init(Window &win, vk::PhysicalDevice &gpu, vk::Device &device, vk::SurfaceKHR &surface)
+VulkanSwapchain::~VulkanSwapchain()
 {
-    DEBUG_FUNCTION
-    createSwapchain(win, gpu, device, surface);
-    getImages(device);
-    createImageViews(device);
+    if (*this) this->destroy();
 }
 
-void Swapchain::destroy() { chainDeletionQueue.flush(); }
-
-void Swapchain::recreate(Window &win, vk::PhysicalDevice &gpu, vk::Device &device, vk::SurfaceKHR &surface)
+void VulkanSwapchain::create(const vk::Extent2D &size, vk::PhysicalDevice &gpu, vk::Device &device,
+                             vk::SurfaceKHR &surface)
 {
     DEBUG_FUNCTION
-    this->destroy();
-    this->init(win, gpu, device, surface);
+    this->device = device;
+    createSwapchain(size, gpu, surface);
+    getImages();
+    createImageViews();
 }
 
-uint32_t Swapchain::nbOfImage() const
+void VulkanSwapchain::destroy() { chainDeletionQueue.flush(); }
+
+void VulkanSwapchain::recreate(const vk::Extent2D &size, vk::PhysicalDevice &gpu, vk::Device &device,
+                               vk::SurfaceKHR &surface)
 {
-    if (swapChainImages.size() != swapChainImageViews.size()) [[unlikely]]
-        throw std::length_error("swapchain has different amount of vk::Image and vk::ImageView");
+    DEBUG_FUNCTION
+    destroy();
+    create(size, gpu, device, surface);
+}
+
+uint32_t VulkanSwapchain::nbOfImage() const
+{
+    assert(swapChainImages.size() == swapChainImageViews.size());
     return swapChainImages.size();
 }
 
-void Swapchain::createSwapchain(Window &window, vk::PhysicalDevice &gpu, vk::Device &device, vk::SurfaceKHR &surface)
+uint32_t VulkanSwapchain::getNextImageIndex(const uint64_t maxDelay, vk::Semaphore semaphore)
+{
+    uint32_t imageIndex;
+    vk::Result result;
+
+    std::tie(result, imageIndex) = device->acquireNextImageKHR(swapChain, maxDelay, semaphore);
+    vk_utils::vk_try(result);
+    return imageIndex;
+}
+
+void VulkanSwapchain::createSwapchain(const vk::Extent2D &size, vk::PhysicalDevice &gpu, vk::SurfaceKHR &surface)
 {
     DEBUG_FUNCTION
+    assert(device);
+
     auto indices = QueueFamilyIndices::findQueueFamilies(gpu, surface);
 
     auto swapChainSupport = SupportDetails::querySwapChainSupport(gpu, surface);
     auto surfaceFormat = swapChainSupport.chooseSwapSurfaceFormat();
     auto presentMode = swapChainSupport.chooseSwapPresentMode();
-    auto extent = swapChainSupport.chooseSwapExtent(window);
+    auto extent = swapChainSupport.chooseSwapExtent(size);
     uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
     if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
         imageCount = swapChainSupport.capabilities.maxImageCount;
@@ -77,18 +95,20 @@ void Swapchain::createSwapchain(Window &window, vk::PhysicalDevice &gpu, vk::Dev
         createInfo.pQueueFamilyIndices = nullptr;    // Optional
     }
 
-    swapChain = device.createSwapchainKHR(createInfo);
-    chainDeletionQueue.push([&]() { device.destroy(swapChain); });
+    swapChain = device->createSwapchainKHR(createInfo);
+    chainDeletionQueue.push([&]() { device->destroy(swapChain); });
     swapChainImageFormat = surfaceFormat.format;
     swapChainExtent = extent;
 }
 
-void Swapchain::getImages(vk::Device &device)
+void VulkanSwapchain::getImages()
 {
-    DEBUG_FUNCTION swapChainImages = device.getSwapchainImagesKHR(swapChain);
+    DEBUG_FUNCTION;
+    assert(swapChain);
+    swapChainImages = device->getSwapchainImagesKHR(swapChain);
 }
 
-void Swapchain::createImageViews(vk::Device &device)
+void VulkanSwapchain::createImageViews()
 {
     DEBUG_FUNCTION
     swapChainImageViews.resize(swapChainImages.size());
@@ -96,9 +116,9 @@ void Swapchain::createImageViews(vk::Device &device)
     for (size_t i = 0; i < swapChainImages.size(); ++i) {
         vk::ImageViewCreateInfo createInfo =
             vk_init::populateVkImageViewCreateInfo(this->getSwapchainImage(i), this->getSwapchainFormat());
-        swapChainImageViews.at(i) = device.createImageView(createInfo);
+        swapChainImageViews.at(i) = device->createImageView(createInfo);
     }
     chainDeletionQueue.push([&]() {
-        for (auto &imageView: swapChainImageViews) { vkDestroyImageView(device, imageView, nullptr); }
+        for (auto &imageView: swapChainImageViews) { device->destroyImageView(imageView); }
     });
 }

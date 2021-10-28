@@ -1,7 +1,7 @@
-#include "pivot/graphics/Swapchain.hxx"
+#include "pivot/graphics/VulkanSwapchain.hxx"
 #include "pivot/graphics/Window.hxx"
 
-vk::SurfaceFormatKHR Swapchain::SupportDetails::chooseSwapSurfaceFormat() noexcept
+vk::SurfaceFormatKHR VulkanSwapchain::SupportDetails::chooseSwapSurfaceFormat() noexcept
 {
     for (const auto &availableFormat: formats) {
         if (availableFormat.format == vk::Format::eB8G8R8A8Srgb &&
@@ -12,7 +12,7 @@ vk::SurfaceFormatKHR Swapchain::SupportDetails::chooseSwapSurfaceFormat() noexce
     return formats.at(0);
 }
 
-vk::PresentModeKHR Swapchain::SupportDetails::chooseSwapPresentMode() noexcept
+vk::PresentModeKHR VulkanSwapchain::SupportDetails::chooseSwapPresentMode() noexcept
 {
     for (const auto &availablePresentMode: presentModes) {
         if (availablePresentMode == vk::PresentModeKHR::eMailbox) { return availablePresentMode; }
@@ -21,26 +21,23 @@ vk::PresentModeKHR Swapchain::SupportDetails::chooseSwapPresentMode() noexcept
     return vk::PresentModeKHR::eFifo;
 }
 
-vk::Extent2D Swapchain::SupportDetails::chooseSwapExtent(Window &window) noexcept
+vk::Extent2D VulkanSwapchain::SupportDetails::chooseSwapExtent(const vk::Extent2D &s) noexcept
 {
     if (capabilities.currentExtent.width != UINT32_MAX) {
         return capabilities.currentExtent;
     } else {
-        auto actualExtent = window.getSize();
+        auto size = s;
+        size.width = std::clamp(size.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+        size.height = std::clamp(size.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
 
-        actualExtent.width =
-            std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
-        actualExtent.height =
-            std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
-
-        return actualExtent;
+        return size;
     }
 }
 
-Swapchain::SupportDetails Swapchain::SupportDetails::querySwapChainSupport(const vk::PhysicalDevice &device,
-                                                                           const vk::SurfaceKHR &surface)
+VulkanSwapchain::SupportDetails VulkanSwapchain::SupportDetails::querySwapChainSupport(const vk::PhysicalDevice &device,
+                                                                                       const vk::SurfaceKHR &surface)
 {
-    return Swapchain::SupportDetails{
+    return VulkanSwapchain::SupportDetails{
         .capabilities = device.getSurfaceCapabilitiesKHR(surface),
         .formats = device.getSurfaceFormatsKHR(surface),
         .presentModes = device.getSurfacePresentModesKHR(surface),

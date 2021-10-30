@@ -69,7 +69,7 @@ endif()
 
 FetchContent_Declare(
     imgui
-    GIT_REPOSITORY https://github.com/ocornut/imgui.git
+    GIT_REPOSITORY https://github.com/EIP-Pivot/imgui.git
     GIT_TAG v1.84.2
 )
 if (NOT imgui_POPULATED)

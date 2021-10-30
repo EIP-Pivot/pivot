@@ -69,14 +69,13 @@ endif()
 
 FetchContent_Declare(
     imgui
-    GIT_REPOSITORY https://github.com/ocornut/imgui.git
-    GIT_TAG v1.84.2
+    GIT_REPOSITORY https://github.com/EIP-Pivot/imgui.git
+    GIT_TAG 763e2ac9654fb9c2bde9d6748b11933d7b616629
 )
 if (NOT imgui_POPULATED)
     message(STATUS "Populating imgui")
     FetchContent_Populate(imgui)
     add_library(imgui ${imgui_SOURCE_DIR}/imgui.cpp
-                    ${imgui_SOURCE_DIR}/imgui_widgets.cpp
 
                     ${imgui_SOURCE_DIR}/imgui_draw.cpp
                     ${imgui_SOURCE_DIR}/imgui_widgets.cpp

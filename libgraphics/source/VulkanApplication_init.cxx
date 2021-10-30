@@ -220,7 +220,7 @@ void VulkanApplication::createRenderPass()
 void VulkanApplication::createPipelineCache()
 {
     DEBUG_FUNCTION
-    vk::PipelineCacheCreateInfo createInfo;
+    vk::PipelineCacheCreateInfo createInfo{};
     pipelineCache = device.createPipelineCache(createInfo);
     mainDeletionQueue.push([&] { device.destroy(pipelineCache); });
 }
@@ -685,6 +685,13 @@ void VulkanApplication::initDearImGui()
 {
     DEBUG_FUNCTION;
     auto indices = QueueFamilyIndices::findQueueFamilies(physical_device, surface);
+
+    ImGui_ImplVulkan_LoadFunctions(
+        [](const char *function_name, void *user) {
+            auto loader = reinterpret_cast<vk::DynamicLoader *>(user);
+            return loader->getProcAddress<PFN_vkVoidFunction>(function_name);
+        },
+        &loader);
 
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForVulkan(window.getWindow(), true);

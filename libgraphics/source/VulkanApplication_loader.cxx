@@ -7,6 +7,8 @@
 #include <stb_image.h>
 #include <tiny_obj_loader.h>
 
+namespace pivot::graphics
+{
 size_t VulkanApplication::loadTextures(const std::vector<std::filesystem::path> &textures)
 {
     DEBUG_FUNCTION
@@ -210,3 +212,5 @@ void VulkanApplication::pushTexturesToGPU()
     cpuStorage.loadedTextures.clear();
     cpuStorage.loadedTexturesSize.clear();
 }
+
+}    // namespace pivot::graphics

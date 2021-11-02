@@ -66,7 +66,7 @@ public:
     }
 
 private:
-    std::array<T, MAX_ENTITIES> mComponentArray{};
+    std::array<T, PIVOT_MAX_ENTITIES> mComponentArray{};
     std::unordered_map<Entity, size_t> mEntityToIndexMap{};
     std::unordered_map<size_t, Entity> mIndexToEntityMap{};
     size_t mSize{};

@@ -10,12 +10,12 @@ constexpr std::uint32_t fnv1a_32(char const *s, std::size_t count)
 constexpr std::uint32_t operator"" _hash(char const *s, std::size_t count) { return fnv1a_32(s, count); }
 
 using Entity = std::uint32_t;
-const Entity MAX_ENTITIES = 5000;
+const Entity PIVOT_MAX_ENTITIES = 5000;
 
 using ComponentType = std::uint8_t;
-const ComponentType MAX_COMPONENTS = 32;
+const ComponentType PIVOT_MAX_COMPONENTS = 32;
 
-using Signature = std::bitset<MAX_COMPONENTS>;
+using Signature = std::bitset<PIVOT_MAX_COMPONENTS>;
 
 using EventId = std::uint32_t;
 using ParamId = std::uint32_t;

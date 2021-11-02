@@ -9,32 +9,20 @@
 #include <vulkan/vulkan.hpp>
 
 #include "pivot/graphics/DeletionQueue.hxx"
+#include "pivot/graphics/Swapchain.hxx"
 #include "pivot/graphics/VulkanLoader.hxx"
 #include "pivot/graphics/VulkanSwapchain.hxx"
 #include "pivot/graphics/Window.hxx"
+#include "pivot/graphics/common.hxx"
 #include "pivot/graphics/types/Frame.hxx"
 #include "pivot/graphics/types/Material.hxx"
 #include "pivot/graphics/types/Mesh.hxx"
 #include "pivot/graphics/types/RenderObject.hxx"
 #include "pivot/graphics/types/vk_types.hxx"
 #include "pivot/graphics/vk_utils.hxx"
-#include "pivot/graphics/config.hxx"
 
-#ifndef MAX_OBJECT
-#define MAX_OBJECT 5000
-#endif
-
-#ifndef MAX_TEXTURES
-#define MAX_TEXTURES 1000
-#endif
-
-#ifndef MAX_COMMANDS
-#define MAX_COMMANDS MAX_OBJECT
-#endif
-
-#ifndef MAX_MATERIALS
-#define MAX_MATERIALS 100
-#endif
+namespace pivot::graphics
+{
 
 const std::vector<const char *> validationLayers = {
     "VK_LAYER_KHRONOS_validation",
@@ -43,8 +31,6 @@ const std::vector<const char *> validationLayers = {
 const std::vector<const char *> deviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 };
-
-constexpr uint8_t MAX_FRAME_FRAME_IN_FLIGHT = 3;
 
 /// @class VulkanApplication
 /// @brief Main class of the graphics engine
@@ -93,7 +79,7 @@ public:
     /// You must have already loaded your models and texture !
     void draw(const std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
               const gpuObject::CameraData &camera
-#ifdef CULLING_DEBUG
+#ifdef PIVOT_CULLING_DEBUG
               ,
               const std::optional<std::reference_wrapper<const gpuObject::CameraData>> cullingCamera = std::nullopt
 #endif
@@ -113,6 +99,11 @@ public:
 
     /// @brief get Swapchain aspect ratio
     float getAspectRatio() const;
+
+    void recreateViewport(const vk::Extent2D &size);
+    Swapchain &getViewportSwapchain() noexcept { return viewportContext.swapchain; }
+    const vk::Sampler &getViewportSampler() const noexcept { return viewportContext.sampler; }
+    uint32_t getCurrentFrame() const noexcept { return currentFrame; }
 
 private:
     void pushModelsToGPU();
@@ -179,6 +170,11 @@ private:
 
     void createImGuiDescriptorPool();
     void initDearImGui();
+    void createViewportRenderPass();
+    void createViewportFramebuffers();
+    void createImGuiSampler();
+    void createViewportDepthResources();
+    void createViewportColorResources();
 
 public:
     /// The Window used to render 3D objects
@@ -201,23 +197,30 @@ public:
     ImageStorage loadedTextures;
 
 private:
-    /// @cond
+    uint8_t currentFrame = 0;
     uint32_t mipLevels = 0;
     vk::SampleCountFlagBits maxMsaaSample = vk::SampleCountFlagBits::e1;
 
     AllocatedBuffer vertexBuffers{};
     AllocatedBuffer indicesBuffers{};
 
-    struct UploadContext {
+    struct {
         vk::Fence uploadFence = VK_NULL_HANDLE;
         vk::CommandPool commandPool = VK_NULL_HANDLE;
     } uploadContext = {};
 
-    struct ImGuiContext {
+    struct {
+        vk::RenderPass renderPass = VK_NULL_HANDLE;
+        std::vector<vk::Framebuffer> framebuffers;
         vk::CommandPool cmdPool = VK_NULL_HANDLE;
         std::vector<vk::CommandBuffer> cmdBuffer;
         vk::DescriptorPool pool = VK_NULL_HANDLE;
-    } imguiContext;
+        vk::Sampler sampler = VK_NULL_HANDLE;
+        Swapchain swapchain;
+        AllocatedImage depthResources = {};
+        AllocatedImage colorImage = {};
+    } viewportContext = {};
+    DeletionQueue viewportDeletionQueue;
 
     DeletionQueue mainDeletionQueue;
     DeletionQueue swapchainDeletionQueue;
@@ -231,8 +234,7 @@ private:
     vk::Queue graphicsQueue = VK_NULL_HANDLE;
     vk::Queue presentQueue = VK_NULL_HANDLE;
 
-    uint8_t currentFrame = 0;
-    Frame frames[MAX_FRAME_FRAME_IN_FLIGHT];
+    Frame frames[PIVOT_MAX_FRAME_FRAME_IN_FLIGHT];
 
     vk::RenderPass renderPass = VK_NULL_HANDLE;
     vk::DescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
@@ -255,7 +257,6 @@ private:
     vk::Pipeline graphicsPipeline = VK_NULL_HANDLE;
 
     std::vector<vk::Framebuffer> swapChainFramebuffers;
-    /// @endcond
 };
 
 #ifndef VULKAN_APPLICATION_IMPLEMENTATION
@@ -281,3 +282,5 @@ void VulkanApplication::copyBuffer(AllocatedBuffer &buffer, const std::vector<T>
 }
 
 #endif
+
+}    // namespace pivot::graphics

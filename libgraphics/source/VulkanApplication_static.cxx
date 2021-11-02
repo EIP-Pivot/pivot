@@ -23,6 +23,8 @@ static const char *to_string_message_type(VkDebugUtilsMessageTypeFlagsEXT s)
     return "Unknown";
 }
 
+namespace pivot::graphics
+{
 uint32_t VulkanApplication::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
                                           VkDebugUtilsMessageTypeFlagsEXT messageType,
                                           const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *)
@@ -121,3 +123,5 @@ bool VulkanApplication::checkDeviceExtensionSupport(const vk::PhysicalDevice &de
     for (const auto &extension: availableExtensions) { requiredExtensions.erase(extension.extensionName); }
     return requiredExtensions.empty();
 }
+
+}    // namespace pivot::graphics

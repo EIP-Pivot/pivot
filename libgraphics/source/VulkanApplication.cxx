@@ -9,6 +9,9 @@
 
 #include <algorithm>
 
+namespace pivot::graphics
+{
+
 VulkanApplication::VulkanApplication(): VulkanLoader(), window("Vulkan", 800, 600)
 {
     DEBUG_FUNCTION;
@@ -26,6 +29,8 @@ VulkanApplication::~VulkanApplication()
     DEBUG_FUNCTION
     if (device) device.waitIdle();
     if (swapchain) swapchain.destroy();
+    if (viewportContext.swapchain) viewportContext.swapchain.destroy();
+    viewportDeletionQueue.flush();
     swapchainDeletionQueue.flush();
     mainDeletionQueue.flush();
 }
@@ -34,7 +39,7 @@ void VulkanApplication::init() { initVulkanRessources(); }
 
 void VulkanApplication::draw(const std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
                              const gpuObject::CameraData &gpuCamera
-#ifdef CULLING_DEBUG
+#ifdef PIVOT_CULLING_DEBUG
                              ,
                              const std::optional<std::reference_wrapper<const gpuObject::CameraData>> cullingCamera
 #endif
@@ -47,7 +52,7 @@ try {
 
     auto &cmd = commandBuffersPrimary[imageIndex];
     auto &drawCmd = commandBuffersSecondary[imageIndex];
-    auto &imguiCmd = imguiContext.cmdBuffer[imageIndex];
+    auto &imguiCmd = viewportContext.cmdBuffer[imageIndex];
 
     device.resetFences(frame.inFlightFences);
     cmd.reset();
@@ -58,23 +63,7 @@ try {
     vk::PipelineStageFlags waitStages[] = {vk::PipelineStageFlagBits::eColorAttachmentOutput};
     vk::Semaphore signalSemaphores[] = {frame.renderFinishedSemaphore};
 
-    const std::array<float, 4> vClearColor = {0.0f, 0.0f, 0.0f, 1.0f};
-    std::array<vk::ClearValue, 2> clearValues{};
-    clearValues.at(0).color = vk::ClearColorValue{vClearColor};
-    clearValues.at(1).depthStencil = vk::ClearDepthStencilValue{1.0f, 0};
-
-    vk::RenderPassBeginInfo renderPassInfo{
-        .renderPass = renderPass,
-        .framebuffer = swapChainFramebuffers[imageIndex],
-        .renderArea =
-            {
-                .offset = {0, 0},
-                .extent = swapchain.getSwapchainExtent(),
-            },
-        .clearValueCount = static_cast<uint32_t>(clearValues.size()),
-        .pClearValues = clearValues.data(),
-    };
-#ifdef CULLING_DEBUG
+#ifdef PIVOT_CULLING_DEBUG
     auto cullingGPUCamera = cullingCamera.value_or(std::ref(gpuCamera)).get();
 #else
     auto cullingGPUCamera = gpuCamera;
@@ -84,18 +73,19 @@ try {
     buildIndirectBuffers(sceneObjectGPUData.objectDrawBatches, frame);
     copyBuffer(frame.data.uniformBuffer, sceneObjectGPUData.objectGPUData);
 
-    vk::CommandBufferInheritanceInfo inheritanceInfo{
-        .renderPass = renderPass,
-        .subpass = 0,
-        .framebuffer = swapChainFramebuffers.at(imageIndex),
-    };
-
     // ImGui draw
     {
+        vk::CommandBufferInheritanceInfo inheritenceInfo{
+            .renderPass = renderPass,
+            .subpass = 0,
+            .framebuffer = swapChainFramebuffers.at(imageIndex),
+        };
+
         vk::CommandBufferBeginInfo imguiBeginInfo{
             .flags = vk::CommandBufferUsageFlagBits::eRenderPassContinue,
-            .pInheritanceInfo = &inheritanceInfo,
+            .pInheritanceInfo = &inheritenceInfo,
         };
+
         VK_TRY(imguiCmd.begin(&imguiBeginInfo));
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), imguiCmd);
         imguiCmd.end();
@@ -103,10 +93,16 @@ try {
 
     // Normal draw
     {
+
+        vk::CommandBufferInheritanceInfo inheritenceInfo{
+            .renderPass = viewportContext.renderPass,
+            .subpass = 0,
+            .framebuffer = viewportContext.framebuffers.at(imageIndex),
+        };
         vk::DeviceSize offset = 0;
         vk::CommandBufferBeginInfo drawBeginInfo{
             .flags = vk::CommandBufferUsageFlagBits::eRenderPassContinue,
-            .pInheritanceInfo = &inheritanceInfo,
+            .pInheritanceInfo = &inheritenceInfo,
         };
         VK_TRY(drawCmd.begin(&drawBeginInfo));
         drawCmd.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
@@ -125,12 +121,50 @@ try {
         drawCmd.end();
     }
 
-    std::array<vk::CommandBuffer, 2> secondaryBuffer{drawCmd, imguiCmd};
+    const std::array<float, 4> vClearColor = {0.0f, 0.0f, 0.0f, 1.0f};
+    std::array<vk::ClearValue, 2> clearValues{};
+    clearValues.at(0).color = vk::ClearColorValue{vClearColor};
+    clearValues.at(1).depthStencil = vk::ClearDepthStencilValue{1.0f, 0};
+
+    vk::RenderPassBeginInfo normalRenderPassInfo{
+        .renderPass = viewportContext.renderPass,
+        .framebuffer = viewportContext.framebuffers[imageIndex],
+        .renderArea =
+            {
+                .offset = {0, 0},
+                .extent =
+                    {
+                        .width = viewportContext.swapchain.getInfo().size.width,
+                        .height = viewportContext.swapchain.getInfo().size.height,
+
+                    },
+            },
+        .clearValueCount = static_cast<uint32_t>(clearValues.size()),
+        .pClearValues = clearValues.data(),
+    };
+
+    vk::RenderPassBeginInfo imGuiRenderPassInfo{
+        .renderPass = renderPass,
+        .framebuffer = swapChainFramebuffers[imageIndex],
+        .renderArea =
+            {
+                .offset = {0, 0},
+                .extent = swapchain.getSwapchainExtent(),
+            },
+        .clearValueCount = static_cast<uint32_t>(clearValues.size()),
+        .pClearValues = clearValues.data(),
+    };
     vk::CommandBufferBeginInfo beginInfo;
     VK_TRY(cmd.begin(&beginInfo));
-    cmd.beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
-    cmd.executeCommands(secondaryBuffer);
+
+    cmd.beginRenderPass(normalRenderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
+    cmd.executeCommands(drawCmd);
     cmd.endRenderPass();
+
+    cmd.beginRenderPass(imGuiRenderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
+    cmd.executeCommands(imguiCmd);
+    cmd.endRenderPass();
+
     cmd.end();
 
     const std::array<vk::CommandBuffer, 1> submitCmd{cmd};
@@ -152,7 +186,7 @@ try {
         .pImageIndices = &imageIndex,
     };
     vk_utils::vk_try(presentQueue.presentKHR(presentInfo));
-    currentFrame = (currentFrame + 1) % MAX_FRAME_FRAME_IN_FLIGHT;
+    currentFrame = (currentFrame + 1) % PIVOT_MAX_FRAME_FRAME_IN_FLIGHT;
 } catch (const vk::OutOfDateKHRError &se) {
     return recreateSwapchain();
 }
@@ -162,7 +196,7 @@ VulkanApplication::buildSceneObjectsGPUData(const std::vector<std::reference_wra
                                             const gpuObject::CameraData &camera)
 {
     if (objects.empty()) return {};
-    if (objects.size() >= MAX_OBJECT) throw TooManyObjectInSceneError();
+    if (objects.size() >= PIVOT_MAX_OBJECT) throw TooManyObjectInSceneError();
 
     std::vector<DrawBatch> packedDraws;
     std::vector<gpuObject::UniformBufferObject> objectGPUData;
@@ -170,8 +204,7 @@ VulkanApplication::buildSceneObjectsGPUData(const std::vector<std::reference_wra
 
     for (const auto &object: objects) {
         auto boundingBox = meshesBoundingBoxes.at(object.get().meshID);
-        if (pivot::graphics::culling::should_object_be_rendered(object.get().objectInformation.transform, boundingBox,
-                                                                camera)) {
+        if (culling::should_object_be_rendered(object.get().objectInformation.transform, boundingBox, camera)) {
             packedDraws.push_back({
                 .meshId = object.get().meshID,
                 .first = drawCount++,
@@ -205,6 +238,9 @@ void VulkanApplication::buildIndirectBuffers(const std::vector<DrawBatch> &packe
 void VulkanApplication::initVulkanRessources()
 {
     DEBUG_FUNCTION
+    logger->info("VulkanApplication") << "Initializing Vulkan ressources...";
+    LOGGER_ENDL;
+
     createInstance();
     createDebugMessenger();
     createSurface();
@@ -223,6 +259,18 @@ void VulkanApplication::initVulkanRessources()
 
     auto size = window.getSize();
     swapchain.create(size, physical_device, device, surface);
+
+    viewportContext.swapchain.create(
+        {
+            .size = {1500, 1000, 1},
+            .msaaSamples = maxMsaaSample,
+        },
+        allocator, device);
+    createImGuiSampler();
+    createViewportRenderPass();
+    createViewportColorResources();
+    createViewportDepthResources();
+    createViewportFramebuffers();
 
     createUniformBuffers();
     createRenderPass();
@@ -246,6 +294,9 @@ void VulkanApplication::initVulkanRessources()
         .specular = {1.0f, 1.0f, 1.0f, 1.0f},
     };
     postInitialization();
+
+    logger->info("VulkanApplication") << "Vulkan initialisation complete !";
+    LOGGER_ENDL;
 }
 
 void VulkanApplication::postInitialization()
@@ -257,6 +308,22 @@ void VulkanApplication::postInitialization()
                    [](const auto &i) { return i.second; });
 
     for (auto &frame: frames) { copyBuffer(frame.data.materialBuffer, materialStor); }
+}
+
+void VulkanApplication::recreateViewport(const vk::Extent2D &size)
+{
+    viewportDeletionQueue.flush();
+    viewportContext.swapchain.destroy();
+    viewportContext.swapchain.create(
+        {
+            .size = {size.height, size.width, 1},
+            .msaaSamples = maxMsaaSample,
+        },
+        allocator, device);
+    createViewportRenderPass();
+    createViewportColorResources();
+    createViewportDepthResources();
+    createViewportFramebuffers();
 }
 
 void VulkanApplication::recreateSwapchain()
@@ -290,3 +357,5 @@ void VulkanApplication::recreateSwapchain()
     LOGGER_ENDL;
     postInitialization();
 }
+
+}    // namespace pivot::graphics

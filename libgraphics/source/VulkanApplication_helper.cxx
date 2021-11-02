@@ -12,7 +12,13 @@
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
-float VulkanApplication::getAspectRatio() const { return swapchain.getAspectRatio(); }
+namespace pivot::graphics
+{
+float VulkanApplication::getAspectRatio() const
+{
+    return 1.0f;
+}    // return viewportContext.swapchain.getAspectRatio(); }
+
 void VulkanApplication::copyBufferToBuffer(const vk::Buffer &srcBuffer, vk::Buffer &dstBuffer,
                                            const vk::DeviceSize &size)
 {
@@ -26,6 +32,7 @@ void VulkanApplication::copyBufferToBuffer(const vk::Buffer &srcBuffer, vk::Buff
         cmd.copyBuffer(srcBuffer, dstBuffer, copyRegion);
     });
 }
+
 void VulkanApplication::copyBufferToImage(const vk::Buffer &srcBuffer, vk::Image &dstImage, const vk::Extent3D &extent)
 {
     DEBUG_FUNCTION
@@ -236,3 +243,5 @@ void VulkanApplication::generateMipmaps(vk::Image &image, vk::Format imageFormat
                             vk::DependencyFlags{}, nullptr, nullptr, barrier);
     });
 }
+
+}    // namespace pivot::graphics

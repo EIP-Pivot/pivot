@@ -16,6 +16,8 @@
 #include <ranges>
 #include <set>
 
+namespace pivot::graphics
+{
 void VulkanApplication::createInstance()
 {
     DEBUG_FUNCTION
@@ -24,6 +26,7 @@ void VulkanApplication::createInstance()
     if (bEnableValidationLayers) { extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME); }
 
     vk::ApplicationInfo applicationInfo{
+        .pEngineName = "pivot",
         .apiVersion = VK_API_VERSION_1_2,
     };
     vk::InstanceCreateInfo createInfo{
@@ -36,6 +39,12 @@ void VulkanApplication::createInstance()
         createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
         createInfo.ppEnabledLayerNames = validationLayers.data();
     }
+
+    auto &l = logger->debug(__PRETTY_FUNCTION__);
+    l << "Instance extensions : ";
+    for (const auto &i: extensions) { l << i << " "; }
+    LOGGER_ENDL;
+
     this->VulkanLoader::createInstance(createInfo);
     mainDeletionQueue.push([&] { instance.destroy(); });
 }
@@ -117,6 +126,12 @@ void VulkanApplication::createLogicalDevice()
         .ppEnabledExtensionNames = deviceExtensions.data(),
         .pEnabledFeatures = &deviceFeature,
     };
+
+    auto &l = logger->debug(__PRETTY_FUNCTION__);
+    l << "Device extensions : ";
+    for (const auto &i: deviceExtensions) { l << i << " "; }
+    LOGGER_ENDL;
+
     this->VulkanLoader::createLogicalDevice(physical_device, createInfo);
     mainDeletionQueue.push([&] { device.destroy(); });
 
@@ -132,7 +147,7 @@ void VulkanApplication::createAllocator()
     allocatorInfo.device = device;
     allocatorInfo.instance = instance;
     allocatorInfo.vulkanApiVersion = 0;
-    allocatorInfo.frameInUseCount = MAX_FRAME_FRAME_IN_FLIGHT;
+    allocatorInfo.frameInUseCount = PIVOT_MAX_FRAME_FRAME_IN_FLIGHT;
 
     allocator = vma::createAllocator(allocatorInfo);
     mainDeletionQueue.push([&] { allocator.destroy(); });
@@ -143,30 +158,8 @@ void VulkanApplication::createRenderPass()
     DEBUG_FUNCTION
     vk::AttachmentDescription colorAttachment{
         .format = swapchain.getSwapchainFormat(),
-        .samples = maxMsaaSample,
-        .loadOp = vk::AttachmentLoadOp::eClear,
-        .storeOp = vk::AttachmentStoreOp::eDontCare,
-        .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
-        .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
-        .initialLayout = vk::ImageLayout::eUndefined,
-        .finalLayout = vk::ImageLayout::eColorAttachmentOptimal,
-    };
-    vk::AttachmentDescription depthAttachment{
-        .format = vk_utils::findSupportedFormat(
-            physical_device, {vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint},
-            vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment),
-        .samples = maxMsaaSample,
-        .loadOp = vk::AttachmentLoadOp::eClear,
-        .storeOp = vk::AttachmentStoreOp::eDontCare,
-        .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
-        .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
-        .initialLayout = vk::ImageLayout::eUndefined,
-        .finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal,
-    };
-    vk::AttachmentDescription colorAttachmentResolve{
-        .format = swapchain.getSwapchainFormat(),
         .samples = vk::SampleCountFlagBits::e1,
-        .loadOp = vk::AttachmentLoadOp::eDontCare,
+        .loadOp = vk::AttachmentLoadOp::eClear,
         .storeOp = vk::AttachmentStoreOp::eStore,
         .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
         .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
@@ -177,40 +170,17 @@ void VulkanApplication::createRenderPass()
         .attachment = 0,
         .layout = vk::ImageLayout::eColorAttachmentOptimal,
     };
-    vk::AttachmentReference depthAttachmentRef{
-        .attachment = 1,
-        .layout = vk::ImageLayout::eDepthStencilAttachmentOptimal,
-    };
-    vk::AttachmentReference colorAttachmentResolveRef{
-        .attachment = 2,
-        .layout = vk::ImageLayout::eColorAttachmentOptimal,
-    };
     vk::SubpassDescription subpass{
         .pipelineBindPoint = vk::PipelineBindPoint::eGraphics,
         .colorAttachmentCount = 1,
         .pColorAttachments = &colorAttachmentRef,
-        .pResolveAttachments = &colorAttachmentResolveRef,
-        .pDepthStencilAttachment = &depthAttachmentRef,
-    };
-    vk::SubpassDependency dependency{
-        .srcSubpass = VK_SUBPASS_EXTERNAL,
-        .dstSubpass = 0,
-        .srcStageMask =
-            vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests,
-        .dstStageMask =
-            vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests,
-        .srcAccessMask = vk::AccessFlagBits::eNoneKHR,
-        .dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite,
     };
 
-    std::array<vk::AttachmentDescription, 3> attachments = {colorAttachment, depthAttachment, colorAttachmentResolve};
     vk::RenderPassCreateInfo renderPassInfo{
-        .attachmentCount = static_cast<uint32_t>(attachments.size()),
-        .pAttachments = attachments.data(),
+        .attachmentCount = 1,
+        .pAttachments = &colorAttachment,
         .subpassCount = 1,
         .pSubpasses = &subpass,
-        .dependencyCount = 1,
-        .pDependencies = &dependency,
     };
     renderPass = device.createRenderPass(renderPassInfo);
 
@@ -262,17 +232,20 @@ void VulkanApplication::createPipeline()
     builder.depthStencil = vk_init::populateVkPipelineDepthStencilStateCreateInfo();
     builder.viewport.x = 0.0f;
     builder.viewport.y = 0.0f;
-    builder.viewport.width = swapchain.getSwapchainExtent().width;
-    builder.viewport.height = swapchain.getSwapchainExtent().height;
+    builder.viewport.width = viewportContext.swapchain.getInfo().size.width;
+    builder.viewport.height = viewportContext.swapchain.getInfo().size.height;
     builder.viewport.minDepth = 0.0f;
     builder.viewport.maxDepth = 1.0f;
     builder.scissor.offset = vk::Offset2D{0, 0};
-    builder.scissor.extent = swapchain.getSwapchainExtent();
+    builder.scissor.extent = vk::Extent2D{
+        .width = viewportContext.swapchain.getInfo().size.width,
+        .height = viewportContext.swapchain.getInfo().size.height,
+    };
     builder.colorBlendAttachment = vk_init::populateVkPipelineColorBlendAttachmentState();
     builder.rasterizer = vk_init::populateVkPipelineRasterizationStateCreateInfo(vk::PolygonMode::eFill);
-    builder.rasterizer.cullMode = vk::CullModeFlagBits::eBack;
+    builder.rasterizer.cullMode = vk::CullModeFlagBits::eNone;
     builder.rasterizer.frontFace = vk::FrontFace::eCounterClockwise;
-    graphicsPipeline = builder.build(device, renderPass, pipelineCache);
+    graphicsPipeline = builder.build(device, viewportContext.renderPass, pipelineCache);
 
     device.destroy(fragShaderModule);
     device.destroy(vertShaderModule);
@@ -284,8 +257,7 @@ void VulkanApplication::createFramebuffers()
     DEBUG_FUNCTION
     swapChainFramebuffers.resize(swapchain.nbOfImage());
     for (size_t i = 0; i < swapchain.nbOfImage(); i++) {
-        std::array<vk::ImageView, 3> attachments = {colorImage.imageView, depthResources.imageView,
-                                                    swapchain.getSwapchainImageView(i)};
+        std::array<vk::ImageView, 1> attachments = {swapchain.getSwapchainImageView(i)};
 
         vk::FramebufferCreateInfo framebufferInfo{
             .renderPass = renderPass,
@@ -312,9 +284,9 @@ void VulkanApplication::createCommandPool()
     };
     commandPool = device.createCommandPool(poolInfo);
     uploadContext.commandPool = device.createCommandPool(poolInfo);
-    imguiContext.cmdPool = device.createCommandPool(poolInfo);
+    viewportContext.cmdPool = device.createCommandPool(poolInfo);
     mainDeletionQueue.push([&] {
-        device.destroy(imguiContext.cmdPool);
+        device.destroy(viewportContext.cmdPool);
         device.destroy(uploadContext.commandPool);
         device.destroy(commandPool);
     });
@@ -338,15 +310,15 @@ void VulkanApplication::createCommandBuffers()
     commandBuffersSecondary = device.allocateCommandBuffers(drawInfo);
 
     vk::CommandBufferAllocateInfo imguiInfo{
-        .commandPool = imguiContext.cmdPool,
+        .commandPool = viewportContext.cmdPool,
         .level = vk::CommandBufferLevel::eSecondary,
         .commandBufferCount = static_cast<uint32_t>(swapchain.nbOfImage()),
     };
-    imguiContext.cmdBuffer = device.allocateCommandBuffers(imguiInfo);
+    viewportContext.cmdBuffer = device.allocateCommandBuffers(imguiInfo);
     swapchainDeletionQueue.push([&] {
         device.free(commandPool, commandBuffersPrimary);
         device.free(commandPool, commandBuffersSecondary);
-        device.free(imguiContext.cmdPool, imguiContext.cmdBuffer);
+        device.free(viewportContext.cmdPool, viewportContext.cmdBuffer);
     });
 }
 
@@ -434,9 +406,9 @@ void VulkanApplication::createUniformBuffers()
 {
     DEBUG_FUNCTION
     for (auto &f: frames) {
-        f.data.uniformBuffer = createBuffer(sizeof(gpuObject::UniformBufferObject) * MAX_OBJECT,
+        f.data.uniformBuffer = createBuffer(sizeof(gpuObject::UniformBufferObject) * PIVOT_MAX_OBJECT,
                                             vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
-        f.data.materialBuffer = createBuffer(sizeof(gpuObject::Material) * MAX_MATERIALS,
+        f.data.materialBuffer = createBuffer(sizeof(gpuObject::Material) * PIVOT_MAX_MATERIALS,
                                              vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
     }
     mainDeletionQueue.push([&] {
@@ -452,7 +424,7 @@ void VulkanApplication::createIndirectBuffer()
     DEBUG_FUNCTION
     for (auto &f: frames) {
         f.indirectBuffer =
-            this->createBuffer(sizeof(vk::DrawIndexedIndirectCommand) * MAX_OBJECT,
+            this->createBuffer(sizeof(vk::DrawIndexedIndirectCommand) * PIVOT_MAX_OBJECT,
                                vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer |
                                    vk::BufferUsageFlagBits::eIndirectBuffer,
                                vma::MemoryUsage::eCpuToGpu);
@@ -467,11 +439,11 @@ void VulkanApplication::createDescriptorPool()
     vk::DescriptorPoolSize poolSize[] = {
         {
             .type = vk::DescriptorType::eUniformBuffer,
-            .descriptorCount = MAX_FRAME_FRAME_IN_FLIGHT,
+            .descriptorCount = PIVOT_MAX_FRAME_FRAME_IN_FLIGHT,
         },
         {
             .type = vk::DescriptorType::eCombinedImageSampler,
-            .descriptorCount = MAX_TEXTURES,
+            .descriptorCount = PIVOT_MAX_TEXTURES,
         },
     };
 
@@ -500,12 +472,12 @@ void VulkanApplication::createDescriptorSets()
         vk::DescriptorBufferInfo bufferInfo{
             .buffer = f.data.uniformBuffer.buffer,
             .offset = 0,
-            .range = sizeof(gpuObject::UniformBufferObject) * MAX_OBJECT,
+            .range = sizeof(gpuObject::UniformBufferObject) * PIVOT_MAX_OBJECT,
         };
         vk::DescriptorBufferInfo materialInfo{
             .buffer = f.data.materialBuffer.buffer,
             .offset = 0,
-            .range = sizeof(gpuObject::Material) * MAX_MATERIALS,
+            .range = sizeof(gpuObject::Material) * PIVOT_MAX_MATERIALS,
         };
         std::vector<vk::WriteDescriptorSet> descriptorWrites{
             {
@@ -610,6 +582,7 @@ void VulkanApplication::createDepthResources()
         .sharingMode = vk::SharingMode::eExclusive,
         .initialLayout = vk::ImageLayout::eUndefined,
     };
+
     vma::AllocationCreateInfo allocInfo;
     allocInfo.setUsage(vma::MemoryUsage::eGpuOnly);
     std::tie(depthResources.image, depthResources.memory) = allocator.createImage(imageInfo, allocInfo);
@@ -677,8 +650,8 @@ void VulkanApplication::createImGuiDescriptorPool()
         .pPoolSizes = pool_sizes,
     };
 
-    imguiContext.pool = device.createDescriptorPool(pool_info);
-    mainDeletionQueue.push([&] { device.destroy(imguiContext.pool); });
+    viewportContext.pool = device.createDescriptorPool(pool_info);
+    mainDeletionQueue.push([&] { device.destroy(viewportContext.pool); });
 }
 
 void VulkanApplication::initDearImGui()
@@ -704,10 +677,9 @@ void VulkanApplication::initDearImGui()
     init_info.QueueFamily = indices.graphicsFamily.value();
     init_info.Queue = graphicsQueue;
     init_info.PipelineCache = pipelineCache;
-    init_info.DescriptorPool = imguiContext.pool;
+    init_info.DescriptorPool = viewportContext.pool;
     init_info.MinImageCount = swapchain.nbOfImage();
     init_info.ImageCount = swapchain.nbOfImage();
-    init_info.MSAASamples = static_cast<VkSampleCountFlagBits>(maxMsaaSample);
     init_info.CheckVkResultFn = vk_utils::vk_try;
 
     ImGui_ImplVulkan_Init(&init_info, renderPass);
@@ -721,3 +693,201 @@ void VulkanApplication::initDearImGui()
         ImGui::DestroyContext();
     });
 }
+
+void VulkanApplication::createViewportRenderPass()
+{
+    DEBUG_FUNCTION
+    vk::AttachmentDescription colorAttachment{
+        .format = viewportContext.swapchain.getInfo().format,
+        .samples = maxMsaaSample,
+        .loadOp = vk::AttachmentLoadOp::eClear,
+        .storeOp = vk::AttachmentStoreOp::eDontCare,
+        .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
+        .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
+        .initialLayout = vk::ImageLayout::eUndefined,
+        .finalLayout = vk::ImageLayout::eColorAttachmentOptimal,
+    };
+    vk::AttachmentDescription depthAttachment{
+        .format = vk_utils::findSupportedFormat(
+            physical_device, {vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint},
+            vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment),
+        .samples = maxMsaaSample,
+        .loadOp = vk::AttachmentLoadOp::eClear,
+        .storeOp = vk::AttachmentStoreOp::eDontCare,
+        .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
+        .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
+        .initialLayout = vk::ImageLayout::eUndefined,
+        .finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal,
+    };
+    vk::AttachmentDescription colorAttachmentResolve{
+        .format = viewportContext.swapchain.getInfo().format,
+        .samples = vk::SampleCountFlagBits::e1,
+        .loadOp = vk::AttachmentLoadOp::eDontCare,
+        .storeOp = vk::AttachmentStoreOp::eStore,
+        .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
+        .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
+        .initialLayout = vk::ImageLayout::eUndefined,
+        .finalLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
+    };
+    vk::AttachmentReference colorAttachmentRef{
+        .attachment = 0,
+        .layout = vk::ImageLayout::eColorAttachmentOptimal,
+    };
+    vk::AttachmentReference depthAttachmentRef{
+        .attachment = 1,
+        .layout = vk::ImageLayout::eDepthStencilAttachmentOptimal,
+    };
+    vk::AttachmentReference colorAttachmentResolveRef{
+        .attachment = 2,
+        .layout = vk::ImageLayout::eColorAttachmentOptimal,
+    };
+    vk::SubpassDescription subpass{
+        .pipelineBindPoint = vk::PipelineBindPoint::eGraphics,
+        .colorAttachmentCount = 1,
+        .pColorAttachments = &colorAttachmentRef,
+        .pResolveAttachments = &colorAttachmentResolveRef,
+        .pDepthStencilAttachment = &depthAttachmentRef,
+    };
+    vk::SubpassDependency dependency{
+        .srcSubpass = VK_SUBPASS_EXTERNAL,
+        .dstSubpass = 0,
+        .srcStageMask =
+            vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests,
+        .dstStageMask =
+            vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests,
+        .srcAccessMask = vk::AccessFlagBits::eNoneKHR,
+        .dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite,
+    };
+
+    std::array<vk::AttachmentDescription, 3> attachments = {colorAttachment, depthAttachment, colorAttachmentResolve};
+    vk::RenderPassCreateInfo renderPassInfo{
+        .attachmentCount = static_cast<uint32_t>(attachments.size()),
+        .pAttachments = attachments.data(),
+        .subpassCount = 1,
+        .pSubpasses = &subpass,
+        .dependencyCount = 1,
+        .pDependencies = &dependency,
+    };
+    viewportContext.renderPass = device.createRenderPass(renderPassInfo);
+
+    viewportDeletionQueue.push([&] { device.destroyRenderPass(viewportContext.renderPass); });
+}
+
+void VulkanApplication::createViewportFramebuffers()
+{
+    DEBUG_FUNCTION
+    viewportContext.framebuffers.resize(swapchain.nbOfImage());
+    for (size_t i = 0; i < swapchain.nbOfImage(); i++) {
+        std::array<vk::ImageView, 3> attachments = {viewportContext.colorImage.imageView,
+                                                    viewportContext.depthResources.imageView,
+                                                    viewportContext.swapchain.getImageView(i)};
+
+        vk::FramebufferCreateInfo framebufferInfo{
+            .renderPass = viewportContext.renderPass,
+            .width = viewportContext.swapchain.getInfo().size.width,
+            .height = viewportContext.swapchain.getInfo().size.height,
+            .layers = 1,
+        };
+        framebufferInfo.setAttachments(attachments);
+
+        viewportContext.framebuffers.at(i) = device.createFramebuffer(framebufferInfo);
+    }
+    viewportDeletionQueue.push([&] {
+        for (auto &framebuffer: viewportContext.framebuffers) { device.destroyFramebuffer(framebuffer); }
+    });
+}
+
+void VulkanApplication::createImGuiSampler()
+{
+    DEBUG_FUNCTION
+    vk::PhysicalDeviceProperties properties = physical_device.getProperties();
+
+    vk::SamplerCreateInfo samplerInfo{
+        .magFilter = vk::Filter::eLinear,
+        .minFilter = vk::Filter::eLinear,
+        .mipmapMode = vk::SamplerMipmapMode::eLinear,
+        .addressModeU = vk::SamplerAddressMode::eRepeat,
+        .addressModeV = vk::SamplerAddressMode::eRepeat,
+        .addressModeW = vk::SamplerAddressMode::eRepeat,
+        .mipLodBias = 0.0f,
+        .anisotropyEnable = VK_TRUE,
+        .maxAnisotropy = properties.limits.maxSamplerAnisotropy,
+        .compareEnable = VK_FALSE,
+        .compareOp = vk::CompareOp::eAlways,
+        .minLod = 0.0f,
+        .maxLod = static_cast<float>(mipLevels),
+        .borderColor = vk::BorderColor::eIntOpaqueBlack,
+        .unnormalizedCoordinates = VK_FALSE,
+    };
+    viewportContext.sampler = device.createSampler(samplerInfo);
+    mainDeletionQueue.push([&] { device.destroy(viewportContext.sampler); });
+}
+
+void VulkanApplication::createViewportDepthResources()
+{
+    DEBUG_FUNCTION
+    vk::Format depthFormat = vk_utils::findSupportedFormat(
+        physical_device, {vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint},
+        vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
+
+    vk::ImageCreateInfo imageInfo{
+        .imageType = vk::ImageType::e2D,
+        .format = depthFormat,
+        .extent = viewportContext.swapchain.getInfo().size,
+        .mipLevels = 1,
+        .arrayLayers = 1,
+        .samples = viewportContext.swapchain.getInfo().msaaSamples,
+        .tiling = vk::ImageTiling::eOptimal,
+        .usage = vk::ImageUsageFlagBits::eDepthStencilAttachment,
+        .sharingMode = vk::SharingMode::eExclusive,
+        .initialLayout = vk::ImageLayout::eUndefined,
+    };
+    vma::AllocationCreateInfo allocInfo;
+    allocInfo.setUsage(vma::MemoryUsage::eGpuOnly);
+    std::tie(viewportContext.depthResources.image, viewportContext.depthResources.memory) =
+        allocator.createImage(imageInfo, allocInfo);
+
+    auto createInfo = vk_init::populateVkImageViewCreateInfo(viewportContext.depthResources.image, depthFormat);
+    createInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eDepth;
+    viewportContext.depthResources.imageView = device.createImageView(createInfo);
+
+    transitionImageLayout(viewportContext.depthResources.image, depthFormat, vk::ImageLayout::eUndefined,
+                          vk::ImageLayout::eDepthStencilAttachmentOptimal);
+    viewportDeletionQueue.push([&] {
+        device.destroy(viewportContext.depthResources.imageView);
+        allocator.destroyImage(viewportContext.depthResources.image, depthResources.memory);
+    });
+}
+
+void VulkanApplication::createViewportColorResources()
+{
+    DEBUG_FUNCTION
+    vk::ImageCreateInfo imageInfo{
+        .imageType = vk::ImageType::e2D,
+        .format = viewportContext.swapchain.getInfo().format,
+        .extent = viewportContext.swapchain.getInfo().size,
+        .mipLevels = 1,
+        .arrayLayers = 1,
+        .samples = viewportContext.swapchain.getInfo().msaaSamples,
+        .tiling = vk::ImageTiling::eOptimal,
+        .usage = vk::ImageUsageFlagBits::eTransientAttachment | vk::ImageUsageFlagBits::eColorAttachment,
+        .sharingMode = vk::SharingMode::eExclusive,
+        .initialLayout = vk::ImageLayout::eUndefined,
+    };
+    vma::AllocationCreateInfo allocInfo{};
+    allocInfo.usage = vma::MemoryUsage::eGpuOnly;
+    std::tie(viewportContext.colorImage.image, viewportContext.colorImage.memory) =
+        allocator.createImage(imageInfo, allocInfo);
+
+    auto createInfo = vk_init::populateVkImageViewCreateInfo(viewportContext.colorImage.image,
+                                                             viewportContext.swapchain.getInfo().format);
+    createInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+    viewportContext.colorImage.imageView = device.createImageView(createInfo);
+
+    viewportDeletionQueue.push([&] {
+        device.destroy(viewportContext.colorImage.imageView);
+        allocator.destroyImage(viewportContext.colorImage.image, viewportContext.colorImage.memory);
+    });
+}
+
+}    // namespace pivot::graphics

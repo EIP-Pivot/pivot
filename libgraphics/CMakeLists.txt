@@ -125,9 +125,8 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/VulkanApplication_loader.cxx
                                    source/culling.cxx
                                    source/math.cxx
+                                   source/Swapchain.cxx
 )
-
-target_precompile_headers(${PROJECT_NAME} PRIVATE <Logger.hpp> <glm/glm.hpp> <vulkan/vulkan.hpp>)
 
 target_precompile_headers(${PROJECT_NAME} PUBLIC <pivot/graphics/VulkanApplication.hxx>)
 

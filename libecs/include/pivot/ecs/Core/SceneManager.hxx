@@ -5,7 +5,7 @@
 #include <string>
 
 using LevelId = std::uint16_t;
-const LevelId MAX_LEVELS = UINT16_MAX; // 65535
+const LevelId PIVOT_MAX_LEVELS = UINT16_MAX;    // 65535
 
 /// @class SceneManager
 ///

@@ -73,6 +73,22 @@ try {
     buildIndirectBuffers(sceneObjectGPUData.objectDrawBatches, frame);
     copyBuffer(frame.data.uniformBuffer, sceneObjectGPUData.objectGPUData);
 
+    static const std::array<float, 4> red = {0.125f, 0.f, 0.f, 0.f};
+    static const std::array<float, 4> blue = {0.f, 0.f, 0.125f, 0.f};
+    static const std::array<float, 4> green = {0.f, 0.125f, 0.f, 0.f};
+    static const vk::DebugUtilsLabelEXT mainDebugLabel{
+        .pLabelName = "Main Command Buffer",
+        .color = green,
+    };
+    static vk::DebugUtilsLabelEXT viewportDebugLabel{
+        .pLabelName = "Viewport CommandBuffer",
+        .color = red,
+    };
+    static vk::DebugUtilsLabelEXT imguiDebugLabel{
+        .pLabelName = "ImGui CommandBuffer",
+        .color = blue,
+    };
+
     // ImGui draw
     {
         vk::CommandBufferInheritanceInfo inheritenceInfo{
@@ -87,7 +103,9 @@ try {
         };
 
         VK_TRY(imguiCmd.begin(&imguiBeginInfo));
+        imguiCmd.beginDebugUtilsLabelEXT(imguiDebugLabel);
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), imguiCmd);
+        imguiCmd.endDebugUtilsLabelEXT();
         imguiCmd.end();
     }
 
@@ -105,6 +123,7 @@ try {
             .pInheritanceInfo = &inheritenceInfo,
         };
         VK_TRY(drawCmd.begin(&drawBeginInfo));
+        drawCmd.beginDebugUtilsLabelEXT(viewportDebugLabel);
         drawCmd.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
         drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, frame.data.objectDescriptor,
                                    nullptr);
@@ -118,6 +137,7 @@ try {
                                         draw.first * sizeof(vk::DrawIndexedIndirectCommand), draw.count,
                                         sizeof(vk::DrawIndexedIndirectCommand));
         }
+        drawCmd.endDebugUtilsLabelEXT();
         drawCmd.end();
     }
 
@@ -156,6 +176,7 @@ try {
     };
     vk::CommandBufferBeginInfo beginInfo;
     VK_TRY(cmd.begin(&beginInfo));
+    cmd.beginDebugUtilsLabelEXT(mainDebugLabel);
 
     cmd.beginRenderPass(normalRenderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
     cmd.executeCommands(drawCmd);
@@ -165,6 +186,7 @@ try {
     cmd.executeCommands(imguiCmd);
     cmd.endRenderPass();
 
+    cmd.endDebugUtilsLabelEXT();
     cmd.end();
 
     const std::array<vk::CommandBuffer, 1> submitCmd{cmd};

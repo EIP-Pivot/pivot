@@ -23,6 +23,7 @@ void VulkanApplication::createInstance()
     DEBUG_FUNCTION
     auto debugInfo = vk_init::populateDebugUtilsMessengerCreateInfoEXT(&VulkanApplication::debugCallback);
     auto extensions = Window::getRequiredExtensions();
+    extensions.insert(extensions.end(), instanceExtensions.begin(), instanceExtensions.end());
     if (bEnableValidationLayers) { extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME); }
 
     vk::ApplicationInfo applicationInfo{

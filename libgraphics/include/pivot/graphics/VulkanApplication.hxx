@@ -32,6 +32,10 @@ const std::vector<const char *> deviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 };
 
+const std::vector<const char *> instanceExtensions = {
+    VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+};
+
 /// @class VulkanApplication
 /// @brief Main class of the graphics engine
 ///

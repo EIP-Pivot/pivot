@@ -7,6 +7,9 @@
 #include <string>
 #include <variant>
 
+namespace pivot::graphics
+{
+
 /// @class ObjectInformation
 ///
 /// @brief Hold the information of the 3D object, on the CPU-side
@@ -22,20 +25,22 @@ struct ObjectInformation {
 namespace gpuObject
 {
 
-/// @struct UniformBufferObject
-///
-/// @brief Hold all the information of the 3D object
-struct UniformBufferObject {
-    /// @param info The object information
-    /// @param imageStor The texture storage, used to resolve the name of the texture
-    /// @param materialStor The material storage, used to resolve material name
-    UniformBufferObject(const ObjectInformation &info, const ImageStorage &imageStor,
-                        const MaterialStorage &materialStor);
-    /// The model matrix
-    glm::mat4 modelMatrix;
-    /// The index of the texture in the buffer
-    alignas(16) uint32_t textureIndex = 0;
-    /// The index of the material in the buffer
-    uint32_t materialIndex = 0;
-};
+    /// @struct UniformBufferObject
+    ///
+    /// @brief Hold all the information of the 3D object
+    struct UniformBufferObject {
+        /// @param info The object information
+        /// @param imageStor The texture storage, used to resolve the name of the texture
+        /// @param materialStor The material storage, used to resolve material name
+        UniformBufferObject(const ObjectInformation &info, const ImageStorage &imageStor,
+                            const MaterialStorage &materialStor);
+        /// The model matrix
+        glm::mat4 modelMatrix;
+        /// The index of the texture in the buffer
+        alignas(16) uint32_t textureIndex = 0;
+        /// The index of the material in the buffer
+        uint32_t materialIndex = 0;
+    };
 }    // namespace gpuObject
+
+}    // namespace pivot::graphics

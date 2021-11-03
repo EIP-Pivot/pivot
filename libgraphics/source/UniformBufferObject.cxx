@@ -5,6 +5,9 @@
 #include <glm/gtx/quaternion.hpp>
 #include <iterator>
 
+namespace pivot::graphics
+{
+
 gpuObject::UniformBufferObject::UniformBufferObject(const ObjectInformation &info, const ImageStorage &stor,
                                                     const MaterialStorage &mat)
     : modelMatrix(info.transform.getModelMatrix()),
@@ -12,3 +15,5 @@ gpuObject::UniformBufferObject::UniformBufferObject(const ObjectInformation &inf
       materialIndex(std::distance(mat.begin(), mat.find(info.materialIndex)))
 {
 }
+
+}    // namespace pivot::graphics

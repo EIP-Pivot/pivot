@@ -24,6 +24,7 @@
 namespace pivot::graphics
 {
 
+/// @cond
 const std::vector<const char *> validationLayers = {
     "VK_LAYER_KHRONOS_validation",
 };
@@ -35,6 +36,7 @@ const std::vector<const char *> deviceExtensions = {
 const std::vector<const char *> instanceExtensions = {
     VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 };
+/// @endcond
 
 /// @class VulkanApplication
 /// @brief Main class of the graphics engine
@@ -104,10 +106,14 @@ public:
     /// @brief get Swapchain aspect ratio
     float getAspectRatio() const;
 
+    /// recreate Viewport to new size
     void recreateViewport(const vk::Extent2D &size);
+
+    /// @cond
     Swapchain &getViewportSwapchain() noexcept { return viewportContext.swapchain; }
     const vk::Sampler &getViewportSampler() const noexcept { return viewportContext.sampler; }
     uint32_t getCurrentFrame() const noexcept { return currentFrame; }
+    /// @endcond
 
 private:
     void pushModelsToGPU();
@@ -201,6 +207,7 @@ public:
     ImageStorage loadedTextures;
 
 private:
+    /// @cond
     uint8_t currentFrame = 0;
     uint32_t mipLevels = 0;
     vk::SampleCountFlagBits maxMsaaSample = vk::SampleCountFlagBits::e1;
@@ -261,6 +268,7 @@ private:
     vk::Pipeline graphicsPipeline = VK_NULL_HANDLE;
 
     std::vector<vk::Framebuffer> swapChainFramebuffers;
+    /// @endcond
 };
 
 #ifndef VULKAN_APPLICATION_IMPLEMENTATION

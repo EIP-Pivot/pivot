@@ -63,6 +63,7 @@ public:
     /// happend)
     uint32_t nbOfImage() const;
 
+    /// return the next image swapchain image index
     uint32_t getNextImageIndex(const uint64_t maxDelay, vk::Semaphore semaphore);
 
     /// Return the Vulkan object

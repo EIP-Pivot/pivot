@@ -2,11 +2,11 @@
 
 #include <pivot/graphics/culling.hxx>
 
-namespace pivot::graphics::culling
+namespace pivot::graphics
 {
 
-bool should_object_be_rendered(const Transform &transform, const MeshBoundingBox &box,
-                               const gpuObject::CameraData &camera)
+bool culling::should_object_be_rendered(const Transform &transform, const MeshBoundingBox &box,
+                                        const gpuObject::CameraData &camera)
 {
     auto projection = camera.viewproj * transform.getModelMatrix();
     bool result = false;

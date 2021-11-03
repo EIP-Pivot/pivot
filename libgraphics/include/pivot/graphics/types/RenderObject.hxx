@@ -3,6 +3,9 @@
 #include "pivot/graphics/types/UniformBufferObject.hxx"
 #include <string>
 
+namespace pivot::graphics
+{
+
 /// @class RenderObject
 ///
 /// @brief Structure representing a 3D object
@@ -13,3 +16,5 @@ struct RenderObject {
     /// @see ObjectInformation
     ObjectInformation objectInformation;
 };
+
+}    // namespace pivot::graphics

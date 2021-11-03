@@ -10,28 +10,45 @@
 namespace pivot::graphics
 {
 
+/// @class Swapchain
+/// @brief This is a "virtual" swapchain aka not linked to actual Vulkan swapchain
 class Swapchain
 {
 public:
+    /// @struct CreateInfo
+    /// @brief Hold all the information used in the creation of the swapchain
     struct CreateInfo {
+        /// size of the swapchain images
         vk::Extent3D size;
+        /// MSAA sample
         vk::SampleCountFlagBits msaaSamples;
+        /// Format of the swapchain images
         vk::Format format = vk::Format::eB8G8R8A8Srgb;
     };
 
 public:
+    /// Constructor
     Swapchain();
+    /// Destructor
     ~Swapchain();
 
+    /// Create the swapchain
+    /// @param info CreateInfo structure holding the info to create the swapchain
+    /// @param alloc a valid allocator structure used to allocated images from
+    /// @param device a valid vk::Device handle to create ImageView
     void create(const CreateInfo &info, vma::Allocator &alloc, vk::Device &device);
+
+    /// Destroy the swapchain
     void destroy();
 
+    /// @cond
     inline const CreateInfo &getInfo() const noexcept { return m_info; }
     inline auto &getImages() noexcept { return images; }
     inline vk::Image &getImage(const auto index) { return images.at(index).image; }
     inline vk::ImageView &getImageView(const auto index) { return images.at(index).imageView; }
 
     inline operator bool() const noexcept { return !images.empty(); }
+    /// @endcond
 
 private:
     void createImage();

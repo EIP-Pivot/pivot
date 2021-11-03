@@ -8,7 +8,7 @@ TEST_CASE("culling works", "[culling]")
     // position: 0,0,0
     // front: 0,0,-1
     // up: 0,1,0
-    gpuObject::CameraData camera{
+    pivot::graphics::gpuObject::CameraData camera{
         .position = glm::vec4(1.0f),
         .viewproj = glm::mat4(0.756078, 0.000000, -0.000000, -0.000000, 0.000000, -1.428148, 0.000000, 0.000000,
                               -0.000000, 0.000000, -1.001001, -1.000000, 0.000000, 0.000000, -0.100100, 0.000000),

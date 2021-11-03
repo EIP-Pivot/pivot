@@ -6,12 +6,12 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
-#ifndef MAX_PROJECTION_LIMIT
-#define MAX_PROJECTION_LIMIT 100.0f
+#ifndef PIVOT_MAX_PROJECTION_LIMIT
+#define PIVOT_MAX_PROJECTION_LIMIT 100.0f
 #endif
 
-#ifndef MIN_PROJECTION_LIMIT
-#define MIN_PROJECTION_LIMIT 0.1f
+#ifndef PIVOT_MIN_PROJECTION_LIMIT
+#define PIVOT_MIN_PROJECTION_LIMIT 0.1f
 #endif
 
 /// @class Camera
@@ -44,8 +44,8 @@ public:
     /// @endcond
 
     /// Get camera projection
-    glm::mat4 getProjection(float fFOV = 70.f, float fAspectRatio = 1700.f / 900.f, float fCloseClippingPlane = 0.1,
-                            float fFarClippingPlane = MAX_PROJECTION_LIMIT) const
+    glm::mat4 getProjection(float fFOV, float fAspectRatio, float fCloseClippingPlane = PIVOT_MIN_PROJECTION_LIMIT,
+                            float fFarClippingPlane = PIVOT_MAX_PROJECTION_LIMIT) const
     {
         return glm::perspective(glm::radians(fFOV), fAspectRatio, fCloseClippingPlane, fFarClippingPlane);
     }
@@ -54,9 +54,9 @@ public:
     glm::mat4 getView() const { return glm::lookAt(position, position + front, up); }
 
     /// Get GpuObject of the camera
-    gpuObject::CameraData getGPUCameraData(float fFOV = 70.f, float fAspectRatio = 1700.f / 900.f,
-                                           float fCloseClippingPlane = 0.1,
-                                           float fFarClippingPlane = MAX_PROJECTION_LIMIT) const
+    gpuObject::CameraData getGPUCameraData(float fFOV, float fAspectRatio,
+                                           float fCloseClippingPlane = PIVOT_MIN_PROJECTION_LIMIT,
+                                           float fFarClippingPlane = PIVOT_MAX_PROJECTION_LIMIT) const
     {
         auto projection = getProjection(fFOV, fAspectRatio, fCloseClippingPlane, fFarClippingPlane);
         projection[1][1] *= -1;

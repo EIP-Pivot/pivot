@@ -10,7 +10,7 @@
 
 #include "pivot/graphics/DeletionQueue.hxx"
 #include "pivot/graphics/Swapchain.hxx"
-#include "pivot/graphics/VulkanLoader.hxx"
+#include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/VulkanSwapchain.hxx"
 #include "pivot/graphics/Window.hxx"
 #include "pivot/graphics/common.hxx"
@@ -24,20 +24,6 @@
 namespace pivot::graphics
 {
 
-/// @cond
-const std::vector<const char *> validationLayers = {
-    "VK_LAYER_KHRONOS_validation",
-};
-
-const std::vector<const char *> deviceExtensions = {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-};
-
-const std::vector<const char *> instanceExtensions = {
-    VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
-};
-/// @endcond
-
 /// @class VulkanApplication
 /// @brief Main class of the graphics engine
 ///
@@ -47,14 +33,9 @@ const std::vector<const char *> instanceExtensions = {
 ///
 /// You can now call the draw() method when you are ready to render a new frame
 
-class VulkanApplication : public VulkanLoader
+class VulkanApplication : public VulkanBase
 {
 private:
-#ifdef NDEBUG
-    bool bEnableValidationLayers = false;
-#else
-    bool bEnableValidationLayers = true;
-#endif
     struct DrawBatch {
         std::string meshId;
         uint32_t first;
@@ -115,6 +96,12 @@ public:
     uint32_t getCurrentFrame() const noexcept { return currentFrame; }
     /// @endcond
 
+    /// Recreate the whole swapchain
+    void recreateSwapchain();
+
+private:
+    static vk::SampleCountFlagBits getMexUsableSampleCount(vk::PhysicalDevice &physical_device);
+
 private:
     void pushModelsToGPU();
     void pushTexturesToGPU();
@@ -130,32 +117,15 @@ private:
     void transitionImageLayout(vk::Image &image, vk::Format format, vk::ImageLayout oldLayout,
                                vk::ImageLayout newLayout, uint32_t mipLevels = 1);
     void generateMipmaps(vk::Image &image, vk::Format imageFormat, vk::Extent3D size, uint32_t mipLevel);
-
-    static bool checkValidationLayerSupport();
-    static uint32_t debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                                  VkDebugUtilsMessageTypeFlagsEXT messageType,
-                                  const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *);
-    static vk::SampleCountFlagBits getMexUsableSampleCount(vk::PhysicalDevice &physical_device);
-    static bool isDeviceSuitable(const vk::PhysicalDevice &gpu, const vk::SurfaceKHR &surface);
-    static uint32_t rateDeviceSuitability(const vk::PhysicalDevice &device);
-    static bool checkDeviceExtensionSupport(const vk::PhysicalDevice &device);
-
+    void initVulkanRessources();
     SceneObjectsGPUData buildSceneObjectsGPUData(const std::vector<std::reference_wrapper<const RenderObject>> &objects,
                                                  const gpuObject::CameraData &camera);
     void buildIndirectBuffers(const std::vector<DrawBatch> &scene, Frame &frame);
 
     void postInitialization();
-    void recreateSwapchain();
-    void initVulkanRessources();
 
     AllocatedBuffer createBuffer(uint32_t allocSize, vk::BufferUsageFlags usage, vma::MemoryUsage memoryUsage);
 
-    void createInstance();
-    void createDebugMessenger();
-    void createAllocator();
-    void createSurface();
-    void pickPhysicalDevice();
-    void createLogicalDevice();
     void createUniformBuffers();
     void createSyncStructure();
 
@@ -187,9 +157,6 @@ private:
     void createViewportColorResources();
 
 public:
-    /// The Window used to render 3D objects
-    Window window;
-
     /// This will the store the textures, 3D models before behind uploaded to the GPU
     struct {
         std::unordered_map<std::string, std::vector<std::byte>> loadedTextures;
@@ -235,15 +202,8 @@ private:
 
     DeletionQueue mainDeletionQueue;
     DeletionQueue swapchainDeletionQueue;
-    vk::DebugUtilsMessengerEXT debugUtilsMessenger = VK_NULL_HANDLE;
-    vk::PhysicalDevice physical_device = VK_NULL_HANDLE;
-    vma::Allocator allocator = VK_NULL_HANDLE;
-    VulkanSwapchain swapchain;
-    vk::SurfaceKHR surface = VK_NULL_HANDLE;
 
-    //  Queues
-    vk::Queue graphicsQueue = VK_NULL_HANDLE;
-    vk::Queue presentQueue = VK_NULL_HANDLE;
+    VulkanSwapchain swapchain;
 
     Frame frames[PIVOT_MAX_FRAME_FRAME_IN_FLIGHT];
 

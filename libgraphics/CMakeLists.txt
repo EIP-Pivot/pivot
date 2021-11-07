@@ -118,6 +118,9 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/UniformBufferObject.cxx
                                    source/Transform.cxx
                                    source/VulkanSwapchain.cxx
+                                   source/VulkanBase.cxx
+                                   source/VulkanBase_init.cxx
+                                   source/VulkanBase_static.cxx
                                    source/VulkanApplication.cxx
                                    source/VulkanApplication_init.cxx
                                    source/VulkanApplication_static.cxx

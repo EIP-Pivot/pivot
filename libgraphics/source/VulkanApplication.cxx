@@ -12,16 +12,12 @@
 namespace pivot::graphics
 {
 
-VulkanApplication::VulkanApplication(): VulkanLoader(), window("Vulkan", 800, 600)
+VulkanApplication::VulkanApplication(): VulkanBase()
 {
     DEBUG_FUNCTION;
-    if (bEnableValidationLayers && !checkValidationLayerSupport()) {
-        logger->warn("Vulkan Instance") << "Validation layers requested, but not available!";
-        LOGGER_ENDL;
-        bEnableValidationLayers = false;
-    }
     window.setKeyPressCallback(Window::Key::ESCAPE,
                                [](Window &window, const Window::Key) { window.shouldClose(true); });
+    mainDeletionQueue.push([&] { VulkanBase::destroy(); });
 }
 
 VulkanApplication::~VulkanApplication()
@@ -263,12 +259,9 @@ void VulkanApplication::initVulkanRessources()
     logger->info("VulkanApplication") << "Initializing Vulkan ressources...";
     LOGGER_ENDL;
 
-    createInstance();
-    createDebugMessenger();
-    createSurface();
-    pickPhysicalDevice();
-    createLogicalDevice();
-    createAllocator();
+    VulkanBase::init();
+    maxMsaaSample = getMexUsableSampleCount(physical_device);
+
     createSyncStructure();
     createIndirectBuffer();
     createDescriptorSetLayout();

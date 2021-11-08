@@ -1,0 +1,64 @@
+#version 460
+
+layout (local_size_x = 64) in;
+
+struct UniformBufferObject {
+    mat4 modelMatrix;
+    uint textureIndex;
+    uint materialIndex;
+    uint boundingBoxIndex;
+};
+
+layout (std140, set = 0, binding = 0) readonly buffer ObjectBuffer {
+    UniformBufferObject objects[];
+} objectBuffer;
+
+struct BoundingBox {
+    vec3 points[8];
+};
+
+layout (std140, set = 0, binding = 2) readonly buffer ObjectBoundingBoxes {
+    BoundingBox boundingBoxes[];
+} objectBoundingBoxes;
+
+layout (std140, set = 0, binding = 3) buffer CullingBuffer {
+    bool visible[];
+} cullingBuffer;
+
+layout (push_constant) uniform constants {
+   vec4 position;
+    mat4 viewproj;
+} cameraData;
+
+const vec4 planes[6] = vec4[](
+    vec4(-1, 0, 0, 1),
+    vec4(1, 0, 0, 1),
+    vec4(0, -1, 0, 1),
+    vec4(0, 1, 0, 1),
+    vec4(0, 0, -1, 1),
+    vec4(0, 0, 1, 0)
+);
+
+void main() {
+    uint gID = gl_GlobalInvocationID.x;
+    uint boundingBoxIndex = objectBuffer.objects[gID].boundingBoxIndex;
+    BoundingBox boundingBox = objectBoundingBoxes.boundingBoxes[boundingBoxIndex];
+    mat4 vpm = cameraData.viewproj * objectBuffer.objects[gID].modelMatrix;
+    vec4 boundingBoxProjection[8];
+
+    for (uint i = 0; i < 8; i++) {
+        boundingBoxProjection[i] = vpm * vec4(boundingBox.points[i], 1.0);
+    }
+
+    bool visible = true;
+
+    for (uint i = 0; i < 6; i++) {
+        bool one_point_inside = false;
+        for (uint j = 0; j < 8; j++) {
+            one_point_inside = one_point_inside || dot(boundingBoxProjection[j], planes[i]) >= 0;
+        }
+        visible = visible && one_point_inside;
+    }
+
+    cullingBuffer.visible[gID] = visible;
+}

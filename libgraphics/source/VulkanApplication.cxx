@@ -185,26 +185,28 @@ void VulkanApplication::initVulkanRessources()
     createLogicalDevice();
     createAllocator();
     createSyncStructure();
+    createCommandPool();
+
     createIndirectBuffer();
+    createUniformBuffers();
+
+    this->pushModelsToGPU();
+    this->pushTexturesToGPU();
+
     createDescriptorSetLayout();
     createTextureDescriptorSetLayout();
-    createPipelineCache();
-    createPipelineLayout();
-    createCommandPool();
     createDescriptorPool();
 
     swapchain.init(window, physical_device, device, surface);
 
-    createUniformBuffers();
     createRenderPass();
+    createPipelineCache();
+    createPipelineLayout();
     createPipeline();
     createDepthResources();
     createColorResources();
     createFramebuffers();
     createDescriptorSets();
-
-    this->pushModelsToGPU();
-    this->pushTexturesToGPU();
 
     createTextureSampler();
     createTextureDescriptorSets();
@@ -227,7 +229,7 @@ void VulkanApplication::postInitialization()
     std::transform(materials.begin(), materials.end(), std::back_inserter(materialStor),
                    [](const auto &i) { return i.second; });
 
-    for (auto &frame: frames) { copyBuffer(frame.data.materialBuffer, materialStor); }
+    copyBuffer(materialBuffer, materialStor);
 }
 
 void VulkanApplication::recreateSwapchain()

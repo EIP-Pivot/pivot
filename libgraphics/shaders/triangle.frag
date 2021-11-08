@@ -12,12 +12,12 @@ layout(location = 5) flat in uint materialIndex;
 
 layout(location = 0) out vec4 outColor;
 
-layout (push_constant) uniform constants {
+layout (push_constant) uniform readonly constants {
     vec4 position;
 	mat4 viewproj;
 } cameraData;
 
-layout(set = 1, binding = 0) uniform sampler2D texSampler[];
+layout(set = 1, binding = 1) uniform sampler2D texSampler[];
 
 struct Material {
     vec4 ambientColor;
@@ -25,7 +25,7 @@ struct Material {
     vec4 specular;
 };
 
-layout (std140, set = 0, binding = 1) readonly buffer ObjectMaterials {
+layout (std140, set = 1, binding = 0) readonly buffer ObjectMaterials {
     Material materials[];
 } objectMaterials;
 

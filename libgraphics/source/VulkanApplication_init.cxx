@@ -364,17 +364,9 @@ void VulkanApplication::createDescriptorSetLayout()
         .descriptorType = vk::DescriptorType::eStorageBuffer,
         .descriptorCount = 1,
         .stageFlags = vk::ShaderStageFlagBits::eVertex,
-        .pImmutableSamplers = nullptr,
     };
-    vk::DescriptorSetLayoutBinding materialBinding{
-        .binding = 1,
-        .descriptorType = vk::DescriptorType::eStorageBuffer,
-        .descriptorCount = 1,
-        .stageFlags = vk::ShaderStageFlagBits::eFragment,
-        .pImmutableSamplers = nullptr,
-    };
+    std::vector<vk::DescriptorSetLayoutBinding> bindings = {uboLayoutBinding};
 
-    std::vector<vk::DescriptorSetLayoutBinding> bindings = {uboLayoutBinding, materialBinding};
     vk::DescriptorSetLayoutCreateInfo layoutInfo{
         .bindingCount = static_cast<uint32_t>(bindings.size()),
         .pBindings = bindings.data(),
@@ -388,6 +380,7 @@ void VulkanApplication::createTextureDescriptorSetLayout()
 {
     DEBUG_FUNCTION
     std::vector<vk::DescriptorBindingFlags> flags{
+        0,
         vk::DescriptorBindingFlagBits::eVariableDescriptorCount | vk::DescriptorBindingFlagBits::ePartiallyBound,
     };
 
@@ -395,16 +388,23 @@ void VulkanApplication::createTextureDescriptorSetLayout()
         .bindingCount = static_cast<uint32_t>(flags.size()),
         .pBindingFlags = flags.data(),
     };
-    vk::DescriptorSetLayoutBinding samplerLayoutBiding{
+    vk::DescriptorSetLayoutBinding materialBinding{
         .binding = 0,
-        .descriptorType = vk::DescriptorType::eCombinedImageSampler,
-        .descriptorCount = 32,
+        .descriptorType = vk::DescriptorType::eStorageBuffer,
+        .descriptorCount = 1,
         .stageFlags = vk::ShaderStageFlagBits::eFragment,
     };
+    vk::DescriptorSetLayoutBinding samplerLayoutBiding{
+        .binding = 1,
+        .descriptorType = vk::DescriptorType::eCombinedImageSampler,
+        .descriptorCount = static_cast<uint32_t>(loadedTextures.size()),
+        .stageFlags = vk::ShaderStageFlagBits::eFragment,
+    };
+    std::vector<vk::DescriptorSetLayoutBinding> bindings = {materialBinding, samplerLayoutBiding};
     vk::DescriptorSetLayoutCreateInfo texturesSetLayoutInfo{
         .pNext = &bindingInfo,
-        .bindingCount = 1,
-        .pBindings = &samplerLayoutBiding,
+        .bindingCount = static_cast<uint32_t>(bindings.size()),
+        .pBindings = bindings.data(),
     };
     texturesSetLayout = device.createDescriptorSetLayout(texturesSetLayoutInfo);
     mainDeletionQueue.push([&] { device.destroy(texturesSetLayout); });
@@ -412,18 +412,16 @@ void VulkanApplication::createTextureDescriptorSetLayout()
 
 void VulkanApplication::createUniformBuffers()
 {
+    materialBuffer = createBuffer(sizeof(gpuObject::Material) * MAX_MATERIALS, vk::BufferUsageFlagBits::eStorageBuffer,
+                                  vma::MemoryUsage::eCpuToGpu);
     DEBUG_FUNCTION
     for (auto &f: frames) {
         f.data.uniformBuffer = createBuffer(sizeof(gpuObject::UniformBufferObject) * MAX_OBJECT,
                                             vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
-        f.data.materialBuffer = createBuffer(sizeof(gpuObject::Material) * MAX_MATERIALS,
-                                             vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
     }
     mainDeletionQueue.push([&] {
-        for (auto &f: frames) {
-            allocator.destroyBuffer(f.data.uniformBuffer.buffer, f.data.uniformBuffer.memory);
-            allocator.destroyBuffer(f.data.materialBuffer.buffer, f.data.materialBuffer.memory);
-        }
+        allocator.destroyBuffer(materialBuffer.buffer, materialBuffer.memory);
+        for (auto &f: frames) { allocator.destroyBuffer(f.data.uniformBuffer.buffer, f.data.uniformBuffer.memory); }
     });
 }
 
@@ -482,11 +480,6 @@ void VulkanApplication::createDescriptorSets()
             .offset = 0,
             .range = sizeof(gpuObject::UniformBufferObject) * MAX_OBJECT,
         };
-        vk::DescriptorBufferInfo materialInfo{
-            .buffer = f.data.materialBuffer.buffer,
-            .offset = 0,
-            .range = sizeof(gpuObject::Material) * MAX_MATERIALS,
-        };
         std::vector<vk::WriteDescriptorSet> descriptorWrites{
             {
                 .dstSet = f.data.objectDescriptor,
@@ -495,14 +488,6 @@ void VulkanApplication::createDescriptorSets()
                 .descriptorCount = 1,
                 .descriptorType = vk::DescriptorType::eStorageBuffer,
                 .pBufferInfo = &bufferInfo,
-            },
-            {
-                .dstSet = f.data.objectDescriptor,
-                .dstBinding = 1,
-                .dstArrayElement = 0,
-                .descriptorCount = 1,
-                .descriptorType = vk::DescriptorType::eStorageBuffer,
-                .pBufferInfo = &materialInfo,
             },
         };
         device.updateDescriptorSets(descriptorWrites, 0);
@@ -521,6 +506,12 @@ void VulkanApplication::createTextureDescriptorSets()
         });
     }
 
+    vk::DescriptorBufferInfo materialInfo{
+        .buffer = materialBuffer.buffer,
+        .offset = 0,
+        .range = sizeof(gpuObject::Material) * MAX_MATERIALS,
+    };
+
     uint32_t counts[] = {static_cast<uint32_t>(imagesInfos.size())};
     vk::DescriptorSetVariableDescriptorCountAllocateInfo set_counts{
         .descriptorSetCount = std::size(counts),
@@ -534,14 +525,23 @@ void VulkanApplication::createTextureDescriptorSets()
     };
     texturesSet = device.allocateDescriptorSets(allocInfo).front();
 
-    vk::WriteDescriptorSet descriptorWrite{
-        .dstSet = texturesSet,
-        .dstBinding = 0,
-        .dstArrayElement = 0,
-        .descriptorCount = static_cast<uint32_t>(imagesInfos.size()),
-        .descriptorType = vk::DescriptorType::eCombinedImageSampler,
-        .pImageInfo = imagesInfos.data(),
-    };
+    std::vector<vk::WriteDescriptorSet> descriptorWrite{
+        {
+            .dstSet = texturesSet,
+            .dstBinding = 0,
+            .dstArrayElement = 0,
+            .descriptorCount = 1,
+            .descriptorType = vk::DescriptorType::eStorageBuffer,
+            .pBufferInfo = &materialInfo,
+        },
+        {
+            .dstSet = texturesSet,
+            .dstBinding = 1,
+            .dstArrayElement = 0,
+            .descriptorCount = static_cast<uint32_t>(imagesInfos.size()),
+            .descriptorType = vk::DescriptorType::eCombinedImageSampler,
+            .pImageInfo = imagesInfos.data(),
+        }};
     device.updateDescriptorSets(descriptorWrite, 0);
 }
 

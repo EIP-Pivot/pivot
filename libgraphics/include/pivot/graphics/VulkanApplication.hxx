@@ -206,6 +206,9 @@ private:
     AllocatedBuffer vertexBuffers;
     AllocatedBuffer indicesBuffers;
 
+    /// The buffer for the materials of the 3D scene
+    AllocatedBuffer materialBuffer{};
+
     struct UploadContex {
         vk::Fence uploadFence = VK_NULL_HANDLE;
         vk::CommandPool commandPool = VK_NULL_HANDLE;

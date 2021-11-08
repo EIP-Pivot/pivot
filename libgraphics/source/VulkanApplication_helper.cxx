@@ -51,6 +51,10 @@ void VulkanApplication::copyBufferToImage(const vk::Buffer &srcBuffer, vk::Image
 void VulkanApplication::immediateCommand(std::function<void(vk::CommandBuffer &)> &&function)
 {
     DEBUG_FUNCTION
+
+    if (!uploadContext.commandPool || !uploadContext.uploadFence)
+        throw VulkanException("The immediate context is not initialised!");
+
     vk::CommandBufferAllocateInfo cmdAllocInfo{
         .commandPool = uploadContext.commandPool,
         .level = vk::CommandBufferLevel::ePrimary,

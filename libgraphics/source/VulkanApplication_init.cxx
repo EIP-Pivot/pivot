@@ -249,7 +249,7 @@ void VulkanApplication::createPipeline()
     std::vector<vk::VertexInputBindingDescription> binding = {Vertex::getBindingDescription()};
     std::vector<vk::VertexInputAttributeDescription> attribute = Vertex::getAttributeDescriptons();
 
-    PipelineBuilder builder;
+    pivot::graphics::GraphicsPipelineBuilder builder;
     builder.pipelineLayout = pipelineLayout;
     builder.shaderStages.push_back(
         vk_init::populateVkPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eVertex, vertShaderModule));

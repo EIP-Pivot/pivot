@@ -3,15 +3,18 @@
 #include <vector>
 #include <vulkan/vulkan.hpp>
 
-/// @class PipelineBuilder
+namespace pivot::graphics
+{
+
+/// @class GraphicsPipelineBuilder
 ///
 /// @brief Utility class to ease the creation of Vulkan pipelines
 /// You must provide and fill all the member variable before calling the build() method
-class PipelineBuilder
+class GraphicsPipelineBuilder
 {
 public:
-    PipelineBuilder() = default;
-    ~PipelineBuilder() = default;
+    GraphicsPipelineBuilder() = default;
+    ~GraphicsPipelineBuilder() = default;
     /// Build the Vulkan pipeline
     ///
     /// @return A valid Vulkan pipeline, or VK_NULL_REFERENCE if an error has occurred
@@ -31,3 +34,21 @@ public:
     vk::PipelineDepthStencilStateCreateInfo depthStencil{};
     /// @endcond
 };
+
+/// @class ComputePipelineBuilder
+///
+/// @brief Utility class to ease the creation of Vulkan pipelines
+/// You must provide and fill all the member variable before calling the build() method
+class ComputePipelineBuilder
+{
+public:
+    ComputePipelineBuilder() = default;
+    ~ComputePipelineBuilder() = default;
+    vk::Pipeline build(vk::Device device, vk::PipelineCache pipelineCache = VK_NULL_HANDLE);
+
+public:
+    vk::PipelineShaderStageCreateInfo shaderStage;
+    vk::PipelineLayout pipelineLayout;
+};
+
+}    // namespace pivot::graphics

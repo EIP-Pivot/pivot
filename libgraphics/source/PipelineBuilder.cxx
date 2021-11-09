@@ -3,7 +3,10 @@
 
 #include <Logger.hpp>
 
-vk::Pipeline PipelineBuilder::build(vk::Device device, vk::RenderPass pass, vk::PipelineCache pipelineCache)
+namespace pivot::graphics
+{
+
+vk::Pipeline GraphicsPipelineBuilder::build(vk::Device device, vk::RenderPass pass, vk::PipelineCache pipelineCache)
 {
     vk::PipelineViewportStateCreateInfo viewportState{
         .viewportCount = 1,
@@ -45,3 +48,22 @@ vk::Pipeline PipelineBuilder::build(vk::Device device, vk::RenderPass pass, vk::
         return newPipeline;
     }
 }
+
+vk::Pipeline ComputePipelineBuilder::build(vk::Device device, vk::PipelineCache pipelineCache)
+{
+    vk::ComputePipelineCreateInfo pipelineInfo{
+        .stage = shaderStage,
+        .layout = pipelineLayout,
+    };
+
+    vk::Pipeline newPipeline{};
+    vk::Result result;
+    std::tie(result, newPipeline) = device.createComputePipeline(pipelineCache, pipelineInfo);
+    if (result != vk::Result::eSuccess) {
+        return VK_NULL_HANDLE;
+    } else {
+        return newPipeline;
+    }
+}
+
+}    // namespace pivot::graphics

@@ -5,6 +5,9 @@
 
 #include <vulkan/vulkan.hpp>
 
+namespace pivot::graphics
+{
+
 /// @struct CPUMesh
 ///
 /// @brief Represent a 3D model loaded in CPU memory
@@ -13,7 +16,7 @@ struct CPUMesh {
     std::vector<Vertex> verticies;
     /// The indices of the models
     std::vector<uint32_t> indices;
-};
+};    // namespace pivot::graphicsstructCPUMesh
 
 /// @struct GPUMesh
 ///
@@ -29,6 +32,7 @@ struct GPUMesh {
     vk::DeviceSize indicesSize = 0;
 };
 
+};    // namespace pivot::graphics
 /// @struct MeshBoundingBox
 ///
 /// @brief Represents the cubic bounding box of a mesh

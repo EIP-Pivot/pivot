@@ -76,11 +76,11 @@ try {
         .pLabelName = "Main Command Buffer",
         .color = green,
     };
-    static vk::DebugUtilsLabelEXT viewportDebugLabel{
+    static const vk::DebugUtilsLabelEXT viewportDebugLabel{
         .pLabelName = "Viewport CommandBuffer",
         .color = red,
     };
-    static vk::DebugUtilsLabelEXT imguiDebugLabel{
+    static const vk::DebugUtilsLabelEXT imguiDebugLabel{
         .pLabelName = "ImGui CommandBuffer",
         .color = blue,
     };

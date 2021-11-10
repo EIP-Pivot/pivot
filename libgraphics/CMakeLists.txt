@@ -115,8 +115,9 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/SwapchainSupportDetails.cxx
                                    source/PipelineBuilder.cxx
                                    source/VulkanLoader.cxx
-                                   source/UniformBufferObject.cxx
-                                   source/Transform.cxx
+                                   source/types/UniformBufferObject.cxx
+                                   source/types/Transform.cxx
+                                   source/types/Vertex.cxx
                                    source/VulkanSwapchain.cxx
                                    source/VulkanBase.cxx
                                    source/VulkanBase_init.cxx

@@ -156,6 +156,7 @@ private:
     void pickPhysicalDevice();
     void createLogicalDevice();
     void createUniformBuffers();
+    void createCullingBuffers();
     void createSyncStructure();
 
     void createDescriptorSetLayout();
@@ -170,6 +171,10 @@ private:
     void createPipelineCache();
     void createPipelineLayout();
     void createPipeline();
+
+    void createComputePipelineLayout();
+    void createComputePipeline();
+
     void createDepthResources();
     void createColorResources();
     void createRenderPass();
@@ -186,6 +191,8 @@ public:
     struct {
         std::unordered_map<std::string, std::vector<std::byte>> loadedTextures;
         std::unordered_map<std::string, vk::Extent3D> loadedTexturesSize;
+        std::unordered_map<std::string, MeshBoundingBox> meshesBoundingBoxes;
+
         std::vector<Vertex> vertexBuffer;
         std::vector<uint32_t> indexBuffer;
     } cpuStorage;
@@ -193,8 +200,6 @@ public:
     MaterialStorage materials;
     /// Internal storage for the meshes
     MeshStorage loadedMeshes;
-    /// Internal storage for the meshes' bounding boxes
-    MeshBoundingBoxStorage meshesBoundingBoxes;
     /// Internal storage for the textures
     ImageStorage loadedTextures;
 
@@ -205,6 +210,8 @@ private:
 
     AllocatedBuffer vertexBuffers;
     AllocatedBuffer indicesBuffers;
+    AllocatedBuffer cullingBuffer;
+    AllocatedBuffer boundingBoxBuffer;
 
     /// The buffer for the materials of the 3D scene
     AllocatedBuffer materialBuffer{};
@@ -247,6 +254,9 @@ private:
     vk::PipelineLayout pipelineLayout = VK_NULL_HANDLE;
     vk::Pipeline graphicsPipeline = VK_NULL_HANDLE;
 
+    vk::PipelineLayout computeLayout = VK_NULL_HANDLE;
+    vk::Pipeline computePipeline = VK_NULL_HANDLE;
+
     std::vector<vk::Framebuffer> swapChainFramebuffers;
     /// @endcond
 };
@@ -257,20 +267,18 @@ private:
 template <vk_utils::is_copyable T>
 void VulkanApplication::copyBuffer(AllocatedBuffer &buffer, const T *data, size_t size)
 {
-    void *mapped = nullptr;
-    vmaMapMemory(allocator, buffer.memory, &mapped);
+    void *mapped = allocator.mapMemory(buffer.memory);
     std::memcpy(mapped, data, size);
-    vmaUnmapMemory(allocator, buffer.memory);
+    allocator.unmapMemory(buffer.memory);
 }
 
 template <vk_utils::is_copyable T>
 void VulkanApplication::copyBuffer(AllocatedBuffer &buffer, const std::vector<T> &data)
 {
     vk::DeviceSize size = sizeof(data[0]) * data.size();
-    void *mapped = nullptr;
-    vmaMapMemory(allocator, buffer.memory, &mapped);
+    void *mapped = allocator.mapMemory(buffer.memory);
     std::memcpy(mapped, data.data(), size);
-    vmaUnmapMemory(allocator, buffer.memory);
+    allocator.unmapMemory(buffer.memory);
 }
 
 #endif

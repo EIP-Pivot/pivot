@@ -113,7 +113,7 @@ size_t VulkanApplication::load3DModels(const std::vector<std::filesystem::path> 
         mesh.indicesSize = indexStagingBuffer.size() - mesh.indicesOffset;
         mesh.verticiesSize = vertexStagingBuffer.size() - mesh.verticiesOffset;
         loadedMeshes[f.stem().string()] = mesh;
-        meshesBoundingBoxes.insert({f.stem().string(), bounding_box.value()});
+        cpuStorage.meshesBoundingBoxes.insert({f.stem().string(), bounding_box.value()});
     }
     cpuStorage.vertexBuffer.swap(vertexStagingBuffer);
     cpuStorage.indexBuffer.swap(indexStagingBuffer);
@@ -142,8 +142,19 @@ void VulkanApplication::pushModelsToGPU()
     copyBuffer(stagingIndex, cpuStorage.indexBuffer);
     copyBufferToBuffer(stagingIndex.buffer, indicesBuffers.buffer, indexSize);
 
+    std::vector<MeshBoundingBox> meshBox;
+    for (auto &[_, i]: cpuStorage.meshesBoundingBoxes) { meshBox.push_back(i); }
+
+    auto stagingBoundingBuffer = createBuffer(sizeof(MeshBoundingBox) * MAX_OBJECT,
+                                              vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
+    copyBuffer(stagingBoundingBuffer, meshBox);
+    boundingBoxBuffer = createBuffer(sizeof(MeshBoundingBox) * MAX_OBJECT, vk::BufferUsageFlagBits::eStorageBuffer,
+                                     vma::MemoryUsage::eGpuOnly);
+    copyBufferToBuffer(stagingBoundingBuffer.buffer, boundingBoxBuffer.buffer, sizeof(MeshBoundingBox) * MAX_OBJECT);
+
     allocator.destroyBuffer(stagingVertex.buffer, stagingVertex.memory);
     allocator.destroyBuffer(stagingIndex.buffer, stagingIndex.memory);
+    allocator.destroyBuffer(stagingBoundingBuffer.buffer, stagingBoundingBuffer.memory);
 
     // clear CPU storage, as it is not needed anymore
     cpuStorage.vertexBuffer.clear();
@@ -153,6 +164,7 @@ void VulkanApplication::pushModelsToGPU()
     mainDeletionQueue.push([&] {
         allocator.destroyBuffer(vertexBuffers.buffer, vertexBuffers.memory);
         allocator.destroyBuffer(indicesBuffers.buffer, indicesBuffers.memory);
+        allocator.destroyBuffer(boundingBoxBuffer.buffer, boundingBoxBuffer.memory);
     });
 }
 

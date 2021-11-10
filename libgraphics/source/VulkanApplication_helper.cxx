@@ -71,15 +71,8 @@ void VulkanApplication::immediateCommand(std::function<void(vk::CommandBuffer &)
     function(cmd);
     cmd.end();
 
-    vk::SubmitInfo submit{
-        .waitSemaphoreCount = 0,
-        .pWaitSemaphores = nullptr,
-        .pWaitDstStageMask = nullptr,
-        .commandBufferCount = 1,
-        .pCommandBuffers = &cmd,
-        .signalSemaphoreCount = 0,
-        .pSignalSemaphores = nullptr,
-    };
+    vk::SubmitInfo submit;
+    submit.setCommandBuffers(cmd);
 
     graphicsQueue.submit(submit, uploadContext.uploadFence);
     VK_TRY(device.waitForFences(uploadContext.uploadFence, VK_TRUE, UINT64_MAX));

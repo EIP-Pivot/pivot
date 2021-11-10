@@ -279,6 +279,36 @@ void VulkanApplication::createPipeline()
     swapchainDeletionQueue.push([&] { device.destroy(graphicsPipeline); });
 }
 
+void VulkanApplication::createComputePipelineLayout()
+{
+
+    DEBUG_FUNCTION
+    std::vector<vk::PushConstantRange> pipelinePushConstant = {
+        vk_init::populateVkPushConstantRange(vk::ShaderStageFlagBits::eCompute, sizeof(gpuObject::CameraData))};
+    std::vector<vk::DescriptorSetLayout> setLayout = {descriptorSetLayout};
+
+    auto pipelineLayoutCreateInfo = vk_init::populateVkPipelineLayoutCreateInfo(setLayout, pipelinePushConstant);
+    computeLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
+    mainDeletionQueue.push([&] { device.destroy(computeLayout); });
+}
+
+void VulkanApplication::createComputePipeline()
+{
+    DEBUG_FUNCTION
+    auto compShaderCode = vk_utils::readFile("shaders/culling.comp.spv");
+    auto compShaderModule = vk_utils::createShaderModule(device, compShaderCode);
+
+    pivot::graphics::ComputePipelineBuilder builder;
+    builder.pipelineLayout = computeLayout;
+    builder.shaderStage =
+        vk_init::populateVkPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eCompute, compShaderModule);
+
+    computePipeline = builder.build(device, pipelineCache);
+
+    device.destroy(compShaderModule);
+    mainDeletionQueue.push([&] { device.destroy(computePipeline); });
+}
+
 void VulkanApplication::createFramebuffers()
 {
     DEBUG_FUNCTION
@@ -363,9 +393,21 @@ void VulkanApplication::createDescriptorSetLayout()
         .binding = 0,
         .descriptorType = vk::DescriptorType::eStorageBuffer,
         .descriptorCount = 1,
-        .stageFlags = vk::ShaderStageFlagBits::eVertex,
+        .stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute,
     };
-    std::vector<vk::DescriptorSetLayoutBinding> bindings = {uboLayoutBinding};
+    vk::DescriptorSetLayoutBinding meshBoundingBoxBinding{
+        .binding = 1,
+        .descriptorType = vk::DescriptorType::eStorageBuffer,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute,
+    };
+    vk::DescriptorSetLayoutBinding cullingBinding{
+        .binding = 2,
+        .descriptorType = vk::DescriptorType::eStorageBuffer,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute,
+    };
+    std::vector<vk::DescriptorSetLayoutBinding> bindings = {uboLayoutBinding, meshBoundingBoxBinding, cullingBinding};
 
     vk::DescriptorSetLayoutCreateInfo layoutInfo{
         .bindingCount = static_cast<uint32_t>(bindings.size()),
@@ -439,13 +481,22 @@ void VulkanApplication::createIndirectBuffer()
         for (auto &f: frames) { allocator.destroyBuffer(f.indirectBuffer.buffer, f.indirectBuffer.memory); }
     });
 }
+
+void VulkanApplication::createCullingBuffers()
+{
+    DEBUG_FUNCTION
+    cullingBuffer =
+        createBuffer(sizeof(bool) * MAX_OBJECT, vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
+    mainDeletionQueue.push([&] { allocator.destroyBuffer(cullingBuffer.buffer, cullingBuffer.memory); });
+}
+
 void VulkanApplication::createDescriptorPool()
 {
     DEBUG_FUNCTION
     vk::DescriptorPoolSize poolSize[] = {
         {
             .type = vk::DescriptorType::eUniformBuffer,
-            .descriptorCount = MAX_FRAME_FRAME_IN_FLIGHT,
+            .descriptorCount = MAX_FRAME_FRAME_IN_FLIGHT * 5,
         },
         {
             .type = vk::DescriptorType::eCombinedImageSampler,
@@ -480,6 +531,16 @@ void VulkanApplication::createDescriptorSets()
             .offset = 0,
             .range = sizeof(gpuObject::UniformBufferObject) * MAX_OBJECT,
         };
+        vk::DescriptorBufferInfo boundingInfo{
+            .buffer = boundingBoxBuffer.buffer,
+            .offset = 0,
+            .range = sizeof(MeshBoundingBox) * MAX_OBJECT,
+        };
+        vk::DescriptorBufferInfo cullingInfo{
+            .buffer = cullingBuffer.buffer,
+            .offset = 0,
+            .range = sizeof(bool) * MAX_OBJECT,
+        };
         std::vector<vk::WriteDescriptorSet> descriptorWrites{
             {
                 .dstSet = f.data.objectDescriptor,
@@ -488,6 +549,22 @@ void VulkanApplication::createDescriptorSets()
                 .descriptorCount = 1,
                 .descriptorType = vk::DescriptorType::eStorageBuffer,
                 .pBufferInfo = &bufferInfo,
+            },
+            {
+                .dstSet = f.data.objectDescriptor,
+                .dstBinding = 1,
+                .dstArrayElement = 0,
+                .descriptorCount = 1,
+                .descriptorType = vk::DescriptorType::eStorageBuffer,
+                .pBufferInfo = &boundingInfo,
+            },
+            {
+                .dstSet = f.data.objectDescriptor,
+                .dstBinding = 2,
+                .dstArrayElement = 0,
+                .descriptorCount = 1,
+                .descriptorType = vk::DescriptorType::eStorageBuffer,
+                .pBufferInfo = &cullingInfo,
             },
         };
         device.updateDescriptorSets(descriptorWrites, 0);
@@ -541,7 +618,8 @@ void VulkanApplication::createTextureDescriptorSets()
             .descriptorCount = static_cast<uint32_t>(imagesInfos.size()),
             .descriptorType = vk::DescriptorType::eCombinedImageSampler,
             .pImageInfo = imagesInfos.data(),
-        }};
+        },
+    };
     device.updateDescriptorSets(descriptorWrite, 0);
 }
 

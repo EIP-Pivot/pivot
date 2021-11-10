@@ -17,11 +17,11 @@ struct BoundingBox {
     vec3 points[8];
 };
 
-layout (std140, set = 0, binding = 2) readonly buffer ObjectBoundingBoxes {
+layout (std140, set = 0, binding = 1) readonly buffer ObjectBoundingBoxes {
     BoundingBox boundingBoxes[];
 } objectBoundingBoxes;
 
-layout (std140, set = 0, binding = 3) buffer CullingBuffer {
+layout (std140, set = 0, binding = 2) buffer CullingBuffer {
     bool visible[];
 } cullingBuffer;
 

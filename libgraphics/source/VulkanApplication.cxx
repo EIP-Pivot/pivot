@@ -1,5 +1,6 @@
 #include "pivot/graphics/VulkanApplication.hxx"
 #include "pivot/graphics/DebugMacros.hxx"
+#include "pivot/graphics/QueueFamilyIndices.hxx"
 #include "pivot/graphics/culling.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
@@ -40,6 +41,8 @@ void VulkanApplication::draw(const std::vector<std::reference_wrapper<const Rend
 #endif
 )
 try {
+    auto indices = QueueFamilyIndices::findQueueFamilies(physical_device, surface);
+
     auto &frame = frames[currentFrame];
     uint32_t imageIndex;
     vk::Result result;
@@ -98,6 +101,22 @@ try {
     vk::DeviceSize offset = 0;
     vk::CommandBufferBeginInfo beginInfo;
     VK_TRY(cmd.begin(&beginInfo));
+
+    vk::BufferMemoryBarrier barrier{
+        .srcAccessMask = vk::AccessFlagBits::eShaderWrite,
+        .dstAccessMask = vk::AccessFlagBits::eShaderRead,
+        .srcQueueFamilyIndex = indices.graphicsFamily.value(),
+        .dstQueueFamilyIndex = indices.graphicsFamily.value(),
+        .buffer = cullingBuffer.buffer,
+        .size = cpuStorage.meshesBoundingBoxes.size(),
+    };
+    cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, computeLayout, 0, frame.data.objectDescriptor, nullptr);
+    cmd.pushConstants<gpuObject::CameraData>(computeLayout, vk::ShaderStageFlagBits::eCompute, 0, cullingGPUCamera);
+    cmd.bindPipeline(vk::PipelineBindPoint::eCompute, computePipeline);
+    cmd.dispatch(sceneObjectGPUData.objectDrawBatches.size() / 64 + 1, 1, 1);
+    cmd.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eVertexShader,
+                        vk::DependencyFlagBits::eByRegion, {}, barrier, {});
+
     cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
     cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, frame.data.objectDescriptor, nullptr);
     cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, texturesSet, nullptr);
@@ -107,10 +126,15 @@ try {
     cmd.bindIndexBuffer(indicesBuffers.buffer, 0, vk::IndexType::eUint32);
     cmd.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
     {
+        bool *mapped = reinterpret_cast<bool *>(allocator.mapMemory(cullingBuffer.memory));
         for (const auto &draw: sceneObjectGPUData.objectDrawBatches) {
-            cmd.drawIndexedIndirect(frame.indirectBuffer.buffer, draw.first * sizeof(vk::DrawIndexedIndirectCommand),
-                                    draw.count, sizeof(vk::DrawIndexedIndirectCommand));
+            if (mapped[draw.first]) {
+                cmd.drawIndexedIndirect(frame.indirectBuffer.buffer,
+                                        draw.first * sizeof(vk::DrawIndexedIndirectCommand), draw.count,
+                                        sizeof(vk::DrawIndexedIndirectCommand));
+            }
         }
+        allocator.unmapMemory(cullingBuffer.memory);
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
     }
     cmd.endRenderPass();
@@ -142,17 +166,13 @@ VulkanApplication::buildSceneObjectsGPUData(const std::vector<std::reference_wra
     unsigned drawCount = 0;
 
     for (const auto &object: objects) {
-        auto boundingBox = meshesBoundingBoxes.at(object.get().meshID);
-        if (pivot::graphics::culling::should_object_be_rendered(object.get().objectInformation.transform, boundingBox,
-                                                                camera)) {
-            packedDraws.push_back({
-                .meshId = object.get().meshID,
-                .first = drawCount++,
-                .count = 1,
-            });
-            objectGPUData.push_back(
-                gpuObject::UniformBufferObject(object.get().objectInformation, loadedTextures, materials));
-        }
+        packedDraws.push_back({
+            .meshId = object.get().meshID,
+            .first = drawCount++,
+            .count = 1,
+        });
+        objectGPUData.push_back(
+            gpuObject::UniformBufferObject(object.get().objectInformation, loadedTextures, materials));
     }
     return {packedDraws, objectGPUData};
 }
@@ -187,6 +207,7 @@ void VulkanApplication::initVulkanRessources()
     createSyncStructure();
     createCommandPool();
 
+    createCullingBuffers();
     createIndirectBuffer();
     createUniformBuffers();
 
@@ -196,6 +217,9 @@ void VulkanApplication::initVulkanRessources()
     createDescriptorSetLayout();
     createTextureDescriptorSetLayout();
     createDescriptorPool();
+
+    createComputePipelineLayout();
+    createComputePipeline();
 
     swapchain.init(window, physical_device, device, surface);
 

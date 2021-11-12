@@ -9,6 +9,7 @@ add_library(${PROJECT_NAME} source/Systems/ControlSystem.cxx
                             source/Core/EventManager.cxx
                             source/Core/SystemManager.cxx
                             source/Core/SceneManager.cxx
+                            source/Core/Component/description.cxx
 )
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 

@@ -1,5 +1,12 @@
 #include "pivot/ecs/Core/Scene.hxx"
 #include <pivot/ecs/Core/Component/index.hxx>
+#include "pivot/ecs/Components/Gravity.hxx"
+#include "pivot/ecs/Components/RigidBody.hxx"
+#include "pivot/graphics/types/RenderObject.hxx"
+
+#include <filesystem>
+#include <fstream>
+#include <iostream>
 #include <nlohmann/json.hpp>
 
 using namespace pivot::ecs;
@@ -95,5 +102,37 @@ const pivot::ecs::component::Manager &Scene::getComponentManager() const { retur
 
 void Scene::save()
 {
-    
+    if (!std::filesystem::exists("scene")) { std::filesystem::create_directory("scene"); }
+    std::ofstream out("scene/" + name + ".json");
+    nlohmann::json j;
+    j["name"] = name;
+    for (auto const &[entity, _]: getEntities()) {
+        j["entity"][entity]["tag"] = GetComponent<Tag>(entity).name;
+        if (hasComponent<RigidBody>(entity)) {
+            j["entity"][entity]["RigidBody"] = {{"acceleration",
+                                                 {{"x", GetComponent<RigidBody>(entity).acceleration.x},
+                                                  {"y", GetComponent<RigidBody>(entity).acceleration.y},
+                                                  {"z", GetComponent<RigidBody>(entity).acceleration.z}}},
+                                                {"velocity",
+                                                 {{"x", GetComponent<RigidBody>(entity).velocity.x},
+                                                  {"y", GetComponent<RigidBody>(entity).velocity.y},
+                                                  {"z", GetComponent<RigidBody>(entity).velocity.z}}}};
+        }
+        if (hasComponent<Gravity>(entity)) {
+            j["entity"][entity]["Gravity"] = {{"force",
+                                               {{"x", GetComponent<Gravity>(entity).force.x},
+                                                {"y", GetComponent<Gravity>(entity).force.y},
+                                                {"z", GetComponent<Gravity>(entity).force.z}}}};
+        }
+        if (hasComponent<RenderObject>(entity)) {
+            j["entity"][entity]["RenderObject"] = {
+                {"meshID", GetComponent<RenderObject>(entity).meshID},
+                {"objectInformation",
+                 {{"textureIndex", GetComponent<RenderObject>(entity).objectInformation.textureIndex},
+                  {"materialIndex", GetComponent<RenderObject>(entity).objectInformation.materialIndex}}}};
+        }
+    }
+
+    out << std::setw(4) << j << std::endl;
+    out.close();
 }

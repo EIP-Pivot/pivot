@@ -34,6 +34,17 @@ fetch_boost_library(utility)
 fetch_boost_library(predef)
 fetch_boost_library(io)
 
+FetchContent_Declare(
+    json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG v3.10.4
+)
+if (NOT json_POPULATED)
+    message(STATUS "Populating json")
+    FetchContent_Populate(json)
+    add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR})
+endif()
+
 add_library(${PROJECT_NAME} source/Systems/ControlSystem.cxx
                             source/Core/Scene.cxx
                             source/Core/EntityManager.cxx
@@ -48,8 +59,10 @@ add_library(${PROJECT_NAME} source/Systems/ControlSystem.cxx
                             source/Components/TagArray.cxx
 )
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
+# Json does not include corectly their include dir
+target_include_directories(${PROJECT_NAME} PUBLIC ${json_SOURCE_DIR}/single_include)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC glm magic_enum boost_fusion)
+target_link_libraries(${PROJECT_NAME} PUBLIC glm magic_enum boost_fusion json)
 target_sources(${PROJECT_NAME} INTERFACE source/Components/Tag.cxx
                                          source/Components/RigidBody.cxx
                                          source/Components/Gravity.cxx

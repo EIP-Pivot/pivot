@@ -241,6 +241,9 @@ public:
     /// Get camera list
     std::vector<Entity> &getCameras();
 
+    /// Save Scene in json file
+    void save();
+
 private:
     std::string name;
     std::unique_ptr<pivot::ecs::component::Manager> mComponentManager;

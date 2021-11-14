@@ -1,5 +1,6 @@
 #include "pivot/ecs/Core/Scene.hxx"
 #include <pivot/ecs/Core/Component/index.hxx>
+#include <nlohmann/json.hpp>
 
 using namespace pivot::ecs;
 
@@ -91,3 +92,8 @@ pivot::ecs::component::Manager &Scene::getComponentManager() { return *this->mCo
 
 /// Get the component manager (const)
 const pivot::ecs::component::Manager &Scene::getComponentManager() const { return *this->mComponentManager.get(); }
+
+void Scene::save()
+{
+    
+}

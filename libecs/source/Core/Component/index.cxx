@@ -20,6 +20,13 @@ const Description &Index::getDescription(const std::string &componentName) const
     return m_components.at(componentName);
 }
 
+std::vector<std::string> Index::getAllComponentsNames() const
+{
+    std::vector<std::string> names;
+    for (auto &[key, value]: m_components) { names.push_back(key); }
+    return names;
+}
+
 void GlobalIndex::registerComponent(const Description &description)
 {
     if (m_read_only) { throw std::logic_error("Cannot modify global component index after program started"); }

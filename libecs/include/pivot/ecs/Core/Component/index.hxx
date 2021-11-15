@@ -13,6 +13,8 @@ public:
 
     const Description &getDescription(const std::string &componentName) const;
 
+    std::vector<std::string> getAllComponentsNames() const;
+
     struct DuplicateError : public std::logic_error {
         DuplicateError(const std::string &componentName);
 

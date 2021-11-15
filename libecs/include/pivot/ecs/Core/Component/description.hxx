@@ -1,3 +1,5 @@
+#pragma once
+
 #include <any>
 #include <functional>
 #include <map>
@@ -5,9 +7,6 @@
 #include <variant>
 #include <vector>
 #include <stdexcept>
-
-#ifndef PIVOT_ECS_COMPONENT_DESCRIPTION_HPP
-#define PIVOT_ECS_COMPONENT_DESCRIPTION_HPP
 
 namespace pivot::ecs::component
 {
@@ -42,5 +41,3 @@ struct Description {
         };
 };
 }    // namespace pivot::ecs::component
-
-#endif    // PIVOT_ECS_COMPONENT_DESCRIPTION_HPP

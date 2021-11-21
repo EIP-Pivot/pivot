@@ -11,9 +11,11 @@ Description::Property::ValueType emptyGetProperty(std::any component, std::strin
 }
 void emptySetProperty(std::any component, std::string property, Description::Property::ValueType value) {}
 std::any emptyCreate(std::map<std::string, Description::Property::ValueType> properties) { return std::any(); }
+std::unique_ptr<IComponentArray> emptyCreateContainer() { return std::unique_ptr<IComponentArray>(nullptr); }
+
 Description emptyComponent(const std::string &name)
 {
-    return {name, {}, emptyGetProperty, emptySetProperty, emptyCreate};
+    return {name, {}, emptyGetProperty, emptySetProperty, emptyCreate, emptyCreateContainer};
 }
 }    // namespace
 

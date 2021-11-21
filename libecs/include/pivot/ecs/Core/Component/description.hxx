@@ -3,13 +3,16 @@
 #include <any>
 #include <functional>
 #include <map>
+#include <memory>
+#include <stdexcept>
 #include <string>
 #include <variant>
 #include <vector>
-#include <stdexcept>
 
 namespace pivot::ecs::component
 {
+
+class IComponentArray;
 
 struct Description {
     struct Property {
@@ -29,15 +32,18 @@ struct Description {
     using GetPropertyType = Property::ValueType (&)(std::any component, std::string property);
     using SetPropertyType = void (&)(std::any component, std::string property, Property::ValueType value);
     using CreateType = std::any (&)(std::map<std::string, Property::ValueType> properties);
+    using CreateContainerType = std::unique_ptr<IComponentArray> (&)();
 
     GetPropertyType getProperty;
     SetPropertyType setProperty;
     CreateType create;
+    CreateContainerType createContainer;
 
     void validate() const;
 
-        class ValidationError : public std::logic_error  {
-                using std::logic_error::logic_error;
-        };
+    class ValidationError : public std::logic_error
+    {
+        using std::logic_error::logic_error;
+    };
 };
 }    // namespace pivot::ecs::component

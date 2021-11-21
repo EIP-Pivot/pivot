@@ -2,6 +2,8 @@
 
 #include <atomic>
 #include <mutex>
+#include <typeindex>
+
 #include <pivot/ecs/Core/Component/description.hxx>
 
 namespace pivot::ecs::component
@@ -21,8 +23,26 @@ public:
         std::string componentName;
     };
 
+    template <typename T>
+    void registerComponentWithType(const Description &description)
+    {
+        auto index = std::type_index(typeid(T));
+        if (m_type_to_name.contains(index) || m_components.contains(description.name)) {
+            throw DuplicateError(description.name);
+        }
+        this->registerComponent(description);
+        m_type_to_name.insert({index, description.name});
+    }
+
+    template <typename T>
+    const std::string &getComponentNameByType()
+    {
+        return m_type_to_name.at(std::type_index(typeid(T)));
+    }
+
 private:
     std::map<std::string, Description> m_components;
+    std::unordered_map<std::type_index, std::string> m_type_to_name;
 };
 
 class GlobalIndex : private Index
@@ -32,8 +52,28 @@ public:
     void registerComponent(const Description &description);
     const Description &getDescription(const std::string &componentName);
 
+    template <typename T>
+    void registerComponentWithType(const Description &description)
+    {
+
+        if (m_read_only) { throw std::logic_error("Cannot modify global component index after program started"); }
+
+        const std::lock_guard<std::mutex> guard(m_mutex);
+
+        this->Index::registerComponentWithType<T>(description);
+    }
+
+    template <typename T>
+    const std::string &getComponentNameByType()
+    {
+        this->lockReadOnly();
+        return this->Index::getComponentNameByType<T>();
+    }
+
 private:
     std::atomic<bool> m_read_only;
     std::mutex m_mutex;
+
+    void lockReadOnly();
 };
 }    // namespace pivot::ecs::component

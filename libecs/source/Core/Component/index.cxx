@@ -38,11 +38,15 @@ void GlobalIndex::registerComponent(const Description &description)
 
 const Description &GlobalIndex::getDescription(const std::string &componentName)
 {
+    this->lockReadOnly();
+    return this->Index::getDescription(componentName);
+}
+
+void GlobalIndex::lockReadOnly()
+{
     if (!m_read_only) {
         const std::lock_guard<std::mutex> guard(m_mutex);
         m_read_only.store(true);
     }
-
-    return this->Index::getDescription(componentName);
 }
 }    // namespace pivot::ecs::component

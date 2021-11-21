@@ -1,4 +1,5 @@
 #include <catch2/catch.hpp>
+#include <pivot/ecs/Core/Component/array.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
 
 using namespace pivot::ecs::component;
@@ -19,6 +20,9 @@ Description emptyComponent(const std::string &name)
 }
 }    // namespace
 
+class TestType1;
+class TestType2;
+
 TEST_CASE("correct synchronisation", "[component][index]")
 {
     GlobalIndex index;
@@ -26,7 +30,14 @@ TEST_CASE("correct synchronisation", "[component][index]")
     index.registerComponent(emptyComponent("Test Component"));
     REQUIRE_THROWS_AS(index.registerComponent(emptyComponent("Test Component")), Index::DuplicateError);
     index.registerComponent(emptyComponent("Test Component 2"));
+
+    index.registerComponentWithType<TestType1>(emptyComponent("TestType1"));
+    REQUIRE_THROWS_AS(index.registerComponentWithType<TestType1>(emptyComponent("TestType1")), Index::DuplicateError);
+
     REQUIRE_THROWS(index.getDescription("Unknown"));
+    REQUIRE_THROWS(index.getComponentNameByType<TestType2>());
     REQUIRE_THROWS(index.registerComponent(emptyComponent("Unknown")));
+
     REQUIRE(index.getDescription("Test Component").name == "Test Component");
+    REQUIRE(index.getComponentNameByType<TestType1>() == "TestType1");
 }

@@ -15,9 +15,14 @@ void Index::registerComponent(const Description &description)
     m_components.insert({description.name, description});
 }
 
-const Description &Index::getDescription(const std::string &componentName) const
+std::optional<Description> Index::getDescription(const std::string &componentName) const
 {
-    return m_components.at(componentName);
+    auto it = m_components.find(componentName);
+    if (it == m_components.end()) {
+        return std::nullopt;
+    } else {
+        return std::make_optional(it->second);
+    }
 }
 
 std::vector<std::string> Index::getAllComponentsNames() const
@@ -36,7 +41,7 @@ void GlobalIndex::registerComponent(const Description &description)
     this->Index::registerComponent(description);
 }
 
-const Description &GlobalIndex::getDescription(const std::string &componentName)
+std::optional<Description> GlobalIndex::getDescription(const std::string &componentName)
 {
     this->lockReadOnly();
     return this->Index::getDescription(componentName);

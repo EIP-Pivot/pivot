@@ -20,8 +20,12 @@ Description emptyComponent(const std::string &name)
 }
 }    // namespace
 
-class TestType1;
-class TestType2;
+class TestType1
+{
+};
+class TestType2
+{
+};
 
 TEST_CASE("correct synchronisation", "[component][index]")
 {
@@ -34,10 +38,10 @@ TEST_CASE("correct synchronisation", "[component][index]")
     index.registerComponentWithType<TestType1>(emptyComponent("TestType1"));
     REQUIRE_THROWS_AS(index.registerComponentWithType<TestType1>(emptyComponent("TestType1")), Index::DuplicateError);
 
-    REQUIRE_THROWS(index.getDescription("Unknown"));
-    REQUIRE_THROWS(index.getComponentNameByType<TestType2>());
+    REQUIRE(index.getDescription("Unknown") == std::nullopt);
+    REQUIRE(index.getComponentNameByType<TestType2>() == std::nullopt);
     REQUIRE_THROWS(index.registerComponent(emptyComponent("Unknown")));
 
-    REQUIRE(index.getDescription("Test Component").name == "Test Component");
-    REQUIRE(index.getComponentNameByType<TestType1>() == "TestType1");
+    REQUIRE(index.getDescription("Test Component").value().name == "Test Component");
+    REQUIRE(index.getComponentNameByType<TestType1>().value() == "TestType1");
 }

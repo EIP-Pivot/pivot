@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <optional>
 #include <typeindex>
 
 #include <pivot/ecs/Core/Component/description.hxx>
@@ -13,7 +14,7 @@ class Index
 public:
     void registerComponent(const Description &description);
 
-    const Description &getDescription(const std::string &componentName) const;
+    std::optional<Description> getDescription(const std::string &componentName) const;
 
     std::vector<std::string> getAllComponentsNames() const;
 
@@ -35,9 +36,14 @@ public:
     }
 
     template <typename T>
-    const std::string &getComponentNameByType()
+    std::optional<std::string> getComponentNameByType()
     {
-        return m_type_to_name.at(std::type_index(typeid(T)));
+        auto it = m_type_to_name.find(std::type_index(typeid(T)));
+        if (it == m_type_to_name.end()) {
+            return std::nullopt;
+        } else {
+            return std::make_optional(it->second);
+        }
     }
 
 private:
@@ -50,7 +56,7 @@ class GlobalIndex : private Index
 
 public:
     void registerComponent(const Description &description);
-    const Description &getDescription(const std::string &componentName);
+    std::optional<Description> getDescription(const std::string &componentName);
 
     template <typename T>
     void registerComponentWithType(const Description &description)
@@ -64,7 +70,7 @@ public:
     }
 
     template <typename T>
-    const std::string &getComponentNameByType()
+    std::optional<std::string> getComponentNameByType()
     {
         this->lockReadOnly();
         return this->Index::getComponentNameByType<T>();

@@ -26,12 +26,13 @@ std::any create(std::map<std::string, Description::Property::ValueType> properti
 
 TEST_CASE("serialize component", "[peristence][component]")
 {
+    std::any component = std::make_any<int>(3);
     Description tagDescription{.name = "tag",
                                .properties = {{.name = "name", .type = Description::Property::Type::STRING}},
                                .getProperty = getProperty,
                                .setProperty = setProperty,
                                .create = create};
 
-    std::string json = serializeComponent(tagDescription, std::make_any<int>(3));
+    std::string json = serializeComponent(tagDescription, component);
     REQUIRE(json == R"({"name":"tag","properties":{"name":"oui"}})");
 }

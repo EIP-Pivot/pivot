@@ -23,21 +23,22 @@ struct Description {
             ASSET,
         } type;
 
+        // TODO: Store the type with the value
         using ValueType = std::variant<int, std::string>;
     };
 
     std::string name;
     std::vector<Property> properties;
 
-    using GetPropertyType = Property::ValueType (&)(std::any component, std::string property);
-    using SetPropertyType = void (&)(std::any component, std::string property, Property::ValueType value);
-    using CreateType = std::any (&)(std::map<std::string, Property::ValueType> properties);
-    using CreateContainerType = std::unique_ptr<IComponentArray> (&)();
+    using GetPropertyType = Property::ValueType(std::any component, std::string property);
+    using SetPropertyType = void(std::any component, std::string property, Property::ValueType value);
+    using CreateType = std::any(std::map<std::string, Property::ValueType> properties);
+    using CreateContainerType = std::unique_ptr<IComponentArray>();
 
-    GetPropertyType getProperty;
-    SetPropertyType setProperty;
-    CreateType create;
-    CreateContainerType createContainer;
+    GetPropertyType &getProperty;
+    SetPropertyType &setProperty;
+    CreateType &create;
+    CreateContainerType &createContainer;
 
     void validate() const;
 

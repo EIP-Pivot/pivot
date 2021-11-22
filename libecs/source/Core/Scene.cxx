@@ -1,13 +1,17 @@
 #include "pivot/ecs/Core/Scene.hxx"
 
-void Scene::Init()
+using namespace pivot::ecs;
+
+Scene::Scene(std::string sceneName)
+    : name(sceneName),
+
+      mComponentManager(std::make_unique<component::Manager>()),
+      mEntityManager(std::make_unique<EntityManager>()),
+      mEventManager(std::make_unique<EventManager>()),
+      mSystemManager(std::make_unique<SystemManager>()),
+      mCurrentCamera(0)
 {
-    mComponentManager = std::make_unique<ComponentManager>();
-    mEntityManager = std::make_unique<EntityManager>();
-    mEventManager = std::make_unique<EventManager>();
-    mSystemManager = std::make_unique<SystemManager>();
-    mComponentManager->RegisterComponent<Tag>();
-    mCurrentCamera = 0;
+    mTagId = mComponentManager->RegisterComponent(Tag::description);
 }
 
 std::string Scene::getName() { return name; }
@@ -15,18 +19,14 @@ std::string Scene::getName() { return name; }
 Entity Scene::CreateEntity()
 {
     Entity newEntity = mEntityManager->CreateEntity();
-    AddComponent<Tag>(newEntity, {
-                                     .name = "Entity " + std::to_string(newEntity),
-                                 });
+    mComponentManager->AddComponent(newEntity, std::make_any<Tag>("Entity " + std::to_string(newEntity)), mTagId);
     return newEntity;
 }
 
 Entity Scene::CreateEntity(std::string newName)
 {
     Entity newEntity = mEntityManager->CreateEntity();
-    mComponentManager->AddComponent<Tag>(newEntity, {
-                                                        .name = newName,
-                                                    });
+    mComponentManager->AddComponent(newEntity, std::make_any<Tag>(newName), mTagId);
     return newEntity;
 }
 
@@ -41,14 +41,17 @@ void Scene::DestroyEntity(Entity entity)
 
 Signature Scene::getSignature(Entity entity) { return mEntityManager->GetSignature(entity); }
 
-std::string &Scene::getEntityName(Entity entity) { return mComponentManager->GetComponent<Tag>(entity).name; }
+std::string Scene::getEntityName(Entity entity)
+{
+    return std::any_cast<Tag>(mComponentManager->GetComponent(entity, mTagId).value()).name;
+}
 
 uint32_t Scene::getLivingEntityCount() { return mEntityManager->getLivingEntityCount(); }
 
-std::unordered_map<const char *, ComponentType> Scene::getComponentsTypes()
-{
-    return mComponentManager->getComponentsTypes();
-}
+// std::unordered_map<const char *, ComponentType> Scene::getComponentsTypes()
+// {
+//     return mComponentManager->getComponentsTypes();
+// }
 
 void Scene::Update(float dt)
 {
@@ -73,7 +76,8 @@ void Scene::switchCamera() { mCurrentCamera = (mCurrentCamera + 1) % mCamera.siz
 Camera &Scene::getCamera()
 {
     if (mCamera.size() == 0) throw EcsException("No camera set");
-    return mComponentManager->GetComponent<Camera>(mCamera[mCurrentCamera]);
+    throw std::logic_error("Unimplemented");
+    // return mComponentManager->GetComponent<Camera>(mCamera[mCurrentCamera]);
 }
 
 std::vector<Entity> &Scene::getCameras() { return mCamera; }

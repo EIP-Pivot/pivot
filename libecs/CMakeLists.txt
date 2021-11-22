@@ -3,7 +3,6 @@ project(pivot-ecs)
 include(FetchContent)
 
 add_library(${PROJECT_NAME} source/Systems/ControlSystem.cxx
-                            source/Core/ComponentManager.cxx
                             source/Core/Scene.cxx
                             source/Core/EntityManager.cxx
                             source/Core/EventManager.cxx
@@ -11,6 +10,7 @@ add_library(${PROJECT_NAME} source/Systems/ControlSystem.cxx
                             source/Core/SceneManager.cxx
                             source/Core/Component/description.cxx
                             source/Core/Component/index.cxx
+                            source/Core/Component/manager.cxx
                             source/Components/Tag.cxx
 )
 target_include_directories(${PROJECT_NAME} PUBLIC include/)

@@ -20,6 +20,12 @@ VulkanApplication::VulkanApplication(): VulkanLoader(), window("Vulkan", 800, 60
     }
     window.setKeyPressCallback(Window::Key::ESCAPE,
                                [](Window &window, const Window::Key) { window.shouldClose(true); });
+
+    materials["white"] = {
+        .ambientColor = {1.0f, 1.0f, 1.0f, 1.0f},
+        .diffuse = {1.0f, 1.0f, 1.0f, 1.0f},
+        .specular = {1.0f, 1.0f, 1.0f, 1.0f},
+    };
 }
 
 VulkanApplication::~VulkanApplication()
@@ -107,13 +113,13 @@ try {
         .dstAccessMask = vk::AccessFlagBits::eShaderRead,
         .srcQueueFamilyIndex = indices.graphicsFamily.value(),
         .dstQueueFamilyIndex = indices.graphicsFamily.value(),
-        .buffer = cullingBuffer.buffer,
-        .size = cpuStorage.meshesBoundingBoxes.size() * sizeof(MeshBoundingBox),
+        .buffer = frame.indirectBuffer.buffer,
+        .size = sizeof(VkDrawIndexedIndirectCommand) * MAX_OBJECT,
     };
     cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, computeLayout, 0, frame.data.objectDescriptor, nullptr);
     cmd.pushConstants<gpuObject::CameraData>(computeLayout, vk::ShaderStageFlagBits::eCompute, 0, cullingGPUCamera);
     cmd.bindPipeline(vk::PipelineBindPoint::eCompute, computePipeline);
-    cmd.dispatch(sceneObjectGPUData.objectDrawBatches.size() / 64 + 1, 1, 1);
+    cmd.dispatch(sceneObjectGPUData.objectDrawBatches.size() / 16 + 1, 1, 1);
     cmd.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eVertexShader,
                         vk::DependencyFlagBits::eByRegion, {}, barrier, {});
 
@@ -126,15 +132,10 @@ try {
     cmd.bindIndexBuffer(indicesBuffers.buffer, 0, vk::IndexType::eUint32);
     cmd.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
     {
-        // bool *mapped = static_cast<bool *>(allocator.mapMemory(cullingBuffer.memory));
         for (const auto &draw: sceneObjectGPUData.objectDrawBatches) {
-            if (true ) {
-                cmd.drawIndexedIndirect(frame.indirectBuffer.buffer,
-                                        draw.first * sizeof(vk::DrawIndexedIndirectCommand), draw.count,
-                                        sizeof(vk::DrawIndexedIndirectCommand));
-            }
+            cmd.drawIndexedIndirect(frame.indirectBuffer.buffer, draw.first * sizeof(vk::DrawIndexedIndirectCommand),
+                                    draw.count, sizeof(vk::DrawIndexedIndirectCommand));
         }
-        // allocator.unmapMemory(cullingBuffer.memory);
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
     }
     cmd.endRenderPass();
@@ -179,10 +180,7 @@ VulkanApplication::buildSceneObjectsGPUData(const std::vector<std::reference_wra
 
 void VulkanApplication::buildIndirectBuffers(const std::vector<DrawBatch> &packedDraws, Frame &frame)
 {
-    void *sceneData = nullptr;
-    vmaMapMemory(allocator, frame.indirectBuffer.memory, &sceneData);
-    auto *buffer = (VkDrawIndexedIndirectCommand *)sceneData;
-
+    auto buffer = static_cast<VkDrawIndexedIndirectCommand *>(allocator.mapMemory(frame.indirectBuffer.memory));
     for (uint32_t i = 0; i < packedDraws.size(); i++) {
         const auto &mesh = loadedMeshes.at(packedDraws[i].meshId);
 
@@ -192,7 +190,7 @@ void VulkanApplication::buildIndirectBuffers(const std::vector<DrawBatch> &packe
         buffer[i].instanceCount = 1;
         buffer[i].firstInstance = i;
     }
-    vmaUnmapMemory(allocator, frame.indirectBuffer.memory);
+    allocator.unmapMemory(frame.indirectBuffer.memory);
 }
 
 void VulkanApplication::initVulkanRessources()
@@ -207,7 +205,6 @@ void VulkanApplication::initVulkanRessources()
     createSyncStructure();
     createCommandPool();
 
-    createCullingBuffers();
     createIndirectBuffer();
     createUniformBuffers();
 
@@ -237,11 +234,6 @@ void VulkanApplication::initVulkanRessources()
     createCommandBuffers();
     initDearImgui();
 
-    materials["white"] = {
-        .ambientColor = {1.0f, 1.0f, 1.0f, 1.0f},
-        .diffuse = {1.0f, 1.0f, 1.0f, 1.0f},
-        .specular = {1.0f, 1.0f, 1.0f, 1.0f},
-    };
     postInitialization();
 }
 

@@ -210,7 +210,6 @@ private:
 
     AllocatedBuffer vertexBuffers;
     AllocatedBuffer indicesBuffers;
-    AllocatedBuffer cullingBuffer;
     AllocatedBuffer boundingBoxBuffer;
 
     /// The buffer for the materials of the 3D scene

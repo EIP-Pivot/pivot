@@ -482,14 +482,6 @@ void VulkanApplication::createIndirectBuffer()
     });
 }
 
-void VulkanApplication::createCullingBuffers()
-{
-    DEBUG_FUNCTION
-    cullingBuffer =
-        createBuffer(sizeof(bool) * MAX_OBJECT, vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
-    mainDeletionQueue.push([&] { allocator.destroyBuffer(cullingBuffer.buffer, cullingBuffer.memory); });
-}
-
 void VulkanApplication::createDescriptorPool()
 {
     DEBUG_FUNCTION
@@ -534,12 +526,12 @@ void VulkanApplication::createDescriptorSets()
         vk::DescriptorBufferInfo boundingInfo{
             .buffer = boundingBoxBuffer.buffer,
             .offset = 0,
-            .range = sizeof(MeshBoundingBox) * MAX_OBJECT,
+            .range = sizeof(MeshBoundingBox) * loadedMeshes.size(),
         };
         vk::DescriptorBufferInfo cullingInfo{
-            .buffer = cullingBuffer.buffer,
+            .buffer = f.indirectBuffer.buffer,
             .offset = 0,
-            .range = sizeof(bool) * MAX_OBJECT,
+            .range = sizeof(VkDrawIndexedIndirectCommand) * MAX_OBJECT,
         };
         std::vector<vk::WriteDescriptorSet> descriptorWrites{
             {
@@ -586,7 +578,7 @@ void VulkanApplication::createTextureDescriptorSets()
     vk::DescriptorBufferInfo materialInfo{
         .buffer = materialBuffer.buffer,
         .offset = 0,
-        .range = sizeof(gpuObject::Material) * MAX_MATERIALS,
+        .range = sizeof(gpuObject::Material) * materials.size(),
     };
 
     uint32_t counts[] = {static_cast<uint32_t>(imagesInfos.size())};

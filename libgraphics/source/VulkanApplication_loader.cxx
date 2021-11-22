@@ -145,14 +145,14 @@ void VulkanApplication::pushModelsToGPU()
     std::vector<MeshBoundingBox> meshBox;
     for (auto &[_, i]: cpuStorage.meshesBoundingBoxes) { meshBox.push_back(i); }
 
-    auto stagingBoundingBuffer = createBuffer(
-        sizeof(MeshBoundingBox) * MAX_OBJECT,
-        vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);
+    auto stagingSize = sizeof(MeshBoundingBox) * cpuStorage.meshesBoundingBoxes.size();
+    auto stagingBoundingBuffer =
+        createBuffer(stagingSize, vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);
     copyBuffer(stagingBoundingBuffer, meshBox);
-    boundingBoxBuffer = createBuffer(sizeof(MeshBoundingBox) * MAX_OBJECT,
-                                     vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer,
-                                     vma::MemoryUsage::eGpuOnly);
-    copyBufferToBuffer(stagingBoundingBuffer.buffer, boundingBoxBuffer.buffer, sizeof(MeshBoundingBox) * MAX_OBJECT);
+    boundingBoxBuffer =
+        createBuffer(stagingSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer,
+                     vma::MemoryUsage::eGpuOnly);
+    copyBufferToBuffer(stagingBoundingBuffer.buffer, boundingBoxBuffer.buffer, stagingSize);
 
     allocator.destroyBuffer(stagingVertex.buffer, stagingVertex.memory);
     allocator.destroyBuffer(stagingIndex.buffer, stagingIndex.memory);

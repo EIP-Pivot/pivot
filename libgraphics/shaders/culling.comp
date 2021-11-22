@@ -1,6 +1,6 @@
 #version 460
 
-layout (local_size_x = 64) in;
+layout (local_size_x = 16) in;
 
 struct UniformBufferObject {
     mat4 modelMatrix;
@@ -22,19 +22,16 @@ layout (std140, set = 0, binding = 1) readonly buffer ObjectBoundingBoxes {
     BoundingBox boundingBoxes[];
 } objectBoundingBoxes;
 
-layout (std140, set = 0, binding = 2) buffer CullingBuffer {
-    bool visible[];
-} cullingBuffer;
 
 struct DrawIndexedIndirect {
     uint    indexCount;
     uint    instanceCount;
     uint    firstIndex;
-    int     vertexOffset;
+    uint    vertexOffset;
     uint    firstInstance;
 };
 
-layout (std140, set = 0, binding = 3) buffer DrawIndexedIndirectBuffer {
+layout (std140, set = 0, binding = 2) buffer DrawIndexedIndirectBuffer {
     DrawIndexedIndirect drawIndexedIndirect[];
 } drawIndexedIndirectBuffer;
 
@@ -77,16 +74,13 @@ void main() {
         boundingBoxProjection[i] = vpm * vec4(points[i], 1.0);
     }
 
-    bool visible = true;
 
     for (uint i = 0; i < 6; i++) {
         bool one_point_inside = false;
         for (uint j = 0; j < 8; j++) {
             one_point_inside = one_point_inside || dot(boundingBoxProjection[j], planes[i]) >= 0;
         }
-        visible = visible && one_point_inside;
     }
 
-    cullingBuffer.visible[gID] = visible;
     drawIndexedIndirectBuffer.drawIndexedIndirect[gID].instanceCount = 0;
 }

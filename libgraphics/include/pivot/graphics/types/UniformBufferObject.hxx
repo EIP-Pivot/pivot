@@ -37,5 +37,7 @@ struct UniformBufferObject {
     alignas(16) uint32_t textureIndex = 0;
     /// The index of the material in the buffer
     uint32_t materialIndex = 0;
+    /// The index of the bounding box in the buffer
+    uint32_t boundingBoxIndex = 0;
 };
 }    // namespace gpuObject

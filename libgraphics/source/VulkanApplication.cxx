@@ -108,7 +108,7 @@ try {
         .srcQueueFamilyIndex = indices.graphicsFamily.value(),
         .dstQueueFamilyIndex = indices.graphicsFamily.value(),
         .buffer = cullingBuffer.buffer,
-        .size = cpuStorage.meshesBoundingBoxes.size(),
+        .size = cpuStorage.meshesBoundingBoxes.size() * sizeof(MeshBoundingBox),
     };
     cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, computeLayout, 0, frame.data.objectDescriptor, nullptr);
     cmd.pushConstants<gpuObject::CameraData>(computeLayout, vk::ShaderStageFlagBits::eCompute, 0, cullingGPUCamera);
@@ -126,15 +126,15 @@ try {
     cmd.bindIndexBuffer(indicesBuffers.buffer, 0, vk::IndexType::eUint32);
     cmd.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
     {
-        bool *mapped = reinterpret_cast<bool *>(allocator.mapMemory(cullingBuffer.memory));
+        // bool *mapped = static_cast<bool *>(allocator.mapMemory(cullingBuffer.memory));
         for (const auto &draw: sceneObjectGPUData.objectDrawBatches) {
-            if (mapped[draw.first]) {
+            if (true ) {
                 cmd.drawIndexedIndirect(frame.indirectBuffer.buffer,
                                         draw.first * sizeof(vk::DrawIndexedIndirectCommand), draw.count,
                                         sizeof(vk::DrawIndexedIndirectCommand));
             }
         }
-        allocator.unmapMemory(cullingBuffer.memory);
+        // allocator.unmapMemory(cullingBuffer.memory);
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
     }
     cmd.endRenderPass();

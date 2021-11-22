@@ -26,6 +26,18 @@ layout (std140, set = 0, binding = 2) buffer CullingBuffer {
     bool visible[];
 } cullingBuffer;
 
+struct DrawIndexedIndirect {
+    uint    indexCount;
+    uint    instanceCount;
+    uint    firstIndex;
+    int     vertexOffset;
+    uint    firstInstance;
+};
+
+layout (std140, set = 0, binding = 3) buffer DrawIndexedIndirectBuffer {
+    DrawIndexedIndirect drawIndexedIndirect[];
+} drawIndexedIndirectBuffer;
+
 layout (push_constant) uniform constants {
    vec4 position;
     mat4 viewproj;
@@ -76,4 +88,5 @@ void main() {
     }
 
     cullingBuffer.visible[gID] = visible;
+    drawIndexedIndirectBuffer.drawIndexedIndirect[gID].instanceCount = 0;
 }

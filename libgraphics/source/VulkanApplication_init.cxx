@@ -399,13 +399,13 @@ void VulkanApplication::createDescriptorSetLayout()
         .binding = 1,
         .descriptorType = vk::DescriptorType::eStorageBuffer,
         .descriptorCount = 1,
-        .stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute,
+        .stageFlags = vk::ShaderStageFlagBits::eCompute,
     };
     vk::DescriptorSetLayoutBinding cullingBinding{
         .binding = 2,
         .descriptorType = vk::DescriptorType::eStorageBuffer,
         .descriptorCount = 1,
-        .stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute,
+        .stageFlags = vk::ShaderStageFlagBits::eCompute,
     };
     std::vector<vk::DescriptorSetLayoutBinding> bindings = {uboLayoutBinding, meshBoundingBoxBinding, cullingBinding};
 

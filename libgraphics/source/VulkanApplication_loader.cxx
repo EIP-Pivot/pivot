@@ -145,10 +145,12 @@ void VulkanApplication::pushModelsToGPU()
     std::vector<MeshBoundingBox> meshBox;
     for (auto &[_, i]: cpuStorage.meshesBoundingBoxes) { meshBox.push_back(i); }
 
-    auto stagingBoundingBuffer = createBuffer(sizeof(MeshBoundingBox) * MAX_OBJECT,
-                                              vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
+    auto stagingBoundingBuffer = createBuffer(
+        sizeof(MeshBoundingBox) * MAX_OBJECT,
+        vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);
     copyBuffer(stagingBoundingBuffer, meshBox);
-    boundingBoxBuffer = createBuffer(sizeof(MeshBoundingBox) * MAX_OBJECT, vk::BufferUsageFlagBits::eStorageBuffer,
+    boundingBoxBuffer = createBuffer(sizeof(MeshBoundingBox) * MAX_OBJECT,
+                                     vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer,
                                      vma::MemoryUsage::eGpuOnly);
     copyBufferToBuffer(stagingBoundingBuffer.buffer, boundingBoxBuffer.buffer, sizeof(MeshBoundingBox) * MAX_OBJECT);
 

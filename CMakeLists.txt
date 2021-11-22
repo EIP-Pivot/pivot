@@ -70,6 +70,17 @@ if (NOT catch2_POPULATED)
     add_subdirectory(${catch2_SOURCE_DIR} ${catch2_BINARY_DIR})
 endif()
 
+FetchContent_Declare(
+    magic_enum
+    GIT_REPOSITORY https://github.com/Neargye/magic_enum
+    GIT_TAG 3d1f6a5a2a3fbcba077e00ad0ccc2dd9fefc2ca7
+)
+if (NOT magic_enum_POPULATED)
+    message(STATUS "Populating Magic Enum")
+    FetchContent_Populate(magic_enum)
+    add_subdirectory(${magic_enum_SOURCE_DIR} ${magic_enum_BINARY_DIR})
+endif()
+
 option(BUILD_DOCUMENTATION "Build the HTML documentation" OFF)
 if (BUILD_DOCUMENTATION)
     message(STATUS "Documentation building using Doxygen enabled")

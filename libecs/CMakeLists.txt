@@ -11,6 +11,7 @@ add_library(${PROJECT_NAME} source/Systems/ControlSystem.cxx
                             source/Core/SceneManager.cxx
                             source/Core/Component/description.cxx
                             source/Core/Component/index.cxx
+                            source/Components/Tag.cxx
 )
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 

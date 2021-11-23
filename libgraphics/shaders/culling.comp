@@ -35,7 +35,7 @@ layout (set = 0, binding = 2) buffer DrawIndexedIndirectBuffer {
     DrawIndexedIndirect drawIndexedIndirect[];
 } drawIndexedIndirectBuffer;
 
-layout (push_constant) uniform constants {
+layout (push_constant) uniform readonly constants {
    vec4 position;
     mat4 viewproj;
 } cameraData;

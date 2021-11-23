@@ -421,13 +421,12 @@ void VulkanApplication::createDescriptorSetLayout()
 void VulkanApplication::createTextureDescriptorSetLayout()
 {
     DEBUG_FUNCTION
-    std::vector<vk::DescriptorBindingFlags> flags{
-        0,
-        vk::DescriptorBindingFlagBits::eVariableDescriptorCount | vk::DescriptorBindingFlagBits::ePartiallyBound,
-    };
+    std::array<vk::DescriptorBindingFlags, 2> flags;
+    flags.at(1) =
+        vk::DescriptorBindingFlagBits::eVariableDescriptorCount | vk::DescriptorBindingFlagBits::ePartiallyBound;
 
     vk::DescriptorSetLayoutBindingFlagsCreateInfo bindingInfo{
-        .bindingCount = static_cast<uint32_t>(flags.size()),
+        .bindingCount = flags.size(),
         .pBindingFlags = flags.data(),
     };
     vk::DescriptorSetLayoutBinding materialBinding{
@@ -454,8 +453,8 @@ void VulkanApplication::createTextureDescriptorSetLayout()
 
 void VulkanApplication::createUniformBuffers()
 {
-    materialBuffer = createBuffer(sizeof(gpuObject::Material) * MAX_MATERIALS, vk::BufferUsageFlagBits::eStorageBuffer,
-                                  vma::MemoryUsage::eCpuToGpu);
+    materialBuffer = createBuffer(sizeof(gpuObject::Material) * materials.size(),
+                                  vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
     DEBUG_FUNCTION
     for (auto &f: frames) {
         f.data.uniformBuffer = createBuffer(sizeof(gpuObject::UniformBufferObject) * MAX_OBJECT,
@@ -473,8 +472,7 @@ void VulkanApplication::createIndirectBuffer()
     for (auto &f: frames) {
         f.indirectBuffer =
             this->createBuffer(sizeof(vk::DrawIndexedIndirectCommand) * MAX_OBJECT,
-                               vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer |
-                                   vk::BufferUsageFlagBits::eIndirectBuffer,
+                               vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer,
                                vma::MemoryUsage::eCpuToGpu);
     }
     mainDeletionQueue.push([&] {
@@ -559,7 +557,7 @@ void VulkanApplication::createDescriptorSets()
                 .pBufferInfo = &cullingInfo,
             },
         };
-        device.updateDescriptorSets(descriptorWrites, 0);
+        device.updateDescriptorSets(descriptorWrites, {});
     }
 }
 

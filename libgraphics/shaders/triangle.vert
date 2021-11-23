@@ -13,7 +13,6 @@ layout(location = 3) out vec2 fragTextCoords;
 layout(location = 4) out uint textureIndex;
 layout(location = 5) out uint materialIndex;
 
-
 struct UniformBufferObject {
     mat4 modelMatrix;
     uint textureIndex;
@@ -21,15 +20,14 @@ struct UniformBufferObject {
     uint boundingBoxIndex;
 };
 
-layout (std140, set = 0, binding = 0) readonly buffer ObjectBuffer {
+layout (set = 0, binding = 0) buffer readonly ObjectBuffer {
     UniformBufferObject objects[];
 } objectBuffer;
 
-layout (push_constant) uniform constants {
+layout (push_constant) uniform readonly constants {
     vec4 position;
 	mat4 viewproj;
 } cameraData;
-
 
 void main() {
     gl_Position = cameraData.viewproj * objectBuffer.objects[gl_BaseInstance].modelMatrix * vec4(inPosition, 1.0);

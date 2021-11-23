@@ -75,12 +75,15 @@ void main() {
     }
 
 
+    bool visible = true;
+
     for (uint i = 0; i < 6; i++) {
         bool one_point_inside = false;
         for (uint j = 0; j < 8; j++) {
             one_point_inside = one_point_inside || dot(boundingBoxProjection[j], planes[i]) >= 0;
         }
+        visible = visible && one_point_inside;
     }
 
-    drawIndexedIndirectBuffer.drawIndexedIndirect[gID].instanceCount = 0;
+    drawIndexedIndirectBuffer.drawIndexedIndirect[gID].instanceCount = visible ? 1 : 0;
 }

@@ -108,20 +108,31 @@ try {
     vk::CommandBufferBeginInfo beginInfo;
     VK_TRY(cmd.begin(&beginInfo));
 
-    vk::BufferMemoryBarrier barrier{
-        .srcAccessMask = vk::AccessFlagBits::eShaderWrite,
-        .dstAccessMask = vk::AccessFlagBits::eShaderRead,
+    vk::BufferMemoryBarrier beforeBarrier{
+        .srcAccessMask = vk::AccessFlagBits::eIndirectCommandRead,
+        .dstAccessMask = vk::AccessFlagBits::eShaderWrite,
         .srcQueueFamilyIndex = indices.graphicsFamily.value(),
         .dstQueueFamilyIndex = indices.graphicsFamily.value(),
         .buffer = frame.indirectBuffer.buffer,
         .size = sizeof(VkDrawIndexedIndirectCommand) * MAX_OBJECT,
     };
+    cmd.pipelineBarrier(vk::PipelineStageFlagBits::eDrawIndirect, vk::PipelineStageFlagBits::eComputeShader,
+                        vk::DependencyFlagBits::eDeviceGroup, {}, beforeBarrier, {});
     cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, computeLayout, 0, frame.data.objectDescriptor, nullptr);
     cmd.pushConstants<gpuObject::CameraData>(computeLayout, vk::ShaderStageFlagBits::eCompute, 0, cullingGPUCamera);
     cmd.bindPipeline(vk::PipelineBindPoint::eCompute, computePipeline);
     cmd.dispatch(sceneObjectGPUData.objectDrawBatches.size() / 16 + 1, 1, 1);
-    cmd.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eVertexShader,
-                        vk::DependencyFlagBits::eByRegion, {}, barrier, {});
+
+    vk::BufferMemoryBarrier afterBarrier{
+        .srcAccessMask = vk::AccessFlagBits::eShaderWrite,
+        .dstAccessMask = vk::AccessFlagBits::eIndirectCommandRead,
+        .srcQueueFamilyIndex = indices.graphicsFamily.value(),
+        .dstQueueFamilyIndex = indices.graphicsFamily.value(),
+        .buffer = frame.indirectBuffer.buffer,
+        .size = sizeof(VkDrawIndexedIndirectCommand) * MAX_OBJECT,
+    };
+    cmd.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eDrawIndirect,
+                        vk::DependencyFlagBits::eDeviceGroup, {}, afterBarrier, {});
 
     cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
     cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, frame.data.objectDescriptor, nullptr);

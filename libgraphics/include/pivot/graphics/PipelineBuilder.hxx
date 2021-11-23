@@ -15,9 +15,10 @@ class GraphicsPipelineBuilder
 public:
     GraphicsPipelineBuilder() = default;
     ~GraphicsPipelineBuilder() = default;
+
     /// Build the Vulkan pipeline
     ///
-    /// @return A valid Vulkan pipeline, or VK_NULL_REFERENCE if an error has occurred
+    /// @return A valid Vulkan pipeline, or VK_NULL_HANDLE if an error has occurred
     vk::Pipeline build(vk::Device device, vk::RenderPass renderPass, vk::PipelineCache pipelineCache = VK_NULL_HANDLE);
 
 public:
@@ -44,11 +45,17 @@ class ComputePipelineBuilder
 public:
     ComputePipelineBuilder() = default;
     ~ComputePipelineBuilder() = default;
+
+    /// Build the Vulkan pipeline
+    ///
+    /// @return A valid Vulkan pipeline, or VK_NULL_HANDLE if an error has occurred
     vk::Pipeline build(vk::Device device, vk::PipelineCache pipelineCache = VK_NULL_HANDLE);
 
 public:
+    /// @cond
     vk::PipelineShaderStageCreateInfo shaderStage;
     vk::PipelineLayout pipelineLayout;
+    /// @endcond
 };
 
 }    // namespace pivot::graphics

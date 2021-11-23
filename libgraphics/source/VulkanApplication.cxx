@@ -108,31 +108,25 @@ try {
     vk::CommandBufferBeginInfo beginInfo;
     VK_TRY(cmd.begin(&beginInfo));
 
-    vk::BufferMemoryBarrier beforeBarrier{
-        .srcAccessMask = vk::AccessFlagBits::eIndirectCommandRead,
+    vk::BufferMemoryBarrier barrier{
+        .srcAccessMask = vk::AccessFlagBits::eShaderRead,
         .dstAccessMask = vk::AccessFlagBits::eShaderWrite,
         .srcQueueFamilyIndex = indices.graphicsFamily.value(),
         .dstQueueFamilyIndex = indices.graphicsFamily.value(),
         .buffer = frame.indirectBuffer.buffer,
         .size = sizeof(VkDrawIndexedIndirectCommand) * MAX_OBJECT,
     };
-    cmd.pipelineBarrier(vk::PipelineStageFlagBits::eDrawIndirect, vk::PipelineStageFlagBits::eComputeShader,
-                        vk::DependencyFlagBits::eDeviceGroup, {}, beforeBarrier, {});
     cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, computeLayout, 0, frame.data.objectDescriptor, nullptr);
     cmd.pushConstants<gpuObject::CameraData>(computeLayout, vk::ShaderStageFlagBits::eCompute, 0, cullingGPUCamera);
     cmd.bindPipeline(vk::PipelineBindPoint::eCompute, computePipeline);
+    cmd.pipelineBarrier(vk::PipelineStageFlagBits::eVertexShader, vk::PipelineStageFlagBits::eComputeShader,
+                        vk::DependencyFlagBits::eByRegion, {}, barrier, {});
     cmd.dispatch(sceneObjectGPUData.objectDrawBatches.size() / 16 + 1, 1, 1);
 
-    vk::BufferMemoryBarrier afterBarrier{
-        .srcAccessMask = vk::AccessFlagBits::eShaderWrite,
-        .dstAccessMask = vk::AccessFlagBits::eIndirectCommandRead,
-        .srcQueueFamilyIndex = indices.graphicsFamily.value(),
-        .dstQueueFamilyIndex = indices.graphicsFamily.value(),
-        .buffer = frame.indirectBuffer.buffer,
-        .size = sizeof(VkDrawIndexedIndirectCommand) * MAX_OBJECT,
-    };
-    cmd.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eDrawIndirect,
-                        vk::DependencyFlagBits::eDeviceGroup, {}, afterBarrier, {});
+    barrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
+    barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+    cmd.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eVertexShader,
+                        vk::DependencyFlagBits::eByRegion, {}, barrier, {});
 
     cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
     cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, frame.data.objectDescriptor, nullptr);
@@ -144,8 +138,8 @@ try {
     cmd.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
     {
         for (const auto &draw: sceneObjectGPUData.objectDrawBatches) {
-            cmd.drawIndexedIndirect(frame.indirectBuffer.buffer, draw.first * sizeof(vk::DrawIndexedIndirectCommand),
-                                    draw.count, sizeof(vk::DrawIndexedIndirectCommand));
+            cmd.drawIndexedIndirect(frame.indirectBuffer.buffer, draw.first * sizeof(vk::DrawIndexedIndirectCommand), 1,
+                                    sizeof(vk::DrawIndexedIndirectCommand));
         }
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
     }
@@ -198,7 +192,7 @@ void VulkanApplication::buildIndirectBuffers(const std::vector<DrawBatch> &packe
         buffer[i].firstIndex = mesh.indicesOffset;
         buffer[i].indexCount = mesh.indicesSize;
         buffer[i].vertexOffset = mesh.verticiesOffset;
-        buffer[i].instanceCount = 1;
+        buffer[i].instanceCount = 0;
         buffer[i].firstInstance = i;
     }
     allocator.unmapMemory(frame.indirectBuffer.memory);

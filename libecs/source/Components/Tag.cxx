@@ -15,7 +15,7 @@ Description::Property::ValueType getProperty(std::any component, std::string pro
     return Description::Property::ValueType(tag->name);
 }
 
-void setProperty(std::any component, std::string property, Description::Property::ValueType value)
+void setProperty(std::any &component, std::string property, Description::Property::ValueType value)
 {
     if (property != "name") { throw UnknownProperty(property); }
     auto *tag = std::any_cast<Tag>(&component);

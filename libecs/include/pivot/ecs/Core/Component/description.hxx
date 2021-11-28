@@ -31,7 +31,7 @@ struct Description {
     std::vector<Property> properties;
 
     using GetPropertyType = Property::ValueType(std::any component, std::string property);
-    using SetPropertyType = void(std::any component, std::string property, Property::ValueType value);
+    using SetPropertyType = void(std::any &component, std::string property, Property::ValueType value);
     using CreateType = std::any(std::map<std::string, Property::ValueType> properties);
     using CreateContainerType = std::unique_ptr<IComponentArray>();
 

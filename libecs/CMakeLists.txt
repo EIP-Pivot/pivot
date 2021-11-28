@@ -2,6 +2,17 @@ project(pivot-ecs)
 
 include(FetchContent)
 
+FetchContent_Declare(
+    boost_fusion
+    GIT_REPOSITORY https://github.com/boostorg/fusion.git
+    GIT_TAG boost-1.77.0
+)
+if (NOT boost_fusion_POPULATED)
+    message(STATUS "Populating Boost Fusion")
+    FetchContent_Populate(boost_fusion)
+    add_subdirectory(${boost_fusion_SOURCE_DIR} ${boost_fusion_BINARY_DIR})
+endif()
+
 add_library(${PROJECT_NAME} source/Systems/ControlSystem.cxx
                             source/Core/Scene.cxx
                             source/Core/EntityManager.cxx

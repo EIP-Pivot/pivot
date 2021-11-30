@@ -26,7 +26,7 @@ add_library(${PROJECT_NAME} source/Systems/ControlSystem.cxx
 )
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC glm magic_enum)
+target_link_libraries(${PROJECT_NAME} PUBLIC glm magic_enum boost_fusion)
 
 # Unit tests building
 if (BUILD_TESTING)

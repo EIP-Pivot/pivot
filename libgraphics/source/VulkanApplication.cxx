@@ -121,7 +121,7 @@ try {
     cmd.bindPipeline(vk::PipelineBindPoint::eCompute, computePipeline);
     cmd.pipelineBarrier(vk::PipelineStageFlagBits::eVertexShader, vk::PipelineStageFlagBits::eComputeShader,
                         vk::DependencyFlagBits::eByRegion, {}, barrier, {});
-    cmd.dispatch(sceneObjectGPUData.objectDrawBatches.size() / 16 + 1, 1, 1);
+    cmd.dispatch(sceneObjectGPUData.objectDrawBatches.size(), 1, 1);
 
     barrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
     barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;

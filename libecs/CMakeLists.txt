@@ -2,16 +2,37 @@ project(pivot-ecs)
 
 include(FetchContent)
 
+function(fetch_boost_library library)
 FetchContent_Declare(
-    boost_fusion
-    GIT_REPOSITORY https://github.com/boostorg/fusion.git
+    boost_${library}
+    GIT_REPOSITORY https://github.com/boostorg/${library}.git
     GIT_TAG boost-1.77.0
 )
-if (NOT boost_fusion_POPULATED)
-    message(STATUS "Populating Boost Fusion")
-    FetchContent_Populate(boost_fusion)
-    add_subdirectory(${boost_fusion_SOURCE_DIR} ${boost_fusion_BINARY_DIR})
+if (NOT boost_${library}_POPULATED)
+    message(STATUS "Populating Boost ${library}")
+    FetchContent_Populate(boost_${library})
+    add_subdirectory(${boost_${library}_SOURCE_DIR} ${boost_${library}_BINARY_DIR})
 endif()
+endfunction()
+
+fetch_boost_library(fusion)
+fetch_boost_library(core)
+fetch_boost_library(config)
+fetch_boost_library(container_hash)
+fetch_boost_library(detail)
+fetch_boost_library(integer)
+fetch_boost_library(static_assert)
+fetch_boost_library(type_traits)
+fetch_boost_library(assert)
+fetch_boost_library(preprocessor)
+fetch_boost_library(throw_exception)
+fetch_boost_library(function_types)
+fetch_boost_library(mpl)
+fetch_boost_library(tuple)
+fetch_boost_library(typeof)
+fetch_boost_library(utility)
+fetch_boost_library(predef)
+fetch_boost_library(io)
 
 add_library(${PROJECT_NAME} source/Systems/ControlSystem.cxx
                             source/Core/Scene.cxx

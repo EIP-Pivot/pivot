@@ -100,16 +100,8 @@ public:
     void recreateSwapchain();
 
 private:
-    static vk::SampleCountFlagBits getMexUsableSampleCount(vk::PhysicalDevice &physical_device);
-
-private:
     void pushModelsToGPU();
     void pushTexturesToGPU();
-
-    template <vk_utils::is_copyable T>
-    void copyBuffer(AllocatedBuffer &buffer, const std::vector<T> &data);
-    template <vk_utils::is_copyable T>
-    void copyBuffer(AllocatedBuffer &buffer, const T *data, size_t size);
 
     void immediateCommand(std::function<void(vk::CommandBuffer &)> &&function);
     void copyBufferToImage(const vk::Buffer &srcBuffer, vk::Image &dstImage, const vk::Extent3D &extent);
@@ -120,12 +112,9 @@ private:
     void initVulkanRessources();
     SceneObjectsGPUData buildSceneObjectsGPUData(const std::vector<std::reference_wrapper<const RenderObject>> &objects,
                                                  const gpuObject::CameraData &camera);
-    void buildIndirectBuffers(const std::vector<DrawBatch> &scene, Frame &frame);
+    void buildIndirectBuffers(const std::vector<DrawBatch> &scene, FrameRessources &frame);
 
     void postInitialization();
-
-    AllocatedBuffer createBuffer(uint32_t allocSize, vk::BufferUsageFlags usage, vma::MemoryUsage memoryUsage);
-
     void createUniformBuffers();
     void createSyncStructure();
 
@@ -173,7 +162,7 @@ public:
     /// Internal storage for the textures
     ImageStorage loadedTextures;
 
-private:
+protected:
     /// @cond
     uint8_t currentFrame = 0;
     uint32_t mipLevels = 0;
@@ -203,9 +192,7 @@ private:
     DeletionQueue mainDeletionQueue;
     DeletionQueue swapchainDeletionQueue;
 
-    VulkanSwapchain swapchain;
-
-    Frame frames[PIVOT_MAX_FRAME_FRAME_IN_FLIGHT];
+    FrameRessources frames[PIVOT_MAX_FRAME_FRAME_IN_FLIGHT];
 
     vk::RenderPass renderPass = VK_NULL_HANDLE;
     vk::DescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
@@ -216,8 +203,6 @@ private:
     vk::Sampler textureSampler = VK_NULL_HANDLE;
 
     vk::CommandPool commandPool = VK_NULL_HANDLE;
-
-    std::vector<vk::CommandBuffer> commandBuffersPrimary;
     std::vector<vk::CommandBuffer> commandBuffersSecondary;
 
     AllocatedImage depthResources = {};
@@ -230,29 +215,5 @@ private:
     std::vector<vk::Framebuffer> swapChainFramebuffers;
     /// @endcond
 };
-
-#ifndef VULKAN_APPLICATION_IMPLEMENTATION
-#define VULKAN_APPLICATION_IMPLEMENTATION
-
-template <vk_utils::is_copyable T>
-void VulkanApplication::copyBuffer(AllocatedBuffer &buffer, const T *data, size_t size)
-{
-    void *mapped = nullptr;
-    vmaMapMemory(allocator, buffer.memory, &mapped);
-    std::memcpy(mapped, data, size);
-    vmaUnmapMemory(allocator, buffer.memory);
-}
-
-template <vk_utils::is_copyable T>
-void VulkanApplication::copyBuffer(AllocatedBuffer &buffer, const std::vector<T> &data)
-{
-    vk::DeviceSize size = sizeof(data[0]) * data.size();
-    void *mapped = nullptr;
-    vmaMapMemory(allocator, buffer.memory, &mapped);
-    std::memcpy(mapped, data.data(), size);
-    vmaUnmapMemory(allocator, buffer.memory);
-}
-
-#endif
 
 }    // namespace pivot::graphics

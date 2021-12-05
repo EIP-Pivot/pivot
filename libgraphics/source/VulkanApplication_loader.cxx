@@ -129,19 +129,21 @@ void VulkanApplication::pushModelsToGPU()
     logger->info("GPU") << "Loading Models onto the GPU";
     LOGGER_ENDL;
     auto vertexSize = cpuStorage.vertexBuffer.size() * sizeof(Vertex);
-    auto stagingVertex = createBuffer(vertexSize, vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);
-    vertexBuffers =
-        createBuffer(vertexSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
-                     vma::MemoryUsage::eGpuOnly);
-    copyBuffer(stagingVertex, cpuStorage.vertexBuffer);
+    auto stagingVertex = vk_utils::createBuffer(allocator, vertexSize, vk::BufferUsageFlagBits::eTransferSrc,
+                                                vma::MemoryUsage::eCpuToGpu);
+    vertexBuffers = vk_utils::createBuffer(
+        allocator, vertexSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
+        vma::MemoryUsage::eGpuOnly);
+    vk_utils::copyBuffer(allocator, stagingVertex, cpuStorage.vertexBuffer);
     copyBufferToBuffer(stagingVertex.buffer, vertexBuffers.buffer, vertexSize);
 
     auto indexSize = cpuStorage.indexBuffer.size() * sizeof(uint32_t);
-    auto stagingIndex = createBuffer(indexSize, vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);
-    indicesBuffers =
-        createBuffer(indexSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
-                     vma::MemoryUsage::eGpuOnly);
-    copyBuffer(stagingIndex, cpuStorage.indexBuffer);
+    auto stagingIndex = vk_utils::createBuffer(allocator, indexSize, vk::BufferUsageFlagBits::eTransferSrc,
+                                               vma::MemoryUsage::eCpuToGpu);
+    indicesBuffers = vk_utils::createBuffer(
+        allocator, indexSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
+        vma::MemoryUsage::eGpuOnly);
+    vk_utils::copyBuffer(allocator, stagingIndex, cpuStorage.indexBuffer);
     copyBufferToBuffer(stagingIndex.buffer, indicesBuffers.buffer, indexSize);
 
     allocator.destroyBuffer(stagingVertex.buffer, stagingVertex.memory);
@@ -166,9 +168,9 @@ void VulkanApplication::pushTexturesToGPU()
     auto bar = logger->newProgressBar("GPU Textures", cpuStorage.loadedTextures.size());
     for (const auto &[name, texture]: cpuStorage.loadedTextures) {
 
-        AllocatedBuffer stagingBuffer =
-            createBuffer(texture.size(), vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);
-        copyBuffer(stagingBuffer, texture);
+        AllocatedBuffer stagingBuffer = vk_utils::createBuffer(
+            allocator, texture.size(), vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);
+        vk_utils::copyBuffer(allocator, stagingBuffer, texture);
 
         mipLevels =
             static_cast<uint32_t>(std::floor(std::log2(std::max(cpuStorage.loadedTexturesSize.at(name).width,

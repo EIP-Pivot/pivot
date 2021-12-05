@@ -1,5 +1,4 @@
 #include "pivot/graphics/VulkanBase.hxx"
-
 #include "pivot/graphics/DebugMacros.hxx"
 
 #include <Logger.hpp>
@@ -28,6 +27,13 @@ void VulkanBase::init()
     pickPhysicalDevice();
     createLogicalDevice();
     createAllocator();
+
+    swapchain.create(window.getSize(), physical_device, device, surface);
+
+    createCommandPool();
+    createCommandBuffers();
+
+    createSyncStructure();
 }
 
 void VulkanBase::destroy()

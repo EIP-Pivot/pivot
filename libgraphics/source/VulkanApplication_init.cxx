@@ -157,14 +157,6 @@ void VulkanApplication::createCommandPool()
 
 void VulkanApplication::createCommandBuffers()
 {
-    DEBUG_FUNCTION
-    vk::CommandBufferAllocateInfo allocInfo{
-        .commandPool = commandPool,
-        .level = vk::CommandBufferLevel::ePrimary,
-        .commandBufferCount = static_cast<uint32_t>(swapchain.nbOfImage()),
-    };
-    commandBuffersPrimary = device.allocateCommandBuffers(allocInfo);
-
     vk::CommandBufferAllocateInfo drawInfo{
         .commandPool = commandPool,
         .level = vk::CommandBufferLevel::eSecondary,
@@ -179,7 +171,6 @@ void VulkanApplication::createCommandBuffers()
     };
     viewportContext.cmdBuffer = device.allocateCommandBuffers(imguiInfo);
     swapchainDeletionQueue.push([&] {
-        device.free(commandPool, commandBuffersPrimary);
         device.free(commandPool, commandBuffersSecondary);
         device.free(viewportContext.cmdPool, viewportContext.cmdBuffer);
     });
@@ -188,29 +179,10 @@ void VulkanApplication::createCommandBuffers()
 void VulkanApplication::createSyncStructure()
 {
     DEBUG_FUNCTION
-    vk::SemaphoreCreateInfo semaphoreInfo{};
-    vk::FenceCreateInfo fenceInfo{
-        .flags = vk::FenceCreateFlagBits::eSignaled,
-    };
     vk::FenceCreateInfo uploadFenceInfo{};
-
     uploadContext.uploadFence = device.createFence(uploadFenceInfo);
-    for (auto &f: frames) {
-        f.imageAvailableSemaphore = device.createSemaphore(semaphoreInfo);
-        f.renderFinishedSemaphore = device.createSemaphore(semaphoreInfo);
-        f.inFlightFences = device.createFence(fenceInfo);
-    }
-
-    mainDeletionQueue.push([&] {
-        device.destroy(uploadContext.uploadFence);
-        for (auto &f: frames) {
-            device.destroy(f.inFlightFences);
-            device.destroy(f.renderFinishedSemaphore);
-            device.destroy(f.imageAvailableSemaphore);
-        }
-    });
+    mainDeletionQueue.push([&] { device.destroy(uploadContext.uploadFence); });
 }
-
 void VulkanApplication::createDescriptorSetLayout()
 {
     DEBUG_FUNCTION
@@ -269,10 +241,12 @@ void VulkanApplication::createUniformBuffers()
 {
     DEBUG_FUNCTION
     for (auto &f: frames) {
-        f.data.uniformBuffer = createBuffer(sizeof(gpuObject::UniformBufferObject) * PIVOT_MAX_OBJECT,
-                                            vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
-        f.data.materialBuffer = createBuffer(sizeof(gpuObject::Material) * PIVOT_MAX_MATERIALS,
-                                             vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
+        f.data.uniformBuffer =
+            vk_utils::createBuffer(allocator, sizeof(gpuObject::UniformBufferObject) * PIVOT_MAX_OBJECT,
+                                   vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
+        f.data.materialBuffer =
+            vk_utils::createBuffer(allocator, sizeof(gpuObject::Material) * PIVOT_MAX_MATERIALS,
+                                   vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
     }
     mainDeletionQueue.push([&] {
         for (auto &f: frames) {
@@ -287,10 +261,10 @@ void VulkanApplication::createIndirectBuffer()
     DEBUG_FUNCTION
     for (auto &f: frames) {
         f.indirectBuffer =
-            this->createBuffer(sizeof(vk::DrawIndexedIndirectCommand) * PIVOT_MAX_OBJECT,
-                               vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer |
-                                   vk::BufferUsageFlagBits::eIndirectBuffer,
-                               vma::MemoryUsage::eCpuToGpu);
+            vk_utils::createBuffer(allocator, sizeof(vk::DrawIndexedIndirectCommand) * PIVOT_MAX_OBJECT,
+                                   vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer |
+                                       vk::BufferUsageFlagBits::eIndirectBuffer,
+                                   vma::MemoryUsage::eCpuToGpu);
     }
     mainDeletionQueue.push([&] {
         for (auto &f: frames) { allocator.destroyBuffer(f.indirectBuffer.buffer, f.indirectBuffer.memory); }

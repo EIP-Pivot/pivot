@@ -5,7 +5,7 @@
 #include <vulkan/vulkan.hpp>
 
 /// @struct Frame
-/// @brief Store all of the per frame ressources
+/// @brief Store all of the per frame syncronization ressources
 struct Frame {
     /// Indicate if the image can be recover from the swapchain
     vk::Semaphore imageAvailableSemaphore;
@@ -13,6 +13,11 @@ struct Frame {
     vk::Semaphore renderFinishedSemaphore;
     /// Indicate if the image has been displayed and if it's ressources can be reused
     vk::Fence inFlightFences;
+};
+
+/// @struct FrameRessources
+/// @brief Store all the per frame ressources
+struct FrameRessources {
     /// The buffer for the indirect drawing
     AllocatedBuffer indirectBuffer{};
 

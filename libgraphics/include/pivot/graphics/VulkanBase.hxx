@@ -2,7 +2,10 @@
 
 #include "pivot/graphics/DeletionQueue.hxx"
 #include "pivot/graphics/VulkanLoader.hxx"
+#include "pivot/graphics/VulkanSwapchain.hxx"
 #include "pivot/graphics/Window.hxx"
+#include "pivot/graphics/common.hxx"
+#include "pivot/graphics/types/Frame.hxx"
 
 #include <vk_mem_alloc.hpp>
 
@@ -21,7 +24,7 @@ const std::vector<const char *> deviceExtensions = {
 
 /// The instance extensions pivot is using
 const std::vector<const char *> instanceExtensions = {
-    VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+
 };
 
 /// @class VulkanBase
@@ -64,6 +67,9 @@ private:
     void createSurface();
     void pickPhysicalDevice();
     void createLogicalDevice();
+    void createCommandPool();
+    void createCommandBuffers();
+    void createSyncStructure();
 
 protected:
     /// The Window used to render 3D objects
@@ -79,8 +85,15 @@ protected:
     vk::PhysicalDevice physical_device = VK_NULL_HANDLE;
     vma::Allocator allocator = VK_NULL_HANDLE;
     vk::SurfaceKHR surface = VK_NULL_HANDLE;
-    /// @endcond
 
+    VulkanSwapchain swapchain;
+
+    vk::CommandPool primaryCommandPool = VK_NULL_HANDLE;
+    std::vector<vk::CommandBuffer> commandBuffer;
+
+    Frame framesSync[PIVOT_MAX_FRAME_FRAME_IN_FLIGHT];
+
+    /// @endcond
 private:
     DeletionQueue baseDeletionQueue;
 };

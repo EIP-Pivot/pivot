@@ -153,22 +153,6 @@ void VulkanApplication::transitionImageLayout(vk::Image &image, vk::Format forma
     });
 }
 
-AllocatedBuffer VulkanApplication::createBuffer(uint32_t allocSize, vk::BufferUsageFlags usage,
-                                                vma::MemoryUsage memoryUsage)
-{
-    DEBUG_FUNCTION
-    vk::BufferCreateInfo bufferInfo{
-        .size = allocSize,
-        .usage = usage,
-    };
-    vma::AllocationCreateInfo vmaallocInfo;
-    vmaallocInfo.usage = memoryUsage;
-
-    AllocatedBuffer newBuffer;
-    std::tie(newBuffer.buffer, newBuffer.memory) = allocator.createBuffer(bufferInfo, vmaallocInfo);
-    return newBuffer;
-}
-
 void VulkanApplication::generateMipmaps(vk::Image &image, vk::Format imageFormat, vk::Extent3D size, uint32_t mipLevel)
 {
     DEBUG_FUNCTION

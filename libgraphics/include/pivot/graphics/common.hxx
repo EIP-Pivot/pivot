@@ -29,8 +29,8 @@
 namespace pivot::graphics
 {
 
-/// Simple alias for optional reference
-template <typename T>
-using OptionalRef = std::optional<std::reference_wrapper<T>>;
-
 }    // namespace pivot::graphics
+
+template <typename T>
+/// Simple alias for optional reference
+using OptionalRef = std::optional<std::reference_wrapper<T>>;

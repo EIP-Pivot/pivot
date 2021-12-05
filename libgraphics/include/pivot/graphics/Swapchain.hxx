@@ -41,11 +41,15 @@ public:
     /// Destroy the swapchain
     void destroy();
 
+    /// Return the number of images in the swapchain
+    /// happend)
+    uint32_t nbOfImage() const noexcept { return images.size(); }
+
     /// @cond
     inline const CreateInfo &getInfo() const noexcept { return m_info; }
-    inline auto &getImages() noexcept { return images; }
-    inline vk::Image &getImage(const auto index) { return images.at(index).image; }
-    inline vk::ImageView &getImageView(const auto index) { return images.at(index).imageView; }
+    inline auto &getImages() const noexcept { return images; }
+    inline const vk::Image &getImage(const auto index) const { return images.at(index).image; }
+    inline const vk::ImageView &getImageView(const auto index) const { return images.at(index).imageView; }
 
     inline operator bool() const noexcept { return !images.empty(); }
     /// @endcond

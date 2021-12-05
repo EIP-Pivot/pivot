@@ -151,4 +151,51 @@ void VulkanBase::createAllocator()
     allocator = vma::createAllocator(allocatorInfo);
     baseDeletionQueue.push([&] { allocator.destroy(); });
 }
+
+void VulkanBase::createCommandPool()
+{
+    DEBUG_FUNCTION
+    auto indices = QueueFamilyIndices::findQueueFamilies(physical_device, surface);
+    vk::CommandPoolCreateInfo poolInfo{
+        .flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
+        .queueFamilyIndex = indices.graphicsFamily.value(),
+    };
+    primaryCommandPool = device.createCommandPool(poolInfo);
+    baseDeletionQueue.push([&] { device.destroy(primaryCommandPool); });
+}
+
+void VulkanBase::createCommandBuffers()
+{
+    DEBUG_FUNCTION
+    vk::CommandBufferAllocateInfo allocInfo{
+        .commandPool = primaryCommandPool,
+        .level = vk::CommandBufferLevel::ePrimary,
+        .commandBufferCount = static_cast<uint32_t>(swapchain.nbOfImage()),
+    };
+    commandBuffer = device.allocateCommandBuffers(allocInfo);
+}
+
+void VulkanBase::createSyncStructure()
+{
+    DEBUG_FUNCTION
+    vk::SemaphoreCreateInfo semaphoreInfo{};
+    vk::FenceCreateInfo fenceInfo{
+        .flags = vk::FenceCreateFlagBits::eSignaled,
+    };
+
+    for (auto &f: framesSync) {
+        f.imageAvailableSemaphore = device.createSemaphore(semaphoreInfo);
+        f.renderFinishedSemaphore = device.createSemaphore(semaphoreInfo);
+        f.inFlightFences = device.createFence(fenceInfo);
+    }
+
+    baseDeletionQueue.push([&] {
+        for (auto &f: framesSync) {
+            device.destroy(f.inFlightFences);
+            device.destroy(f.renderFinishedSemaphore);
+            device.destroy(f.imageAvailableSemaphore);
+        }
+    });
+}
+
 }    // namespace pivot::graphics

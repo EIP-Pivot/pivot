@@ -42,22 +42,22 @@ void VulkanApplication::draw(const std::vector<std::reference_wrapper<const Rend
 )
 try {
     auto &frame = frames[currentFrame];
-    VK_TRY(device.waitForFences(frame.inFlightFences, VK_TRUE, UINT64_MAX));
+    VK_TRY(device.waitForFences(framesSync[currentFrame].inFlightFences, VK_TRUE, UINT64_MAX));
 
-    uint32_t imageIndex = swapchain.getNextImageIndex(UINT64_MAX, frame.imageAvailableSemaphore);
+    uint32_t imageIndex = swapchain.getNextImageIndex(UINT64_MAX, framesSync[currentFrame].imageAvailableSemaphore);
 
-    auto &cmd = commandBuffersPrimary[imageIndex];
+    auto &cmd = commandBuffer[imageIndex];
     auto &drawCmd = commandBuffersSecondary[imageIndex];
     auto &imguiCmd = viewportContext.cmdBuffer[imageIndex];
 
-    device.resetFences(frame.inFlightFences);
+    device.resetFences(framesSync[currentFrame].inFlightFences);
     cmd.reset();
     drawCmd.reset();
     imguiCmd.reset();
 
-    vk::Semaphore waitSemaphores[] = {frame.imageAvailableSemaphore};
+    vk::Semaphore waitSemaphores[] = {framesSync[currentFrame].imageAvailableSemaphore};
     vk::PipelineStageFlags waitStages[] = {vk::PipelineStageFlagBits::eColorAttachmentOutput};
-    vk::Semaphore signalSemaphores[] = {frame.renderFinishedSemaphore};
+    vk::Semaphore signalSemaphores[] = {framesSync[currentFrame].renderFinishedSemaphore};
 
 #ifdef PIVOT_CULLING_DEBUG
     auto cullingGPUCamera = cullingCamera.value_or(std::ref(gpuCamera)).get();
@@ -67,7 +67,7 @@ try {
 
     auto sceneObjectGPUData = buildSceneObjectsGPUData(sceneInformation, cullingGPUCamera);
     buildIndirectBuffers(sceneObjectGPUData.objectDrawBatches, frame);
-    copyBuffer(frame.data.uniformBuffer, sceneObjectGPUData.objectGPUData);
+    vk_utils::copyBuffer(allocator, frame.data.uniformBuffer, sceneObjectGPUData.objectGPUData);
 
     static const std::array<float, 4> red = {0.125f, 0.f, 0.f, 0.f};
     static const std::array<float, 4> blue = {0.f, 0.f, 0.125f, 0.f};
@@ -107,7 +107,6 @@ try {
 
     // Normal draw
     {
-
         vk::CommandBufferInheritanceInfo inheritenceInfo{
             .renderPass = viewportContext.renderPass,
             .subpass = 0,
@@ -194,7 +193,7 @@ try {
         .pSignalSemaphores = signalSemaphores,
     };
     submitInfo.setCommandBuffers(submitCmd);
-    graphicsQueue.submit(submitInfo, frame.inFlightFences);
+    graphicsQueue.submit(submitInfo, framesSync[currentFrame].inFlightFences);
 
     vk::PresentInfoKHR presentInfo{
         .waitSemaphoreCount = 1,
@@ -235,7 +234,7 @@ VulkanApplication::buildSceneObjectsGPUData(const std::vector<std::reference_wra
     return {packedDraws, objectGPUData};
 }
 
-void VulkanApplication::buildIndirectBuffers(const std::vector<DrawBatch> &packedDraws, Frame &frame)
+void VulkanApplication::buildIndirectBuffers(const std::vector<DrawBatch> &packedDraws, FrameRessources &frame)
 {
     void *sceneData = nullptr;
     vmaMapMemory(allocator, frame.indirectBuffer.memory, &sceneData);
@@ -260,7 +259,7 @@ void VulkanApplication::initVulkanRessources()
     LOGGER_ENDL;
 
     VulkanBase::init();
-    maxMsaaSample = getMexUsableSampleCount(physical_device);
+    maxMsaaSample = vk_utils::getMexUsableSampleCount(physical_device);
 
     createSyncStructure();
     createIndirectBuffer();
@@ -271,9 +270,6 @@ void VulkanApplication::initVulkanRessources()
     createCommandPool();
     createDescriptorPool();
     createImGuiDescriptorPool();
-
-    auto size = window.getSize();
-    swapchain.create(size, physical_device, device, surface);
 
     viewportContext.swapchain.create(
         {
@@ -322,7 +318,7 @@ void VulkanApplication::postInitialization()
     std::transform(materials.begin(), materials.end(), std::back_inserter(materialStor),
                    [](const auto &i) { return i.second; });
 
-    for (auto &frame: frames) { copyBuffer(frame.data.materialBuffer, materialStor); }
+    for (auto &frame: frames) { vk_utils::copyBuffer(allocator, frame.data.materialBuffer, materialStor); }
 }
 
 void VulkanApplication::recreateViewport(const vk::Extent2D &size)

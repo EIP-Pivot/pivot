@@ -7,6 +7,37 @@
 
 namespace vk_utils
 {
+
+vk::SampleCountFlagBits getMexUsableSampleCount(vk::PhysicalDevice &physical_device)
+{
+    vk::PhysicalDeviceProperties physicalDeviceProperties = physical_device.getProperties();
+
+    vk::SampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts &
+                                  physicalDeviceProperties.limits.framebufferDepthSampleCounts;
+    if (counts & vk::SampleCountFlagBits::e64) { return vk::SampleCountFlagBits::e64; }
+    if (counts & vk::SampleCountFlagBits::e32) { return vk::SampleCountFlagBits::e32; }
+    if (counts & vk::SampleCountFlagBits::e16) { return vk::SampleCountFlagBits::e16; }
+    if (counts & vk::SampleCountFlagBits::e8) { return vk::SampleCountFlagBits::e8; }
+    if (counts & vk::SampleCountFlagBits::e4) { return vk::SampleCountFlagBits::e4; }
+    if (counts & vk::SampleCountFlagBits::e2) { return vk::SampleCountFlagBits::e2; }
+
+    return vk::SampleCountFlagBits::e1;
+}
+
+AllocatedBuffer createBuffer(vma::Allocator &allocator, uint32_t allocSize, vk::BufferUsageFlags usage,
+                             vma::MemoryUsage memoryUsage)
+{
+    vk::BufferCreateInfo bufferInfo{
+        .size = allocSize,
+        .usage = usage,
+    };
+    vma::AllocationCreateInfo vmaallocInfo;
+    vmaallocInfo.usage = memoryUsage;
+
+    AllocatedBuffer newBuffer;
+    std::tie(newBuffer.buffer, newBuffer.memory) = allocator.createBuffer(bufferInfo, vmaallocInfo);
+    return newBuffer;
+}
 std::vector<std::byte> readFile(const std::string &filename)
 {
     size_t fileSize = 0;

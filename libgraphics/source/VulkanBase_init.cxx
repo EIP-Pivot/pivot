@@ -9,8 +9,17 @@
 #include <Logger.hpp>
 
 #include <map>
-#include <ranges>
 #include <set>
+
+#define DEBUG_ARRAY(MESSAGE, ARRAY)               \
+    auto &l = logger->debug(__PRETTY_FUNCTION__); \
+    l << MESSAGE << ": [";                        \
+    for (const auto &i: ARRAY) {                  \
+        l << i;                                   \
+        if (i != ARRAY.back()) l << ", ";         \
+    }                                             \
+    l << "]";                                     \
+    LOGGER_ENDL;
 
 namespace pivot::graphics
 {
@@ -38,10 +47,7 @@ void VulkanBase::createInstance()
         createInfo.ppEnabledLayerNames = validationLayers.data();
     }
 
-    auto &l = logger->debug(__PRETTY_FUNCTION__);
-    l << "Instance extensions : ";
-    for (const auto &i: extensions) { l << i << " "; }
-    LOGGER_ENDL;
+    DEBUG_ARRAY("Instance extensions", extensions);
 
     this->VulkanLoader::createInstance(createInfo);
     baseDeletionQueue.push([&] { instance.destroy(); });
@@ -65,9 +71,8 @@ void VulkanBase::pickPhysicalDevice()
     std::vector<vk::PhysicalDevice> gpus = instance.enumeratePhysicalDevices();
     std::multimap<uint32_t, vk::PhysicalDevice> ratedGpus;
 
-    for (const auto &i:
-         gpus | std::views::filter([&](const vk::PhysicalDevice &gpu) { return isDeviceSuitable(gpu, surface); })) {
-        ratedGpus.insert(std::make_pair(rateDeviceSuitability(i), i));
+    for (const auto &i: gpus) {
+        if (isDeviceSuitable(i, surface)) { ratedGpus.insert(std::make_pair(rateDeviceSuitability(i), i)); }
     }
     if (ratedGpus.rbegin()->first > 0) {
         physical_device = ratedGpus.rbegin()->second;
@@ -124,10 +129,7 @@ void VulkanBase::createLogicalDevice()
         .pEnabledFeatures = &deviceFeature,
     };
 
-    auto &l = logger->debug(__PRETTY_FUNCTION__);
-    l << "Device extensions : ";
-    for (const auto &i: deviceExtensions) { l << i << " "; }
-    LOGGER_ENDL;
+    DEBUG_ARRAY("Device extensions", deviceExtensions);
 
     this->VulkanLoader::createLogicalDevice(physical_device, createInfo);
     baseDeletionQueue.push([&] { device.destroy(); });

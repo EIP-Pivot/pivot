@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <set>
 
 #include <boost/fusion/include/adapt_struct.hpp>
@@ -9,6 +10,7 @@
 
 #include <pivot/ecs/Core/Component/array.hxx>
 #include <pivot/ecs/Core/Component/error.hxx>
+#include <pivot/ecs/Core/Component/index.hxx>
 
 namespace pivot::ecs::component::helpers
 {
@@ -137,4 +139,25 @@ std::unique_ptr<IComponentArray> createContainer()
     return std::unique_ptr<IComponentArray>(nullptr);
 }
 
+template <typename T>
+Description build_component_description(const char *name)
+{
+    Description description{name,
+                            helpers::buildPropertyArray<T>(),
+                            helpers::getProperty<T>,
+                            helpers::setProperty<T>,
+                            helpers::create<T>,
+                            helpers::createContainer<T>};
+    std::clog << "Registering " << name << std::endl;
+    GlobalIndex::getSingleton().registerComponentWithType<T>(description);
+    return description;
+}
 }    // namespace pivot::ecs::component::helpers
+
+#define PIVOT_REGISTER_COMPONENT(component_type)                                                      \
+    namespace pivot::ecs::component::helpers                                                          \
+    {                                                                                                 \
+        template <>                                                                                   \
+        constexpr const char *component_name<component_type> = #component_type;                       \
+        static const auto description = build_component_description<component_type>(#component_type); \
+    }

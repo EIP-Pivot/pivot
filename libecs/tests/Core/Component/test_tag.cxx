@@ -1,11 +1,14 @@
 #include <catch2/catch.hpp>
 #include <pivot/ecs/Components/Tag.hxx>
+#include <pivot/ecs/Core/Component/description_helpers.hxx>
+#include <pivot/ecs/Core/Component/index.hxx>
 
 using namespace pivot::ecs::component;
 
 TEST_CASE("Correct description for tag component", "[component][tag]")
 {
-    auto &description = Tag::description;
+    REQUIRE(GlobalIndex::getSingleton().getComponentNameByType<Tag>() == "Tag");
+    auto description = GlobalIndex::getSingleton().getDescription("Tag").value();
 
     REQUIRE(description.name == "Tag");
     REQUIRE(description.properties.size() == 1);

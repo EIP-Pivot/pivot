@@ -10,6 +10,4 @@
 struct Tag {
     /// Name of an entity
     std::string name;
-
-    static pivot::ecs::component::Description description;
 };

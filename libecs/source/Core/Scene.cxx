@@ -1,4 +1,5 @@
 #include "pivot/ecs/Core/Scene.hxx"
+#include <pivot/ecs/Core/Component/index.hxx>
 
 using namespace pivot::ecs;
 
@@ -11,7 +12,9 @@ Scene::Scene(std::string sceneName)
       mSystemManager(std::make_unique<SystemManager>()),
       mCurrentCamera(0)
 {
-    mTagId = mComponentManager->RegisterComponent(Tag::description);
+    auto tag = pivot::ecs::component::GlobalIndex::getSingleton().getComponentNameByType<Tag>().value();
+    auto description = pivot::ecs::component::GlobalIndex::getSingleton().getDescription(tag).value();
+    mTagId = mComponentManager->RegisterComponent(description);
 }
 
 std::string Scene::getName() { return name; }

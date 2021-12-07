@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <memory>
 #include <mutex>
 #include <optional>
 #include <typeindex>
@@ -76,10 +77,13 @@ public:
         return this->Index::getComponentNameByType<T>();
     }
 
+    static GlobalIndex &getSingleton();
+
 private:
     std::atomic<bool> m_read_only;
     std::mutex m_mutex;
 
     void lockReadOnly();
 };
+
 }    // namespace pivot::ecs::component

@@ -54,4 +54,16 @@ void GlobalIndex::lockReadOnly()
         m_read_only.store(true);
     }
 }
+
+namespace
+{
+    static std::unique_ptr<GlobalIndex> singleton = nullptr;
+}
+
+GlobalIndex &GlobalIndex::getSingleton()
+{
+    if (!singleton) singleton = std::make_unique<GlobalIndex>();
+    return *singleton;
+}
+
 }    // namespace pivot::ecs::component

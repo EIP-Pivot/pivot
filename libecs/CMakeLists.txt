@@ -43,6 +43,7 @@ add_library(${PROJECT_NAME} source/Systems/ControlSystem.cxx
                             source/Core/Component/description.cxx
                             source/Core/Component/index.cxx
                             source/Core/Component/manager.cxx
+                            source/Components/TagArray.cxx
 )
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 

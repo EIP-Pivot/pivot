@@ -12,9 +12,11 @@ Scene::Scene(std::string sceneName)
       mSystemManager(std::make_unique<SystemManager>()),
       mCurrentCamera(0)
 {
-    auto tag = pivot::ecs::component::GlobalIndex::getSingleton().getComponentNameByType<Tag>().value();
-    auto description = pivot::ecs::component::GlobalIndex::getSingleton().getDescription(tag).value();
-    mTagId = mComponentManager->RegisterComponent(description);
+    auto &global_index = component::GlobalIndex::getSingleton();
+    for (auto &[name, description]: global_index) {
+        auto componentId = mComponentManager->RegisterComponent(description);
+        if (name == "Tag") { mTagId = componentId; }
+    }
 }
 
 std::string Scene::getName() { return name; }

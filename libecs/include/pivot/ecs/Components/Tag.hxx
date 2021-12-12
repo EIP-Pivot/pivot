@@ -2,8 +2,6 @@
 
 #include <string>
 
-#include <pivot/ecs/Core/Component/description.hxx>
-
 /// @struct Tag
 ///
 /// @brief Tag component, use to name entities

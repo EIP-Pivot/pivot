@@ -19,7 +19,7 @@ public:
             throw EcsException("Registering component type more than once.");
 
         ComponentId index = m_componentArrays.size();
-        m_componentArrays.push_back(componentDescription.createContainer());
+        m_componentArrays.push_back(componentDescription.createContainer(componentDescription));
         m_componentNameToIndex.insert({componentDescription.name, index});
         return index;
     }

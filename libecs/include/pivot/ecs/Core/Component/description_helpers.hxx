@@ -137,13 +137,13 @@ std::any create(std::map<std::string, Description::Property::ValueType> properti
     return std::any(component);
 }
 
-template <typename T>
-std::unique_ptr<IComponentArray> createContainer()
+template <typename A>
+std::unique_ptr<IComponentArray> createContainer(Description description)
 {
-    return std::unique_ptr<IComponentArray>(nullptr);
+    return std::make_unique<A>(description);
 }
 
-template <typename T>
+template <typename T, typename A>
 Description build_component_description(const char *name)
 {
     Description description{name,
@@ -151,17 +151,17 @@ Description build_component_description(const char *name)
                             helpers::getProperty<T>,
                             helpers::setProperty<T>,
                             helpers::create<T>,
-                            helpers::createContainer<T>};
+                            helpers::createContainer<A>};
     std::clog << "Registering " << name << std::endl;
     GlobalIndex::getSingleton().registerComponentWithType<T>(description);
     return description;
 }
 }    // namespace pivot::ecs::component::helpers
 
-#define PIVOT_REGISTER_COMPONENT(component_type)                                                      \
-    namespace pivot::ecs::component::helpers                                                          \
-    {                                                                                                 \
-        template <>                                                                                   \
-        constexpr const char *component_name<component_type> = #component_type;                       \
-        static const auto description = build_component_description<component_type>(#component_type); \
+#define PIVOT_REGISTER_COMPONENT(component_type, array_type)                                                      \
+    namespace pivot::ecs::component::helpers                                                                      \
+    {                                                                                                             \
+        template <>                                                                                               \
+        constexpr const char *component_name<component_type> = #component_type;                                   \
+        static const auto description = build_component_description<component_type, array_type>(#component_type); \
     }

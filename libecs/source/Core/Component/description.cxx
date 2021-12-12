@@ -19,6 +19,7 @@ void Description::validate() const
             Description::Property::Type::STRING,
             Description::Property::Type::NUMBER,
             Description::Property::Type::ASSET,
+            Description::Property::Type::VEC3,
         };
         if (!all_property_types.contains(type)) { throw ValidationError("Unknown property type"); }
 

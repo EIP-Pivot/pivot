@@ -7,6 +7,7 @@
 #include <boost/fusion/include/for_each.hpp>
 #include <boost/fusion/include/mpl.hpp>
 #include <boost/mpl/range_c.hpp>
+#include <glm/vec3.hpp>
 
 #include <pivot/ecs/Core/Component/array.hxx>
 #include <pivot/ecs/Core/Component/error.hxx>
@@ -26,6 +27,9 @@ namespace
     template <>
     constexpr std::optional<Description::Property::Type> cpp_type_to_property_type<int> =
         Description::Property::Type::NUMBER;
+    template <>
+    constexpr std::optional<Description::Property::Type> cpp_type_to_property_type<glm::vec3> =
+        Description::Property::Type::VEC3;
 
     Description::Property::Type value_to_type(const Description::Property::ValueType &value)
     {

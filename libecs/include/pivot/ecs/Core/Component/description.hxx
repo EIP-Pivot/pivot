@@ -9,6 +9,8 @@
 #include <variant>
 #include <vector>
 
+#include <glm/vec3.hpp>
+
 namespace pivot::ecs::component
 {
 
@@ -21,10 +23,11 @@ struct Description {
             STRING,
             NUMBER,
             ASSET,
+            VEC3,
         } type;
 
         // TODO: Store the type with the value
-        using ValueType = std::variant<int, std::string>;
+        using ValueType = std::variant<int, std::string, glm::vec3>;
     };
 
     std::string name;

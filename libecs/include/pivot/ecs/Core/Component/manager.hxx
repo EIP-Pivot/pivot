@@ -59,7 +59,7 @@ public:
         return m_componentArrays.at(index)->getValueForEntity(entity);
     }
 
-    const std::optional<std::any> GetComponentRef(Entity entity, ComponentId index)
+    [[deprecated]] const std::optional<std::any> GetComponentRef(Entity entity, ComponentId index)
     {
         return m_componentArrays.at(index)->getRefForEntity(entity);
     }

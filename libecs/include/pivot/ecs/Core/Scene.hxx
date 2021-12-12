@@ -61,7 +61,7 @@ public:
 
     /// Check if entity get a component
     template <typename T>
-    bool hasComponent(Entity entity)
+    [[deprecated]] bool hasComponent(Entity entity)
     {
         Signature entitySignature = mEntityManager->GetSignature(entity);
         auto id = GetComponentType<T>();
@@ -83,7 +83,7 @@ public:
     /// gCoordinator.RegisterComponent<{YourComponent}>();
     /// @endcode
     template <typename T>
-    void RegisterComponent()
+    [[deprecated]] void RegisterComponent()
     {
         auto name = mComponentIndex.getComponentNameByType<T>();
         auto description = mComponentIndex.getDescription(name.value());
@@ -92,7 +92,7 @@ public:
 
     /// Check if the component is register in the scene
     template <typename T>
-    bool isRegister()
+    [[deprecated]] bool isRegister()
     {
         auto name = mComponentIndex.getComponentNameByType<T>();
         return mComponentManager->GetComponentId(name.value()).has_value();
@@ -103,7 +103,7 @@ public:
     /// gCoordinator.AddComponent<{YourComponent}>({YourEntity});
     /// @endcode
     template <typename T>
-    void AddComponent(Entity entity, T component)
+    [[deprecated]] void AddComponent(Entity entity, T component)
     {
         auto name = mComponentIndex.getComponentNameByType<T>();
         auto id = mComponentManager->GetComponentId(name.value());
@@ -121,7 +121,7 @@ public:
     /// gCoordinator.RemoveComponent<{YourComponent}>({YourEntity});
     /// @endcode
     template <typename T>
-    void RemoveComponent(Entity entity)
+    [[deprecated]] void RemoveComponent(Entity entity)
     {
         auto name = mComponentIndex.getComponentNameByType<T>();
         auto id = mComponentManager->GetComponentId(name.value());
@@ -139,7 +139,7 @@ public:
     /// gCoordinator.GetComponent<{YourComponent}>({YourEntity});
     /// @endcode
     template <typename T>
-    T &GetComponent(Entity entity)
+    [[deprecated]] T &GetComponent(Entity entity)
     {
         auto id = GetComponentType<T>();
         auto component = mComponentManager->GetComponentRef(entity, id);
@@ -152,7 +152,7 @@ public:
     /// gCoordinator.GetComponentType<{YourComponent}>();
     /// @endcode
     template <typename T>
-    pivot::ecs::component::Manager::ComponentId GetComponentType()
+    [[deprecated]] pivot::ecs::component::Manager::ComponentId GetComponentType()
     {
         auto name = mComponentIndex.getComponentNameByType<T>();
         auto id = mComponentManager->GetComponentId(name.value());

@@ -10,12 +10,17 @@
 
 namespace pivot::ecs::component
 {
+
 class Index
 {
 public:
     void registerComponent(const Description &description);
 
     std::optional<Description> getDescription(const std::string &componentName) const;
+
+    using const_iterator = std::map<std::string, Description>::const_iterator;
+    const_iterator begin() const;
+    const_iterator end() const;
 
     std::vector<std::string> getAllComponentsNames() const;
 
@@ -58,6 +63,9 @@ class GlobalIndex : private Index
 public:
     void registerComponent(const Description &description);
     std::optional<Description> getDescription(const std::string &componentName);
+    std::vector<std::string> getAllComponentsNames();
+    Index::const_iterator begin();
+    Index::const_iterator end();
 
     template <typename T>
     void registerComponentWithType(const Description &description)

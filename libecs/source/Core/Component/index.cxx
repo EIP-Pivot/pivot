@@ -25,9 +25,13 @@ std::optional<Description> Index::getDescription(const std::string &componentNam
     }
 }
 
+Index::const_iterator Index::begin() const { return m_components.begin(); }
+Index::const_iterator Index::end() const { return m_components.end(); }
+
 std::vector<std::string> Index::getAllComponentsNames() const
 {
     std::vector<std::string> names;
+    names.reserve(m_components.size());
     for (auto &[key, value]: m_components) { names.push_back(key); }
     return names;
 }
@@ -47,6 +51,13 @@ std::optional<Description> GlobalIndex::getDescription(const std::string &compon
     return this->Index::getDescription(componentName);
 }
 
+std::vector<std::string> GlobalIndex::getAllComponentsNames()
+{
+
+    this->lockReadOnly();
+    return this->Index::getAllComponentsNames();
+}
+
 void GlobalIndex::lockReadOnly()
 {
     if (!m_read_only) {
@@ -64,6 +75,18 @@ GlobalIndex &GlobalIndex::getSingleton()
 {
     if (!singleton) singleton = std::make_unique<GlobalIndex>();
     return *singleton;
+}
+
+Index::const_iterator GlobalIndex::begin()
+{
+    this->lockReadOnly();
+    return this->Index::begin();
+}
+
+Index::const_iterator GlobalIndex::end()
+{
+    this->lockReadOnly();
+    return this->Index::end();
 }
 
 }    // namespace pivot::ecs::component

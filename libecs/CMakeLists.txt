@@ -47,7 +47,10 @@ add_library(${PROJECT_NAME} source/Systems/ControlSystem.cxx
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC glm magic_enum boost_fusion)
-target_sources(${PROJECT_NAME} INTERFACE source/Components/Tag.cxx)
+target_sources(${PROJECT_NAME} INTERFACE source/Components/Tag.cxx
+                                         source/Components/RigidBody.cxx
+                                         source/Components/Gravity.cxx
+                                         source/Components/Transform.cxx)
 
 # Unit tests building
 if (BUILD_TESTING)

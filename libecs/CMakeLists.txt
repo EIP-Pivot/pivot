@@ -52,6 +52,8 @@ add_library(${PROJECT_NAME} source/Core/Scene.cxx
                             source/Core/SceneManager.cxx
                             source/Core/Component/description.cxx
                             source/Core/Component/index.cxx
+                            source/Core/Systems/description.cxx
+                            source/Core/Systems/index.cxx
                             source/Core/Component/manager.cxx
                             source/Core/Component/ref.cxx
                             source/Core/Component/combination.cxx

@@ -13,8 +13,17 @@
 
 #include <map>
 #include <numeric>
-#include <ranges>
 #include <set>
+
+#define DEBUG_ARRAY(MESSAGE, ARRAY)               \
+    auto &l = logger->debug(__PRETTY_FUNCTION__); \
+    l << MESSAGE << ": [";                        \
+    for (const auto &i: ARRAY) {                  \
+        l << i;                                   \
+        if (i != ARRAY.back()) l << ", ";         \
+    }                                             \
+    l << "]";                                     \
+    LOGGER_ENDL;
 
 void VulkanApplication::createInstance()
 {
@@ -36,6 +45,7 @@ void VulkanApplication::createInstance()
         createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
         createInfo.ppEnabledLayerNames = validationLayers.data();
     }
+    DEBUG_ARRAY("Instance extensions: ", extensions);
     this->VulkanLoader::createInstance(createInfo);
     mainDeletionQueue.push([&] { instance.destroy(); });
 }
@@ -58,9 +68,8 @@ void VulkanApplication::pickPhysicalDevice()
     std::vector<vk::PhysicalDevice> gpus = instance.enumeratePhysicalDevices();
     std::multimap<uint32_t, vk::PhysicalDevice> ratedGpus;
 
-    for (const auto &i:
-         gpus | std::views::filter([&](const vk::PhysicalDevice &gpu) { return isDeviceSuitable(gpu, surface); })) {
-        ratedGpus.insert(std::make_pair(rateDeviceSuitability(i), i));
+    for (const auto &i: gpus) {
+        if (isDeviceSuitable(i, surface)) { ratedGpus.insert(std::make_pair(rateDeviceSuitability(i), i)); }
     }
     if (ratedGpus.rbegin()->first > 0) {
         physical_device = ratedGpus.rbegin()->second;
@@ -69,6 +78,7 @@ void VulkanApplication::pickPhysicalDevice()
         throw VulkanException("failed to find a suitable GPU!");
     }
 
+    DEBUG_ARRAY("Device extensions", deviceExtensions);
     const auto deviceProperties = physical_device.getProperties();
     logger->info(vk::to_string(deviceProperties.deviceType)) << deviceProperties.deviceName;
     LOGGER_ENDL;

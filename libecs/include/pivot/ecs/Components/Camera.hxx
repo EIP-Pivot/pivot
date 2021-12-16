@@ -7,7 +7,7 @@
 #include <glm/vec4.hpp>
 
 #ifndef PIVOT_MAX_PROJECTION_LIMIT
-#define PIVOT_MAX_PROJECTION_LIMIT 100.0f
+#define PIVOT_MAX_PROJECTION_LIMIT 10000.0f
 #endif
 
 #ifndef PIVOT_MIN_PROJECTION_LIMIT
@@ -44,14 +44,15 @@ public:
     /// @endcond
 
     /// Get camera projection
-    glm::mat4 getProjection(float fFOV, float fAspectRatio, float fCloseClippingPlane = PIVOT_MIN_PROJECTION_LIMIT,
-                            float fFarClippingPlane = PIVOT_MAX_PROJECTION_LIMIT) const
+    inline glm::mat4 getProjection(float fFOV, float fAspectRatio,
+                                   float fCloseClippingPlane = PIVOT_MIN_PROJECTION_LIMIT,
+                                   float fFarClippingPlane = PIVOT_MAX_PROJECTION_LIMIT) const
     {
         return glm::perspective(glm::radians(fFOV), fAspectRatio, fCloseClippingPlane, fFarClippingPlane);
     }
 
     /// Get camera view
-    glm::mat4 getView() const { return glm::lookAt(position, position + front, up); }
+    inline glm::mat4 getView() const { return glm::lookAt(position, position + front, up); }
 
     /// Get GpuObject of the camera
     gpuObject::CameraData getGPUCameraData(float fFOV, float fAspectRatio,

@@ -186,20 +186,18 @@ VulkanApplication::buildSceneObjectsGPUData(const std::vector<std::reference_wra
 
 void VulkanApplication::buildIndirectBuffers(const std::vector<DrawBatch> &packedDraws, Frame &frame)
 {
-    void *sceneData = nullptr;
-    vmaMapMemory(allocator, frame.indirectBuffer.memory, &sceneData);
-    auto *buffer = (VkDrawIndexedIndirectCommand *)sceneData;
+    auto *sceneData = (VkDrawIndexedIndirectCommand *)allocator.mapMemory(frame.indirectBuffer.memory);
 
     for (uint32_t i = 0; i < packedDraws.size(); i++) {
         const auto &mesh = loadedMeshes.at(packedDraws[i].meshId);
 
-        buffer[i].firstIndex = mesh.indicesOffset;
-        buffer[i].indexCount = mesh.indicesSize;
-        buffer[i].vertexOffset = mesh.verticiesOffset;
-        buffer[i].instanceCount = 1;
-        buffer[i].firstInstance = i;
+        sceneData[i].firstIndex = mesh.indicesOffset;
+        sceneData[i].indexCount = mesh.indicesSize;
+        sceneData[i].vertexOffset = mesh.verticiesOffset;
+        sceneData[i].instanceCount = 1;
+        sceneData[i].firstInstance = i;
     }
-    vmaUnmapMemory(allocator, frame.indirectBuffer.memory);
+    allocator.unmapMemory(frame.indirectBuffer.memory);
 }
 
 void VulkanApplication::initVulkanRessources()

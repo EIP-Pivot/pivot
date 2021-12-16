@@ -264,20 +264,18 @@ private:
 template <vk_utils::is_copyable T>
 void VulkanApplication::copyBuffer(AllocatedBuffer &buffer, const T *data, size_t size)
 {
-    void *mapped = nullptr;
-    vmaMapMemory(allocator, buffer.memory, &mapped);
+    void *mapped = allocator.mapMemory(buffer.memory);
     std::memcpy(mapped, data, size);
-    vmaUnmapMemory(allocator, buffer.memory);
+    allocator.unmapMemory(buffer.memory);
 }
 
 template <vk_utils::is_copyable T>
 void VulkanApplication::copyBuffer(AllocatedBuffer &buffer, const std::vector<T> &data)
 {
     vk::DeviceSize size = sizeof(data[0]) * data.size();
-    void *mapped = nullptr;
-    vmaMapMemory(allocator, buffer.memory, &mapped);
+    void *mapped = allocator.mapMemory(buffer.memory);
     std::memcpy(mapped, data.data(), size);
-    vmaUnmapMemory(allocator, buffer.memory);
+    allocator.unmapMemory(buffer.memory);
 }
 
 #endif

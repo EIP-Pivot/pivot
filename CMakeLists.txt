@@ -101,14 +101,15 @@ add_subdirectory(libecs/)
 add_subdirectory(libgraphics/)
 target_link_libraries(pivot-ecs PUBLIC pivot-graphics)
 
+
 target_compile_options(pivot-ecs PRIVATE
      $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
           -Wall>
      $<$<CXX_COMPILER_ID:MSVC>:
-          /W4>)
+          /W3 /wd4267 /wd4201 /wd4244>)
 
 target_compile_options(pivot-graphics PRIVATE
      $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
           -Wall>
      $<$<CXX_COMPILER_ID:MSVC>:
-          /W3>)
+          /W3 /wd4267 /wd4201 /wd4244>)

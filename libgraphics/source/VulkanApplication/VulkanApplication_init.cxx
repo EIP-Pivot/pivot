@@ -272,8 +272,8 @@ void VulkanApplication::createPipeline()
     builder.depthStencil = vk_init::populateVkPipelineDepthStencilStateCreateInfo();
     builder.viewport.x = 0.0f;
     builder.viewport.y = 0.0f;
-    builder.viewport.width = swapchain.getSwapchainExtent().width;
-    builder.viewport.height = swapchain.getSwapchainExtent().height;
+    builder.viewport.width = static_cast<float>(swapchain.getSwapchainExtent().width);
+    builder.viewport.height = static_cast<float>(swapchain.getSwapchainExtent().height);
     builder.viewport.minDepth = 0.0f;
     builder.viewport.maxDepth = 1.0f;
     builder.scissor.offset = vk::Offset2D{0, 0};

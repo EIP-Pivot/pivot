@@ -153,7 +153,7 @@ try {
     };
     vk_utils::vk_try(presentQueue.presentKHR(presentInfo));
     currentFrame = (currentFrame + 1) % MAX_FRAME_FRAME_IN_FLIGHT;
-} catch (const vk::OutOfDateKHRError &se) {
+} catch (const vk::OutOfDateKHRError &) {
     return recreateSwapchain();
 }
 

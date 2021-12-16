@@ -1,7 +1,7 @@
 #pragma once
 
 #include "pivot/graphics/types/Transform.hxx"
-#include "pivot/graphics/types/vk_types.hxx"
+#include "pivot/graphics/types/common.hxx"
 
 #include <glm/mat4x4.hpp>
 #include <string>

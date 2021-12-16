@@ -1,13 +1,5 @@
 #pragma once
 
-#include <cstring>
-#include <filesystem>
-#include <optional>
-#include <unordered_map>
-#include <vector>
-#include <vk_mem_alloc.hpp>
-#include <vulkan/vulkan.hpp>
-
 #include "pivot/graphics/DeletionQueue.hxx"
 #include "pivot/graphics/VulkanLoader.hxx"
 #include "pivot/graphics/VulkanSwapchain.hxx"
@@ -16,9 +8,17 @@
 #include "pivot/graphics/types/Material.hxx"
 #include "pivot/graphics/types/Mesh.hxx"
 #include "pivot/graphics/types/RenderObject.hxx"
+#include "pivot/graphics/types/common.hxx"
 #include "pivot/graphics/types/vk_types.hxx"
 #include "pivot/graphics/vk_utils.hxx"
-#include "pivot/graphics/config.hxx"
+
+#include <cstring>
+#include <filesystem>
+#include <optional>
+#include <unordered_map>
+#include <vector>
+#include <vk_mem_alloc.hpp>
+#include <vulkan/vulkan.hpp>
 
 #ifndef MAX_OBJECT
 #define MAX_OBJECT 5000

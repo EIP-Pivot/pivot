@@ -109,20 +109,21 @@ if (NOT imguizmo_POPULATED)
 endif()
 
 add_library(${PROJECT_NAME} STATIC source/lib.cxx
+                                   source/types/Vertex.cxx
+                                   source/types/Transform.cxx
+                                   source/types/UniformBufferObject.cxx
                                    source/Window.cxx
                                    source/vk_utils.cxx
                                    source/vk_init.cxx
                                    source/SwapchainSupportDetails.cxx
                                    source/PipelineBuilder.cxx
                                    source/VulkanLoader.cxx
-                                   source/UniformBufferObject.cxx
-                                   source/Transform.cxx
                                    source/VulkanSwapchain.cxx
-                                   source/VulkanApplication.cxx
-                                   source/VulkanApplication_init.cxx
-                                   source/VulkanApplication_static.cxx
-                                   source/VulkanApplication_helper.cxx
-                                   source/VulkanApplication_loader.cxx
+                                   source/VulkanApplication/VulkanApplication.cxx
+                                   source/VulkanApplication/VulkanApplication_init.cxx
+                                   source/VulkanApplication/VulkanApplication_static.cxx
+                                   source/VulkanApplication/VulkanApplication_helper.cxx
+                                   source/VulkanApplication/VulkanApplication_loader.cxx
                                    source/culling.cxx
                                    source/math.cxx
 )

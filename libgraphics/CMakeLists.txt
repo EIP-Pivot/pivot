@@ -128,9 +128,8 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/math.cxx
 )
 
-target_precompile_headers(${PROJECT_NAME} PRIVATE <Logger.hpp> <glm/glm.hpp> <vulkan/vulkan.hpp>)
+target_precompile_headers(${PROJECT_NAME} PRIVATE <vulkan/vulkan.hpp> <vk_mem_alloc.hpp>)
 
-target_precompile_headers(${PROJECT_NAME} PUBLIC <pivot/graphics/VulkanApplication.hxx>)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC
   VULKAN_HPP_NO_CONSTRUCTORS

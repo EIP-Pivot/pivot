@@ -1,4 +1,3 @@
-#include <logging.hxx>
 #include <pivot/graphics/types/Mesh.hxx>
 
 #include <catch2/catch.hpp>

@@ -86,3 +86,8 @@ Camera &Scene::getCamera()
 }
 
 std::vector<Entity> &Scene::getCameras() { return mCamera; }
+
+pivot::ecs::component::Manager &Scene::getComponentManager() { return *this->mComponentManager.get(); }
+
+/// Get the component manager (const)
+const pivot::ecs::component::Manager &Scene::getComponentManager() const { return *this->mComponentManager.get(); }

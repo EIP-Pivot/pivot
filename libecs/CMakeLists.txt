@@ -62,6 +62,7 @@ if (BUILD_TESTING)
     tests/Core/Component/test_index.cxx
     tests/Core/Component/test_tag.cxx
     tests/Core/Component/test_global_registration.cxx
+    tests/Core/test_scene.cxx
     )
   target_include_directories(${TEST_NAME} PRIVATE tests/)
   target_link_libraries(${TEST_NAME} Catch2 ${PROJECT_NAME})

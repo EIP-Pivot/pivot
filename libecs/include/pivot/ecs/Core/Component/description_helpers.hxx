@@ -144,7 +144,7 @@ std::unique_ptr<IComponentArray> createContainer(Description description)
 }
 
 template <typename T, typename A>
-Description build_component_description(const char *name)
+Description build_component_description(const char *name, bool registerComponent = true)
 {
     Description description{name,
                             helpers::buildPropertyArray<T>(),
@@ -152,13 +152,15 @@ Description build_component_description(const char *name)
                             helpers::setProperty<T>,
                             helpers::create<T>,
                             helpers::createContainer<A>};
-    std::clog << "Registering " << name << std::endl;
-    GlobalIndex::getSingleton().registerComponentWithType<T>(description);
+    if (registerComponent) {
+        std::clog << "Registering " << name << std::endl;
+        GlobalIndex::getSingleton().registerComponentWithType<T>(description);
+    }
     return description;
 }
 }    // namespace pivot::ecs::component::helpers
 
-/// Registered a component
+/// Registers a component
 #define PIVOT_REGISTER_COMPONENT(component_type, array_type)                                                      \
     namespace pivot::ecs::component::helpers                                                                      \
     {                                                                                                             \

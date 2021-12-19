@@ -158,6 +158,7 @@ Description build_component_description(const char *name)
 }
 }    // namespace pivot::ecs::component::helpers
 
+/// Registered a component
 #define PIVOT_REGISTER_COMPONENT(component_type, array_type)                                                      \
     namespace pivot::ecs::component::helpers                                                                      \
     {                                                                                                             \

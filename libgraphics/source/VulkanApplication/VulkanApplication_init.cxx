@@ -15,14 +15,14 @@
 #include <numeric>
 #include <set>
 
-#define DEBUG_ARRAY(MESSAGE, ARRAY)               \
-    auto &l = logger->debug(__PRETTY_FUNCTION__); \
-    l << MESSAGE << ": [";                        \
-    for (const auto &i: ARRAY) {                  \
-        l << i;                                   \
-        if (i != ARRAY.back()) l << ", ";         \
-    }                                             \
-    l << "]";                                     \
+#define DEBUG_STRING_ARRAY(BUFFER, MESSAGE, ARRAY) \
+    auto &l = BUFFER;                              \
+    l << MESSAGE << ": [";                         \
+    for (const auto &i: ARRAY) {                   \
+        l << i;                                    \
+        if (i != ARRAY.back()) l << ", ";          \
+    }                                              \
+    l << "]";                                      \
     LOGGER_ENDL;
 
 void VulkanApplication::createInstance()
@@ -45,7 +45,7 @@ void VulkanApplication::createInstance()
         createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
         createInfo.ppEnabledLayerNames = validationLayers.data();
     }
-    DEBUG_ARRAY("Instance extensions: ", extensions);
+    DEBUG_STRING_ARRAY(logger->info("INSTANCE"), "Instance extensions: ", extensions);
     this->VulkanLoader::createInstance(createInfo);
     mainDeletionQueue.push([&] { instance.destroy(); });
 }
@@ -78,9 +78,15 @@ void VulkanApplication::pickPhysicalDevice()
         throw VulkanException("failed to find a suitable GPU!");
     }
 
-    DEBUG_ARRAY("Device extensions", deviceExtensions);
+    DEBUG_STRING_ARRAY(logger->info("PHYSICAL DEVICE"), "Device extensions", deviceExtensions);
     const auto deviceProperties = physical_device.getProperties();
-    logger->info(vk::to_string(deviceProperties.deviceType)) << deviceProperties.deviceName;
+    logger->info("PHYSICAL DEVICE") << vk::to_string(deviceProperties.deviceType) << ": "
+                                    << deviceProperties.deviceName;
+    LOGGER_ENDL;
+
+    deviceFeature = physical_device.getFeatures();
+    logger->info("PHYSICAL DEVICE") << "multiDrawIndirect available: " << std::boolalpha
+                                    << (deviceFeature.multiDrawIndirect == VK_TRUE);
     LOGGER_ENDL;
 }
 
@@ -115,6 +121,7 @@ void VulkanApplication::createLogicalDevice()
     };
 
     vk::PhysicalDeviceFeatures deviceFeature{
+        .multiDrawIndirect = this->deviceFeature.multiDrawIndirect,
         .drawIndirectFirstInstance = VK_TRUE,
         .fillModeNonSolid = VK_TRUE,
         .samplerAnisotropy = VK_TRUE,

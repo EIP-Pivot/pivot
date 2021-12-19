@@ -117,10 +117,16 @@ try {
             pipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, gpuCamera);
         drawCmd.bindVertexBuffers(0, vertexBuffers.buffer, offset);
         drawCmd.bindIndexBuffer(indicesBuffers.buffer, 0, vk::IndexType::eUint32);
-        for (const auto &draw: sceneObjectGPUData.objectDrawBatches) {
-            drawCmd.drawIndexedIndirect(frame.indirectBuffer.buffer,
-                                        draw.first * sizeof(vk::DrawIndexedIndirectCommand), draw.count,
+
+        if (deviceFeature.multiDrawIndirect == VK_TRUE) {
+            drawCmd.drawIndexedIndirect(frame.indirectBuffer.buffer, 0, sceneObjectGPUData.objectDrawBatches.size(),
                                         sizeof(vk::DrawIndexedIndirectCommand));
+        } else {
+            for (const auto &draw: sceneObjectGPUData.objectDrawBatches) {
+                drawCmd.drawIndexedIndirect(frame.indirectBuffer.buffer,
+                                            draw.first * sizeof(vk::DrawIndexedIndirectCommand), draw.count,
+                                            sizeof(vk::DrawIndexedIndirectCommand));
+            }
         }
         drawCmd.end();
     }

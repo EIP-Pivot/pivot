@@ -204,6 +204,7 @@ private:
     /// @cond
     uint32_t mipLevels = 0;
     vk::SampleCountFlagBits maxMsaaSample = vk::SampleCountFlagBits::e1;
+    vk::PhysicalDeviceFeatures deviceFeature{};
 
     AllocatedBuffer vertexBuffers{};
     AllocatedBuffer indicesBuffers{};

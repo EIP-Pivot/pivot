@@ -102,10 +102,11 @@ bool VulkanApplication::isDeviceSuitable(const vk::PhysicalDevice &gpu, const vk
 uint32_t VulkanApplication::rateDeviceSuitability(const vk::PhysicalDevice &gpu)
 {
     vk::PhysicalDeviceProperties deviceProperties = gpu.getProperties();
-    // vk::PhysicalDeviceFeatures deviceFeatures = gpu.getFeatures();
+    vk::PhysicalDeviceFeatures deviceFeatures = gpu.getFeatures();
     int32_t score = 0;
 
     if (deviceProperties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu) score += 1000;
+    if (deviceFeatures.multiDrawIndirect == VK_TRUE) score += 100;
 
     score += deviceProperties.limits.maxPushConstantsSize;
     score += deviceProperties.limits.maxImageDimension2D;

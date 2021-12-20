@@ -1,9 +1,11 @@
 #pragma once
 
 #include "pivot/graphics/DeletionQueue.hxx"
+#include "pivot/graphics/QueueFamilyIndices.hxx"
 #include "pivot/graphics/VulkanLoader.hxx"
 #include "pivot/graphics/VulkanSwapchain.hxx"
 #include "pivot/graphics/Window.hxx"
+#include "pivot/graphics/abstract/AImmediateCommand.hxx"
 #include "pivot/graphics/types/Frame.hxx"
 #include "pivot/graphics/types/Material.hxx"
 #include "pivot/graphics/types/Mesh.hxx"
@@ -55,7 +57,7 @@ constexpr uint8_t MAX_FRAME_FRAME_IN_FLIGHT = 3;
 ///
 /// You can now call the draw() method when you are ready to render a new frame
 
-class VulkanApplication : public VulkanLoader
+class VulkanApplication : public VulkanLoader, public pivot::graphics::abstract::AImmediateCommand
 {
 private:
 #ifdef NDEBUG
@@ -123,7 +125,6 @@ private:
     template <vk_utils::is_copyable T>
     void copyBuffer(AllocatedBuffer &buffer, const T *data, size_t size);
 
-    void immediateCommand(std::function<void(vk::CommandBuffer &)> &&function);
     void copyBufferToImage(const vk::Buffer &srcBuffer, vk::Image &dstImage, const vk::Extent3D &extent);
     void copyBufferToBuffer(const vk::Buffer &srcBuffer, vk::Buffer &dstBuffer, const vk::DeviceSize &size);
     void transitionImageLayout(vk::Image &image, vk::Format format, vk::ImageLayout oldLayout,
@@ -205,14 +206,10 @@ private:
     uint32_t mipLevels = 0;
     vk::SampleCountFlagBits maxMsaaSample = vk::SampleCountFlagBits::e1;
     vk::PhysicalDeviceFeatures deviceFeature{};
+    QueueFamilyIndices queueIndices;
 
     AllocatedBuffer vertexBuffers{};
     AllocatedBuffer indicesBuffers{};
-
-    struct UploadContext {
-        vk::Fence uploadFence = VK_NULL_HANDLE;
-        vk::CommandPool commandPool = VK_NULL_HANDLE;
-    } uploadContext = {};
 
     struct ImGuiContext {
         vk::CommandPool cmdPool = VK_NULL_HANDLE;

@@ -124,6 +124,7 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/VulkanApplication/VulkanApplication_static.cxx
                                    source/VulkanApplication/VulkanApplication_helper.cxx
                                    source/VulkanApplication/VulkanApplication_loader.cxx
+                                   source/abstract/AImmediateCommand.cxx
                                    source/culling.cxx
                                    source/math.cxx
 )

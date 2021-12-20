@@ -101,9 +101,10 @@ void VulkanApplication::createLogicalDevice()
 {
     DEBUG_FUNCTION
     float fQueuePriority = 1.0f;
-    auto indices = QueueFamilyIndices::findQueueFamilies(physical_device, surface);
+    queueIndices = QueueFamilyIndices::findQueueFamilies(physical_device, surface);
     std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
-    std::set<uint32_t> uniqueQueueFamilies{indices.graphicsFamily.value(), indices.presentFamily.value()};
+    std::set<uint32_t> uniqueQueueFamilies{queueIndices.graphicsFamily.value(), queueIndices.presentFamily.value(),
+                                           queueIndices.transferFamily.value()};
 
     for (const uint32_t queueFamily: uniqueQueueFamilies) {
         queueCreateInfos.push_back(vk_init::populateDeviceQueueCreateInfo(1, queueFamily, fQueuePriority));
@@ -137,8 +138,8 @@ void VulkanApplication::createLogicalDevice()
     this->VulkanLoader::createLogicalDevice(physical_device, createInfo);
     mainDeletionQueue.push([&] { device.destroy(); });
 
-    graphicsQueue = device.getQueue(indices.graphicsFamily.value(), 0);
-    presentQueue = device.getQueue(indices.presentFamily.value(), 0);
+    graphicsQueue = device.getQueue(queueIndices.graphicsFamily.value(), 0);
+    presentQueue = device.getQueue(queueIndices.presentFamily.value(), 0);
 }
 
 void VulkanApplication::createAllocator()
@@ -322,17 +323,14 @@ void VulkanApplication::createFramebuffers()
 void VulkanApplication::createCommandPool()
 {
     DEBUG_FUNCTION
-    auto indices = QueueFamilyIndices::findQueueFamilies(physical_device, surface);
     vk::CommandPoolCreateInfo poolInfo{
         .flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
-        .queueFamilyIndex = indices.graphicsFamily.value(),
+        .queueFamilyIndex = queueIndices.graphicsFamily.value(),
     };
     commandPool = device.createCommandPool(poolInfo);
-    uploadContext.commandPool = device.createCommandPool(poolInfo);
     imguiContext.cmdPool = device.createCommandPool(poolInfo);
     mainDeletionQueue.push([&] {
         device.destroy(imguiContext.cmdPool);
-        device.destroy(uploadContext.commandPool);
         device.destroy(commandPool);
     });
 }
@@ -374,9 +372,7 @@ void VulkanApplication::createSyncStructure()
     vk::FenceCreateInfo fenceInfo{
         .flags = vk::FenceCreateFlagBits::eSignaled,
     };
-    vk::FenceCreateInfo uploadFenceInfo{};
 
-    uploadContext.uploadFence = device.createFence(uploadFenceInfo);
     for (auto &f: frames) {
         f.imageAvailableSemaphore = device.createSemaphore(semaphoreInfo);
         f.renderFinishedSemaphore = device.createSemaphore(semaphoreInfo);
@@ -384,7 +380,6 @@ void VulkanApplication::createSyncStructure()
     }
 
     mainDeletionQueue.push([&] {
-        device.destroy(uploadContext.uploadFence);
         for (auto &f: frames) {
             device.destroy(f.inFlightFences);
             device.destroy(f.renderFinishedSemaphore);
@@ -701,7 +696,6 @@ void VulkanApplication::createImGuiDescriptorPool()
 void VulkanApplication::initDearImGui()
 {
     DEBUG_FUNCTION;
-    auto indices = QueueFamilyIndices::findQueueFamilies(physical_device, surface);
 
     ImGui_ImplVulkan_LoadFunctions(
         [](const char *function_name, void *user) {
@@ -718,7 +712,7 @@ void VulkanApplication::initDearImGui()
     init_info.Instance = instance;
     init_info.PhysicalDevice = physical_device;
     init_info.Device = device;
-    init_info.QueueFamily = indices.graphicsFamily.value();
+    init_info.QueueFamily = queueIndices.graphicsFamily.value();
     init_info.Queue = graphicsQueue;
     init_info.PipelineCache = pipelineCache;
     init_info.DescriptorPool = imguiContext.pool;

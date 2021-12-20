@@ -48,41 +48,6 @@ void VulkanApplication::copyBufferToImage(const vk::Buffer &srcBuffer, vk::Image
     });
 }
 
-void VulkanApplication::immediateCommand(std::function<void(vk::CommandBuffer &)> &&function)
-{
-    DEBUG_FUNCTION
-    vk::CommandBufferAllocateInfo cmdAllocInfo{
-        .commandPool = uploadContext.commandPool,
-        .level = vk::CommandBufferLevel::ePrimary,
-        .commandBufferCount = 1,
-    };
-
-    vk::CommandBuffer cmd = device.allocateCommandBuffers(cmdAllocInfo)[0];
-
-    vk::CommandBufferBeginInfo cmdBeginInfo{
-        .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit,
-    };
-
-    cmd.begin(cmdBeginInfo);
-    function(cmd);
-    cmd.end();
-
-    vk::SubmitInfo submit{
-        .waitSemaphoreCount = 0,
-        .pWaitSemaphores = nullptr,
-        .pWaitDstStageMask = nullptr,
-        .commandBufferCount = 1,
-        .pCommandBuffers = &cmd,
-        .signalSemaphoreCount = 0,
-        .pSignalSemaphores = nullptr,
-    };
-
-    graphicsQueue.submit(submit, uploadContext.uploadFence);
-    VK_TRY(device.waitForFences(uploadContext.uploadFence, VK_TRUE, UINT64_MAX));
-    device.resetFences(uploadContext.uploadFence);
-    device.resetCommandPool(uploadContext.commandPool);
-}
-
 void VulkanApplication::transitionImageLayout(vk::Image &image, vk::Format format, vk::ImageLayout oldLayout,
                                               vk::ImageLayout newLayout, uint32_t mipLevels)
 {

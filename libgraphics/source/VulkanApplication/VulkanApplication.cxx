@@ -26,6 +26,7 @@ VulkanApplication::~VulkanApplication()
     DEBUG_FUNCTION
     if (device) device.waitIdle();
     if (swapchain) swapchain.destroy();
+    pivot::graphics::abstract::AImmediateCommand::destroy();
     swapchainDeletionQueue.flush();
     mainDeletionQueue.flush();
 }
@@ -214,6 +215,9 @@ void VulkanApplication::initVulkanRessources()
     createSurface();
     pickPhysicalDevice();
     createLogicalDevice();
+
+    pivot::graphics::abstract::AImmediateCommand::init(device, queueIndices.transferFamily.value());
+
     createAllocator();
     createSyncStructure();
     createIndirectBuffer();

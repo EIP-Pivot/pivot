@@ -11,6 +11,9 @@
 #include <string>
 #include <unordered_map>
 
+template <typename T>
+using OptionalRef = std::optional<std::reference_wrapper<T>>;
+
 using ImageStorage = std::unordered_map<std::string, AllocatedImage>;
 using MeshStorage = std::unordered_map<std::string, GPUMesh>;
 using MeshBoundingBoxStorage = std::unordered_map<std::string, MeshBoundingBox>;

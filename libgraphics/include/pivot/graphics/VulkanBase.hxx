@@ -6,6 +6,8 @@
 #include "pivot/graphics/Window.hxx"
 #include "pivot/graphics/abstract/AImmediateCommand.hxx"
 
+#include <vk_mem_alloc.hpp>
+
 namespace pivot::graphics
 {
 
@@ -13,7 +15,7 @@ namespace pivot::graphics
 /// Handle the bare minimum of Vulkan ressources to perform GPU manipulation
 class VulkanBase : public VulkanLoader, public abstract::AImmediateCommand
 {
-public:
+protected:
     /// Default ctor
     VulkanBase(const std::string &windowName = "VulkanBase");
     /// Default ctor
@@ -59,8 +61,6 @@ public:
     vma::Allocator allocator = VK_NULL_HANDLE;
 
 protected:
-    /// Maximum mipmap level
-    uint32_t mipLevels = 0;
     /// Maximum support msaaSample value.
     vk::SampleCountFlagBits maxMsaaSample = vk::SampleCountFlagBits::e1;
     /// List of GPU features

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pivot/graphics/AssetStorage.hxx"
 #include "pivot/graphics/DeletionQueue.hxx"
 #include "pivot/graphics/QueueFamilyIndices.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
@@ -53,7 +54,6 @@ const std::vector<const char *> deviceExtensions = {
 /// Then you will call the init() method, to initialise the Vulkan ressources
 ///
 /// You can now call the draw() method when you are ready to render a new frame
-
 class VulkanApplication : public pivot::graphics::VulkanBase
 {
 private:
@@ -98,36 +98,10 @@ public:
 #endif
     );
 
-    /// @brief load the 3D models into CPU memory
-    ///
-    /// @arg paths the path for all individual file to load
-    /// @return the number of file successfully loaded
-    size_t load3DModels(const std::vector<std::filesystem::path> &paths);
-
-    /// @brief load the Textures into CPU memory
-    ///
-    /// @arg paths the path for all individual file to load
-    /// @return the number of file successfully loaded
-    size_t loadTextures(const std::vector<std::filesystem::path> &);
-
     /// @brief get Swapchain aspect ratio
-    float getAspectRatio() const;
+    float getAspectRatio() const noexcept { return swapchain.getAspectRatio(); }
 
 private:
-    void pushModelsToGPU();
-    void pushTexturesToGPU();
-
-    template <vk_utils::is_copyable T>
-    void copyBuffer(AllocatedBuffer &buffer, const std::vector<T> &data);
-    template <vk_utils::is_copyable T>
-    void copyBuffer(AllocatedBuffer &buffer, const T *data, size_t size);
-
-    void copyBufferToImage(const vk::Buffer &srcBuffer, vk::Image &dstImage, const vk::Extent3D &extent);
-    void copyBufferToBuffer(const vk::Buffer &srcBuffer, vk::Buffer &dstBuffer, const vk::DeviceSize &size);
-    void transitionImageLayout(vk::Image &image, vk::Format format, vk::ImageLayout oldLayout,
-                               vk::ImageLayout newLayout, uint32_t mipLevels = 1);
-    void generateMipmaps(vk::Image &image, vk::Format imageFormat, vk::Extent3D size, uint32_t mipLevel);
-
     SceneObjectsGPUData buildSceneObjectsGPUData(const std::vector<std::reference_wrapper<const RenderObject>> &objects,
                                                  const gpuObject::CameraData &camera);
     void buildIndirectBuffers(const std::vector<DrawBatch> &scene, Frame &frame);
@@ -135,8 +109,6 @@ private:
     void postInitialization();
     void recreateSwapchain();
     void initVulkanRessources();
-
-    AllocatedBuffer createBuffer(uint32_t allocSize, vk::BufferUsageFlags usage, vma::MemoryUsage memoryUsage);
 
     void createUniformBuffers();
     void createSyncStructure();
@@ -164,27 +136,11 @@ private:
     void initDearImGui();
 
 public:
-    /// This will the store the textures, 3D models before behind uploaded to the GPU
-    struct {
-        std::unordered_map<std::string, std::vector<std::byte>> loadedTextures;
-        std::unordered_map<std::string, vk::Extent3D> loadedTexturesSize;
-        std::vector<Vertex> vertexBuffer;
-        std::vector<uint32_t> indexBuffer;
-    } cpuStorage;
-    /// Internal storage for the material
-    MaterialStorage materials;
-    /// Internal storage for the meshes
-    MeshStorage loadedMeshes;
-    /// Internal storage for the meshes' bounding boxes
-    MeshBoundingBoxStorage meshesBoundingBoxes;
-    /// Internal storage for the textures
-    ImageStorage loadedTextures;
+    pivot::graphics::AssetStorage assetStorage;
 
 private:
     /// @cond
     uint32_t mipLevels = 0;
-    AllocatedBuffer vertexBuffers{};
-    AllocatedBuffer indicesBuffers{};
 
     struct ImGuiContext {
         vk::CommandPool cmdPool = VK_NULL_HANDLE;
@@ -222,25 +178,3 @@ private:
     std::vector<vk::Framebuffer> swapChainFramebuffers;
     /// @endcond
 };
-
-#ifndef VULKAN_APPLICATION_IMPLEMENTATION
-#define VULKAN_APPLICATION_IMPLEMENTATION
-
-template <vk_utils::is_copyable T>
-void VulkanApplication::copyBuffer(AllocatedBuffer &buffer, const T *data, size_t size)
-{
-    void *mapped = allocator.mapMemory(buffer.memory);
-    std::memcpy(mapped, data, size);
-    allocator.unmapMemory(buffer.memory);
-}
-
-template <vk_utils::is_copyable T>
-void VulkanApplication::copyBuffer(AllocatedBuffer &buffer, const std::vector<T> &data)
-{
-    vk::DeviceSize size = sizeof(data[0]) * data.size();
-    void *mapped = allocator.mapMemory(buffer.memory);
-    std::memcpy(mapped, data.data(), size);
-    allocator.unmapMemory(buffer.memory);
-}
-
-#endif

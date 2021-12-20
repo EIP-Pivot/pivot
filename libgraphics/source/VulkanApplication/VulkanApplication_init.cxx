@@ -30,7 +30,7 @@ void VulkanApplication::createRenderPass()
         .finalLayout = vk::ImageLayout::eColorAttachmentOptimal,
     };
     vk::AttachmentDescription depthAttachment{
-        .format = vk_utils::findSupportedFormat(
+        .format = pivot::graphics::vk_utils::findSupportedFormat(
             physical_device, {vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint},
             vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment),
         .samples = maxMsaaSample,
@@ -118,11 +118,11 @@ void VulkanApplication::createPipelineLayout()
 void VulkanApplication::createPipeline()
 {
     DEBUG_FUNCTION
-    auto vertShaderCode = vk_utils::readFile("shaders/triangle.vert.spv");
-    auto fragShaderCode = vk_utils::readFile("shaders/triangle.frag.spv");
+    auto vertShaderCode = pivot::graphics::vk_utils::readFile("shaders/triangle.vert.spv");
+    auto fragShaderCode = pivot::graphics::vk_utils::readFile("shaders/triangle.frag.spv");
 
-    auto vertShaderModule = vk_utils::createShaderModule(device, vertShaderCode);
-    auto fragShaderModule = vk_utils::createShaderModule(device, fragShaderCode);
+    auto vertShaderModule = pivot::graphics::vk_utils::createShaderModule(device, vertShaderCode);
+    auto fragShaderModule = pivot::graphics::vk_utils::createShaderModule(device, fragShaderCode);
 
     std::vector<vk::VertexInputBindingDescription> binding = {Vertex::getBindingDescription()};
     std::vector<vk::VertexInputAttributeDescription> attribute = Vertex::getAttributeDescriptons();
@@ -258,15 +258,8 @@ void VulkanApplication::createDescriptorSetLayout()
         .stageFlags = vk::ShaderStageFlagBits::eVertex,
         .pImmutableSamplers = nullptr,
     };
-    vk::DescriptorSetLayoutBinding materialBinding{
-        .binding = 1,
-        .descriptorType = vk::DescriptorType::eStorageBuffer,
-        .descriptorCount = 1,
-        .stageFlags = vk::ShaderStageFlagBits::eFragment,
-        .pImmutableSamplers = nullptr,
-    };
 
-    std::vector<vk::DescriptorSetLayoutBinding> bindings = {uboLayoutBinding, materialBinding};
+    std::vector<vk::DescriptorSetLayoutBinding> bindings = {uboLayoutBinding};
     vk::DescriptorSetLayoutCreateInfo layoutInfo{
         .bindingCount = static_cast<uint32_t>(bindings.size()),
         .pBindings = bindings.data(),
@@ -280,6 +273,7 @@ void VulkanApplication::createTextureDescriptorSetLayout()
 {
     DEBUG_FUNCTION
     std::vector<vk::DescriptorBindingFlags> flags{
+        {},
         vk::DescriptorBindingFlagBits::eVariableDescriptorCount | vk::DescriptorBindingFlagBits::ePartiallyBound,
     };
 
@@ -287,16 +281,23 @@ void VulkanApplication::createTextureDescriptorSetLayout()
         .bindingCount = static_cast<uint32_t>(flags.size()),
         .pBindingFlags = flags.data(),
     };
-    vk::DescriptorSetLayoutBinding samplerLayoutBiding{
+    vk::DescriptorSetLayoutBinding materialLayoutBinding{
         .binding = 0,
-        .descriptorType = vk::DescriptorType::eCombinedImageSampler,
-        .descriptorCount = 32,
+        .descriptorType = vk::DescriptorType::eStorageBuffer,
+        .descriptorCount = 1,
         .stageFlags = vk::ShaderStageFlagBits::eFragment,
     };
+    vk::DescriptorSetLayoutBinding samplerLayoutBiding{
+        .binding = 1,
+        .descriptorType = vk::DescriptorType::eCombinedImageSampler,
+        .descriptorCount = static_cast<uint32_t>(assetStorage.getTextures().size()),
+        .stageFlags = vk::ShaderStageFlagBits::eFragment,
+    };
+    std::vector<vk::DescriptorSetLayoutBinding> bindings = {materialLayoutBinding, samplerLayoutBiding};
     vk::DescriptorSetLayoutCreateInfo texturesSetLayoutInfo{
         .pNext = &bindingInfo,
-        .bindingCount = 1,
-        .pBindings = &samplerLayoutBiding,
+        .bindingCount = static_cast<uint32_t>(bindings.size()),
+        .pBindings = bindings.data(),
     };
     texturesSetLayout = device.createDescriptorSetLayout(texturesSetLayoutInfo);
     mainDeletionQueue.push([&] { device.destroy(texturesSetLayout); });
@@ -306,16 +307,12 @@ void VulkanApplication::createUniformBuffers()
 {
     DEBUG_FUNCTION
     for (auto &f: frames) {
-        f.data.uniformBuffer = createBuffer(sizeof(gpuObject::UniformBufferObject) * MAX_OBJECT,
-                                            vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
-        f.data.materialBuffer = createBuffer(sizeof(gpuObject::Material) * MAX_MATERIALS,
-                                             vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
+        f.data.uniformBuffer = pivot::graphics::vk_utils::createBuffer(
+            allocator, sizeof(gpuObject::UniformBufferObject) * MAX_OBJECT, vk::BufferUsageFlagBits::eStorageBuffer,
+            vma::MemoryUsage::eCpuToGpu);
     }
     mainDeletionQueue.push([&] {
-        for (auto &f: frames) {
-            allocator.destroyBuffer(f.data.uniformBuffer.buffer, f.data.uniformBuffer.memory);
-            allocator.destroyBuffer(f.data.materialBuffer.buffer, f.data.materialBuffer.memory);
-        }
+        for (auto &f: frames) { allocator.destroyBuffer(f.data.uniformBuffer.buffer, f.data.uniformBuffer.memory); }
     });
 }
 
@@ -323,11 +320,11 @@ void VulkanApplication::createIndirectBuffer()
 {
     DEBUG_FUNCTION
     for (auto &f: frames) {
-        f.indirectBuffer =
-            this->createBuffer(sizeof(vk::DrawIndexedIndirectCommand) * MAX_OBJECT,
-                               vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer |
-                                   vk::BufferUsageFlagBits::eIndirectBuffer,
-                               vma::MemoryUsage::eCpuToGpu);
+        f.indirectBuffer = pivot::graphics::vk_utils::createBuffer(
+            allocator, sizeof(vk::DrawIndexedIndirectCommand) * MAX_OBJECT,
+            vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer |
+                vk::BufferUsageFlagBits::eIndirectBuffer,
+            vma::MemoryUsage::eCpuToGpu);
     }
     mainDeletionQueue.push([&] {
         for (auto &f: frames) { allocator.destroyBuffer(f.indirectBuffer.buffer, f.indirectBuffer.memory); }
@@ -354,7 +351,7 @@ void VulkanApplication::createDescriptorPool()
         .pPoolSizes = poolSize,
     };
     descriptorPool = device.createDescriptorPool(poolInfo);
-    mainDeletionQueue.push([&] { device.destroy(descriptorPool); });
+    mainDeletionQueue.push([&] { device.destroyDescriptorPool(descriptorPool); });
 }
 
 void VulkanApplication::createDescriptorSets()
@@ -374,29 +371,14 @@ void VulkanApplication::createDescriptorSets()
             .offset = 0,
             .range = sizeof(gpuObject::UniformBufferObject) * MAX_OBJECT,
         };
-        vk::DescriptorBufferInfo materialInfo{
-            .buffer = f.data.materialBuffer.buffer,
-            .offset = 0,
-            .range = sizeof(gpuObject::Material) * MAX_MATERIALS,
-        };
-        std::vector<vk::WriteDescriptorSet> descriptorWrites{
-            {
-                .dstSet = f.data.objectDescriptor,
-                .dstBinding = 0,
-                .dstArrayElement = 0,
-                .descriptorCount = 1,
-                .descriptorType = vk::DescriptorType::eStorageBuffer,
-                .pBufferInfo = &bufferInfo,
-            },
-            {
-                .dstSet = f.data.objectDescriptor,
-                .dstBinding = 1,
-                .dstArrayElement = 0,
-                .descriptorCount = 1,
-                .descriptorType = vk::DescriptorType::eStorageBuffer,
-                .pBufferInfo = &materialInfo,
-            },
-        };
+        std::vector<vk::WriteDescriptorSet> descriptorWrites{{
+            .dstSet = f.data.objectDescriptor,
+            .dstBinding = 0,
+            .dstArrayElement = 0,
+            .descriptorCount = 1,
+            .descriptorType = vk::DescriptorType::eStorageBuffer,
+            .pBufferInfo = &bufferInfo,
+        }};
         device.updateDescriptorSets(descriptorWrites, 0);
     }
 }
@@ -405,13 +387,18 @@ void VulkanApplication::createTextureDescriptorSets()
 {
     DEBUG_FUNCTION
     std::vector<vk::DescriptorImageInfo> imagesInfos;
-    for (auto &[_, t]: loadedTextures) {
+    for (auto &[_, t]: assetStorage.getTextures()) {
         imagesInfos.push_back({
             .sampler = textureSampler,
-            .imageView = t.imageView,
+            .imageView = std::get<AllocatedImage>(t.image).imageView,
             .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
         });
     }
+    vk::DescriptorBufferInfo materialInfo{
+        .buffer = assetStorage.getMaterialBuffer().buffer,
+        .offset = 0,
+        .range = sizeof(gpuObject::Material) * assetStorage.getMaterialBufferSize(),
+    };
 
     uint32_t counts[] = {static_cast<uint32_t>(imagesInfos.size())};
     vk::DescriptorSetVariableDescriptorCountAllocateInfo set_counts{
@@ -426,13 +413,23 @@ void VulkanApplication::createTextureDescriptorSets()
     };
     texturesSet = device.allocateDescriptorSets(allocInfo).front();
 
-    vk::WriteDescriptorSet descriptorWrite{
-        .dstSet = texturesSet,
-        .dstBinding = 0,
-        .dstArrayElement = 0,
-        .descriptorCount = static_cast<uint32_t>(imagesInfos.size()),
-        .descriptorType = vk::DescriptorType::eCombinedImageSampler,
-        .pImageInfo = imagesInfos.data(),
+    std::vector<vk::WriteDescriptorSet> descriptorWrite{
+        {
+            .dstSet = texturesSet,
+            .dstBinding = 0,
+            .dstArrayElement = 0,
+            .descriptorCount = 1,
+            .descriptorType = vk::DescriptorType::eStorageBuffer,
+            .pBufferInfo = &materialInfo,
+        },
+        {
+            .dstSet = texturesSet,
+            .dstBinding = 1,
+            .dstArrayElement = 0,
+            .descriptorCount = static_cast<uint32_t>(imagesInfos.size()),
+            .descriptorType = vk::DescriptorType::eCombinedImageSampler,
+            .pImageInfo = imagesInfos.data(),
+        },
     };
     device.updateDescriptorSets(descriptorWrite, 0);
 }
@@ -460,13 +457,13 @@ void VulkanApplication::createTextureSampler()
         .unnormalizedCoordinates = VK_FALSE,
     };
     textureSampler = device.createSampler(samplerInfo);
-    mainDeletionQueue.push([&] { device.destroy(textureSampler); });
+    mainDeletionQueue.push([&] { device.destroySampler(textureSampler); });
 }
 
 void VulkanApplication::createDepthResources()
 {
     DEBUG_FUNCTION
-    vk::Format depthFormat = vk_utils::findSupportedFormat(
+    vk::Format depthFormat = pivot::graphics::vk_utils::findSupportedFormat(
         physical_device, {vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint},
         vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
 
@@ -490,10 +487,11 @@ void VulkanApplication::createDepthResources()
     createInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eDepth;
     depthResources.imageView = device.createImageView(createInfo);
 
-    transitionImageLayout(depthResources.image, depthFormat, vk::ImageLayout::eUndefined,
-                          vk::ImageLayout::eDepthStencilAttachmentOptimal);
+    pivot::graphics::vk_utils::transitionImageLayout(*this, depthResources.image, depthFormat,
+                                                     vk::ImageLayout::eUndefined,
+                                                     vk::ImageLayout::eDepthStencilAttachmentOptimal);
     swapchainDeletionQueue.push([&] {
-        device.destroy(depthResources.imageView);
+        device.destroyImageView(depthResources.imageView);
         allocator.destroyImage(depthResources.image, depthResources.memory);
     });
 }
@@ -522,7 +520,7 @@ void VulkanApplication::createColorResources()
     colorImage.imageView = device.createImageView(createInfo);
 
     swapchainDeletionQueue.push([&] {
-        device.destroy(colorImage.imageView);
+        device.destroyImageView(colorImage.imageView);
         allocator.destroyImage(colorImage.image, colorImage.memory);
     });
 }
@@ -550,7 +548,7 @@ void VulkanApplication::createImGuiDescriptorPool()
     };
 
     imguiContext.pool = device.createDescriptorPool(pool_info);
-    mainDeletionQueue.push([&] { device.destroy(imguiContext.pool); });
+    mainDeletionQueue.push([&] { device.destroyDescriptorPool(imguiContext.pool); });
 }
 
 void VulkanApplication::initDearImGui()
@@ -579,7 +577,7 @@ void VulkanApplication::initDearImGui()
     init_info.MinImageCount = swapchain.nbOfImage();
     init_info.ImageCount = swapchain.nbOfImage();
     init_info.MSAASamples = static_cast<VkSampleCountFlagBits>(maxMsaaSample);
-    init_info.CheckVkResultFn = vk_utils::vk_try;
+    init_info.CheckVkResultFn = pivot::graphics::vk_utils::vk_try;
 
     ImGui_ImplVulkan_Init(&init_info, renderPass);
 

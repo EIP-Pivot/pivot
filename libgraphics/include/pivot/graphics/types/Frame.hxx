@@ -23,8 +23,5 @@ struct Frame {
         AllocatedBuffer uniformBuffer{};
         /// The descriptor set for to access to the uniformBuffer in the shader
         vk::DescriptorSet objectDescriptor = VK_NULL_HANDLE;
-        /// The buffer for the materials of the 3D scene
-        AllocatedBuffer materialBuffer{};
-
     } data = {};
 };

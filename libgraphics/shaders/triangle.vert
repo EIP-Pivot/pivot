@@ -24,7 +24,7 @@ layout (std140, set = 0, binding = 0) readonly buffer ObjectBuffer {
     UniformBufferObject objects[];
 } objectBuffer;
 
-layout (push_constant) uniform constants {
+layout (push_constant) uniform readonly constants {
     vec4 position;
 	mat4 viewproj;
 } cameraData;

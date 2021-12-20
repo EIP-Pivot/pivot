@@ -9,7 +9,7 @@
 
 #include <algorithm>
 
-VulkanApplication::VulkanApplication(): pivot::graphics::VulkanBase()
+VulkanApplication::VulkanApplication(): pivot::graphics::VulkanBase(), assetStorage(*this)
 {
     DEBUG_FUNCTION;
     if (bEnableValidationLayers && !VulkanBase::checkValidationLayerSupport(validationLayers)) {
@@ -26,7 +26,7 @@ VulkanApplication::~VulkanApplication()
     DEBUG_FUNCTION
     if (device) device.waitIdle();
     if (swapchain) swapchain.destroy();
-    pivot::graphics::abstract::AImmediateCommand::destroy();
+    assetStorage.destroy();
     swapchainDeletionQueue.flush();
     mainDeletionQueue.flush();
     VulkanBase::destroy();
@@ -50,7 +50,7 @@ VulkanApplication::buildSceneObjectsGPUData(const std::vector<std::reference_wra
     unsigned drawCount = 0;
 
     for (const auto &object: objects) {
-        auto boundingBox = meshesBoundingBoxes.at(object.get().meshID);
+        const auto &boundingBox = assetStorage.get<MeshBoundingBox>(object.get().meshID);
         if (pivot::graphics::culling::should_object_be_rendered(object.get().objectInformation.transform, boundingBox,
                                                                 camera)) {
             packedDraws.push_back({
@@ -58,8 +58,7 @@ VulkanApplication::buildSceneObjectsGPUData(const std::vector<std::reference_wra
                 .first = drawCount++,
                 .count = 1,
             });
-            objectGPUData.push_back(
-                gpuObject::UniformBufferObject(object.get().objectInformation, loadedTextures, materials));
+            objectGPUData.push_back(gpuObject::UniformBufferObject(object.get().objectInformation, assetStorage));
         }
     }
     return {packedDraws, objectGPUData};
@@ -70,11 +69,11 @@ void VulkanApplication::buildIndirectBuffers(const std::vector<DrawBatch> &packe
     auto *sceneData = (VkDrawIndexedIndirectCommand *)allocator.mapMemory(frame.indirectBuffer.memory);
 
     for (uint32_t i = 0; i < packedDraws.size(); i++) {
-        const auto &mesh = loadedMeshes.at(packedDraws[i].meshId);
+        const auto &mesh = assetStorage.get<pivot::graphics::AssetStorage::Mesh>(packedDraws[i].meshId);
 
         sceneData[i].firstIndex = mesh.indicesOffset;
         sceneData[i].indexCount = mesh.indicesSize;
-        sceneData[i].vertexOffset = mesh.verticiesOffset;
+        sceneData[i].vertexOffset = mesh.vertexOffset;
         sceneData[i].instanceCount = 1;
         sceneData[i].firstInstance = i;
     }
@@ -106,32 +105,17 @@ void VulkanApplication::initVulkanRessources()
     createFramebuffers();
     createDescriptorSets();
 
-    this->pushModelsToGPU();
-    this->pushTexturesToGPU();
+    assetStorage.build();
 
     createTextureSampler();
     createTextureDescriptorSets();
     createCommandBuffers();
     initDearImGui();
 
-    materials["white"] = {
-        .ambientColor = {1.0f, 1.0f, 1.0f, 1.0f},
-        .diffuse = {1.0f, 1.0f, 1.0f, 1.0f},
-        .specular = {1.0f, 1.0f, 1.0f, 1.0f},
-    };
     postInitialization();
 }
 
-void VulkanApplication::postInitialization()
-{
-    DEBUG_FUNCTION
-
-    std::vector<gpuObject::Material> materialStor;
-    std::transform(materials.begin(), materials.end(), std::back_inserter(materialStor),
-                   [](const auto &i) { return i.second; });
-
-    for (auto &frame: frames) { copyBuffer(frame.data.materialBuffer, materialStor); }
-}
+void VulkanApplication::postInitialization() { DEBUG_FUNCTION }
 
 void VulkanApplication::recreateSwapchain()
 {
@@ -215,7 +199,7 @@ try {
 
     auto sceneObjectGPUData = buildSceneObjectsGPUData(sceneInformation, cullingGPUCamera);
     buildIndirectBuffers(sceneObjectGPUData.objectDrawBatches, frame);
-    copyBuffer(frame.data.uniformBuffer, sceneObjectGPUData.objectGPUData);
+    pivot::graphics::vk_utils::copyBuffer(allocator, frame.data.uniformBuffer, sceneObjectGPUData.objectGPUData);
 
     vk::CommandBufferInheritanceInfo inheritanceInfo{
         .renderPass = renderPass,
@@ -248,8 +232,8 @@ try {
         drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, texturesSet, nullptr);
         drawCmd.pushConstants<gpuObject::CameraData>(
             pipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, gpuCamera);
-        drawCmd.bindVertexBuffers(0, vertexBuffers.buffer, offset);
-        drawCmd.bindIndexBuffer(indicesBuffers.buffer, 0, vk::IndexType::eUint32);
+        drawCmd.bindVertexBuffers(0, assetStorage.getVertexBuffer().buffer, offset);
+        drawCmd.bindIndexBuffer(assetStorage.getIndexBuffer().buffer, 0, vk::IndexType::eUint32);
 
         if (deviceFeature.multiDrawIndirect == VK_TRUE) {
             drawCmd.drawIndexedIndirect(frame.indirectBuffer.buffer, 0, sceneObjectGPUData.objectDrawBatches.size(),
@@ -290,7 +274,7 @@ try {
         .pSwapchains = &(swapchain.getSwapchain()),
         .pImageIndices = &imageIndex,
     };
-    vk_utils::vk_try(presentQueue.presentKHR(presentInfo));
+    pivot::graphics::vk_utils::vk_try(presentQueue.presentKHR(presentInfo));
     currentFrame = (currentFrame + 1) % MAX_FRAME_FRAME_IN_FLIGHT;
 } catch (const vk::OutOfDateKHRError &) {
     return recreateSwapchain();

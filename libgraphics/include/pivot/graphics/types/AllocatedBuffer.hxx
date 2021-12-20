@@ -10,6 +10,7 @@ struct AllocatedBuffer {
     //// @cond
     vk::Buffer buffer = VK_NULL_HANDLE;
     vma::Allocation memory = VK_NULL_HANDLE;
+    inline operator bool() { return buffer && memory; }
     //// @endcond
 };
 

@@ -5,10 +5,10 @@
 #include <glm/gtx/quaternion.hpp>
 #include <iterator>
 
-gpuObject::UniformBufferObject::UniformBufferObject(const ObjectInformation &info, const ImageStorage &stor,
-                                                    const MaterialStorage &mat)
+gpuObject::UniformBufferObject::UniformBufferObject(const ObjectInformation &info,
+                                                    const pivot::graphics::AssetStorage &assetStorage)
     : modelMatrix(info.transform.getModelMatrix()),
-      textureIndex(std::distance(stor.begin(), stor.find(info.textureIndex))),
-      materialIndex(std::distance(mat.begin(), mat.find(info.materialIndex)))
+      textureIndex(assetStorage.getIndex<pivot::graphics::AssetStorage::Texture>(info.textureIndex)),
+      materialIndex(assetStorage.getIndex<Material>(info.materialIndex))
 {
 }

@@ -37,7 +37,7 @@ void VulkanBase::createInstance(const std::vector<const char *> &instanceExtensi
         createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
         createInfo.ppEnabledLayerNames = validationLayers.data();
     }
-    PRINT_STRING_ARRAY(logger->info("INSTANCE"), "Instance extensions: ", extensions);
+    PRINT_STRING_ARRAY(logger->info("Instance"), "Instance extensions: ", extensions);
     this->VulkanLoader::createInstance(createInfo);
     baseDeletionQueue.push([&] { instance.destroy(); });
 }
@@ -74,19 +74,19 @@ void VulkanBase::selectPhysicalDevice(const std::vector<const char *> &deviceExt
     }
     if (ratedGpus.rbegin()->first > 0) {
         physical_device = ratedGpus.rbegin()->second;
-        maxMsaaSample = vk_utils::getMexUsableSampleCount(physical_device);
+        maxMsaaSample = pivot::graphics::vk_utils::getMexUsableSampleCount(physical_device);
     } else {
         throw VulkanException("failed to find a suitable GPU!");
     }
 
-    PRINT_STRING_ARRAY(logger->info("PHYSICAL DEVICE"), "Device extensions", deviceExtensions);
+    PRINT_STRING_ARRAY(logger->info("Physical Device"), "Device extensions", deviceExtensions);
     const auto deviceProperties = physical_device.getProperties();
-    logger->info("PHYSICAL DEVICE") << vk::to_string(deviceProperties.deviceType) << ": "
+    logger->info("Physical Device") << vk::to_string(deviceProperties.deviceType) << ": "
                                     << deviceProperties.deviceName;
     LOGGER_ENDL;
 
     deviceFeature = physical_device.getFeatures();
-    logger->info("PHYSICAL DEVICE") << "multiDrawIndirect available: " << std::boolalpha
+    logger->info("Physical Device") << "multiDrawIndirect available: " << std::boolalpha
                                     << (deviceFeature.multiDrawIndirect == VK_TRUE);
     LOGGER_ENDL;
 }

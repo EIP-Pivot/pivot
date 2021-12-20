@@ -49,7 +49,7 @@ uint32_t VulkanSwapchain::getNextImageIndex(const uint64_t maxDelay, vk::Semapho
     vk::Result result;
 
     std::tie(result, imageIndex) = device->acquireNextImageKHR(swapChain, maxDelay, semaphore);
-    vk_utils::vk_try(result);
+    pivot::graphics::vk_utils::vk_try(result);
     return imageIndex;
 }
 

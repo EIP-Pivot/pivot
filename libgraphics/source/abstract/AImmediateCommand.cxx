@@ -28,7 +28,7 @@ void AImmediateCommand::destroy()
 
 void AImmediateCommand::immediateCommand(std::function<void(vk::CommandBuffer &)> function)
 {
-    DEBUG_FUNCTION
+    assert(immediateCommandPool && immediateFence && immediateQueue);
     vk::CommandBufferAllocateInfo cmdAllocInfo{
         .commandPool = immediateCommandPool,
         .level = vk::CommandBufferLevel::ePrimary,

@@ -21,7 +21,7 @@ endif()
 FetchContent_Declare(
     vma
     GIT_REPOSITORY https://github.com/malte-v/VulkanMemoryAllocator-Hpp.git
-    GIT_TAG 3a61240a5354ce56c222969a69825aabb6ba0a21
+    GIT_TAG 658904b881a6ca8b7dd56b81aca7d81b410060a5
 )
 if (NOT vma_POPULATED)
     message(STATUS "Populating vma")
@@ -119,10 +119,9 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/PipelineBuilder.cxx
                                    source/VulkanLoader.cxx
                                    source/VulkanSwapchain.cxx
+                                   source/AssetsStorage.cxx
                                    source/VulkanApplication/VulkanApplication.cxx
                                    source/VulkanApplication/VulkanApplication_init.cxx
-                                   source/VulkanApplication/VulkanApplication_helper.cxx
-                                   source/VulkanApplication/VulkanApplication_loader.cxx
                                    source/VulkanBase/VulkanBase.cxx
                                    source/VulkanBase/VulkanBase_init.cxx
                                    source/VulkanBase/VulkanBase_static.cxx

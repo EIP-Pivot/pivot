@@ -8,7 +8,7 @@ VulkanBase::VulkanBase(const std::string &windowName)
 {
 }
 
-VulkanBase::~VulkanBase() { destroy(); }
+VulkanBase::~VulkanBase() {}
 
 void VulkanBase::init(const std::vector<const char *> &instanceExtensions,
                       const std::vector<const char *> &deviceExtensions,
@@ -24,6 +24,11 @@ void VulkanBase::init(const std::vector<const char *> &instanceExtensions,
     abstract::AImmediateCommand::init(device, queueIndices.transferFamily.value());
 }
 
-void VulkanBase::destroy() { baseDeletionQueue.flush(); }
+void VulkanBase::destroy()
+{
+    DEBUG_FUNCTION;
+    abstract::AImmediateCommand::destroy();
+    baseDeletionQueue.flush();
+}
 
 }    // namespace pivot::graphics

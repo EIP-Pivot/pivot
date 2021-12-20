@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pivot/graphics/AssetStorage.hxx"
 #include "pivot/graphics/types/Transform.hxx"
 #include "pivot/graphics/types/common.hxx"
 
@@ -29,8 +30,7 @@ struct UniformBufferObject {
     /// @param info The object information
     /// @param imageStor The texture storage, used to resolve the name of the texture
     /// @param materialStor The material storage, used to resolve material name
-    UniformBufferObject(const ObjectInformation &info, const ImageStorage &imageStor,
-                        const MaterialStorage &materialStor);
+    UniformBufferObject(const ObjectInformation &info, const pivot::graphics::AssetStorage &imageStor);
     /// The model matrix
     glm::mat4 modelMatrix;
     /// The index of the texture in the buffer

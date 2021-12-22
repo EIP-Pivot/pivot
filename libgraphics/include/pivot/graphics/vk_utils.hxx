@@ -41,6 +41,8 @@ constexpr bool vk_try_mutiple(const vk::Result result, const FailedValue... fail
 
 std::vector<std::byte> readFile(const std::string &filename);
 vk::ShaderModule createShaderModule(const vk::Device &device, const std::vector<std::byte> &code);
+
+vk::SampleCountFlagBits getMexUsableSampleCount(vk::PhysicalDevice &physical_device);
 vk::Format findSupportedFormat(vk::PhysicalDevice &gpu, const std::vector<vk::Format> &candidates,
                                vk::ImageTiling tiling, vk::FormatFeatureFlags features);
 bool hasStencilComponent(vk::Format format) noexcept;

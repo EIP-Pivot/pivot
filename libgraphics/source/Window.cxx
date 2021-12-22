@@ -51,14 +51,12 @@ void Window::captureCursor(bool capture) noexcept
 
 bool Window::captureCursor() noexcept { return glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED; }
 
-// static
 std::vector<const char *> Window::getRequiredExtensions()
 {
     uint32_t glfwExtensionCount = 0;
     const char **glfwExtentsions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
-    std::vector<const char *> extensions(glfwExtentsions, glfwExtentsions + glfwExtensionCount);
-    return extensions;
+    return {glfwExtentsions, glfwExtentsions + glfwExtensionCount};
 }
 
 void Window::setKeyCallback(GLFWkeyfun &&f) noexcept { glfwSetKeyCallback(window, f); }
@@ -95,13 +93,13 @@ void Window::error_callback(int code, const char *msg) noexcept
     LOGGER_ENDL;
 }
 
-void cursor_callback(GLFWwindow *win, double xpos, double ypos)
+void Window::cursor_callback(GLFWwindow *win, double xpos, double ypos)
 {
     auto window = (Window *)glfwGetWindowUserPointer(win);
     if (window->mouseCallback) (*window->mouseCallback)(*window, glm::dvec2(xpos, ypos));
 }
 
-void keyboard_callback(GLFWwindow *win, int key, int, int action, int)
+void Window::keyboard_callback(GLFWwindow *win, int key, int, int action, int)
 {
     auto window = (Window *)glfwGetWindowUserPointer(win);
     auto _key = static_cast<Window::Key>(key);

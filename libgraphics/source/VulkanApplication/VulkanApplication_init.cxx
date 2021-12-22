@@ -1,7 +1,8 @@
+#include "pivot/graphics/VulkanApplication.hxx"
+
 #include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/PipelineBuilder.hxx"
 #include "pivot/graphics/QueueFamilyIndices.hxx"
-#include "pivot/graphics/VulkanApplication.hxx"
 #include "pivot/graphics/types/Material.hxx"
 #include "pivot/graphics/types/UniformBufferObject.hxx"
 #include "pivot/graphics/vk_init.hxx"
@@ -14,147 +15,6 @@
 #include <map>
 #include <numeric>
 #include <set>
-
-#define DEBUG_STRING_ARRAY(BUFFER, MESSAGE, ARRAY) \
-    auto &l = BUFFER;                              \
-    l << MESSAGE << ": [";                         \
-    for (const auto &i: ARRAY) {                   \
-        l << i;                                    \
-        if (i != ARRAY.back()) l << ", ";          \
-    }                                              \
-    l << "]";                                      \
-    LOGGER_ENDL;
-
-void VulkanApplication::createInstance()
-{
-    DEBUG_FUNCTION
-    auto debugInfo = vk_init::populateDebugUtilsMessengerCreateInfoEXT(&VulkanApplication::debugCallback);
-    auto extensions = Window::getRequiredExtensions();
-    if (bEnableValidationLayers) { extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME); }
-
-    vk::ApplicationInfo applicationInfo{
-        .apiVersion = VK_API_VERSION_1_2,
-    };
-    vk::InstanceCreateInfo createInfo{
-        .pApplicationInfo = &applicationInfo,
-        .enabledExtensionCount = static_cast<uint32_t>(extensions.size()),
-        .ppEnabledExtensionNames = extensions.data(),
-    };
-    if (bEnableValidationLayers) {
-        createInfo.pNext = &debugInfo;
-        createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-        createInfo.ppEnabledLayerNames = validationLayers.data();
-    }
-    DEBUG_STRING_ARRAY(logger->info("INSTANCE"), "Instance extensions: ", extensions);
-    this->VulkanLoader::createInstance(createInfo);
-    mainDeletionQueue.push([&] { instance.destroy(); });
-}
-
-void VulkanApplication::createDebugMessenger()
-{
-    DEBUG_FUNCTION
-    if (!bEnableValidationLayers) return;
-    auto debugInfo = vk_init::populateDebugUtilsMessengerCreateInfoEXT(&VulkanApplication::debugCallback);
-    debugUtilsMessenger = instance.createDebugUtilsMessengerEXT(debugInfo);
-
-    logger->warn("Validation Layers") << "Validation Layers are activated !";
-    LOGGER_ENDL;
-    mainDeletionQueue.push([&] { instance.destroyDebugUtilsMessengerEXT(debugUtilsMessenger); });
-}
-
-void VulkanApplication::pickPhysicalDevice()
-{
-    DEBUG_FUNCTION
-    std::vector<vk::PhysicalDevice> gpus = instance.enumeratePhysicalDevices();
-    std::multimap<uint32_t, vk::PhysicalDevice> ratedGpus;
-
-    for (const auto &i: gpus) {
-        if (isDeviceSuitable(i, surface)) { ratedGpus.insert(std::make_pair(rateDeviceSuitability(i), i)); }
-    }
-    if (ratedGpus.rbegin()->first > 0) {
-        physical_device = ratedGpus.rbegin()->second;
-        maxMsaaSample = getMexUsableSampleCount(physical_device);
-    } else {
-        throw VulkanException("failed to find a suitable GPU!");
-    }
-
-    DEBUG_STRING_ARRAY(logger->info("PHYSICAL DEVICE"), "Device extensions", deviceExtensions);
-    const auto deviceProperties = physical_device.getProperties();
-    logger->info("PHYSICAL DEVICE") << vk::to_string(deviceProperties.deviceType) << ": "
-                                    << deviceProperties.deviceName;
-    LOGGER_ENDL;
-
-    deviceFeature = physical_device.getFeatures();
-    logger->info("PHYSICAL DEVICE") << "multiDrawIndirect available: " << std::boolalpha
-                                    << (deviceFeature.multiDrawIndirect == VK_TRUE);
-    LOGGER_ENDL;
-}
-
-void VulkanApplication::createSurface()
-{
-    DEBUG_FUNCTION
-    surface = window.createSurface(instance);
-    mainDeletionQueue.push([&] { instance.destroy(surface); });
-}
-
-void VulkanApplication::createLogicalDevice()
-{
-    DEBUG_FUNCTION
-    float fQueuePriority = 1.0f;
-    queueIndices = QueueFamilyIndices::findQueueFamilies(physical_device, surface);
-    std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
-    std::set<uint32_t> uniqueQueueFamilies{queueIndices.graphicsFamily.value(), queueIndices.presentFamily.value(),
-                                           queueIndices.transferFamily.value()};
-
-    for (const uint32_t queueFamily: uniqueQueueFamilies) {
-        queueCreateInfos.push_back(vk_init::populateDeviceQueueCreateInfo(1, queueFamily, fQueuePriority));
-    }
-
-    vk::PhysicalDeviceDescriptorIndexingFeatures descriptorIndex{
-        .shaderSampledImageArrayNonUniformIndexing = VK_TRUE,
-        .descriptorBindingPartiallyBound = VK_TRUE,
-        .descriptorBindingVariableDescriptorCount = VK_TRUE,
-        .runtimeDescriptorArray = VK_TRUE,
-    };
-    vk::PhysicalDeviceVulkan11Features v11Features{
-        .pNext = &descriptorIndex,
-        .shaderDrawParameters = VK_TRUE,
-    };
-
-    vk::PhysicalDeviceFeatures deviceFeature{
-        .multiDrawIndirect = this->deviceFeature.multiDrawIndirect,
-        .drawIndirectFirstInstance = VK_TRUE,
-        .fillModeNonSolid = VK_TRUE,
-        .samplerAnisotropy = VK_TRUE,
-    };
-    vk::DeviceCreateInfo createInfo{
-        .pNext = &v11Features,
-        .queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size()),
-        .pQueueCreateInfos = queueCreateInfos.data(),
-        .enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size()),
-        .ppEnabledExtensionNames = deviceExtensions.data(),
-        .pEnabledFeatures = &deviceFeature,
-    };
-    this->VulkanLoader::createLogicalDevice(physical_device, createInfo);
-    mainDeletionQueue.push([&] { device.destroy(); });
-
-    graphicsQueue = device.getQueue(queueIndices.graphicsFamily.value(), 0);
-    presentQueue = device.getQueue(queueIndices.presentFamily.value(), 0);
-}
-
-void VulkanApplication::createAllocator()
-{
-    DEBUG_FUNCTION
-    vma::AllocatorCreateInfo allocatorInfo;
-    allocatorInfo.physicalDevice = physical_device;
-    allocatorInfo.device = device;
-    allocatorInfo.instance = instance;
-    allocatorInfo.vulkanApiVersion = 0;
-    allocatorInfo.frameInUseCount = MAX_FRAME_FRAME_IN_FLIGHT;
-
-    allocator = vma::createAllocator(allocatorInfo);
-    mainDeletionQueue.push([&] { allocator.destroy(); });
-}
 
 void VulkanApplication::createRenderPass()
 {

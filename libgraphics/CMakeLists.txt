@@ -121,9 +121,11 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/VulkanSwapchain.cxx
                                    source/VulkanApplication/VulkanApplication.cxx
                                    source/VulkanApplication/VulkanApplication_init.cxx
-                                   source/VulkanApplication/VulkanApplication_static.cxx
                                    source/VulkanApplication/VulkanApplication_helper.cxx
                                    source/VulkanApplication/VulkanApplication_loader.cxx
+                                   source/VulkanBase/VulkanBase.cxx
+                                   source/VulkanBase/VulkanBase_init.cxx
+                                   source/VulkanBase/VulkanBase_static.cxx
                                    source/abstract/AImmediateCommand.cxx
                                    source/culling.cxx
                                    source/math.cxx

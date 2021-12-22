@@ -9,10 +9,10 @@
 
 #include <algorithm>
 
-VulkanApplication::VulkanApplication(): VulkanLoader(), window("Vulkan", 800, 600)
+VulkanApplication::VulkanApplication(): pivot::graphics::VulkanBase()
 {
     DEBUG_FUNCTION;
-    if (bEnableValidationLayers && !checkValidationLayerSupport()) {
+    if (bEnableValidationLayers && !VulkanBase::checkValidationLayerSupport(validationLayers)) {
         logger->warn("Vulkan Instance") << "Validation layers requested, but not available!";
         LOGGER_ENDL;
         bEnableValidationLayers = false;
@@ -29,9 +29,141 @@ VulkanApplication::~VulkanApplication()
     pivot::graphics::abstract::AImmediateCommand::destroy();
     swapchainDeletionQueue.flush();
     mainDeletionQueue.flush();
+    VulkanBase::destroy();
 }
 
-void VulkanApplication::init() { initVulkanRessources(); }
+void VulkanApplication::init()
+{
+    VulkanBase::init({}, deviceExtensions, validationLayers);
+    initVulkanRessources();
+}
+
+VulkanApplication::SceneObjectsGPUData
+VulkanApplication::buildSceneObjectsGPUData(const std::vector<std::reference_wrapper<const RenderObject>> &objects,
+                                            const gpuObject::CameraData &camera)
+{
+    if (objects.empty()) return {};
+    if (objects.size() >= MAX_OBJECT) throw TooManyObjectInSceneError();
+
+    std::vector<DrawBatch> packedDraws;
+    std::vector<gpuObject::UniformBufferObject> objectGPUData;
+    unsigned drawCount = 0;
+
+    for (const auto &object: objects) {
+        auto boundingBox = meshesBoundingBoxes.at(object.get().meshID);
+        if (pivot::graphics::culling::should_object_be_rendered(object.get().objectInformation.transform, boundingBox,
+                                                                camera)) {
+            packedDraws.push_back({
+                .meshId = object.get().meshID,
+                .first = drawCount++,
+                .count = 1,
+            });
+            objectGPUData.push_back(
+                gpuObject::UniformBufferObject(object.get().objectInformation, loadedTextures, materials));
+        }
+    }
+    return {packedDraws, objectGPUData};
+}
+
+void VulkanApplication::buildIndirectBuffers(const std::vector<DrawBatch> &packedDraws, Frame &frame)
+{
+    auto *sceneData = (VkDrawIndexedIndirectCommand *)allocator.mapMemory(frame.indirectBuffer.memory);
+
+    for (uint32_t i = 0; i < packedDraws.size(); i++) {
+        const auto &mesh = loadedMeshes.at(packedDraws[i].meshId);
+
+        sceneData[i].firstIndex = mesh.indicesOffset;
+        sceneData[i].indexCount = mesh.indicesSize;
+        sceneData[i].vertexOffset = mesh.verticiesOffset;
+        sceneData[i].instanceCount = 1;
+        sceneData[i].firstInstance = i;
+    }
+    allocator.unmapMemory(frame.indirectBuffer.memory);
+}
+
+void VulkanApplication::initVulkanRessources()
+{
+    DEBUG_FUNCTION
+
+    createSyncStructure();
+    createIndirectBuffer();
+    createDescriptorSetLayout();
+    createTextureDescriptorSetLayout();
+    createPipelineCache();
+    createPipelineLayout();
+    createCommandPool();
+    createDescriptorPool();
+    createImGuiDescriptorPool();
+
+    auto size = window.getSize();
+    swapchain.create(size, physical_device, device, surface);
+
+    createUniformBuffers();
+    createRenderPass();
+    createPipeline();
+    createDepthResources();
+    createColorResources();
+    createFramebuffers();
+    createDescriptorSets();
+
+    this->pushModelsToGPU();
+    this->pushTexturesToGPU();
+
+    createTextureSampler();
+    createTextureDescriptorSets();
+    createCommandBuffers();
+    initDearImGui();
+
+    materials["white"] = {
+        .ambientColor = {1.0f, 1.0f, 1.0f, 1.0f},
+        .diffuse = {1.0f, 1.0f, 1.0f, 1.0f},
+        .specular = {1.0f, 1.0f, 1.0f, 1.0f},
+    };
+    postInitialization();
+}
+
+void VulkanApplication::postInitialization()
+{
+    DEBUG_FUNCTION
+
+    std::vector<gpuObject::Material> materialStor;
+    std::transform(materials.begin(), materials.end(), std::back_inserter(materialStor),
+                   [](const auto &i) { return i.second; });
+
+    for (auto &frame: frames) { copyBuffer(frame.data.materialBuffer, materialStor); }
+}
+
+void VulkanApplication::recreateSwapchain()
+{
+    DEBUG_FUNCTION
+
+    /// do not recreate the swapchain if the window size is 0
+    vk::Extent2D size = window.getSize();
+    while (size.width == 0 || size.height == 0) {
+        window.pollEvent();
+        size = window.getSize();
+    }
+
+    logger->info("VulkanSwapchain") << "Recreating swapchain...";
+    LOGGER_ENDL;
+
+    device.waitIdle();
+    swapchainDeletionQueue.flush();
+
+    swapchain.recreate(size, physical_device, device, surface);
+    createRenderPass();
+    createPipeline();
+    createColorResources();
+    createDepthResources();
+    createFramebuffers();
+    createCommandBuffers();
+    initDearImGui();
+    logger->info("Swapchain recreation") << "New height = " << swapchain.getSwapchainExtent().height
+                                         << ", New width =" << swapchain.getSwapchainExtent().width
+                                         << ", numberOfImage = " << swapchain.nbOfImage();
+    LOGGER_ENDL;
+    postInitialization();
+}
 
 void VulkanApplication::draw(const std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
                              const gpuObject::CameraData &gpuCamera
@@ -162,139 +294,4 @@ try {
     currentFrame = (currentFrame + 1) % MAX_FRAME_FRAME_IN_FLIGHT;
 } catch (const vk::OutOfDateKHRError &) {
     return recreateSwapchain();
-}
-
-VulkanApplication::SceneObjectsGPUData
-VulkanApplication::buildSceneObjectsGPUData(const std::vector<std::reference_wrapper<const RenderObject>> &objects,
-                                            const gpuObject::CameraData &camera)
-{
-    if (objects.empty()) return {};
-    if (objects.size() >= MAX_OBJECT) throw TooManyObjectInSceneError();
-
-    std::vector<DrawBatch> packedDraws;
-    std::vector<gpuObject::UniformBufferObject> objectGPUData;
-    unsigned drawCount = 0;
-
-    for (const auto &object: objects) {
-        auto boundingBox = meshesBoundingBoxes.at(object.get().meshID);
-        if (pivot::graphics::culling::should_object_be_rendered(object.get().objectInformation.transform, boundingBox,
-                                                                camera)) {
-            packedDraws.push_back({
-                .meshId = object.get().meshID,
-                .first = drawCount++,
-                .count = 1,
-            });
-            objectGPUData.push_back(
-                gpuObject::UniformBufferObject(object.get().objectInformation, loadedTextures, materials));
-        }
-    }
-    return {packedDraws, objectGPUData};
-}
-
-void VulkanApplication::buildIndirectBuffers(const std::vector<DrawBatch> &packedDraws, Frame &frame)
-{
-    auto *sceneData = (VkDrawIndexedIndirectCommand *)allocator.mapMemory(frame.indirectBuffer.memory);
-
-    for (uint32_t i = 0; i < packedDraws.size(); i++) {
-        const auto &mesh = loadedMeshes.at(packedDraws[i].meshId);
-
-        sceneData[i].firstIndex = mesh.indicesOffset;
-        sceneData[i].indexCount = mesh.indicesSize;
-        sceneData[i].vertexOffset = mesh.verticiesOffset;
-        sceneData[i].instanceCount = 1;
-        sceneData[i].firstInstance = i;
-    }
-    allocator.unmapMemory(frame.indirectBuffer.memory);
-}
-
-void VulkanApplication::initVulkanRessources()
-{
-    DEBUG_FUNCTION
-    createInstance();
-    createDebugMessenger();
-    createSurface();
-    pickPhysicalDevice();
-    createLogicalDevice();
-
-    pivot::graphics::abstract::AImmediateCommand::init(device, queueIndices.transferFamily.value());
-
-    createAllocator();
-    createSyncStructure();
-    createIndirectBuffer();
-    createDescriptorSetLayout();
-    createTextureDescriptorSetLayout();
-    createPipelineCache();
-    createPipelineLayout();
-    createCommandPool();
-    createDescriptorPool();
-    createImGuiDescriptorPool();
-
-    auto size = window.getSize();
-    swapchain.create(size, physical_device, device, surface);
-
-    createUniformBuffers();
-    createRenderPass();
-    createPipeline();
-    createDepthResources();
-    createColorResources();
-    createFramebuffers();
-    createDescriptorSets();
-
-    this->pushModelsToGPU();
-    this->pushTexturesToGPU();
-
-    createTextureSampler();
-    createTextureDescriptorSets();
-    createCommandBuffers();
-    initDearImGui();
-
-    materials["white"] = {
-        .ambientColor = {1.0f, 1.0f, 1.0f, 1.0f},
-        .diffuse = {1.0f, 1.0f, 1.0f, 1.0f},
-        .specular = {1.0f, 1.0f, 1.0f, 1.0f},
-    };
-    postInitialization();
-}
-
-void VulkanApplication::postInitialization()
-{
-    DEBUG_FUNCTION
-
-    std::vector<gpuObject::Material> materialStor;
-    std::transform(materials.begin(), materials.end(), std::back_inserter(materialStor),
-                   [](const auto &i) { return i.second; });
-
-    for (auto &frame: frames) { copyBuffer(frame.data.materialBuffer, materialStor); }
-}
-
-void VulkanApplication::recreateSwapchain()
-{
-    DEBUG_FUNCTION
-
-    /// do not recreate the swapchain if the window size is 0
-    vk::Extent2D size = window.getSize();
-    while (size.width == 0 || size.height == 0) {
-        window.pollEvent();
-        size = window.getSize();
-    }
-
-    logger->info("VulkanSwapchain") << "Recreating swapchain...";
-    LOGGER_ENDL;
-
-    device.waitIdle();
-    swapchainDeletionQueue.flush();
-
-    swapchain.recreate(size, physical_device, device, surface);
-    createRenderPass();
-    createPipeline();
-    createColorResources();
-    createDepthResources();
-    createFramebuffers();
-    createCommandBuffers();
-    initDearImGui();
-    logger->info("Swapchain recreation") << "New height = " << swapchain.getSwapchainExtent().height
-                                         << ", New width =" << swapchain.getSwapchainExtent().width
-                                         << ", numberOfImage = " << swapchain.nbOfImage();
-    LOGGER_ENDL;
-    postInitialization();
 }

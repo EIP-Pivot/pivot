@@ -21,4 +21,9 @@ struct CameraData {
     /// The camera projected view matrix
     glm::mat4 viewproj;
 };
+
+/// The size of the required pushConstants
+constexpr const auto pushConstantsSize = sizeof(CameraData);
+
 }    // namespace gpuObject
+constexpr const uint8_t MAX_FRAME_FRAME_IN_FLIGHT = 3;

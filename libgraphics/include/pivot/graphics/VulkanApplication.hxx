@@ -2,10 +2,9 @@
 
 #include "pivot/graphics/DeletionQueue.hxx"
 #include "pivot/graphics/QueueFamilyIndices.hxx"
-#include "pivot/graphics/VulkanLoader.hxx"
+#include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/VulkanSwapchain.hxx"
 #include "pivot/graphics/Window.hxx"
-#include "pivot/graphics/abstract/AImmediateCommand.hxx"
 #include "pivot/graphics/types/Frame.hxx"
 #include "pivot/graphics/types/Material.hxx"
 #include "pivot/graphics/types/Mesh.hxx"
@@ -46,8 +45,6 @@ const std::vector<const char *> deviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 };
 
-constexpr uint8_t MAX_FRAME_FRAME_IN_FLIGHT = 3;
-
 /// @class VulkanApplication
 /// @brief Main class of the graphics engine
 ///
@@ -57,7 +54,7 @@ constexpr uint8_t MAX_FRAME_FRAME_IN_FLIGHT = 3;
 ///
 /// You can now call the draw() method when you are ready to render a new frame
 
-class VulkanApplication : public VulkanLoader, public pivot::graphics::abstract::AImmediateCommand
+class VulkanApplication : public pivot::graphics::VulkanBase
 {
 private:
 #ifdef NDEBUG
@@ -131,15 +128,6 @@ private:
                                vk::ImageLayout newLayout, uint32_t mipLevels = 1);
     void generateMipmaps(vk::Image &image, vk::Format imageFormat, vk::Extent3D size, uint32_t mipLevel);
 
-    static bool checkValidationLayerSupport();
-    static uint32_t debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                                  VkDebugUtilsMessageTypeFlagsEXT messageType,
-                                  const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *);
-    static vk::SampleCountFlagBits getMexUsableSampleCount(vk::PhysicalDevice &physical_device);
-    static bool isDeviceSuitable(const vk::PhysicalDevice &gpu, const vk::SurfaceKHR &surface);
-    static uint32_t rateDeviceSuitability(const vk::PhysicalDevice &device);
-    static bool checkDeviceExtensionSupport(const vk::PhysicalDevice &device);
-
     SceneObjectsGPUData buildSceneObjectsGPUData(const std::vector<std::reference_wrapper<const RenderObject>> &objects,
                                                  const gpuObject::CameraData &camera);
     void buildIndirectBuffers(const std::vector<DrawBatch> &scene, Frame &frame);
@@ -150,12 +138,6 @@ private:
 
     AllocatedBuffer createBuffer(uint32_t allocSize, vk::BufferUsageFlags usage, vma::MemoryUsage memoryUsage);
 
-    void createInstance();
-    void createDebugMessenger();
-    void createAllocator();
-    void createSurface();
-    void pickPhysicalDevice();
-    void createLogicalDevice();
     void createUniformBuffers();
     void createSyncStructure();
 
@@ -182,9 +164,6 @@ private:
     void initDearImGui();
 
 public:
-    /// The Window used to render 3D objects
-    Window window;
-
     /// This will the store the textures, 3D models before behind uploaded to the GPU
     struct {
         std::unordered_map<std::string, std::vector<std::byte>> loadedTextures;
@@ -204,10 +183,6 @@ public:
 private:
     /// @cond
     uint32_t mipLevels = 0;
-    vk::SampleCountFlagBits maxMsaaSample = vk::SampleCountFlagBits::e1;
-    vk::PhysicalDeviceFeatures deviceFeature{};
-    QueueFamilyIndices queueIndices;
-
     AllocatedBuffer vertexBuffers{};
     AllocatedBuffer indicesBuffers{};
 
@@ -219,15 +194,7 @@ private:
 
     DeletionQueue mainDeletionQueue;
     DeletionQueue swapchainDeletionQueue;
-    vk::DebugUtilsMessengerEXT debugUtilsMessenger = VK_NULL_HANDLE;
-    vk::PhysicalDevice physical_device = VK_NULL_HANDLE;
-    vma::Allocator allocator = VK_NULL_HANDLE;
     VulkanSwapchain swapchain;
-    vk::SurfaceKHR surface = VK_NULL_HANDLE;
-
-    //  Queues
-    vk::Queue graphicsQueue = VK_NULL_HANDLE;
-    vk::Queue presentQueue = VK_NULL_HANDLE;
 
     uint8_t currentFrame = 0;
     Frame frames[MAX_FRAME_FRAME_IN_FLIGHT];

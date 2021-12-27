@@ -18,7 +18,10 @@ class DenseTypedComponentArray : public IComponentArray
 {
 public:
     /// Creates a DenseTypedComponentArray from the Description of its component
-    DenseTypedComponentArray(Description description): m_description(description) {}
+    DenseTypedComponentArray(Description description)
+        : m_description(description), m_component_exist(MAX_ENTITIES, false), m_components(MAX_ENTITIES)
+    {
+    }
 
     /// \copydoc pivot::ecs::component::IComponentArray::getDescription()
     const Description &getDescription() const override { return m_description; }

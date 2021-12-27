@@ -1,10 +1,12 @@
 #pragma once
 
+#include <any>
+#include <memory>
+#include <ranges>
+
 #include "pivot/ecs/Core/Component/array.hxx"
 #include "pivot/ecs/Core/EcsException.hxx"
 #include "pivot/ecs/Core/types.hxx"
-#include <any>
-#include <memory>
 
 namespace pivot::ecs::component
 {
@@ -46,7 +48,23 @@ public:
     void EntityDestroyed(Entity entity);
 
 private:
-    std::vector<std::unique_ptr<IComponentArray>> m_componentArrays;
+    using component_array_type = std::vector<std::unique_ptr<IComponentArray>>;
+    using value_type = std::pair<const Description &, std::optional<std::any>>;
+
+    component_array_type m_componentArrays;
     std::map<std::string, ComponentId, std::less<>> m_componentNameToIndex;
+
+public:
+    /// Returns a range containing all components of the entity
+    auto GetAllComponents(Entity entity)
+    {
+        auto components =
+            std::views::transform(m_componentArrays, [entity](std::unique_ptr<IComponentArray> &component_array) {
+                return std::make_pair(component_array->getDescription(), component_array->getValueForEntity(entity));
+            });
+        auto filtered = std::views::filter(components, [](auto pair) { return pair.second.has_value(); });
+        return std::views::transform(filtered,
+                                     [](auto pair) { return std::make_pair(pair.first, pair.second.value()); });
+    }
 };
 }    // namespace pivot::ecs::component

@@ -1,7 +1,7 @@
 #include "pivot/graphics/VulkanApplication.hxx"
 
 #include "pivot/graphics/DebugMacros.hxx"
-#include "pivot/graphics/PipelineBuilder.hxx"
+#include "pivot/graphics/PipelineBuilders/GraphicsPipelineBuilder.hxx"
 #include "pivot/graphics/QueueFamilyIndices.hxx"
 #include "pivot/graphics/types/Material.hxx"
 #include "pivot/graphics/types/UniformBufferObject.hxx"
@@ -118,42 +118,16 @@ void VulkanApplication::createPipelineLayout()
 void VulkanApplication::createPipeline()
 {
     DEBUG_FUNCTION
-    auto vertShaderCode = pivot::graphics::vk_utils::readFile("shaders/triangle.vert.spv");
-    auto fragShaderCode = pivot::graphics::vk_utils::readFile("shaders/triangle.frag.spv");
 
-    auto vertShaderModule = pivot::graphics::vk_utils::createShaderModule(device, vertShaderCode);
-    auto fragShaderModule = pivot::graphics::vk_utils::createShaderModule(device, fragShaderCode);
+    pivot::graphics::GraphicsPipelineBuilder builder(swapchain.getSwapchainExtent());
+    builder.setPipelineLayout(pipelineLayout)
+        .setRenderPass(renderPass)
+        .setMsaaSample(maxMsaaSample)
+        .setFaceCulling(vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise)
+        .setVertexShaderPath("shaders/triangle.vert.spv")
+        .setFragmentShaderPath("shaders/triangle.frag.spv");
+    graphicsPipeline = builder.build(device, pipelineCache);
 
-    std::vector<vk::VertexInputBindingDescription> binding = {Vertex::getBindingDescription()};
-    std::vector<vk::VertexInputAttributeDescription> attribute = Vertex::getAttributeDescriptons();
-
-    PipelineBuilder builder;
-    builder.pipelineLayout = pipelineLayout;
-    builder.shaderStages.push_back(
-        vk_init::populateVkPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eVertex, vertShaderModule));
-    builder.shaderStages.push_back(
-        vk_init::populateVkPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment, fragShaderModule));
-    builder.vertexInputInfo = vk_init::populateVkPipelineVertexInputStateCreateInfo(binding, attribute);
-    builder.inputAssembly =
-        vk_init::populateVkPipelineInputAssemblyCreateInfo(vk::PrimitiveTopology::eTriangleList, VK_FALSE);
-    builder.multisampling = vk_init::populateVkPipelineMultisampleStateCreateInfo(maxMsaaSample);
-    builder.depthStencil = vk_init::populateVkPipelineDepthStencilStateCreateInfo();
-    builder.viewport.x = 0.0f;
-    builder.viewport.y = 0.0f;
-    builder.viewport.width = static_cast<float>(swapchain.getSwapchainExtent().width);
-    builder.viewport.height = static_cast<float>(swapchain.getSwapchainExtent().height);
-    builder.viewport.minDepth = 0.0f;
-    builder.viewport.maxDepth = 1.0f;
-    builder.scissor.offset = vk::Offset2D{0, 0};
-    builder.scissor.extent = swapchain.getSwapchainExtent();
-    builder.colorBlendAttachment = vk_init::populateVkPipelineColorBlendAttachmentState();
-    builder.rasterizer = vk_init::populateVkPipelineRasterizationStateCreateInfo(vk::PolygonMode::eFill);
-    builder.rasterizer.cullMode = vk::CullModeFlagBits::eBack;
-    builder.rasterizer.frontFace = vk::FrontFace::eCounterClockwise;
-    graphicsPipeline = builder.build(device, renderPass, pipelineCache);
-
-    device.destroy(fragShaderModule);
-    device.destroy(vertShaderModule);
     swapchainDeletionQueue.push([&] { device.destroy(graphicsPipeline); });
 }
 

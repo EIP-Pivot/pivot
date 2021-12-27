@@ -46,9 +46,20 @@ TEST_CASE("A scene can register components and add entities", "[component][scene
     REQUIRE(!cm.GetComponentId("TestComponent").has_value());
     cm.RegisterComponent(description);
     REQUIRE(cm.GetComponentId("TestComponent").has_value());
+    auto test_component_id = cm.GetComponentId("TestComponent").value();
 
     const auto entityName = "Test entity";
     Entity entity;
     REQUIRE_NOTHROW(entity = scene.CreateEntity(entityName));
-    // REQUIRE(scene.getEntityName(entity) == entityName);
+    REQUIRE(scene.getEntityName(entity) == entityName);
+
+    REQUIRE(!cm.GetComponent(entity, test_component_id).has_value());
+    cm.AddComponent(entity, std::make_any<TestComponent>(42), test_component_id);
+    auto test_component_value = cm.GetComponent(entity, test_component_id);
+    REQUIRE(test_component_value.has_value());
+    REQUIRE(std::any_cast<TestComponent>(test_component_value.value()).data == 42);
+
+    for (auto [description, value]: cm.GetAllComponents(entity)) {
+        REQUIRE((description.name == "TestComponent" || description.name == "Tag"));
+    }
 }

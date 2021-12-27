@@ -57,11 +57,6 @@ const std::vector<const char *> deviceExtensions = {
 class VulkanApplication : public pivot::graphics::VulkanBase
 {
 private:
-#ifdef NDEBUG
-    bool bEnableValidationLayers = false;
-#else
-    bool bEnableValidationLayers = true;
-#endif
     struct DrawBatch {
         std::string meshId;
         uint32_t first;

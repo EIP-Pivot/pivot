@@ -73,15 +73,15 @@ protected:
     /// The queue used for presenting, can be the same as the graphics queue
     vk::Queue presentQueue = VK_NULL_HANDLE;
 
-private:
-    vk::DebugUtilsMessengerEXT debugUtilsMessenger = VK_NULL_HANDLE;
-    DeletionQueue baseDeletionQueue;
-
 #ifdef NDEBUG
     bool bEnableValidationLayers = false;
 #else
     bool bEnableValidationLayers = true;
 #endif
+
+private:
+    vk::DebugUtilsMessengerEXT debugUtilsMessenger = VK_NULL_HANDLE;
+    DeletionQueue baseDeletionQueue;
 };
 
 }    // namespace pivot::graphics

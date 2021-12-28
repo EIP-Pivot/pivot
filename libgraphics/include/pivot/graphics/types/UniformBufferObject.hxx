@@ -6,7 +6,6 @@
 
 #include <glm/mat4x4.hpp>
 #include <string>
-#include <variant>
 
 /// @class ObjectInformation
 ///
@@ -28,9 +27,8 @@ namespace gpuObject
 /// @brief Hold all the information of the 3D object
 struct UniformBufferObject {
     /// @param info The object information
-    /// @param imageStor The texture storage, used to resolve the name of the texture
-    /// @param materialStor The material storage, used to resolve material name
-    UniformBufferObject(const ObjectInformation &info, const pivot::graphics::AssetStorage &imageStor);
+    /// @param assetStorage The AssetStorage used to get the indexes
+    UniformBufferObject(const ObjectInformation &info, const pivot::graphics::AssetStorage &assetStorage);
     /// The model matrix
     glm::mat4 modelMatrix;
     /// The index of the texture in the buffer

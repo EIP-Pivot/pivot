@@ -73,6 +73,7 @@ protected:
     /// The queue used for presenting, can be the same as the graphics queue
     vk::Queue presentQueue = VK_NULL_HANDLE;
 
+    /// Indicate if Vulkan Validation layers are activated
 #ifdef NDEBUG
     bool bEnableValidationLayers = false;
 #else

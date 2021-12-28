@@ -8,12 +8,10 @@
 namespace pivot::graphics
 {
 
-GraphicsPipelineBuilder::GraphicsPipelineBuilder()
-    : GraphicsPipelineBuilder(vk::Extent2D{0, 0}) {}    // namespace pivot::graphics
-
 GraphicsPipelineBuilder::GraphicsPipelineBuilder(const vk::Extent2D &extent)
     : inputAssembly(vk_init::populateVkPipelineInputAssemblyCreateInfo(vk::PrimitiveTopology::eTriangleList, VK_FALSE)),
       colorBlendAttachment(vk_init::populateVkPipelineColorBlendAttachmentState()),
+      multisampling(vk_init::populateVkPipelineMultisampleStateCreateInfo(vk::SampleCountFlagBits::e1)),
       depthStencil(vk_init::populateVkPipelineDepthStencilStateCreateInfo()),
       rasterizer(vk_init::populateVkPipelineRasterizationStateCreateInfo(vk::PolygonMode::eFill)),
       viewport(vk::Viewport{

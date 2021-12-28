@@ -131,6 +131,7 @@ private:
     void initDearImGui();
 
 public:
+    /// The application asssets storage
     pivot::graphics::AssetStorage assetStorage;
 
 private:

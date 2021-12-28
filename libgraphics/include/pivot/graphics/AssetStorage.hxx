@@ -26,6 +26,8 @@ concept is_valid_path = requires
     std::is_convertible_v<T, std::filesystem::path>;
 };
 
+/// @class AssetStorage
+/// Store all of the assets used by the game
 class AssetStorage
 {
 public:
@@ -70,7 +72,7 @@ public:
     template <is_valid_path... Path>
     /// @brief load the 3D models into CPU memory
     ///
-    /// @arg paths the path for all individual file to load
+    /// @arg the path for all individual file to load
     /// @return the number of file successfully loaded
     unsigned loadModels(Path... p)
     {
@@ -78,7 +80,7 @@ public:
     }
 
     template <is_valid_path... Path>
-    /// @brief load the 3D models into CPU memory
+    /// @brief load the textures into CPU memory
     ///
     /// @arg the path for all individual file to load
     /// @return the number of file successfully loaded
@@ -87,21 +89,32 @@ public:
         return ((loadTexture(p)) + ...);
     }
 
+    /// Push the ressource into GPU memory
     void build();
+
+    /// Free GPU memory
     void destroy();
 
     template <typename T>
-    inline const T &get(const std::string &) const;
+    /// Get an asset of type T named name
+    inline const T &get(const std::string &name) const;
 
     template <typename T>
-    inline std::uint32_t getIndex(const std::string &i) const;
+    /// Get the index of the asset of type T named name
+    inline std::uint32_t getIndex(const std::string &name) const;
 
+    /// @return Get the Index buffer
     constexpr const AllocatedBuffer &getIndexBuffer() const noexcept { return indicesBuffer; }
+    /// @return Get the VertexBuffer
     constexpr const AllocatedBuffer &getVertexBuffer() const noexcept { return vertexBuffer; }
 
+    /// @return Get the Material buffer
     constexpr const AllocatedBuffer &getMaterialBuffer() const noexcept { return materialBuffer; }
+
+    /// @return Get the size of the Material buffer
     inline const std::size_t getMaterialBufferSize() const noexcept { return materialStorage.size(); }
 
+    /// @return Get all the loaded Textures
     constexpr const auto &getTextures() const noexcept { return textureStorage; }
 
 private:

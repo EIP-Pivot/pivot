@@ -45,23 +45,18 @@ void DrawCallResolver::prepareForDraw(const std::vector<std::reference_wrapper<c
 
     for (const auto &object: sceneInformation) {
         const auto &boundingBox = storage_ref->get().get<MeshBoundingBox>(object.get().meshID);
-        if (pivot::graphics::culling::should_object_be_rendered(object.get().objectInformation.transform, boundingBox,
-                                                                camera)) {
-            packedDraws.push_back({
-                .meshId = object.get().meshID,
-                .first = drawCount++,
-                .count = 1,
-            });
-            objectGPUData.push_back(gpuObject::UniformBufferObject(object.get().objectInformation, *storage_ref));
-        }
+        packedDraws.push_back({
+            .meshId = object.get().meshID,
+            .first = drawCount++,
+            .count = pivot::graphics::culling::should_object_be_rendered(object.get().objectInformation.transform,
+                                                                         boundingBox, camera),
+        });
+        objectGPUData.push_back(gpuObject::UniformBufferObject(object.get().objectInformation, *storage_ref));
     }
     assert(packedDraws.size() == objectGPUData.size());
     if (objectGPUData.size() > frame.currentBufferSize) {
         recreateBuffers(objectGPUData.size(), frameIndex);
         frame.currentBufferSize = objectGPUData.size();
-    } else if (packedDraws.size() < frame.currentBufferSize && !packedDraws.empty()) {
-        base_ref->get().device.freeDescriptorSets(descriptorPool, frame.objectDescriptor);
-        createDescriptorSets(frame, packedDraws.size());
     }
 
     if (frame.currentBufferSize > 0) {

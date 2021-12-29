@@ -244,14 +244,21 @@ void AssetStorage::pushTexturesOnGPU()
 
 void AssetStorage::pushMaterialOnGPU()
 {
-    materialBuffer =
-        vk_utils::createBuffer(base_ref->get().allocator, sizeof(gpuObject::Material) * materialStorage.size(),
-                               vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
+    DEBUG_FUNCTION
+    auto size = sizeof(gpuObject::Material) * materialStorage.size();
+    auto materialStaging = vk_utils::createBuffer(
+        base_ref->get().allocator, size,
+        vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);
+    materialBuffer = vk_utils::createBuffer(
+        base_ref->get().allocator, size,
+        vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst, vma::MemoryUsage::eGpuOnly);
 
     std::vector<gpuObject::Material> materialStor;
     std::transform(materialStorage.begin(), materialStorage.end(), std::back_inserter(materialStor),
                    [](const auto &i) { return i.second; });
-    vk_utils::copyBuffer(base_ref->get().allocator, materialBuffer, materialStor);
+    vk_utils::copyBuffer(base_ref->get().allocator, materialStaging, materialStor);
+    vk_utils::copyBufferToBuffer(*base_ref, materialStaging.buffer, materialBuffer.buffer, size);
+    base_ref->get().allocator.destroyBuffer(materialStaging.buffer, materialStaging.memory);
 }
 
 }    // namespace pivot::graphics

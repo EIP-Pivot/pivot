@@ -1,5 +1,6 @@
 #include "pivot/graphics/vk_utils.hxx"
 
+#include <Logger.hpp>
 #include <fstream>
 #include <stdexcept>
 
@@ -11,6 +12,11 @@ namespace pivot::graphics::vk_utils
 AllocatedBuffer createBuffer(vma::Allocator &allocator, uint32_t allocSize, vk::BufferUsageFlags usage,
                              vma::MemoryUsage memoryUsage)
 {
+    if (allocSize == 0) {
+        LOGGER_ERR << "Can't allocate empty buffer !";
+        LOGGER_ENDL;
+        abort();
+    }
     vk::BufferCreateInfo bufferInfo{
         .size = allocSize,
         .usage = usage,

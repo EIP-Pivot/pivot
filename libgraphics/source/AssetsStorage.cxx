@@ -25,6 +25,7 @@ AssetStorage::~AssetStorage() {}
 
 void AssetStorage::build()
 {
+    DEBUG_FUNCTION
     logger->info("ASSET STORAGE") << "Pushing models onto the GPU";
     LOGGER_ENDL;
     pushModelsOnGPU();
@@ -57,6 +58,7 @@ void AssetStorage::destroy()
 
 bool AssetStorage::loadModel(const std::filesystem::path &path)
 {
+    DEBUG_FUNCTION
     if (std::find(supportedObject.begin(), supportedObject.end(), path.extension()) == supportedObject.end()) {
         logger->err("LOAD MODEL") << "Non supported model extension: " << path.extension();
         LOGGER_ENDL;
@@ -139,6 +141,7 @@ bool AssetStorage::loadModel(const std::filesystem::path &path)
 
 bool AssetStorage::loadTexture(const std::filesystem::path &path)
 {
+    DEBUG_FUNCTION
     if (std::find(supportedTexture.begin(), supportedTexture.end(), path.extension()) == supportedTexture.end()) {
         logger->err("LOAD MODEL") << "Non supported texture extension: " << path.extension();
         LOGGER_ENDL;
@@ -172,7 +175,15 @@ bool AssetStorage::loadTexture(const std::filesystem::path &path)
 
 void AssetStorage::pushModelsOnGPU()
 {
+    DEBUG_FUNCTION
+
     auto vertexSize = vertexStagingBuffer.size() * sizeof(Vertex);
+
+    if (vertexSize == 0) {
+        logger->warn("Asset Storage") << "No model to push";
+        LOGGER_ENDL;
+        return;
+    }
     auto stagingVertex = vk_utils::createBuffer(base_ref->get().allocator, vertexSize,
                                                 vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);
     vertexBuffer = vk_utils::createBuffer(
@@ -202,6 +213,13 @@ void AssetStorage::pushModelsOnGPU()
 
 void AssetStorage::pushTexturesOnGPU()
 {
+    DEBUG_FUNCTION
+
+    if (textureStorage.empty()) {
+        logger->warn("Asset Storage") << "No textures to push";
+        LOGGER_ENDL;
+        return;
+    }
     for (auto &[name, texture]: textureStorage) {
 
         auto &bytes = std::get<std::vector<std::byte>>(texture.image);
@@ -246,6 +264,11 @@ void AssetStorage::pushMaterialOnGPU()
 {
     DEBUG_FUNCTION
     auto size = sizeof(gpuObject::Material) * materialStorage.size();
+    if (size == 0) {
+        logger->warn("Asset Storage") << "No material to push";
+        LOGGER_ENDL;
+        return;
+    }
     auto materialStaging = vk_utils::createBuffer(
         base_ref->get().allocator, size,
         vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);

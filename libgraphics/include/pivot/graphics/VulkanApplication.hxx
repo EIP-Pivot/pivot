@@ -2,6 +2,7 @@
 
 #include "pivot/graphics/AssetStorage.hxx"
 #include "pivot/graphics/DeletionQueue.hxx"
+#include "pivot/graphics/DrawCallResolver.hxx"
 #include "pivot/graphics/QueueFamilyIndices.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/VulkanSwapchain.hxx"
@@ -56,18 +57,6 @@ const std::vector<const char *> deviceExtensions = {
 /// You can now call the draw() method when you are ready to render a new frame
 class VulkanApplication : public pivot::graphics::VulkanBase
 {
-private:
-    struct DrawBatch {
-        std::string meshId;
-        uint32_t first;
-        uint32_t count;
-    };
-
-    struct SceneObjectsGPUData {
-        std::vector<DrawBatch> objectDrawBatches;
-        std::vector<gpuObject::UniformBufferObject> objectGPUData;
-    };
-
 public:
     /// Default constructor
     VulkanApplication();
@@ -97,22 +86,16 @@ public:
     float getAspectRatio() const noexcept { return swapchain.getAspectRatio(); }
 
 private:
-    SceneObjectsGPUData buildSceneObjectsGPUData(const std::vector<std::reference_wrapper<const RenderObject>> &objects,
-                                                 const gpuObject::CameraData &camera);
-    void buildIndirectBuffers(const std::vector<DrawBatch> &scene, Frame &frame);
-
     void postInitialization();
     void recreateSwapchain();
     void initVulkanRessources();
 
-    void createUniformBuffers();
     void createSyncStructure();
 
     void createDescriptorSetLayout();
     void createTextureDescriptorSetLayout();
 
     void createDescriptorPool();
-    void createDescriptorSets();
     void createTextureDescriptorSets();
     void createCommandPool();
     void createCommandBuffers();
@@ -123,7 +106,6 @@ private:
     void createDepthResources();
     void createColorResources();
     void createRenderPass();
-    void createIndirectBuffer();
     void createTextureSampler();
     void createFramebuffers();
 
@@ -149,7 +131,8 @@ private:
     VulkanSwapchain swapchain;
 
     uint8_t currentFrame = 0;
-    Frame frames[MAX_FRAME_FRAME_IN_FLIGHT];
+    pivot::graphics::DrawCallResolver drawResolver;
+    std::array<Frame, MaxFrameInFlight> frames;
 
     vk::RenderPass renderPass = VK_NULL_HANDLE;
     vk::DescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;

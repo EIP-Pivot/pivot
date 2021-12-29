@@ -9,7 +9,8 @@
 
 #include <algorithm>
 
-VulkanApplication::VulkanApplication(): pivot::graphics::VulkanBase(), assetStorage(*this)
+VulkanApplication::VulkanApplication()
+    : pivot::graphics::VulkanBase(), assetStorage(*this), drawResolver(*this, assetStorage)
 {
     DEBUG_FUNCTION;
     if (bEnableValidationLayers && !VulkanBase::checkValidationLayerSupport(validationLayers)) {
@@ -29,6 +30,7 @@ VulkanApplication::~VulkanApplication()
     assetStorage.destroy();
     swapchainDeletionQueue.flush();
     mainDeletionQueue.flush();
+    drawResolver.destroy();
     VulkanBase::destroy();
 }
 
@@ -38,54 +40,12 @@ void VulkanApplication::init()
     initVulkanRessources();
 }
 
-VulkanApplication::SceneObjectsGPUData
-VulkanApplication::buildSceneObjectsGPUData(const std::vector<std::reference_wrapper<const RenderObject>> &objects,
-                                            const gpuObject::CameraData &camera)
-{
-    if (objects.empty()) return {};
-    if (objects.size() >= MAX_OBJECT) throw TooManyObjectInSceneError();
-
-    std::vector<DrawBatch> packedDraws;
-    std::vector<gpuObject::UniformBufferObject> objectGPUData;
-    unsigned drawCount = 0;
-
-    for (const auto &object: objects) {
-        const auto &boundingBox = assetStorage.get<MeshBoundingBox>(object.get().meshID);
-        if (pivot::graphics::culling::should_object_be_rendered(object.get().objectInformation.transform, boundingBox,
-                                                                camera)) {
-            packedDraws.push_back({
-                .meshId = object.get().meshID,
-                .first = drawCount++,
-                .count = 1,
-            });
-            objectGPUData.push_back(gpuObject::UniformBufferObject(object.get().objectInformation, assetStorage));
-        }
-    }
-    return {packedDraws, objectGPUData};
-}
-
-void VulkanApplication::buildIndirectBuffers(const std::vector<DrawBatch> &packedDraws, Frame &frame)
-{
-    auto *sceneData = (VkDrawIndexedIndirectCommand *)allocator.mapMemory(frame.indirectBuffer.memory);
-
-    for (uint32_t i = 0; i < packedDraws.size(); i++) {
-        const auto &mesh = assetStorage.get<pivot::graphics::AssetStorage::Mesh>(packedDraws[i].meshId);
-
-        sceneData[i].firstIndex = mesh.indicesOffset;
-        sceneData[i].indexCount = mesh.indicesSize;
-        sceneData[i].vertexOffset = mesh.vertexOffset;
-        sceneData[i].instanceCount = 1;
-        sceneData[i].firstInstance = i;
-    }
-    allocator.unmapMemory(frame.indirectBuffer.memory);
-}
-
 void VulkanApplication::initVulkanRessources()
 {
     DEBUG_FUNCTION
 
+    drawResolver.init();
     createSyncStructure();
-    createIndirectBuffer();
     createDescriptorSetLayout();
     createTextureDescriptorSetLayout();
     createPipelineCache();
@@ -97,13 +57,11 @@ void VulkanApplication::initVulkanRessources()
     auto size = window.getSize();
     swapchain.create(size, physical_device, device, surface);
 
-    createUniformBuffers();
     createRenderPass();
     createPipeline();
     createDepthResources();
     createColorResources();
     createFramebuffers();
-    createDescriptorSets();
 
     assetStorage.build();
 
@@ -161,6 +119,7 @@ try {
     VK_TRY(device.waitForFences(frame.inFlightFences, VK_TRUE, UINT64_MAX));
 
     uint32_t imageIndex = swapchain.getNextImageIndex(UINT64_MAX, frame.imageAvailableSemaphore);
+    allocator.setCurrentFrameIndex(imageIndex);
 
     auto &cmd = commandBuffersPrimary[imageIndex];
     auto &drawCmd = commandBuffersSecondary[imageIndex];
@@ -196,10 +155,7 @@ try {
 #else
     auto cullingGPUCamera = gpuCamera;
 #endif
-
-    auto sceneObjectGPUData = buildSceneObjectsGPUData(sceneInformation, cullingGPUCamera);
-    buildIndirectBuffers(sceneObjectGPUData.objectDrawBatches, frame);
-    pivot::graphics::vk_utils::copyBuffer(allocator, frame.data.uniformBuffer, sceneObjectGPUData.objectGPUData);
+    drawResolver.prepareForDraw(sceneInformation, cullingGPUCamera, currentFrame);
 
     vk::CommandBufferInheritanceInfo inheritanceInfo{
         .renderPass = renderPass,
@@ -227,8 +183,8 @@ try {
         };
         VK_TRY(drawCmd.begin(&drawBeginInfo));
         drawCmd.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
-        drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, frame.data.objectDescriptor,
-                                   nullptr);
+        drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0,
+                                   drawResolver.getFrameData(currentFrame).objectDescriptor, nullptr);
         drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, texturesSet, nullptr);
         drawCmd.pushConstants<gpuObject::CameraData>(
             pipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, gpuCamera);
@@ -236,11 +192,12 @@ try {
         drawCmd.bindIndexBuffer(assetStorage.getIndexBuffer().buffer, 0, vk::IndexType::eUint32);
 
         if (deviceFeature.multiDrawIndirect == VK_TRUE) {
-            drawCmd.drawIndexedIndirect(frame.indirectBuffer.buffer, 0, sceneObjectGPUData.objectDrawBatches.size(),
+            drawCmd.drawIndexedIndirect(drawResolver.getFrameData(currentFrame).indirectBuffer.buffer, 0,
+                                        drawResolver.getFrameData(currentFrame).currentBufferSize,
                                         sizeof(vk::DrawIndexedIndirectCommand));
         } else {
-            for (const auto &draw: sceneObjectGPUData.objectDrawBatches) {
-                drawCmd.drawIndexedIndirect(frame.indirectBuffer.buffer,
+            for (const auto &draw: drawResolver.getFrameData(currentFrame).packedDraws) {
+                drawCmd.drawIndexedIndirect(drawResolver.getFrameData(currentFrame).indirectBuffer.buffer,
                                             draw.first * sizeof(vk::DrawIndexedIndirectCommand), draw.count,
                                             sizeof(vk::DrawIndexedIndirectCommand));
             }
@@ -275,7 +232,7 @@ try {
         .pImageIndices = &imageIndex,
     };
     pivot::graphics::vk_utils::vk_try(presentQueue.presentKHR(presentInfo));
-    currentFrame = (currentFrame + 1) % MAX_FRAME_FRAME_IN_FLIGHT;
+    currentFrame = (currentFrame + 1) % MaxFrameInFlight;
 } catch (const vk::OutOfDateKHRError &) {
     return recreateSwapchain();
 }

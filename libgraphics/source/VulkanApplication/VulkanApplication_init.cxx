@@ -277,41 +277,10 @@ void VulkanApplication::createTextureDescriptorSetLayout()
     mainDeletionQueue.push([&] { device.destroy(texturesSetLayout); });
 }
 
-void VulkanApplication::createUniformBuffers()
-{
-    DEBUG_FUNCTION
-    for (auto &f: frames) {
-        f.data.uniformBuffer = pivot::graphics::vk_utils::createBuffer(
-            allocator, sizeof(gpuObject::UniformBufferObject) * MAX_OBJECT, vk::BufferUsageFlagBits::eStorageBuffer,
-            vma::MemoryUsage::eCpuToGpu);
-    }
-    mainDeletionQueue.push([&] {
-        for (auto &f: frames) { allocator.destroyBuffer(f.data.uniformBuffer.buffer, f.data.uniformBuffer.memory); }
-    });
-}
-
-void VulkanApplication::createIndirectBuffer()
-{
-    DEBUG_FUNCTION
-    for (auto &f: frames) {
-        f.indirectBuffer = pivot::graphics::vk_utils::createBuffer(
-            allocator, sizeof(vk::DrawIndexedIndirectCommand) * MAX_OBJECT,
-            vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer |
-                vk::BufferUsageFlagBits::eIndirectBuffer,
-            vma::MemoryUsage::eCpuToGpu);
-    }
-    mainDeletionQueue.push([&] {
-        for (auto &f: frames) { allocator.destroyBuffer(f.indirectBuffer.buffer, f.indirectBuffer.memory); }
-    });
-}
 void VulkanApplication::createDescriptorPool()
 {
     DEBUG_FUNCTION
     vk::DescriptorPoolSize poolSize[] = {
-        {
-            .type = vk::DescriptorType::eUniformBuffer,
-            .descriptorCount = MAX_FRAME_FRAME_IN_FLIGHT,
-        },
         {
             .type = vk::DescriptorType::eCombinedImageSampler,
             .descriptorCount = MAX_TEXTURES,
@@ -326,35 +295,6 @@ void VulkanApplication::createDescriptorPool()
     };
     descriptorPool = device.createDescriptorPool(poolInfo);
     mainDeletionQueue.push([&] { device.destroyDescriptorPool(descriptorPool); });
-}
-
-void VulkanApplication::createDescriptorSets()
-{
-    DEBUG_FUNCTION
-    for (auto &f: frames) {
-        vk::DescriptorSetAllocateInfo allocInfo{
-            .descriptorPool = descriptorPool,
-            .descriptorSetCount = 1,
-            .pSetLayouts = &descriptorSetLayout,
-        };
-
-        f.data.objectDescriptor = device.allocateDescriptorSets(allocInfo).front();
-
-        vk::DescriptorBufferInfo bufferInfo{
-            .buffer = f.data.uniformBuffer.buffer,
-            .offset = 0,
-            .range = sizeof(gpuObject::UniformBufferObject) * MAX_OBJECT,
-        };
-        std::vector<vk::WriteDescriptorSet> descriptorWrites{{
-            .dstSet = f.data.objectDescriptor,
-            .dstBinding = 0,
-            .dstArrayElement = 0,
-            .descriptorCount = 1,
-            .descriptorType = vk::DescriptorType::eStorageBuffer,
-            .pBufferInfo = &bufferInfo,
-        }};
-        device.updateDescriptorSets(descriptorWrites, 0);
-    }
 }
 
 void VulkanApplication::createTextureDescriptorSets()

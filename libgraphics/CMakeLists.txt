@@ -32,7 +32,7 @@ if (NOT vma_POPULATED)
         LANGUAGE CXX
     )
     target_include_directories(VulkanMemoryAllocator PUBLIC ${vma_SOURCE_DIR})
-    target_compile_definitions(VulkanMemoryAllocator PRIVATE VMA_IMPLEMENTATION VMA_USE_STL_CONTAINERS)
+    target_compile_definitions(VulkanMemoryAllocator PRIVATE VMA_IMPLEMENTATION)
     set_target_properties(VulkanMemoryAllocator PROPERTIES LINKER_LANGUAGE CXX)
     target_link_libraries(VulkanMemoryAllocator PUBLIC Vulkan::Vulkan)
 endif()
@@ -128,7 +128,7 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/VulkanBase/VulkanBase_static.cxx
                                    source/abstract/AImmediateCommand.cxx
                                    source/culling.cxx
-                                   source/math.cxx
+                                   source/DrawCallResolver.cxx
 )
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE <vulkan/vulkan.hpp> <vk_mem_alloc.hpp>)

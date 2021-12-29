@@ -13,15 +13,4 @@ struct Frame {
     vk::Semaphore renderFinishedSemaphore;
     /// Indicate if the image has been displayed and if it's ressources can be reused
     vk::Fence inFlightFences;
-    /// The buffer for the indirect drawing
-    AllocatedBuffer indirectBuffer{};
-
-    /// This structure hold the actual data of the frame. This struct mostly exist to separate the syncronization
-    /// objects from the rest.
-    struct {
-        /// The buffer for the information of the 3D object
-        AllocatedBuffer uniformBuffer{};
-        /// The descriptor set for to access to the uniformBuffer in the shader
-        vk::DescriptorSet objectDescriptor = VK_NULL_HANDLE;
-    } data = {};
 };

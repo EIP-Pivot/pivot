@@ -26,4 +26,4 @@ struct CameraData {
 constexpr const auto pushConstantsSize = sizeof(CameraData);
 
 }    // namespace gpuObject
-constexpr const uint8_t MAX_FRAME_FRAME_IN_FLIGHT = 3;
+constexpr const auto MaxFrameInFlight = 3;

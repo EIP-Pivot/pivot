@@ -45,14 +45,15 @@ void VulkanApplication::initVulkanRessources()
     DEBUG_FUNCTION
 
     drawResolver.init();
-    createSyncStructure();
-    createDescriptorSetLayout();
-    createTextureDescriptorSetLayout();
     createPipelineCache();
+    createSyncStructure();
+    createRessourcesDescriptorSetLayout();
     createPipelineLayout();
+    createCullingPipelineLayout();
     createCommandPool();
     createDescriptorPool();
     createImGuiDescriptorPool();
+    createCullingPipeline();
 
     auto size = window.getSize();
     swapchain.create(size, physical_device, device, surface);
@@ -66,7 +67,7 @@ void VulkanApplication::initVulkanRessources()
     assetStorage.build();
 
     createTextureSampler();
-    createTextureDescriptorSets();
+    createRessourcesDescriptorSets();
     createCommandBuffers();
     initDearImGui();
 
@@ -185,9 +186,12 @@ try {
         drawCmd.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
         drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0,
                                    drawResolver.getFrameData(currentFrame).objectDescriptor, nullptr);
-        drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, texturesSet, nullptr);
+        drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, ressourceDescriptorSet,
+                                   nullptr);
         drawCmd.pushConstants<gpuObject::CameraData>(
-            pipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, gpuCamera);
+            pipelineLayout,
+            vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eCompute,
+            0, gpuCamera);
         drawCmd.bindVertexBuffers(0, assetStorage.getVertexBuffer().buffer, offset);
         drawCmd.bindIndexBuffer(assetStorage.getIndexBuffer().buffer, 0, vk::IndexType::eUint32);
 
@@ -208,6 +212,28 @@ try {
     std::array<vk::CommandBuffer, 2> secondaryBuffer{drawCmd, imguiCmd};
     vk::CommandBufferBeginInfo beginInfo;
     VK_TRY(cmd.begin(&beginInfo));
+
+    vk::BufferMemoryBarrier barrier{
+        .srcAccessMask = vk::AccessFlagBits::eShaderRead,
+        .dstAccessMask = vk::AccessFlagBits::eShaderWrite,
+        .srcQueueFamilyIndex = queueIndices.graphicsFamily.value(),
+        .dstQueueFamilyIndex = queueIndices.graphicsFamily.value(),
+        .buffer = drawResolver.getFrameData(currentFrame).indirectBuffer.buffer,
+        .size = drawResolver.getFrameData(currentFrame).indirectBuffer.size,
+    };
+    cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, cullingLayout, 0,
+                           drawResolver.getFrameData(currentFrame).objectDescriptor, nullptr);
+    cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, cullingLayout, 1, ressourceDescriptorSet, nullptr);
+    cmd.pushConstants<gpuObject::CameraData>(cullingLayout, vk::ShaderStageFlagBits::eCompute, 0, cullingGPUCamera);
+    cmd.bindPipeline(vk::PipelineBindPoint::eCompute, cullingPipeline);
+    cmd.pipelineBarrier(vk::PipelineStageFlagBits::eVertexShader, vk::PipelineStageFlagBits::eComputeShader,
+                        vk::DependencyFlagBits::eByRegion, {}, barrier, {});
+    cmd.dispatch(drawResolver.getFrameData(currentFrame).packedDraws.size(), 1, 1);
+
+    barrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
+    barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+    cmd.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eVertexShader,
+                        vk::DependencyFlagBits::eByRegion, {}, barrier, {});
     cmd.beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
     cmd.executeCommands(secondaryBuffer);
     cmd.endRenderPass();

@@ -1,7 +1,6 @@
 #include "pivot/graphics/DrawCallResolver.hxx"
 
 #include "pivot/graphics/DebugMacros.hxx"
-#include "pivot/graphics/culling.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
 namespace pivot::graphics
@@ -44,12 +43,10 @@ void DrawCallResolver::prepareForDraw(const std::vector<std::reference_wrapper<c
     uint32_t drawCount = 0;
 
     for (const auto &object: sceneInformation) {
-        const auto &boundingBox = storage_ref->get().get<MeshBoundingBox>(object.get().meshID);
         packedDraws.push_back({
             .meshId = object.get().meshID,
             .first = drawCount++,
-            .count = pivot::graphics::culling::should_object_be_rendered(object.get().objectInformation.transform,
-                                                                         boundingBox, camera),
+            .count = 1,
         });
         objectGPUData.push_back(gpuObject::UniformBufferObject(object.get().objectInformation, *storage_ref));
     }
@@ -63,18 +60,19 @@ void DrawCallResolver::prepareForDraw(const std::vector<std::reference_wrapper<c
         vk_utils::copyBuffer(base_ref->get().allocator, frame.objectBuffer, objectGPUData);
 
         auto *sceneData =
-            (VkDrawIndexedIndirectCommand *)base_ref->get().allocator.mapMemory(frame.indirectBuffer.memory);
+            (vk::DrawIndexedIndirectCommand *)base_ref->get().allocator.mapMemory(frame.indirectBuffer.memory);
         for (uint32_t i = 0; i < packedDraws.size(); i++) {
             const auto &mesh = storage_ref->get().get<pivot::graphics::AssetStorage::Mesh>(packedDraws[i].meshId);
 
             sceneData[i].firstIndex = mesh.indicesOffset;
             sceneData[i].indexCount = mesh.indicesSize;
             sceneData[i].vertexOffset = mesh.vertexOffset;
-            sceneData[i].instanceCount = 1;
+            sceneData[i].instanceCount = 0;
             sceneData[i].firstInstance = i;
         }
         base_ref->get().allocator.unmapMemory(frame.indirectBuffer.memory);
     }
+    frame.packedDraws.swap(packedDraws);
 }
 
 void DrawCallResolver::recreateBuffers(const auto newSize, const std::uint32_t frameIndex)
@@ -132,14 +130,29 @@ void DrawCallResolver::createDescriptorSets(Frame &frame, const auto bufferSize)
         .offset = 0,
         .range = sizeof(gpuObject::UniformBufferObject) * bufferSize,
     };
-    std::vector<vk::WriteDescriptorSet> descriptorWrites{{
-        .dstSet = frame.objectDescriptor,
-        .dstBinding = 0,
-        .dstArrayElement = 0,
-        .descriptorCount = 1,
-        .descriptorType = vk::DescriptorType::eStorageBuffer,
-        .pBufferInfo = &bufferInfo,
-    }};
+    vk::DescriptorBufferInfo indirectInfo{
+        .buffer = frame.indirectBuffer.buffer,
+        .offset = 0,
+        .range = sizeof(vk::DrawIndexedIndirectCommand) * bufferSize,
+    };
+    std::vector<vk::WriteDescriptorSet> descriptorWrites{
+        {
+            .dstSet = frame.objectDescriptor,
+            .dstBinding = 0,
+            .dstArrayElement = 0,
+            .descriptorCount = 1,
+            .descriptorType = vk::DescriptorType::eStorageBuffer,
+            .pBufferInfo = &bufferInfo,
+        },
+        {
+            .dstSet = frame.objectDescriptor,
+            .dstBinding = 1,
+            .dstArrayElement = 0,
+            .descriptorCount = 1,
+            .descriptorType = vk::DescriptorType::eStorageBuffer,
+            .pBufferInfo = &indirectInfo,
+        },
+    };
     base_ref->get().device.updateDescriptorSets(descriptorWrites, 0);
 }
 
@@ -149,11 +162,16 @@ void DrawCallResolver::createDescriptorSetLayout()
         .binding = 0,
         .descriptorType = vk::DescriptorType::eStorageBuffer,
         .descriptorCount = 1,
-        .stageFlags = vk::ShaderStageFlagBits::eVertex,
-        .pImmutableSamplers = nullptr,
+        .stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute,
+    };
+    vk::DescriptorSetLayoutBinding indirectBuffer{
+        .binding = 1,
+        .descriptorType = vk::DescriptorType::eStorageBuffer,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eCompute,
     };
 
-    std::vector<vk::DescriptorSetLayoutBinding> bindings = {uboLayoutBinding};
+    std::vector<vk::DescriptorSetLayoutBinding> bindings = {uboLayoutBinding, indirectBuffer};
     vk::DescriptorSetLayoutCreateInfo layoutInfo{
         .bindingCount = static_cast<uint32_t>(bindings.size()),
         .pBindings = bindings.data(),

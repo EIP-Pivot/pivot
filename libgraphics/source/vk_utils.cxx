@@ -24,7 +24,9 @@ AllocatedBuffer createBuffer(vma::Allocator &allocator, uint32_t allocSize, vk::
     vma::AllocationCreateInfo vmaallocInfo;
     vmaallocInfo.usage = memoryUsage;
 
-    AllocatedBuffer newBuffer;
+    AllocatedBuffer newBuffer{
+        .size = allocSize,
+    };
     std::tie(newBuffer.buffer, newBuffer.memory) = allocator.createBuffer(bufferInfo, vmaallocInfo);
     return newBuffer;
 }

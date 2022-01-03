@@ -92,17 +92,18 @@ private:
 
     void createSyncStructure();
 
-    void createDescriptorSetLayout();
-    void createTextureDescriptorSetLayout();
+    void createRessourcesDescriptorSetLayout();
+    void createPipelineLayout();
+    void createCullingPipelineLayout();
 
     void createDescriptorPool();
-    void createTextureDescriptorSets();
+    void createRessourcesDescriptorSets();
     void createCommandPool();
     void createCommandBuffers();
 
     void createPipelineCache();
-    void createPipelineLayout();
     void createPipeline();
+    void createCullingPipeline();
     void createDepthResources();
     void createColorResources();
     void createRenderPass();
@@ -135,10 +136,10 @@ private:
     std::array<Frame, MaxFrameInFlight> frames;
 
     vk::RenderPass renderPass = VK_NULL_HANDLE;
-    vk::DescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
-    vk::DescriptorSetLayout texturesSetLayout = VK_NULL_HANDLE;
+
     vk::DescriptorPool descriptorPool = VK_NULL_HANDLE;
-    vk::DescriptorSet texturesSet = VK_NULL_HANDLE;
+    vk::DescriptorSetLayout ressourcesSetLayout = VK_NULL_HANDLE;
+    vk::DescriptorSet ressourceDescriptorSet = VK_NULL_HANDLE;
 
     vk::Sampler textureSampler = VK_NULL_HANDLE;
 
@@ -153,6 +154,9 @@ private:
     vk::PipelineCache pipelineCache = VK_NULL_HANDLE;
     vk::PipelineLayout pipelineLayout = VK_NULL_HANDLE;
     vk::Pipeline graphicsPipeline = VK_NULL_HANDLE;
+
+    vk::PipelineLayout cullingLayout = VK_NULL_HANDLE;
+    vk::Pipeline cullingPipeline = VK_NULL_HANDLE;
 
     std::vector<vk::Framebuffer> swapChainFramebuffers;
     /// @endcond

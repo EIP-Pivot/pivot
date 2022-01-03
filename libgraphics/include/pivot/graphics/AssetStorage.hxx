@@ -111,8 +111,8 @@ public:
     /// @return Get the Material buffer
     constexpr const AllocatedBuffer &getMaterialBuffer() const noexcept { return materialBuffer; }
 
-    /// @return Get the size of the Material buffer
-    inline const std::size_t getMaterialBufferSize() const noexcept { return materialStorage.size(); }
+    /// @return Get the bounding box buffer
+    constexpr const AllocatedBuffer &getBoundingBoxBuffer() const noexcept { return boundingboxbuffer; }
 
     /// @return Get all the loaded Textures
     constexpr const auto &getTextures() const noexcept { return textureStorage; }
@@ -121,6 +121,7 @@ private:
     bool loadModel(const std::filesystem::path &path);
     bool loadTexture(const std::filesystem::path &path);
     void pushModelsOnGPU();
+    void pushBoundingBoxesOnGPU();
     void pushTexturesOnGPU();
     void pushMaterialOnGPU();
 
@@ -136,6 +137,7 @@ private:
 
     AllocatedBuffer vertexBuffer;
     AllocatedBuffer indicesBuffer;
+    AllocatedBuffer boundingboxbuffer;
     AllocatedBuffer materialBuffer;
 };
 

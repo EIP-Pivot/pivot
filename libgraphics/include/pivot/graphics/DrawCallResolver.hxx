@@ -63,6 +63,9 @@ public:
     /// Get the frame data of a given frame
     constexpr const Frame &getFrameData(const uint32_t &frameIndex) const { return frames.at(frameIndex); }
 
+    /// @return Get the descritor set layout
+    constexpr const vk::DescriptorSetLayout &getDescriptorSetLayout() const noexcept { return descriptorSetLayout; }
+
 private:
     void recreateBuffers(const auto newSize, const std::uint32_t frameIndex);
     void createDescriptorPool();

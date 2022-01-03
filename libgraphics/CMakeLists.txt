@@ -142,6 +142,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
 
 add_shader(${PROJECT_NAME} triangle.vert)
 add_shader(${PROJECT_NAME} triangle.frag)
+add_shader(${PROJECT_NAME} culling.comp)
 
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 

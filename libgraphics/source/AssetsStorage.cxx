@@ -30,6 +30,10 @@ void AssetStorage::build()
     LOGGER_ENDL;
     pushModelsOnGPU();
 
+    logger->info("ASSET STORAGE") << "Pushing bounding boxes onto the GPU";
+    LOGGER_ENDL;
+    pushBoundingBoxesOnGPU();
+
     logger->info("ASSET STORAGE") << "Pushing textures onto the GPU";
     LOGGER_ENDL;
     pushTexturesOnGPU();
@@ -46,7 +50,8 @@ void AssetStorage::destroy()
         base_ref->get().allocator.destroyBuffer(vertexBuffer.buffer, vertexBuffer.memory);
         base_ref->get().allocator.destroyBuffer(indicesBuffer.buffer, indicesBuffer.memory);
     }
-    if (materialBuffer) { base_ref->get().allocator.destroyBuffer(materialBuffer.buffer, materialBuffer.memory); }
+    if (boundingboxbuffer) base_ref->get().allocator.destroyBuffer(boundingboxbuffer.buffer, boundingboxbuffer.memory);
+    if (materialBuffer) base_ref->get().allocator.destroyBuffer(materialBuffer.buffer, materialBuffer.memory);
     for (auto &[_, i]: textureStorage) {
         if (std::holds_alternative<AllocatedImage>(i.image)) {
             auto &image = std::get<AllocatedImage>(i.image);
@@ -282,6 +287,30 @@ void AssetStorage::pushMaterialOnGPU()
     vk_utils::copyBuffer(base_ref->get().allocator, materialStaging, materialStor);
     vk_utils::copyBufferToBuffer(*base_ref, materialStaging.buffer, materialBuffer.buffer, size);
     base_ref->get().allocator.destroyBuffer(materialStaging.buffer, materialStaging.memory);
+}
+
+void AssetStorage::pushBoundingBoxesOnGPU()
+{
+    DEBUG_FUNCTION
+    auto size = sizeof(MeshBoundingBox) * materialStorage.size();
+    if (size == 0) {
+        logger->warn("Asset Storage") << "No material to push";
+        LOGGER_ENDL;
+        return;
+    }
+    auto boundingboxStaging = vk_utils::createBuffer(
+        base_ref->get().allocator, size,
+        vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);
+    boundingboxbuffer = vk_utils::createBuffer(
+        base_ref->get().allocator, size,
+        vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst, vma::MemoryUsage::eGpuOnly);
+
+    std::vector<gpuObject::Material> materialStor;
+    std::transform(materialStorage.begin(), materialStorage.end(), std::back_inserter(materialStor),
+                   [](const auto &i) { return i.second; });
+    vk_utils::copyBuffer(base_ref->get().allocator, boundingboxStaging, materialStor);
+    vk_utils::copyBufferToBuffer(*base_ref, boundingboxStaging.buffer, boundingboxbuffer.buffer, size);
+    base_ref->get().allocator.destroyBuffer(boundingboxStaging.buffer, boundingboxStaging.memory);
 }
 
 }    // namespace pivot::graphics

@@ -1,6 +1,7 @@
 #include "pivot/graphics/VulkanApplication.hxx"
 
 #include "pivot/graphics/DebugMacros.hxx"
+#include "pivot/graphics/PipelineBuilders/ComputePipelineBuilder.hxx"
 #include "pivot/graphics/PipelineBuilders/GraphicsPipelineBuilder.hxx"
 #include "pivot/graphics/QueueFamilyIndices.hxx"
 #include "pivot/graphics/types/Material.hxx"
@@ -106,13 +107,27 @@ void VulkanApplication::createPipelineCache()
 void VulkanApplication::createPipelineLayout()
 {
     DEBUG_FUNCTION
-    std::vector<vk::PushConstantRange> pipelinePushConstant = {vk_init::populateVkPushConstantRange(
-        vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, sizeof(gpuObject::CameraData))};
+    std::vector<vk::PushConstantRange> pipelinePushConstant = {
+        vk_init::populateVkPushConstantRange(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment |
+                                                 vk::ShaderStageFlagBits::eCompute,
+                                             sizeof(gpuObject::CameraData)),
+    };
 
-    std::vector<vk::DescriptorSetLayout> setLayout = {descriptorSetLayout, texturesSetLayout};
+    std::vector<vk::DescriptorSetLayout> setLayout = {drawResolver.getDescriptorSetLayout(), ressourcesSetLayout};
     auto pipelineLayoutCreateInfo = vk_init::populateVkPipelineLayoutCreateInfo(setLayout, pipelinePushConstant);
     pipelineLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
     mainDeletionQueue.push([&] { device.destroy(pipelineLayout); });
+}
+
+void VulkanApplication::createCullingPipelineLayout()
+{
+    DEBUG_FUNCTION
+    std::vector<vk::PushConstantRange> pipelinePushConstant = {
+        vk_init::populateVkPushConstantRange(vk::ShaderStageFlagBits::eCompute, sizeof(gpuObject::CameraData))};
+    std::vector<vk::DescriptorSetLayout> setLayout = {drawResolver.getDescriptorSetLayout(), ressourcesSetLayout};
+    auto pipelineLayoutCreateInfo = vk_init::populateVkPipelineLayoutCreateInfo(setLayout, pipelinePushConstant);
+    cullingLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
+    mainDeletionQueue.push([&] { device.destroy(cullingLayout); });
 }
 
 void VulkanApplication::createPipeline()
@@ -129,6 +144,15 @@ void VulkanApplication::createPipeline()
     graphicsPipeline = builder.build(device, pipelineCache);
 
     swapchainDeletionQueue.push([&] { device.destroy(graphicsPipeline); });
+}
+
+void VulkanApplication::createCullingPipeline()
+{
+    DEBUG_FUNCTION
+    pivot::graphics::ComputePipelineBuilder builder;
+    builder.setPipelineLayout(cullingLayout).setComputeShaderPath("shaders/culling.comp.spv");
+    cullingPipeline = builder.build(device, pipelineCache);
+    mainDeletionQueue.push([&] { device.destroyPipeline(cullingPipeline); });
 }
 
 void VulkanApplication::createFramebuffers()
@@ -222,31 +246,11 @@ void VulkanApplication::createSyncStructure()
     });
 }
 
-void VulkanApplication::createDescriptorSetLayout()
-{
-    DEBUG_FUNCTION
-    vk::DescriptorSetLayoutBinding uboLayoutBinding{
-        .binding = 0,
-        .descriptorType = vk::DescriptorType::eStorageBuffer,
-        .descriptorCount = 1,
-        .stageFlags = vk::ShaderStageFlagBits::eVertex,
-        .pImmutableSamplers = nullptr,
-    };
-
-    std::vector<vk::DescriptorSetLayoutBinding> bindings = {uboLayoutBinding};
-    vk::DescriptorSetLayoutCreateInfo layoutInfo{
-        .bindingCount = static_cast<uint32_t>(bindings.size()),
-        .pBindings = bindings.data(),
-    };
-
-    descriptorSetLayout = device.createDescriptorSetLayout(layoutInfo);
-    mainDeletionQueue.push([&] { device.destroy(descriptorSetLayout); });
-}
-
-void VulkanApplication::createTextureDescriptorSetLayout()
+void VulkanApplication::createRessourcesDescriptorSetLayout()
 {
     DEBUG_FUNCTION
     std::vector<vk::DescriptorBindingFlags> flags{
+        {},
         {},
         vk::DescriptorBindingFlagBits::eVariableDescriptorCount | vk::DescriptorBindingFlagBits::ePartiallyBound,
     };
@@ -255,26 +259,36 @@ void VulkanApplication::createTextureDescriptorSetLayout()
         .bindingCount = static_cast<uint32_t>(flags.size()),
         .pBindingFlags = flags.data(),
     };
-    vk::DescriptorSetLayoutBinding materialLayoutBinding{
+    vk::DescriptorSetLayoutBinding boundingBoxBinding{
         .binding = 0,
+        .descriptorType = vk::DescriptorType::eStorageBuffer,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eCompute,
+    };
+    vk::DescriptorSetLayoutBinding materialLayoutBinding{
+        .binding = 1,
         .descriptorType = vk::DescriptorType::eStorageBuffer,
         .descriptorCount = 1,
         .stageFlags = vk::ShaderStageFlagBits::eFragment,
     };
     vk::DescriptorSetLayoutBinding samplerLayoutBiding{
-        .binding = 1,
+        .binding = 2,
         .descriptorType = vk::DescriptorType::eCombinedImageSampler,
         .descriptorCount = static_cast<uint32_t>(assetStorage.getTextures().size()),
         .stageFlags = vk::ShaderStageFlagBits::eFragment,
     };
-    std::vector<vk::DescriptorSetLayoutBinding> bindings = {materialLayoutBinding, samplerLayoutBiding};
-    vk::DescriptorSetLayoutCreateInfo texturesSetLayoutInfo{
+    std::array<vk::DescriptorSetLayoutBinding, 3> bindings = {
+        boundingBoxBinding,
+        materialLayoutBinding,
+        samplerLayoutBiding,
+    };
+    vk::DescriptorSetLayoutCreateInfo ressourcesSetLayoutInfo{
         .pNext = &bindingInfo,
         .bindingCount = static_cast<uint32_t>(bindings.size()),
         .pBindings = bindings.data(),
     };
-    texturesSetLayout = device.createDescriptorSetLayout(texturesSetLayoutInfo);
-    mainDeletionQueue.push([&] { device.destroy(texturesSetLayout); });
+    ressourcesSetLayout = device.createDescriptorSetLayout(ressourcesSetLayoutInfo);
+    mainDeletionQueue.push([&] { device.destroy(ressourcesSetLayout); });
 }
 
 void VulkanApplication::createDescriptorPool()
@@ -284,6 +298,10 @@ void VulkanApplication::createDescriptorPool()
         {
             .type = vk::DescriptorType::eCombinedImageSampler,
             .descriptorCount = MAX_TEXTURES,
+        },
+        {
+            .type = vk::DescriptorType::eStorageBuffer,
+            .descriptorCount = MAX_MATERIALS * MAX_OBJECT,
         },
     };
 
@@ -297,7 +315,7 @@ void VulkanApplication::createDescriptorPool()
     mainDeletionQueue.push([&] { device.destroyDescriptorPool(descriptorPool); });
 }
 
-void VulkanApplication::createTextureDescriptorSets()
+void VulkanApplication::createRessourcesDescriptorSets()
 {
     DEBUG_FUNCTION
     std::vector<vk::DescriptorImageInfo> imagesInfos;
@@ -308,10 +326,17 @@ void VulkanApplication::createTextureDescriptorSets()
             .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
         });
     }
+    auto &materialBuffer = assetStorage.getMaterialBuffer();
     vk::DescriptorBufferInfo materialInfo{
-        .buffer = assetStorage.getMaterialBuffer().buffer,
+        .buffer = materialBuffer.buffer,
         .offset = 0,
-        .range = sizeof(gpuObject::Material) * assetStorage.getMaterialBufferSize(),
+        .range = materialBuffer.size,
+    };
+    auto &boundingBoxBuffer = assetStorage.getBoundingBoxBuffer();
+    vk::DescriptorBufferInfo boundingBoxInfo{
+        .buffer = boundingBoxBuffer.buffer,
+        .offset = 0,
+        .range = boundingBoxBuffer.size,
     };
 
     uint32_t counts[] = {static_cast<uint32_t>(imagesInfos.size())};
@@ -323,22 +348,30 @@ void VulkanApplication::createTextureDescriptorSets()
         .pNext = &set_counts,
         .descriptorPool = descriptorPool,
         .descriptorSetCount = 1,
-        .pSetLayouts = &texturesSetLayout,
+        .pSetLayouts = &ressourcesSetLayout,
     };
-    texturesSet = device.allocateDescriptorSets(allocInfo).front();
+    ressourceDescriptorSet = device.allocateDescriptorSets(allocInfo).front();
 
     std::vector<vk::WriteDescriptorSet> descriptorWrite{
         {
-            .dstSet = texturesSet,
+            .dstSet = ressourceDescriptorSet,
             .dstBinding = 0,
+            .dstArrayElement = 0,
+            .descriptorCount = 1,
+            .descriptorType = vk::DescriptorType::eStorageBuffer,
+            .pBufferInfo = &boundingBoxInfo,
+        },
+        {
+            .dstSet = ressourceDescriptorSet,
+            .dstBinding = 1,
             .dstArrayElement = 0,
             .descriptorCount = 1,
             .descriptorType = vk::DescriptorType::eStorageBuffer,
             .pBufferInfo = &materialInfo,
         },
         {
-            .dstSet = texturesSet,
-            .dstBinding = 1,
+            .dstSet = ressourceDescriptorSet,
+            .dstBinding = 2,
             .dstArrayElement = 0,
             .descriptorCount = static_cast<uint32_t>(imagesInfos.size()),
             .descriptorType = vk::DescriptorType::eCombinedImageSampler,

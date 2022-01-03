@@ -23,11 +23,11 @@ struct Material {
     vec4 specular;
 };
 
-layout (std140, set = 1, binding = 0) readonly buffer ObjectMaterials {
+layout (std140, set = 1, binding = 1) readonly buffer ObjectMaterials {
     Material materials[];
 } objectMaterials;
 
-layout(set = 1, binding = 1) uniform sampler2D texSampler[];
+layout(set = 1, binding = 2) uniform sampler2D texSampler[];
 
 const vec3 lightDirection = vec3(11.0, 16.0, 24.0);
 

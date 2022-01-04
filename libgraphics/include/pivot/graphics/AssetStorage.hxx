@@ -31,6 +31,13 @@ concept is_valid_path = requires
 class AssetStorage
 {
 public:
+    /// @struct AssetStorageException
+    /// Exception type for the AssetStorage
+    struct AssetStorageException : public std::out_of_range {
+        using std::out_of_range::out_of_range;
+    };
+
+public:
     /// List of supported texture extensions
     static constexpr const std::array<const std::string_view, 1> supportedTexture{".png"};
     /// List of supported object extensions
@@ -144,22 +151,28 @@ private:
 #ifndef PIVOT_ASSETSTORAGE_TEMPLATE_INITIALIZED
 #define PIVOT_ASSETSTORAGE_TEMPLATE_INITIALIZED
 
-/// Get the assets for give id
+#define PIVOT_TEST_CONTAINS(stor, key) \
+    if (!stor.contains(key)) throw AssetStorage::AssetStorageException("Missing " + key + " in " #stor);
+
 template <>
+/// @cond
 inline const AssetStorage::Mesh &AssetStorage::get(const std::string &p) const
 {
+    PIVOT_TEST_CONTAINS(meshStorage, p);
     return meshStorage.at(p);
 }
 
 template <>
 inline const AssetStorage::Texture &AssetStorage::get(const std::string &p) const
 {
+    PIVOT_TEST_CONTAINS(textureStorage, p);
     return textureStorage.at(p);
 }
 
 template <>
 inline const MeshBoundingBox &AssetStorage::get(const std::string &p) const
 {
+    PIVOT_TEST_CONTAINS(meshBoundingBoxStorage, p);
     return meshBoundingBoxStorage.at(p);
 }
 
@@ -167,26 +180,34 @@ inline const MeshBoundingBox &AssetStorage::get(const std::string &p) const
 template <>
 inline std::uint32_t AssetStorage::getIndex<AssetStorage::Mesh>(const std::string &i) const
 {
+    PIVOT_TEST_CONTAINS(meshStorage, i);
     return std::distance(meshStorage.begin(), meshStorage.find(i));
 }
 
 template <>
 inline std::uint32_t AssetStorage::getIndex<AssetStorage::Texture>(const std::string &i) const
 {
+    PIVOT_TEST_CONTAINS(textureStorage, i);
     return std::distance(textureStorage.begin(), textureStorage.find(i));
 }
 
 template <>
 inline std::uint32_t AssetStorage::getIndex<gpuObject::Material>(const std::string &i) const
 {
+    PIVOT_TEST_CONTAINS(materialStorage, i);
     return std::distance(materialStorage.begin(), materialStorage.find(i));
 }
 
 template <>
+
 inline std::uint32_t AssetStorage::getIndex<MeshBoundingBox>(const std::string &i) const
 {
+    PIVOT_TEST_CONTAINS(meshBoundingBoxStorage, i);
     return std::distance(meshBoundingBoxStorage.begin(), meshBoundingBoxStorage.find(i));
 }
+///@endcond
+
+#undef PIVOT_TEST_CONTAINS
 
 #endif
 

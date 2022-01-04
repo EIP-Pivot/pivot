@@ -10,8 +10,7 @@
 struct RenderObject {
     /// Id of the mesh to use. The id is the stem of the file
     std::string meshID;
-    /// The informations about the object
-    /// @see ObjectInformation
+
     /// @class ObjectInformation
     ///
     /// @brief Hold the information of the 3D object, on the CPU-side
@@ -22,5 +21,8 @@ struct RenderObject {
         std::string textureIndex;
         /// The name of the material to use on the object
         std::string materialIndex;
-    } objectInformation;
+    }
+    /// The informations about the object
+    /// @see ObjectInformation
+    objectInformation;
 };

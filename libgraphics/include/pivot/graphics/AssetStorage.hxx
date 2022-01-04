@@ -182,6 +182,12 @@ inline std::uint32_t AssetStorage::getIndex<gpuObject::Material>(const std::stri
     return std::distance(materialStorage.begin(), materialStorage.find(i));
 }
 
+template <>
+inline std::uint32_t AssetStorage::getIndex<MeshBoundingBox>(const std::string &i) const
+{
+    return std::distance(meshBoundingBoxStorage.begin(), meshBoundingBoxStorage.find(i));
+}
+
 #endif
 
 }    // namespace pivot::graphics

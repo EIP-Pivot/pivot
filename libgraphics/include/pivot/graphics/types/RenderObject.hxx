@@ -1,6 +1,7 @@
 #pragma once
 
-#include "pivot/graphics/types/UniformBufferObject.hxx"
+#include "pivot/graphics/types/Transform.hxx"
+
 #include <string>
 
 /// @class RenderObject
@@ -11,5 +12,15 @@ struct RenderObject {
     std::string meshID;
     /// The informations about the object
     /// @see ObjectInformation
-    ObjectInformation objectInformation;
+    /// @class ObjectInformation
+    ///
+    /// @brief Hold the information of the 3D object, on the CPU-side
+    struct ObjectInformation {
+        /// The object transform
+        Transform transform;
+        /// The name of the texture to apply on the object
+        std::string textureIndex;
+        /// The name of the material to use on the object
+        std::string materialIndex;
+    } objectInformation;
 };

@@ -1,6 +1,7 @@
 #include "pivot/graphics/DrawCallResolver.hxx"
 
 #include "pivot/graphics/DebugMacros.hxx"
+#include "pivot/graphics/types/UniformBufferObject.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
 namespace pivot::graphics
@@ -48,7 +49,7 @@ void DrawCallResolver::prepareForDraw(const std::vector<std::reference_wrapper<c
             .first = drawCount++,
             .count = 1,
         });
-        objectGPUData.push_back(gpuObject::UniformBufferObject(object.get().objectInformation, *storage_ref));
+        objectGPUData.push_back(gpuObject::UniformBufferObject(object.get(), *storage_ref));
     }
     assert(packedDraws.size() == objectGPUData.size());
     if (objectGPUData.size() > frame.currentBufferSize) {

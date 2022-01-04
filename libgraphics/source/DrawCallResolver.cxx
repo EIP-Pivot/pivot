@@ -2,6 +2,7 @@
 
 #include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/types/UniformBufferObject.hxx"
+#include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
 namespace pivot::graphics
@@ -103,6 +104,7 @@ void DrawCallResolver::createDescriptorPool()
         .pPoolSizes = poolSize,
     };
     descriptorPool = base_ref->get().device.createDescriptorPool(poolInfo);
+    vk_debug::setObjectName(base_ref->get().device, descriptorPool, "Objects DescriptorPool");
 }
 
 void DrawCallResolver::createBuffers(Frame &frame, const auto bufferSize)
@@ -111,9 +113,14 @@ void DrawCallResolver::createBuffers(Frame &frame, const auto bufferSize)
         vk_utils::createBuffer(base_ref->get().allocator, sizeof(vk::DrawIndexedIndirectCommand) * bufferSize,
                                vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer,
                                vma::MemoryUsage::eCpuToGpu);
+    vk_debug::setObjectName(base_ref->get().device, frame.indirectBuffer.buffer,
+                            "Indirect Command Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
+
     frame.objectBuffer =
         vk_utils::createBuffer(base_ref->get().allocator, sizeof(gpuObject::UniformBufferObject) * bufferSize,
                                vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
+    vk_debug::setObjectName(base_ref->get().device, frame.objectBuffer.buffer,
+                            "Object Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
 }
 
 void DrawCallResolver::createDescriptorSets(Frame &frame, const auto bufferSize)
@@ -179,6 +186,7 @@ void DrawCallResolver::createDescriptorSetLayout()
     };
 
     descriptorSetLayout = base_ref->get().device.createDescriptorSetLayout(layoutInfo);
+    vk_debug::setObjectName(base_ref->get().device, descriptorSetLayout, "Object DescriptorSet Layout");
 }
 
 }    // namespace pivot::graphics

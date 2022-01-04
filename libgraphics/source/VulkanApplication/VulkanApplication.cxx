@@ -1,6 +1,7 @@
 #include "pivot/graphics/VulkanApplication.hxx"
 #include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/culling.hxx"
+#include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
 #include <Logger.hpp>
@@ -171,18 +172,22 @@ try {
             .pInheritanceInfo = &inheritanceInfo,
         };
         VK_TRY(imguiCmd.begin(&imguiBeginInfo));
+        pivot::graphics::vk_debug::beginRegion(imguiCmd, "Imgui Commands", {0.125f, 0.f, 0.f, 1.f});
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), imguiCmd);
+        pivot::graphics::vk_debug::endRegion(imguiCmd);
         imguiCmd.end();
     }
 
     // Normal draw
     {
+
         vk::DeviceSize offset = 0;
         vk::CommandBufferBeginInfo drawBeginInfo{
             .flags = vk::CommandBufferUsageFlagBits::eRenderPassContinue,
             .pInheritanceInfo = &inheritanceInfo,
         };
         VK_TRY(drawCmd.begin(&drawBeginInfo));
+        pivot::graphics::vk_debug::beginRegion(imguiCmd, "Draw Commands", {0.f, 0.125f, 0.f, 1.f});
         drawCmd.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
         drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0,
                                    drawResolver.getFrameData(currentFrame).objectDescriptor, nullptr);
@@ -206,12 +211,14 @@ try {
                                             sizeof(vk::DrawIndexedIndirectCommand));
             }
         }
+        pivot::graphics::vk_debug::endRegion(drawCmd);
         drawCmd.end();
     }
 
     std::array<vk::CommandBuffer, 2> secondaryBuffer{drawCmd, imguiCmd};
     vk::CommandBufferBeginInfo beginInfo;
     VK_TRY(cmd.begin(&beginInfo));
+    pivot::graphics::vk_debug::beginRegion(imguiCmd, "main command", {1.f, 1.f, 1.f, 1.f});
 
     vk::BufferMemoryBarrier barrier{
         .srcAccessMask = vk::AccessFlagBits::eShaderRead,
@@ -237,6 +244,7 @@ try {
     cmd.beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
     cmd.executeCommands(secondaryBuffer);
     cmd.endRenderPass();
+    pivot::graphics::vk_debug::endRegion(cmd);
     cmd.end();
 
     const std::array<vk::CommandBuffer, 1> submitCmd{cmd};

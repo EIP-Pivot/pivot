@@ -115,6 +115,7 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/Window.cxx
                                    source/vk_utils.cxx
                                    source/vk_init.cxx
+                                   source/vk_debug.cxx
                                    source/SwapchainSupportDetails.cxx
                                    source/PipelineBuilders/GraphicsPipelineBuilder.cxx
                                    source/PipelineBuilders/ComputePipelineBuilder.cxx

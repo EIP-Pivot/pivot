@@ -1,6 +1,7 @@
 #include "pivot/graphics/AssetStorage.hxx"
 
 #include "pivot/graphics/DebugMacros.hxx"
+#include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
@@ -29,18 +30,27 @@ void AssetStorage::build()
     logger->info("ASSET STORAGE") << "Pushing models onto the GPU";
     LOGGER_ENDL;
     pushModelsOnGPU();
+    vk_debug::setObjectName(base_ref->get().device, vertexBuffer.buffer, "Vertex Buffer");
+    vk_debug::setObjectName(base_ref->get().device, indicesBuffer.buffer, "Indices Buffer");
 
     logger->info("ASSET STORAGE") << "Pushing bounding boxes onto the GPU";
     LOGGER_ENDL;
     pushBoundingBoxesOnGPU();
+    vk_debug::setObjectName(base_ref->get().device, boundingboxbuffer.buffer, "BoundingBox Buffer");
 
     logger->info("ASSET STORAGE") << "Pushing textures onto the GPU";
     LOGGER_ENDL;
     pushTexturesOnGPU();
+    for (auto &[name, image]: textureStorage) {
+        auto &im = std::get<AllocatedImage>(image.image);
+        vk_debug::setObjectName(base_ref->get().device, im.image, "Texture " + name);
+        vk_debug::setObjectName(base_ref->get().device, im.imageView, "Texture " + name + "ImageView");
+    }
 
     logger->info("ASSET STORAGE") << "Pushing materials onto the GPU";
     LOGGER_ENDL;
     pushMaterialOnGPU();
+    vk_debug::setObjectName(base_ref->get().device, materialBuffer.buffer, "Material Buffer");
 }
 
 void AssetStorage::destroy()

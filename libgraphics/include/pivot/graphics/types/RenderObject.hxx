@@ -20,7 +20,7 @@ struct RenderObject {
         /// The name of the texture to apply on the object
         std::string textureIndex;
         /// The name of the material to use on the object
-        std::string materialIndex;
+        std::string materialIndex = "white";
     }
     /// The informations about the object
     /// @see ObjectInformation

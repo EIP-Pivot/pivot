@@ -9,19 +9,9 @@ struct UniformBufferObject {
     uint boundingBoxIndex;
 };
 
-layout (set = 0, binding = 0) readonly buffer ObjectBuffer {
+layout (std140, set = 0, binding = 0) readonly buffer ObjectBuffer {
     UniformBufferObject objects[];
 } objectBuffer;
-
-struct BoundingBox {
-    vec3 low;
-    vec3 high;
-};
-
-layout (set = 1, binding = 0) readonly buffer ObjectBoundingBoxes {
-    BoundingBox boundingBoxes[];
-} objectBoundingBoxes;
-
 
 struct DrawIndexedIndirect {
     uint    indexCount;
@@ -35,8 +25,17 @@ layout (set = 0, binding = 1) buffer DrawIndexedIndirectBuffer {
     DrawIndexedIndirect drawIndexedIndirect[];
 } drawIndexedIndirectBuffer;
 
+struct BoundingBox {
+    vec3 low;
+    vec3 high;
+};
+
+layout (set = 1, binding = 0) readonly buffer ObjectBoundingBoxes {
+    BoundingBox boundingBoxes[];
+} objectBoundingBoxes;
+
 layout (push_constant) uniform readonly constants {
-   vec4 position;
+    vec3 position;
     mat4 viewproj;
 } cameraData;
 

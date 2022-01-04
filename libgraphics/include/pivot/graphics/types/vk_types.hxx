@@ -17,9 +17,9 @@ struct CameraData {
     /// @brief Position of the camera.
     ///
     /// This is a vec4 for easier alignment
-    glm::vec4 position;
+    alignas(16) glm::vec3 position;
     /// The camera projected view matrix
-    glm::mat4 viewproj;
+    alignas(16) glm::mat4 viewproj;
 };
 
 /// The size of the required pushConstants

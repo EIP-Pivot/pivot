@@ -14,11 +14,11 @@ namespace pivot::graphics
 
 AssetStorage::AssetStorage(VulkanBase &base): base_ref(base)
 {
-    /// Initiate a default "white" material
+    // Initiate a default "white" material
     materialStorage["white"] = {
-        .ambientColor = {1.0f, 1.0f, 1.0f, 1.0f},
-        .diffuse = {1.0f, 1.0f, 1.0f, 1.0f},
-        .specular = {1.0f, 1.0f, 1.0f, 1.0f},
+        .ambientColor = {1.0f, 1.0f, 1.0f},
+        .diffuse = {1.0f, 1.0f, 1.0f},
+        .specular = {1.0f, 1.0f, 1.0f},
     };
 }
 
@@ -315,10 +315,10 @@ void AssetStorage::pushBoundingBoxesOnGPU()
         base_ref->get().allocator, size,
         vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst, vma::MemoryUsage::eGpuOnly);
 
-    std::vector<gpuObject::Material> materialStor;
-    std::transform(materialStorage.begin(), materialStorage.end(), std::back_inserter(materialStor),
+    std::vector<MeshBoundingBox> boundingStor;
+    std::transform(meshBoundingBoxStorage.begin(), meshBoundingBoxStorage.end(), std::back_inserter(boundingStor),
                    [](const auto &i) { return i.second; });
-    vk_utils::copyBuffer(base_ref->get().allocator, boundingboxStaging, materialStor);
+    vk_utils::copyBuffer(base_ref->get().allocator, boundingboxStaging, boundingStor);
     vk_utils::copyBufferToBuffer(*base_ref, boundingboxStaging.buffer, boundingboxbuffer.buffer, size);
     base_ref->get().allocator.destroyBuffer(boundingboxStaging.buffer, boundingboxStaging.memory);
 }

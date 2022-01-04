@@ -63,7 +63,7 @@ public:
         projection[1][1] *= -1;
         auto view = getView();
         gpuObject::CameraData data{
-            .position = glm::vec4(position, 1.0f),
+            .position = position,
             .viewproj = projection * view,
         };
         return data;

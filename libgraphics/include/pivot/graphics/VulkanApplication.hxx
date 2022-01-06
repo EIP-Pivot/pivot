@@ -8,8 +8,6 @@
 #include "pivot/graphics/VulkanSwapchain.hxx"
 #include "pivot/graphics/Window.hxx"
 #include "pivot/graphics/types/Frame.hxx"
-#include "pivot/graphics/types/Material.hxx"
-#include "pivot/graphics/types/Mesh.hxx"
 #include "pivot/graphics/types/RenderObject.hxx"
 #include "pivot/graphics/types/common.hxx"
 #include "pivot/graphics/types/vk_types.hxx"

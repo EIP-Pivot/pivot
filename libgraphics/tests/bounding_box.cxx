@@ -1,4 +1,4 @@
-#include <pivot/graphics/types/Mesh.hxx>
+#include <pivot/graphics/types/MeshBoundingBox.hxx>
 
 #include <catch2/catch.hpp>
 

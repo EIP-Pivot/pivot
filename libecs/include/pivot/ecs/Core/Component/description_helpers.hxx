@@ -46,8 +46,8 @@ std::vector<Description::Property> buildPropertyArray()
     std::vector<Description::Property> properties;
     using Indices = boost::mpl::range_c<unsigned, 0, boost::fusion::result_of::size<T>::value>;
     boost::fusion::for_each(Indices(), [&](auto i) {
-        std::string field_name = boost::fusion::extension::struct_member_name<T, i>::call();
-        using value_type = typename boost::fusion::result_of::value_at_c<T, i>::type;
+        std::string field_name = boost::fusion::extension::struct_member_name<T, decltype(i)::value>::call();
+        using value_type = typename boost::fusion::result_of::value_at_c<T, decltype(i)::value>::type;
         auto type = cpp_type_to_property_type<value_type>;
         if (type.has_value()) { properties.push_back({field_name, *type}); }
     });
@@ -66,9 +66,9 @@ Description::Property::ValueType getProperty(std::any component, std::string pro
 
     using Indices = boost::mpl::range_c<unsigned, 0, boost::fusion::result_of::size<T>::value>;
     boost::fusion::for_each(Indices(), [&](auto i) {
-        std::string field_name = boost::fusion::extension::struct_member_name<T, i>::call();
+        std::string field_name = boost::fusion::extension::struct_member_name<T, decltype(i)::value>::call();
         if (field_name == property) {
-            auto it = boost::fusion::advance_c<i>(boost::fusion::begin(*tag));
+            auto it = boost::fusion::advance_c<decltype(i)::value>(boost::fusion::begin(*tag));
             value = std::make_optional(*it);
         }
     });
@@ -89,11 +89,11 @@ void setProperty(std::any &component, std::string property, Description::Propert
 
     using Indices = boost::mpl::range_c<unsigned, 0, boost::fusion::result_of::size<T>::value>;
     boost::fusion::for_each(Indices(), [&](auto i) {
-        std::string field_name = boost::fusion::extension::struct_member_name<T, i>::call();
+        std::string field_name = boost::fusion::extension::struct_member_name<T, decltype(i)::value>::call();
         if (field_name == property) {
             assert(!found);
-            auto it = boost::fusion::advance_c<i>(boost::fusion::begin(*tag));
-            using value_type = typename boost::fusion::result_of::value_at_c<T, i>::type;
+            auto it = boost::fusion::advance_c<decltype(i)::value>(boost::fusion::begin(*tag));
+            using value_type = typename boost::fusion::result_of::value_at_c<T, decltype(i)::value>::type;
             auto new_value = std::get_if<value_type>(&value);
 
             if (new_value == nullptr) {
@@ -117,11 +117,11 @@ std::any create(std::map<std::string, Description::Property::ValueType> properti
 
     using Indices = boost::mpl::range_c<unsigned, 0, boost::fusion::result_of::size<T>::value>;
     boost::fusion::for_each(Indices(), [&](auto i) {
-        const char *field_name = boost::fusion::extension::struct_member_name<T, i>::call();
+        const char *field_name = boost::fusion::extension::struct_member_name<T, decltype(i)::value>::call();
         auto property = properties.find(field_name);
         if (property == properties.end()) { throw MissingProperty(field_name); }
-        auto it = boost::fusion::advance_c<i>(boost::fusion::begin(component));
-        using value_type = typename boost::fusion::result_of::value_at_c<T, i>::type;
+        auto it = boost::fusion::advance_c<decltype(i)::value>(boost::fusion::begin(component));
+        using value_type = typename boost::fusion::result_of::value_at_c<T, decltype(i)::value>::type;
         auto new_value = std::get_if<value_type>(&property->second);
 
         if (new_value == nullptr) {

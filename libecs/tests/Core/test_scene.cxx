@@ -5,10 +5,6 @@
 #include <pivot/ecs/Core/Component/index.hxx>
 #include <pivot/ecs/Core/Scene.hxx>
 
-template pivot::ecs::component::Manager *std::unique_ptr<pivot::ecs::component::Manager>::get() const;
-template EntityManager *std::unique_ptr<EntityManager>::get() const;
-template EventManager *std::unique_ptr<EventManager>::get() const;
-template SystemManager *std::unique_ptr<SystemManager>::get() const;
 
 using namespace pivot::ecs::component;
 

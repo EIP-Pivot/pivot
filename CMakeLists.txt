@@ -3,6 +3,18 @@ project(pivot)
 
 include(FetchContent)
 include(CTest)
+include(CheckIPOSupported)
+
+check_ipo_supported(RESULT supported)
+if(supported)
+    message(STATUS "LTO enabled")
+    cmake_policy(SET CMP0069 NEW) 
+    set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+else()
+    message(STATUS "LTO not supported")
+endif()
+
 
 if(MSVC)
     # see https://gitlab.kitware.com/cmake/cmake/-/issues/22606

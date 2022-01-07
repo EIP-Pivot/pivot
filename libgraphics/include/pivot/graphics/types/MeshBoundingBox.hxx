@@ -31,7 +31,7 @@ struct MeshBoundingBox {
     }
 
     /// Returns an array of the 8 vertices of the bounding box
-    constexpr const std::array<glm::vec3, 8> vertices() const
+    inline const std::array<glm::vec3, 8> vertices() const
     {
         return {
             low,

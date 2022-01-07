@@ -110,7 +110,6 @@ endif()
 
 add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/types/Vertex.cxx
-                                   source/types/Transform.cxx
                                    source/types/UniformBufferObject.cxx
                                    source/Window.cxx
                                    source/vk_utils.cxx

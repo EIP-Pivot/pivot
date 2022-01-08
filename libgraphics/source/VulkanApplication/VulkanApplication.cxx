@@ -202,7 +202,7 @@ try {
 
         if (deviceFeature.multiDrawIndirect == VK_TRUE) {
             drawCmd.drawIndexedIndirect(drawResolver.getFrameData(currentFrame).indirectBuffer.buffer, 0,
-                                        drawResolver.getFrameData(currentFrame).currentBufferSize,
+                                        drawResolver.getFrameData(currentFrame).packedDraws.size(),
                                         sizeof(vk::DrawIndexedIndirectCommand));
         } else {
             for (const auto &draw: drawResolver.getFrameData(currentFrame).packedDraws) {

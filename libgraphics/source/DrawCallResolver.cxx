@@ -53,10 +53,14 @@ void DrawCallResolver::prepareForDraw(const std::vector<std::reference_wrapper<c
         objectGPUData.push_back(gpuObject::UniformBufferObject(object.get(), *storage_ref));
     }
     assert(packedDraws.size() == objectGPUData.size());
-    if (objectGPUData.size() > frame.currentBufferSize) {
-        recreateBuffers(objectGPUData.size(), frameIndex);
-        frame.currentBufferSize = objectGPUData.size();
+
+    auto bufferCmp = objectGPUData.size() <=> frame.currentBufferSize;
+    auto descriptorCmp = objectGPUData.size() <=> frame.currentDescriptorSetSize;
+    if (std::is_gt(bufferCmp)) {
+        createBuffers(frame, objectGPUData.size());
+        createDescriptorSets(frame, objectGPUData.size());
     }
+    if (std::is_lt(bufferCmp) || std::is_gt(descriptorCmp)) { createDescriptorSets(frame, objectGPUData.size()); }
 
     if (frame.currentBufferSize > 0) {
         vk_utils::copyBuffer(base_ref->get().allocator, frame.objectBuffer, objectGPUData);
@@ -75,17 +79,6 @@ void DrawCallResolver::prepareForDraw(const std::vector<std::reference_wrapper<c
         base_ref->get().allocator.unmapMemory(frame.indirectBuffer.memory);
     }
     frame.packedDraws.swap(packedDraws);
-}
-
-void DrawCallResolver::recreateBuffers(const auto newSize, const std::uint32_t frameIndex)
-{
-    auto &frame = frames.at(frameIndex);
-    base_ref->get().device.freeDescriptorSets(descriptorPool, frame.objectDescriptor);
-    base_ref->get().allocator.destroyBuffer(frame.indirectBuffer.buffer, frame.indirectBuffer.memory);
-    base_ref->get().allocator.destroyBuffer(frame.objectBuffer.buffer, frame.objectBuffer.memory);
-
-    createBuffers(frame, newSize);
-    createDescriptorSets(frame, newSize);
 }
 
 void DrawCallResolver::createDescriptorPool()
@@ -109,6 +102,11 @@ void DrawCallResolver::createDescriptorPool()
 
 void DrawCallResolver::createBuffers(Frame &frame, const auto bufferSize)
 {
+    if (frame.indirectBuffer)
+        base_ref->get().allocator.destroyBuffer(frame.indirectBuffer.buffer, frame.indirectBuffer.memory);
+    if (frame.objectBuffer)
+        base_ref->get().allocator.destroyBuffer(frame.objectBuffer.buffer, frame.objectBuffer.memory);
+
     frame.indirectBuffer =
         vk_utils::createBuffer(base_ref->get().allocator, sizeof(vk::DrawIndexedIndirectCommand) * bufferSize,
                                vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer,
@@ -121,10 +119,13 @@ void DrawCallResolver::createBuffers(Frame &frame, const auto bufferSize)
                                vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
     vk_debug::setObjectName(base_ref->get().device, frame.objectBuffer.buffer,
                             "Object Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
+    frame.currentBufferSize = bufferSize;
 }
 
 void DrawCallResolver::createDescriptorSets(Frame &frame, const auto bufferSize)
 {
+    if (frame.objectDescriptor) base_ref->get().device.freeDescriptorSets(descriptorPool, frame.objectDescriptor);
+
     vk::DescriptorSetAllocateInfo allocInfo{
         .descriptorPool = descriptorPool,
         .descriptorSetCount = 1,
@@ -162,6 +163,7 @@ void DrawCallResolver::createDescriptorSets(Frame &frame, const auto bufferSize)
         },
     };
     base_ref->get().device.updateDescriptorSets(descriptorWrites, 0);
+    frame.currentDescriptorSetSize = bufferSize;
 }
 
 void DrawCallResolver::createDescriptorSetLayout()

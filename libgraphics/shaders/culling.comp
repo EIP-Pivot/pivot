@@ -84,5 +84,5 @@ void main() {
         visible = visible && one_point_inside;
     }
 
-    drawIndexedIndirectBuffer.drawIndexedIndirect[gID].instanceCount = visible ? 1 : 0;
+    drawIndexedIndirectBuffer.drawIndexedIndirect[gID].instanceCount += visible ? 1 : 0;
 }

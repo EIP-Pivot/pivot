@@ -19,7 +19,7 @@ class DrawCallResolver
 {
 public:
     /// The default size of the buffers
-    static constexpr const auto defaultBufferSize = 20;
+    static constexpr const auto defaultBufferSize = 42;
 
     /// Represent a draw batch
     struct DrawBatch {
@@ -43,6 +43,8 @@ public:
         std::vector<DrawBatch> packedDraws;
         /// The current size of the buffer
         uint32_t currentBufferSize = defaultBufferSize;
+        /// The current size of the buffer that is exposed through the descriptor set.
+        uint32_t currentDescriptorSetSize = defaultBufferSize;
     };
 
 public:
@@ -67,7 +69,6 @@ public:
     constexpr const vk::DescriptorSetLayout &getDescriptorSetLayout() const noexcept { return descriptorSetLayout; }
 
 private:
-    void recreateBuffers(const auto newSize, const std::uint32_t frameIndex);
     void createDescriptorPool();
     void createBuffers(Frame &frame, const auto bufferSize);
     void createDescriptorSets(Frame &frame, const auto bufferSize);

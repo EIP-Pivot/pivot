@@ -29,7 +29,6 @@ public:
     virtual std::optional<std::any> getValueForEntity(Entity entity) const = 0;
 
     // HACK: Remove this as soon as it is not needed anymore
-
     /// Does the same as getValueForEntity(), but returns a std::reference_wrapper of the type
     virtual std::optional<std::any> getRefForEntity(Entity entity) = 0;
 

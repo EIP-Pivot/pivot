@@ -50,18 +50,4 @@ void Manager::EntityDestroyed(Entity entity)
 {
     for (auto &componentArray: m_componentArrays) { componentArray->setValueForEntity(entity, std::nullopt); }
 }
-// void Manager::EntityDestroyed(Entity entity)
-// {
-//     for (auto const &pair: mComponentArrays) {
-//         auto const &component = pair.second;
-
-//         component->EntityDestroyed(entity);
-//     }
-// }
-
-// std::unordered_map<const char *, ComponentType> ComponentManager::getComponentsTypes()
-// {
-//     return mComponentTypes;
-// }
-
 }    // namespace pivot::ecs::component

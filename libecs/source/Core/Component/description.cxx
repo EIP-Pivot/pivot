@@ -1,5 +1,7 @@
-#include <pivot/ecs/Core/Component/description.hxx>
+#include <magic_enum.hpp>
 #include <set>
+
+#include <pivot/ecs/Core/Component/description.hxx>
 
 namespace pivot::ecs::component
 {
@@ -15,13 +17,9 @@ void Description::validate() const
 
         if (property_names.contains(name)) { throw ValidationError("Duplicate property name"); }
 
-        const std::set<Description::Property::Type> all_property_types{
-            Description::Property::Type::STRING,
-            Description::Property::Type::NUMBER,
-            Description::Property::Type::ASSET,
-            Description::Property::Type::VEC3,
-        };
-        if (!all_property_types.contains(type)) { throw ValidationError("Unknown property type"); }
+        if (!magic_enum::enum_contains<Description::Property::Type>(type)) {
+            throw ValidationError("Unknown property type");
+        }
 
         property_names.insert(name);
     }

@@ -13,7 +13,7 @@ TEST_CASE("Correct description for tag component", "[component][tag]")
     REQUIRE(description.name == "Tag");
     REQUIRE(description.properties.size() == 1);
     REQUIRE(description.properties[0].name == "name");
-    REQUIRE(description.properties[0].type == Description::Property::Type::STRING);
+    REQUIRE(description.properties[0].type == Description::Property::Type::String);
 
     const auto original_tag_name = "a name";
     auto tag = description.create({{"name", original_tag_name}});

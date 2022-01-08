@@ -48,16 +48,16 @@ struct Description {
         /// Type of a property. It must always be a valid value of the Type enum.
         enum class Type {
             /// The property is of type std::string
-            STRING,
+            String,
 
             /// The property is of type int
-            NUMBER,
+            Number,
 
             /// Unused for now
-            ASSET,
+            Asset,
 
             /// The property is of type glm::vec3
-            VEC3,
+            Vec3,
         };
 
         // TODO: Store the type with the value

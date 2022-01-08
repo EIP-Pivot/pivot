@@ -23,13 +23,13 @@ namespace
 
     template <>
     constexpr std::optional<Description::Property::Type> cpp_type_to_property_type<std::string> =
-        Description::Property::Type::STRING;
+        Description::Property::Type::String;
     template <>
     constexpr std::optional<Description::Property::Type> cpp_type_to_property_type<int> =
-        Description::Property::Type::NUMBER;
+        Description::Property::Type::Number;
     template <>
     constexpr std::optional<Description::Property::Type> cpp_type_to_property_type<glm::vec3> =
-        Description::Property::Type::VEC3;
+        Description::Property::Type::Vec3;
 
     Description::Property::Type value_to_type(const Description::Property::ValueType &value)
     {

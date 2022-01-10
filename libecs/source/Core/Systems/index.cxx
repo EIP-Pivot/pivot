@@ -30,4 +30,60 @@ std::vector<std::string> Index::getAllSystemsNames() const
     for (auto &[key, value]: m_systems) { names.push_back(key); }
     return names;
 }
+
+Index::const_iterator Index::begin() const { return m_systems.begin(); }
+Index::const_iterator Index::end() const { return m_systems.end(); }
+
+void GlobalIndex::registerSystem(const Description &description)
+{
+    if (m_read_only) { throw std::logic_error("Cannot modify global system index after program started"); }
+
+    const std::lock_guard<std::mutex> guard(m_mutex);
+
+    this->Index::registerSystem(description);
+}
+
+std::optional<Description> GlobalIndex::getDescription(const std::string &componentName)
+{
+    this->lockReadOnly();
+    return this->Index::getDescription(componentName);
+}
+
+std::vector<std::string> GlobalIndex::getAllSystemsNames()
+{
+
+    this->lockReadOnly();
+    return this->Index::getAllSystemsNames();
+}
+
+void GlobalIndex::lockReadOnly()
+{
+    if (!m_read_only) {
+        const std::lock_guard<std::mutex> guard(m_mutex);
+        m_read_only.store(true);
+    }
+}
+
+namespace
+{
+    static std::unique_ptr<GlobalIndex> singleton = nullptr;
+}
+
+GlobalIndex &GlobalIndex::getSingleton()
+{
+    if (!singleton) singleton = std::make_unique<GlobalIndex>();
+    return *singleton;
+}
+
+Index::const_iterator GlobalIndex::begin()
+{
+    this->lockReadOnly();
+    return this->Index::begin();
+}
+
+Index::const_iterator GlobalIndex::end()
+{
+    this->lockReadOnly();
+    return this->Index::end();
+}
 }

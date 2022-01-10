@@ -19,4 +19,4 @@ void Description::validate() const
     }
 }
 
-}    // namespace pivot::ecs::component
+}    // namespace pivot::ecs::systems

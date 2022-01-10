@@ -8,12 +8,12 @@
 
 using namespace pivot::ecs::systems;
 
-void coucou(RigidBody, Tag, Gravity) {}
+void test_description(RigidBody, Tag, Gravity) {}
 
 TEST_CASE("valid system description", "[systems]")
 {
     const std::string test = "Control";
-    Description description = Description::build_system_description(test, &coucou);
+    Description description = Description::build_system_description(test, &test_description);
     REQUIRE_NOTHROW(description.validate());
 }
 

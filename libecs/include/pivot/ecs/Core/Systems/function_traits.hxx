@@ -32,9 +32,10 @@ struct function_traits<ReturnType (*)(Args...)> {
         using type = typename std::tuple_element<i, std::tuple<Args...>>::type;
     };
 
-    static std::vector<std::optional<std::string>> getArgsName() {
-        std::vector<std::optional<std::string>> args;
-        ((args.push_back(pivot::ecs::component::GlobalIndex::getSingleton().getComponentNameByType<Args>())), ...);
+    static std::array<std::optional<std::string>, arity> getArgsName() {
+        std::array<std::optional<std::string>, arity> args;
+        std::size_t i = 0;
+        (void(args[i++] = pivot::ecs::component::GlobalIndex::getSingleton().getComponentNameByType<Args>()), ...);
         return args;
     }
 };

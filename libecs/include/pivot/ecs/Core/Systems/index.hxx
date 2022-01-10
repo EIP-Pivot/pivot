@@ -1,8 +1,10 @@
 #pragma once
 
+#include <atomic>
+#include <map>
+#include <mutex>
 #include <optional>
 #include <typeindex>
-#include <map>
 
 #include "pivot/ecs/Core/Systems/description.hxx"
 
@@ -15,6 +17,10 @@ public:
 
     std::optional<Description> getDescription(const std::string &systemName) const;
 
+    using const_iterator = std::map<std::string, Description>::const_iterator;
+    const_iterator begin() const;
+    const_iterator end() const;
+
     std::vector<std::string> getAllSystemsNames() const;
 
     struct DuplicateError : public std::logic_error {
@@ -26,4 +32,23 @@ public:
 private:
     std::map<std::string, Description> m_systems;
 };
-}
+
+class GlobalIndex : private Index
+{
+public:
+    void registerSystem(const Description &description);
+    std::optional<Description> getDescription(const std::string &componentName);
+    std::vector<std::string> getAllSystemsNames();
+    Index::const_iterator begin();
+    Index::const_iterator end();
+
+    static GlobalIndex &getSingleton();
+
+private:
+    std::atomic<bool> m_read_only;
+    std::mutex m_mutex;
+
+    void lockReadOnly();
+};
+
+}    // namespace pivot::ecs::systems

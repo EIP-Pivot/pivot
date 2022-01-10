@@ -34,8 +34,7 @@ struct Description {
 
         typedef function_traits<decltype(function)> traits;
 
-        const auto &n = traits::getArgsName();
-        newSystem.arguments = std::vector(n.begin(), n.end());
+        newSystem.arguments = traits::getArgsName();
         return newSystem;
     }
 

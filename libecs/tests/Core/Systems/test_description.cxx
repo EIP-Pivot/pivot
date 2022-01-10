@@ -9,9 +9,7 @@
 
 using namespace pivot::ecs::systems;
 
-void coucou(Tag, Gravity, RigidBody)
-{
-}
+void coucou(RigidBody, Tag, Gravity) {}
 
 TEST_CASE("system description", "[systems]")
 {

@@ -93,6 +93,7 @@ if (BUILD_TESTING)
     tests/Core/Data/test_serialization.cxx
     tests/Core/test_scene.cxx
     tests/Core/Systems/test_description.cxx
+    tests/Core/Systems/test_global_registration.cxx
     )
   target_include_directories(${TEST_NAME} PRIVATE tests/)
   target_link_libraries(${TEST_NAME} Catch2 ${PROJECT_NAME})

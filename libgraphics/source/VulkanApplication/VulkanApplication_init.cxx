@@ -109,8 +109,7 @@ void VulkanApplication::createPipelineLayout()
 {
     DEBUG_FUNCTION
     std::vector<vk::PushConstantRange> pipelinePushConstant = {
-        vk_init::populateVkPushConstantRange(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment |
-                                                 vk::ShaderStageFlagBits::eCompute,
+        vk_init::populateVkPushConstantRange(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
                                              sizeof(gpuObject::CameraData)),
     };
 

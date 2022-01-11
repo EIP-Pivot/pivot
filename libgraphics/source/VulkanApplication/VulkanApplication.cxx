@@ -194,9 +194,7 @@ try {
         drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, ressourceDescriptorSet,
                                    nullptr);
         drawCmd.pushConstants<gpuObject::CameraData>(
-            pipelineLayout,
-            vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eCompute,
-            0, gpuCamera);
+            pipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, gpuCamera);
         drawCmd.bindVertexBuffers(0, assetStorage.getVertexBuffer().buffer, offset);
         drawCmd.bindIndexBuffer(assetStorage.getIndexBuffer().buffer, 0, vk::IndexType::eUint32);
 

@@ -70,7 +70,7 @@ endif()
 FetchContent_Declare(
     imgui
     GIT_REPOSITORY https://github.com/EIP-Pivot/imgui.git
-    GIT_TAG 763e2ac9654fb9c2bde9d6748b11933d7b616629
+    GIT_TAG 6a52ef987ff9003f763f7afc512bc48a752f3086
 )
 if (NOT imgui_POPULATED)
     message(STATUS "Populating imgui")

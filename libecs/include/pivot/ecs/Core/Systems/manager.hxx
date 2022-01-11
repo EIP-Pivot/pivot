@@ -18,6 +18,7 @@ class Manager
 {
 public:
     bool useSystem(const Description &description);
+    bool useSystem(const std::string &systemName);
 
     void execute(component::Manager &componentManager, EntityManager &entityManager);
 

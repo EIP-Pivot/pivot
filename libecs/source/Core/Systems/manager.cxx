@@ -7,13 +7,31 @@ bool Manager::useSystem(const Description &description)
 {
     if (m_systems.contains(description.name))
         throw EcsException("System already use.");
-        
+
     std::optional<std::function<void(component::Manager &, EntityManager &)>> system =
         GlobalIndex::getSingleton().getSystemByDescription(description);
 
     if (!system.has_value()) return false;
 
     m_systems.insert({description.name, GlobalIndex::getSingleton().getSystemByDescription(description).value()});
+    return true;
+}
+
+bool Manager::useSystem(const std::string &systemName)
+{
+    if (m_systems.contains(systemName)) throw EcsException("System already use.");
+
+    std::optional<Description> description = GlobalIndex::getSingleton().getDescription(systemName);
+
+    if (!description.has_value())
+        return false;
+
+    std::optional<std::function<void(component::Manager &, EntityManager &)>> system =
+        GlobalIndex::getSingleton().getSystemByDescription(description.value());
+
+    if (!system.has_value()) return false;
+
+    m_systems.insert({systemName, GlobalIndex::getSingleton().getSystemByDescription(description.value()).value()});
     return true;
 }
 

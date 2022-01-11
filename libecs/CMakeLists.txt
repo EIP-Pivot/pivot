@@ -55,6 +55,7 @@ add_library(${PROJECT_NAME} source/Systems/ControlSystem.cxx
                             source/Core/Component/index.cxx
                             source/Core/Systems/description.cxx
                             source/Core/Systems/index.cxx
+                            source/Core/Systems/manager.cxx
                             source/Core/Component/manager.cxx
                             source/Core/Component/ref.cxx
                             source/Core/Component/combination.cxx

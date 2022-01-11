@@ -7,46 +7,61 @@ Index::DuplicateError::DuplicateError(const std::string &systemName)
 {
 }
 
-void Index::registerSystem(const Description &description)
-{
-    description.validate();
-    if (m_systems.contains(description.name)) { throw DuplicateError(description.name); }
-    m_systems.insert({description.name, description});
-}
-
 std::optional<Description> Index::getDescription(const std::string &systemName) const
 {
-    auto it = m_systems.find(systemName);
-    if (it == m_systems.end()) {
+    auto it = m_descriptionByName.find(systemName);
+    if (it == m_descriptionByName.end()) {
         return std::nullopt;
     } else {
         return std::make_optional(it->second);
     }
 }
 
+std::optional<std::function<void(component::Manager &, EntityManager &)>>
+Index::getSystemByName(const std::string &systemName)
+{
+    auto it = m_systemsByName.find(systemName);
+    if (it == m_systemsByName.end()) {
+        return std::nullopt;
+    } else {
+        return std::make_optional(std::ref(it->second));
+    }
+}
+
+std::optional<std::function<void(component::Manager &, EntityManager &)>>
+Index::getSystemByDescription(const Description &description)
+{
+    return getSystemByName(description.name);
+}
+
+
 std::vector<std::string> Index::getAllSystemsNames() const
 {
     std::vector<std::string> names;
-    for (auto &[key, value]: m_systems) { names.push_back(key); }
+    for (auto &[key, value]: m_descriptionByName) { names.push_back(key); }
     return names;
 }
 
-Index::const_iterator Index::begin() const { return m_systems.begin(); }
-Index::const_iterator Index::end() const { return m_systems.end(); }
-
-void GlobalIndex::registerSystem(const Description &description)
-{
-    if (m_read_only) { throw std::logic_error("Cannot modify global system index after program started"); }
-
-    const std::lock_guard<std::mutex> guard(m_mutex);
-
-    this->Index::registerSystem(description);
-}
+Index::const_iterator Index::begin() const { return m_descriptionByName.begin(); }
+Index::const_iterator Index::end() const { return m_descriptionByName.end(); }
 
 std::optional<Description> GlobalIndex::getDescription(const std::string &componentName)
 {
     this->lockReadOnly();
     return this->Index::getDescription(componentName);
+}
+
+std::optional<std::function<void(component::Manager &, EntityManager &)>>
+GlobalIndex::getSystemByName(const std::string &systemName)
+{
+    this->lockReadOnly();
+    return this->Index::getSystemByName(systemName);
+}
+std::optional<std::function<void(component::Manager &, EntityManager &)>>
+GlobalIndex::getSystemByDescription(const Description &description)
+{
+    this->lockReadOnly();
+    return this->Index::getSystemByDescription(description);
 }
 
 std::vector<std::string> GlobalIndex::getAllSystemsNames()

@@ -16,31 +16,7 @@ namespace pivot::ecs::systems
 class Index
 {
 public:
-    template <typename F>
-    void registerSystem(const Description &description, F &&system)
-    {
-        description.validate();
-        if (m_descriptionByName.contains(description.name)) { throw DuplicateError(description.name); }
-
-        m_descriptionByName.insert({description.name, description});
-        m_systemsByName.insert(
-            {description.name,
-             [system, description](component::Manager &componentManager, EntityManager &entityManager) {
-                 std::vector<component::Manager::ComponentId> componentsId;
-                 componentsId.reserve(description.arguments.size());
-
-                 for (const auto &component: description.arguments) {
-                     componentsId.push_back(componentManager.GetComponentId(component).value());
-                 }
-                 for (const auto &entity: entityManager.getEntities()) {
-                     for (const auto &componentId: componentsId) {
-                         std::cout << componentManager.GetComponent(entity.first, componentId).value().type().name()
-                                   << std::endl;    // DenseComponentArray -> std::any en T : Type de cast inconnue dans
-                                                    // la fonction
-                     }
-                 }
-             }});    // make wrapper with system
-    }
+    void registerSystem(const Description &description);
 
     std::optional<Description> getDescription(const std::string &systemName) const;
 
@@ -70,15 +46,7 @@ private:
 class GlobalIndex : private Index
 {
 public:
-    template <typename F>
-    void registerSystem(const Description &description, F &&system)
-    {
-        if (m_read_only) { throw std::logic_error("Cannot modify global system index after program started"); }
-
-        const std::lock_guard<std::mutex> guard(m_mutex);
-
-        this->Index::registerSystem(description, system);
-    }
+    void registerSystem(const Description &description);
 
     std::optional<Description> getDescription(const std::string &componentName);
 

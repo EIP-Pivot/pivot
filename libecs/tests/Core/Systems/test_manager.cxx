@@ -9,9 +9,14 @@
 
 using namespace pivot::ecs::systems;
 
-void test_manager_registration(RigidBody r, Tag t, Gravity g) {}
+void test_manager_registration(std::vector<std::any> components) {
+    std::cout << "I'm a system with components:\n";
+    for(const auto &component: components)
+        std::cout << "\t" << component.type().name() << "\n";
+    std::cout << std::endl;
+}
 
-TEST_CASE("Manager register system", "[manager][systems]")
+TEST_CASE("Manager register system", "[description][registration][manager]")
 {
     pivot::ecs::component::Manager cManager;
     pivot::ecs::component::Description tag =
@@ -30,8 +35,18 @@ TEST_CASE("Manager register system", "[manager][systems]")
     cManager.AddComponent(entity, Tag{}, tagId);
     cManager.AddComponent(entity, RigidBody{}, rigidId);
     cManager.AddComponent(entity, Gravity{}, gravId);
+    
     Manager manager;
-    Description description = Description::build_system_description("Valid", &test_manager_registration);
+    Description description {
+        .name = "Manager",
+        .arguments =
+            {
+                "RigidBody",
+                "Tag",
+            },
+        .system = &test_manager_registration,
+    };
+    GlobalIndex::getSingleton().registerSystem(description);
     manager.useSystem(description);
     manager.execute(cManager, eManager);
 }

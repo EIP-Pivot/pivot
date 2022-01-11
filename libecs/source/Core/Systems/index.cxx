@@ -7,6 +7,31 @@ Index::DuplicateError::DuplicateError(const std::string &systemName)
 {
 }
 
+void Index::registerSystem(const Description &description)
+{
+    description.validate();
+    if (m_descriptionByName.contains(description.name)) { throw DuplicateError(description.name); }
+
+    m_descriptionByName.insert({description.name, description});
+
+    m_systemsByName.insert(
+        {description.name, [description](component::Manager &componentManager, EntityManager &entityManager) {
+             std::vector<component::Manager::ComponentId> componentsId;
+             componentsId.reserve(description.arguments.size());
+
+             for (const auto &component: description.arguments) {
+                 componentsId.push_back(componentManager.GetComponentId(component).value());
+             }
+            std::vector<std::any> args;
+             for (const auto &entity: entityManager.getEntities()) {
+                 for (const auto &componentId: componentsId) {
+                     args.push_back(componentManager.GetComponent(entity.first, componentId).value());
+                 }
+             }
+             description.system(args);
+         }});
+}
+
 std::optional<Description> Index::getDescription(const std::string &systemName) const
 {
     auto it = m_descriptionByName.find(systemName);
@@ -34,7 +59,6 @@ Index::getSystemByDescription(const Description &description)
     return getSystemByName(description.name);
 }
 
-
 std::vector<std::string> Index::getAllSystemsNames() const
 {
     std::vector<std::string> names;
@@ -44,6 +68,15 @@ std::vector<std::string> Index::getAllSystemsNames() const
 
 Index::const_iterator Index::begin() const { return m_descriptionByName.begin(); }
 Index::const_iterator Index::end() const { return m_descriptionByName.end(); }
+
+void GlobalIndex::registerSystem(const Description &description)
+{
+    if (m_read_only) { throw std::logic_error("Cannot modify global system index after program started"); }
+
+    const std::lock_guard<std::mutex> guard(m_mutex);
+
+    this->Index::registerSystem(description);
+}
 
 std::optional<Description> GlobalIndex::getDescription(const std::string &componentName)
 {
@@ -101,4 +134,4 @@ Index::const_iterator GlobalIndex::end()
     this->lockReadOnly();
     return this->Index::end();
 }
-}
+}    // namespace pivot::ecs::systems

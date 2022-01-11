@@ -7,39 +7,57 @@
 
 using namespace pivot::ecs::systems;
 
-void test_global_registration(RigidBody, Tag, Gravity) {}
+GlobalIndex indexForRegistrationTest;
 
-TEST_CASE("Register same system in Global Index", "[systems]")
+void test_global_registration(std::vector<std::any> components) {}
+
+TEST_CASE("Register same system in Global Index", "[description][registration]")
 {
-    Description description = Description::build_system_description("Duplicate", &test_global_registration);
-    REQUIRE_NOTHROW(GlobalIndex::getSingleton().registerSystem(description, &test_global_registration));
-    REQUIRE_THROWS_AS(GlobalIndex::getSingleton().registerSystem(description, &test_global_registration), Index::DuplicateError);
+    Description description{
+        .name = "Duplicate",
+        .arguments =
+            {
+                "RigidBody",
+                "Tag",
+            },
+        .system = &test_global_registration,
+    };
+    REQUIRE_NOTHROW(indexForRegistrationTest.registerSystem(description));
+    REQUIRE_THROWS_AS(indexForRegistrationTest.registerSystem(description), Index::DuplicateError);
 }
 
-TEST_CASE("Register valid system in Global Index", "[systems]")
+TEST_CASE("Register valid system in Global Index", "[description][registration]")
 {
-    Description description = Description::build_system_description("Valid", &test_global_registration);
-    REQUIRE_NOTHROW(GlobalIndex::getSingleton().registerSystem(description, &test_global_registration));
+    Description description{
+        .name = "Valid",
+        .arguments =
+            {
+                "RigidBody",
+                "Tag",
+            },
+        .system = &test_global_registration,
+    };
+    REQUIRE_NOTHROW(indexForRegistrationTest.registerSystem(description));
 }
 
-TEST_CASE("Register invalid system in Global Index", "[systems]")
+TEST_CASE("Register invalid system in Global Index", "[description][registration]")
 {
     Description description;
-    REQUIRE_THROWS_AS(GlobalIndex::getSingleton().registerSystem(description, &test_global_registration),
+    REQUIRE_THROWS_AS(indexForRegistrationTest.registerSystem(description),
                       Description::ValidationError);
 }
 
-TEST_CASE("Get system in Global Index", "[systems]")
+TEST_CASE("Get system in Global Index", "[description][registration]")
 {
-    REQUIRE(GlobalIndex::getSingleton().getDescription("Valid").has_value());
+    REQUIRE(indexForRegistrationTest.getDescription("Valid").has_value());
 }
 
-TEST_CASE("Get not registered system in Global Index", "[systems]")
+TEST_CASE("Get not registered system in Global Index", "[description][registration]")
 {
-    REQUIRE(!GlobalIndex::getSingleton().getDescription("Yolo").has_value());
+    REQUIRE(!indexForRegistrationTest.getDescription("Yolo").has_value());
 }
 
-TEST_CASE("Iterator of Global Index", "[systems]")
+TEST_CASE("Iterator of Global Index", "[description][registration]")
 {
-    for (auto &[name, description]: GlobalIndex::getSingleton()) { REQUIRE((name == "Valid" || name == "Duplicate")); }
+    for (auto &[name, description]: indexForRegistrationTest) { REQUIRE((name == "Valid" || name == "Duplicate")); }
 }

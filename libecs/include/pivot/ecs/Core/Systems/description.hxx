@@ -6,17 +6,12 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <any>
+#include <vector>
 
 
 namespace pivot::ecs::systems
 {
-
-template <typename Fn>
-concept SystemFunction = requires
-{
-    std::is_same_v<typename function_traits<Fn>::result_type, void>;
-    function_traits<Fn>::arity > 0;
-};
 
 struct Description {
 
@@ -24,22 +19,9 @@ struct Description {
 
     std::vector<std::string> arguments;
 
+    std::function<void(std::vector<std::any>)> system;
+
     void validate() const;
-
-    static Description build_system_description(const std::string &name, SystemFunction auto function)
-    {
-        Description newSystem {
-            .name = name,
-        };
-
-        typedef function_traits<decltype(function)> traits;
-
-        for (const auto &arg: traits::getArgsName()) {
-            if (!arg.has_value()) throw ValidationError("Component not registered.");
-            newSystem.arguments.push_back(arg.value());
-        }
-        return newSystem;
-    }
 
     class ValidationError : public std::logic_error
     {

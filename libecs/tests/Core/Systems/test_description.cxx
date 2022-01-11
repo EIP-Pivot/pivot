@@ -8,22 +8,28 @@
 
 using namespace pivot::ecs::systems;
 
-void test_description(RigidBody, Tag, Gravity) {}
+void test_description(std::vector<std::any> components) {}
 
-TEST_CASE("valid system description", "[systems]")
+TEST_CASE("valid system description", "[description]")
 {
-    const std::string test = "Control";
-    Description description = Description::build_system_description(test, &test_description);
+    Description description {
+        .name = "Test Description",
+        .arguments = {
+            "RigidBody",
+            "Tag",
+        },
+        .system = &test_description,
+    };
     REQUIRE_NOTHROW(description.validate());
 }
 
-TEST_CASE("Empty system description", "[systems]")
+TEST_CASE("Empty system description", "[description]")
 {
     Description description;
     REQUIRE_THROWS_WITH(description.validate(), "Empty system name");
 }
 
-TEST_CASE("Empty args system description", "[systems]")
+TEST_CASE("Empty args system description", "[description]")
 {
     Description description{
         .name = "Invalid",
@@ -31,7 +37,7 @@ TEST_CASE("Empty args system description", "[systems]")
     REQUIRE_THROWS_WITH(description.validate(), "Empty system argument");
 }
 
-TEST_CASE("Invalid args system description", "[systems]")
+TEST_CASE("Invalid args system description", "[description]")
 {
     Description description{
         .name = "Invalid",

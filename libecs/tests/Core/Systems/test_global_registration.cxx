@@ -12,20 +12,21 @@ void test_global_registration(RigidBody, Tag, Gravity) {}
 TEST_CASE("Register same system in Global Index", "[systems]")
 {
     Description description = Description::build_system_description("Duplicate", &test_global_registration);
-    REQUIRE_NOTHROW(GlobalIndex::getSingleton().registerSystem(description));
-    REQUIRE_THROWS_AS(GlobalIndex::getSingleton().registerSystem(description), Index::DuplicateError);
+    REQUIRE_NOTHROW(GlobalIndex::getSingleton().registerSystem(description, &test_global_registration));
+    REQUIRE_THROWS_AS(GlobalIndex::getSingleton().registerSystem(description, &test_global_registration), Index::DuplicateError);
 }
 
 TEST_CASE("Register valid system in Global Index", "[systems]")
 {
     Description description = Description::build_system_description("Valid", &test_global_registration);
-    REQUIRE_NOTHROW(GlobalIndex::getSingleton().registerSystem(description));
+    REQUIRE_NOTHROW(GlobalIndex::getSingleton().registerSystem(description, &test_global_registration));
 }
 
 TEST_CASE("Register invalid system in Global Index", "[systems]")
 {
     Description description;
-    REQUIRE_THROWS_AS(GlobalIndex::getSingleton().registerSystem(description), Description::ValidationError);
+    REQUIRE_THROWS_AS(GlobalIndex::getSingleton().registerSystem(description, &test_global_registration),
+                      Description::ValidationError);
 }
 
 TEST_CASE("Get system in Global Index", "[systems]")
@@ -40,8 +41,5 @@ TEST_CASE("Get not registered system in Global Index", "[systems]")
 
 TEST_CASE("Iterator of Global Index", "[systems]")
 {
-    for (auto index: GlobalIndex::getSingleton())
-    {
-        REQUIRE((index.first == "Valid" || index.first == "Duplicate"));
-    }
+    for (auto &[name, description]: GlobalIndex::getSingleton()) { REQUIRE((name == "Valid" || name == "Duplicate")); }
 }

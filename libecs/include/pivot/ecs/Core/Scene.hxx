@@ -2,6 +2,10 @@
 
 #include "pivot/ecs/Core/Component/index.hxx"
 #include "pivot/ecs/Core/Component/manager.hxx"
+
+#include "pivot/ecs/Core/Systems/index.hxx"
+#include "pivot/ecs/Core/Systems/manager.hxx"
+
 #include "pivot/ecs/Core/EntityManager.hxx"
 #include "pivot/ecs/Core/EventManager.hxx"
 #include "pivot/ecs/Core/SystemManager.hxx"
@@ -77,44 +81,14 @@ public:
 
     // System methods
 
-    /// Register a system before its usage
-    /// @code
-    /// gCoordinator.RegisterSystem<{YourSystem}>();
-    /// @endcode
-    template <typename T>
-    std::shared_ptr<T> RegisterSystem()
-    {
-        auto system = mSystemManager->RegisterSystem<T>();
-        mSystems.push_back(system);
-        return system;
-    }
-
-    /// Set a signature on your System to get the good list of entity.
-    /// In this exemple, the system will pass on all entity wich have {YourComponent}
-    /// @code
-    /// Signature signature;
-    /// signature.set(gCoordinator.GetComponentType<{YourComponent}>());
-    /// signature.set(gCoordinator.GetComponentType<Transform>());
-    /// gCoordinator.SetSystemSignature<{YourSystem}>(signature);
-    /// @endcode
-    template <typename T>
-    void SetSystemSignature(Signature signature)
-    {
-        mSystemManager->SetSignature<T>(signature);
-        for (Entity entity = 0; entity < getLivingEntityCount(); entity++) {
-            if ((getSignature(entity) & signature) == signature) mSystemManager->setEntityToSystem<T>(entity);
-        }
-    }
-
-    /// Check if a system is register in a scene
-    template <typename T>
-    bool hasSystem()
-    {
-        return mSystemManager->hasSystem<T>();
-    }
-
-    /// Update registered systems
+    /// Update used systems
     void Update(float dt);
+
+    /// Get the system manager
+    pivot::ecs::systems::Manager &getSystemManager();
+
+    /// Get the system manager (const)
+    const pivot::ecs::systems::Manager &getSystemManager() const;
 
     // Event methods
 
@@ -156,7 +130,7 @@ private:
     std::unique_ptr<pivot::ecs::component::Manager> mComponentManager;
     std::unique_ptr<EntityManager> mEntityManager;
     std::unique_ptr<EventManager> mEventManager;
-    std::unique_ptr<SystemManager> mSystemManager;
+    std::unique_ptr<pivot::ecs::systems::Manager> mSystemManager;
     std::vector<std::shared_ptr<System>> mSystems;
     std::vector<Entity> mCamera;
     std::uint16_t mCurrentCamera;

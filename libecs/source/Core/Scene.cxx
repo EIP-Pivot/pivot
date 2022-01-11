@@ -9,7 +9,7 @@ Scene::Scene(std::string sceneName)
       mComponentManager(std::make_unique<component::Manager>()),
       mEntityManager(std::make_unique<EntityManager>()),
       mEventManager(std::make_unique<EventManager>()),
-      mSystemManager(std::make_unique<SystemManager>()),
+      mSystemManager(std::make_unique<systems::Manager>()),
       mCurrentCamera(0)
 {
     auto &global_index = component::GlobalIndex::getSingleton();
@@ -41,7 +41,6 @@ void Scene::DestroyEntity(Entity entity)
 {
     mEntityManager->DestroyEntity(entity);
     mComponentManager->EntityDestroyed(entity);
-    mSystemManager->EntityDestroyed(entity);
 }
 
 Signature Scene::getSignature(Entity entity) { return mEntityManager->GetSignature(entity); }
@@ -54,10 +53,12 @@ std::string Scene::getEntityName(Entity entity)
 
 uint32_t Scene::getLivingEntityCount() { return mEntityManager->getLivingEntityCount(); }
 
-void Scene::Update(float dt)
-{
-    for (std::shared_ptr<System> system: mSystems) { system->Update(dt); }
-}
+// std::unordered_map<const char *, ComponentType> Scene::getComponentsTypes()
+// {
+//     return mComponentManager->getComponentsTypes();
+// }
+
+void Scene::Update(float dt) { this->mSystemManager->execute(*this->mComponentManager.get(), *this->mEntityManager.get()); }
 
 void Scene::AddEventListener(EventId eventId, std::function<void(Event &)> const &listener)
 {
@@ -87,3 +88,7 @@ pivot::ecs::component::Manager &Scene::getComponentManager() { return *this->mCo
 
 /// Get the component manager (const)
 const pivot::ecs::component::Manager &Scene::getComponentManager() const { return *this->mComponentManager.get(); }
+
+pivot::ecs::systems::Manager &Scene::getSystemManager() { return *this->mSystemManager.get(); }
+
+const pivot::ecs::systems::Manager &Scene::getSystemManager() const { return *this->mSystemManager.get(); }

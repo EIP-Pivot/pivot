@@ -2,6 +2,7 @@
 
 #include "pivot/graphics/types/Transform.hxx"
 
+#include <optional>
 #include <string>
 
 /// @class RenderObject
@@ -18,9 +19,9 @@ struct RenderObject {
         /// The object transform
         Transform transform;
         /// The name of the texture to apply on the object
-        std::string textureIndex;
+        std::optional<std::string> textureIndex;
         /// The name of the material to use on the object
-        std::string materialIndex = "white";
+        std::optional<std::string> materialIndex;
     }
     /// The informations about the object
     /// @see ObjectInformation

@@ -45,12 +45,20 @@ void DrawCallResolver::prepareForDraw(const std::vector<std::reference_wrapper<c
     uint32_t drawCount = 0;
 
     for (const auto &object: sceneInformation) {
-        packedDraws.push_back({
-            .meshId = object.get().meshID,
-            .first = drawCount++,
-            .count = 1,
-        });
-        objectGPUData.push_back(gpuObject::UniformBufferObject(object.get(), *storage_ref));
+        for (const auto &model: storage_ref->get().get<AssetStorage::Prefab>(object.get().meshID).modelIds) {
+
+            packedDraws.push_back({
+                .meshId = model,
+                .first = drawCount++,
+                .count = 1,
+            });
+            objectGPUData.push_back(gpuObject::UniformBufferObject(
+                {
+                    .meshID = model,
+                    .objectInformation = object.get().objectInformation,
+                },
+                *storage_ref));
+        }
     }
     assert(packedDraws.size() == objectGPUData.size());
 
@@ -70,7 +78,7 @@ void DrawCallResolver::prepareForDraw(const std::vector<std::reference_wrapper<c
         auto *sceneData =
             (vk::DrawIndexedIndirectCommand *)base_ref->get().allocator.mapMemory(frame.indirectBuffer.memory);
         for (uint32_t i = 0; i < packedDraws.size(); i++) {
-            const auto &mesh = storage_ref->get().get<pivot::graphics::AssetStorage::Mesh>(packedDraws[i].meshId);
+            const auto &mesh = storage_ref->get().get<pivot::graphics::AssetStorage::Mesh>(packedDraws.at(i).meshId);
 
             sceneData[i].firstIndex = mesh.indicesOffset;
             sceneData[i].indexCount = mesh.indicesSize;

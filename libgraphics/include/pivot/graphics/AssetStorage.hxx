@@ -13,6 +13,7 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <tiny_obj_loader.h>
 #include <unordered_map>
 #include <utility>
 #include <variant>
@@ -55,11 +56,22 @@ public:
         std::uint32_t indicesOffset;
         /// Number of indice forming the mesh.
         std::uint32_t indicesSize;
+    };
 
+    /// A mesh with a default texture and a default material
+    struct Model {
+        /// Model mesh
+        Mesh mesh;
         /// Default texture id
         std::optional<std::string> default_texture;
         /// Default material id
         std::optional<std::string> default_material;
+    };
+
+    /// An group of model
+    struct Prefab {
+        /// The ids of the composing models
+        std::vector<std::string> modelIds;
     };
 
     /// @struct Texture
@@ -128,6 +140,7 @@ public:
 private:
     bool loadModel(const std::filesystem::path &path);
     bool loadTexture(const std::filesystem::path &path);
+    bool loadMaterial(const tinyobj::material_t &material);
     void pushModelsOnGPU();
     void pushBoundingBoxesOnGPU();
     void pushTexturesOnGPU();
@@ -135,7 +148,8 @@ private:
 
 private:
     OptionalRef<VulkanBase> base_ref;
-    std::unordered_map<std::string, Mesh> meshStorage;
+    std::unordered_map<std::string, Model> modelStorage;
+    std::unordered_map<std::string, Prefab> prefabStorage;
     std::unordered_map<std::string, MeshBoundingBox> meshBoundingBoxStorage;
     std::unordered_map<std::string, Texture> textureStorage;
     std::unordered_map<std::string, gpuObject::Material> materialStorage;
@@ -157,17 +171,23 @@ private:
 
 template <>
 /// @cond
-inline const AssetStorage::Mesh &AssetStorage::get(const std::string &p) const
+inline const AssetStorage::Prefab &AssetStorage::get(const std::string &p) const
 {
-    PIVOT_TEST_CONTAINS(meshStorage, p);
-    return meshStorage.at(p);
+    PIVOT_TEST_CONTAINS(prefabStorage, p);
+    return prefabStorage.at(p);
 }
 
 template <>
-inline const AssetStorage::Texture &AssetStorage::get(const std::string &p) const
+inline const AssetStorage::Model &AssetStorage::get(const std::string &p) const
 {
-    PIVOT_TEST_CONTAINS(textureStorage, p);
-    return textureStorage.at(p);
+    PIVOT_TEST_CONTAINS(modelStorage, p);
+    return modelStorage.at(p);
+}
+
+template <>
+inline const AssetStorage::Mesh &AssetStorage::get(const std::string &p) const
+{
+    return get<Model>(p).mesh;
 }
 
 template <>
@@ -177,12 +197,34 @@ inline const MeshBoundingBox &AssetStorage::get(const std::string &p) const
     return meshBoundingBoxStorage.at(p);
 }
 
+template <>
+inline const AssetStorage::Texture &AssetStorage::get(const std::string &p) const
+{
+    PIVOT_TEST_CONTAINS(textureStorage, p);
+    return textureStorage.at(p);
+}
+
 // Get Index of asset in the buffers
+
+template <>
+/// @cond
+inline std::uint32_t AssetStorage::getIndex<AssetStorage::Model>(const std::string &i) const
+{
+    PIVOT_TEST_CONTAINS(modelStorage, i);
+    return std::distance(modelStorage.begin(), modelStorage.find(i));
+}
+
 template <>
 inline std::uint32_t AssetStorage::getIndex<AssetStorage::Mesh>(const std::string &i) const
 {
-    PIVOT_TEST_CONTAINS(meshStorage, i);
-    return std::distance(meshStorage.begin(), meshStorage.find(i));
+    return getIndex<AssetStorage::Model>(i);
+}
+
+template <>
+inline std::uint32_t AssetStorage::getIndex<MeshBoundingBox>(const std::string &i) const
+{
+    PIVOT_TEST_CONTAINS(meshBoundingBoxStorage, i);
+    return std::distance(meshBoundingBoxStorage.begin(), meshBoundingBoxStorage.find(i));
 }
 
 template <>
@@ -199,13 +241,6 @@ inline std::uint32_t AssetStorage::getIndex<gpuObject::Material>(const std::stri
     return std::distance(materialStorage.begin(), materialStorage.find(i));
 }
 
-template <>
-
-inline std::uint32_t AssetStorage::getIndex<MeshBoundingBox>(const std::string &i) const
-{
-    PIVOT_TEST_CONTAINS(meshBoundingBoxStorage, i);
-    return std::distance(meshBoundingBoxStorage.begin(), meshBoundingBoxStorage.find(i));
-}
 ///@endcond
 
 #undef PIVOT_TEST_CONTAINS

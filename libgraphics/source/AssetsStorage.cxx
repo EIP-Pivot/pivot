@@ -6,8 +6,8 @@
 #include "pivot/graphics/vk_utils.hxx"
 
 #include <Logger.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <stb_image.h>
-#include <tiny_obj_loader.h>
 
 namespace pivot::graphics
 {
@@ -20,6 +20,7 @@ AssetStorage::AssetStorage(VulkanBase &base): base_ref(base)
         .diffuse = {1.0f, 1.0f, 1.0f},
         .specular = {1.0f, 1.0f, 1.0f},
     };
+    loadMaterial(tinyobj::material_t{});
 }
 
 AssetStorage::~AssetStorage() {}
@@ -27,19 +28,19 @@ AssetStorage::~AssetStorage() {}
 void AssetStorage::build()
 {
     DEBUG_FUNCTION
-    logger.info("ASSET STORAGE") << "Pushing models onto the GPU";
+    assert(modelStorage.size() == meshBoundingBoxStorage.size());
 
+    logger.info("ASSET STORAGE") << prefabStorage.size() << " prefab loaded";
+    logger.info("ASSET STORAGE") << "Pushing " << modelStorage.size() << " models onto the GPU";
     pushModelsOnGPU();
     vk_debug::setObjectName(base_ref->get().device, vertexBuffer.buffer, "Vertex Buffer");
     vk_debug::setObjectName(base_ref->get().device, indicesBuffer.buffer, "Indices Buffer");
 
-    logger.info("ASSET STORAGE") << "Pushing bounding boxes onto the GPU";
-
+    logger.info("ASSET STORAGE") << "Pushing " << meshBoundingBoxStorage.size() << " bounding boxes onto the GPU";
     pushBoundingBoxesOnGPU();
     vk_debug::setObjectName(base_ref->get().device, boundingboxbuffer.buffer, "BoundingBox Buffer");
 
-    logger.info("ASSET STORAGE") << "Pushing textures onto the GPU";
-
+    logger.info("ASSET STORAGE") << "Pushing " << textureStorage.size() << " textures onto the GPU";
     pushTexturesOnGPU();
     for (auto &[name, image]: textureStorage) {
         auto &im = std::get<AllocatedImage>(image.image);
@@ -47,8 +48,7 @@ void AssetStorage::build()
         vk_debug::setObjectName(base_ref->get().device, im.imageView, "Texture " + name + "ImageView");
     }
 
-    logger.info("ASSET STORAGE") << "Pushing materials onto the GPU";
-
+    logger.info("ASSET STORAGE") << "Pushing " << materialStorage.size() << " materials onto the GPU";
     pushMaterialOnGPU();
     vk_debug::setObjectName(base_ref->get().device, materialBuffer.buffer, "Material Buffer");
 }
@@ -79,6 +79,8 @@ bool AssetStorage::loadModel(const std::filesystem::path &path)
 
         return false;
     }
+    logger.info("AssetStorage") << "Loading model at : " << path;
+    auto base_dir = path.parent_path();
     std::vector<Vertex> currentVertexBuffer;
     std::vector<uint32_t> currentIndexBuffer;
 
@@ -95,13 +97,32 @@ bool AssetStorage::loadModel(const std::filesystem::path &path)
         return false;
     }
 
-    std::unordered_map<Vertex, uint32_t> uniqueVertices{};
-    Mesh mesh{
-        .vertexOffset = static_cast<uint32_t>(vertexStagingBuffer.size()),
-        .indicesOffset = static_cast<uint32_t>(indexStagingBuffer.size()),
-    };
+    for (const auto &m: materials) {
+        loadMaterial(m);
+        if (!m.diffuse_texname.empty() && !getTextures().contains(m.diffuse_texname)) {
+            loadTexture(base_dir / m.diffuse_texname);
+        }
+    }
 
+    std::unordered_map<Vertex, uint32_t> uniqueVertices{};
+    Prefab prefab;
     for (const auto &shape: shapes) {
+        Model model{
+            .mesh =
+                {
+                    .vertexOffset = static_cast<uint32_t>(vertexStagingBuffer.size()),
+                    .indicesOffset = static_cast<uint32_t>(indexStagingBuffer.size()),
+                },
+        };
+        if (!shape.mesh.material_ids.empty() && shape.mesh.material_ids.at(0) >= 0) {
+            model.default_material = materials.at(shape.mesh.material_ids.at(0)).name;
+            if (std::filesystem::path name = materials.at(shape.mesh.material_ids.at(0)).diffuse_texname;
+                !name.empty()) {
+                model.default_texture = name.stem();
+            } else if (!prefab.modelIds.empty()) {
+                model.default_texture = get<Model>(prefab.modelIds.at(0)).default_texture;
+            }
+        }
         for (const auto &index: shape.mesh.indices) {
             Vertex vertex{
                 .pos =
@@ -127,21 +148,33 @@ bool AssetStorage::loadModel(const std::filesystem::path &path)
             }
 
             if (!uniqueVertices.contains(vertex)) {
-                uniqueVertices[vertex] = vertexStagingBuffer.size() - mesh.vertexOffset;
+                uniqueVertices[vertex] = vertexStagingBuffer.size() - model.mesh.vertexOffset;
                 vertexStagingBuffer.push_back(vertex);
             }
             indexStagingBuffer.push_back(uniqueVertices.at(vertex));
         }
+        model.mesh.indicesSize = indexStagingBuffer.size() - model.mesh.indicesOffset;
+        model.mesh.vertexSize = vertexStagingBuffer.size() - model.mesh.vertexOffset;
+        prefab.modelIds.push_back(shape.name);
+        modelStorage.insert({shape.name, model});
+        meshBoundingBoxStorage.insert(
+            {shape.name,
+             MeshBoundingBox(std::span(vertexStagingBuffer.begin() + model.mesh.vertexOffset, model.mesh.vertexSize))});
     }
-    mesh.indicesSize = indexStagingBuffer.size() - mesh.indicesOffset;
-    mesh.vertexSize = vertexStagingBuffer.size() - mesh.vertexOffset;
-    meshStorage.insert({path.stem().string(), mesh});
-    meshBoundingBoxStorage.insert(
-        {path.stem().string(),
-         MeshBoundingBox(std::span(vertexStagingBuffer.begin() + mesh.vertexOffset, mesh.vertexSize))});
-
+    prefabStorage.insert({path.stem(), prefab});
     vertexStagingBuffer.insert(vertexStagingBuffer.end(), currentVertexBuffer.begin(), currentVertexBuffer.end());
     indexStagingBuffer.insert(indexStagingBuffer.end(), currentIndexBuffer.begin(), currentIndexBuffer.end());
+    return true;
+}
+
+bool AssetStorage::loadMaterial(const tinyobj::material_t &material)
+{
+    gpuObject::Material mat{
+        .ambientColor = glm::make_vec3(material.ambient),
+        .diffuse = glm::make_vec3(material.diffuse),
+        .specular = glm::make_vec3(material.specular),
+    };
+    materialStorage.insert({material.name, mat});
     return true;
 }
 
@@ -153,6 +186,7 @@ bool AssetStorage::loadTexture(const std::filesystem::path &path)
 
         return false;
     }
+    logger.info("AssetStorage") << "Loading texture at : " << path;
 
     int texWidth, texHeight, texChannels;
     stbi_uc *pixels = stbi_load(path.string().c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
@@ -165,7 +199,7 @@ bool AssetStorage::loadTexture(const std::filesystem::path &path)
     stbi_image_free(pixels);
 
     textureStorage.insert({
-        path.stem().string(),
+        path.stem(),
         Texture{
             .image = std::move(image),
             .size =
@@ -187,7 +221,6 @@ void AssetStorage::pushModelsOnGPU()
 
     if (vertexSize == 0) {
         logger.warn("Asset Storage") << "No model to push";
-
         return;
     }
     auto stagingVertex = vk_utils::createBuffer(base_ref->get().allocator, vertexSize,
@@ -223,7 +256,6 @@ void AssetStorage::pushTexturesOnGPU()
 
     if (textureStorage.empty()) {
         logger.warn("Asset Storage") << "No textures to push";
-
         return;
     }
     for (auto &[name, texture]: textureStorage) {
@@ -272,7 +304,6 @@ void AssetStorage::pushMaterialOnGPU()
     auto size = sizeof(gpuObject::Material) * materialStorage.size();
     if (size == 0) {
         logger.warn("Asset Storage") << "No material to push";
-
         return;
     }
     auto materialStaging = vk_utils::createBuffer(
@@ -296,7 +327,6 @@ void AssetStorage::pushBoundingBoxesOnGPU()
     auto size = sizeof(MeshBoundingBox) * materialStorage.size();
     if (size == 0) {
         logger.warn("Asset Storage") << "No material to push";
-
         return;
     }
     auto boundingboxStaging = vk_utils::createBuffer(

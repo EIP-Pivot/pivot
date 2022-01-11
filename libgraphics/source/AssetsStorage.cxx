@@ -89,11 +89,12 @@ bool AssetStorage::loadModel(const std::filesystem::path &path)
     std::vector<tinyobj::material_t> materials;
     std::string warn, err;
 
-    tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.string().c_str(), nullptr);
+    /// TODO: check return value
+    tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.string().c_str(), base_dir.string().c_str(), false,
+                     false);
     if (!warn.empty()) { logger.warn("LOADING_OBJ") << warn; }
     if (!err.empty()) {
         logger.err("LOADING_OBJ") << err;
-
         return false;
     }
 
@@ -118,7 +119,7 @@ bool AssetStorage::loadModel(const std::filesystem::path &path)
             model.default_material = materials.at(shape.mesh.material_ids.at(0)).name;
             if (std::filesystem::path name = materials.at(shape.mesh.material_ids.at(0)).diffuse_texname;
                 !name.empty()) {
-                model.default_texture = name.stem();
+                model.default_texture = name.stem().string();
             } else if (!prefab.modelIds.empty()) {
                 model.default_texture = get<Model>(prefab.modelIds.at(0)).default_texture;
             }
@@ -161,7 +162,7 @@ bool AssetStorage::loadModel(const std::filesystem::path &path)
             {shape.name,
              MeshBoundingBox(std::span(vertexStagingBuffer.begin() + model.mesh.vertexOffset, model.mesh.vertexSize))});
     }
-    prefabStorage.insert({path.stem(), prefab});
+    prefabStorage.insert({path.stem().string(), prefab});
     vertexStagingBuffer.insert(vertexStagingBuffer.end(), currentVertexBuffer.begin(), currentVertexBuffer.end());
     indexStagingBuffer.insert(indexStagingBuffer.end(), currentIndexBuffer.begin(), currentIndexBuffer.end());
     return true;
@@ -198,18 +199,15 @@ bool AssetStorage::loadTexture(const std::filesystem::path &path)
     std::memcpy(image.data(), pixels, imageSize);
     stbi_image_free(pixels);
 
-    textureStorage.insert({
-        path.stem(),
-        Texture{
-            .image = std::move(image),
-            .size =
-                {
-                    .width = static_cast<uint32_t>(texWidth),
-                    .height = static_cast<uint32_t>(texHeight),
-                    .depth = 1,
-                },
-        },
-    });
+    textureStorage.insert(std::make_pair(path.stem().string(), Texture{
+                                                                   .image = std::move(image),
+                                                                   .size =
+                                                                       {
+                                                                           .width = static_cast<uint32_t>(texWidth),
+                                                                           .height = static_cast<uint32_t>(texHeight),
+                                                                           .depth = 1,
+                                                                       },
+                                                               }));
     return true;
 }
 

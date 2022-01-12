@@ -202,27 +202,30 @@ try {
         };
         VK_TRY(drawCmd.begin(&drawBeginInfo));
         pivot::graphics::vk_debug::beginRegion(imguiCmd, "Draw Commands", {0.f, 1.f, 0.f, 1.f});
-        drawCmd.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
-        drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0,
-                                   drawResolver.getFrameData(currentFrame).objectDescriptor, nullptr);
-        drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, ressourceDescriptorSet,
-                                   nullptr);
-        drawCmd.pushConstants<gpuObject::VertexPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0,
-                                                             vertexCamere);
-        drawCmd.pushConstants<gpuObject::FragmentPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eFragment,
-                                                               sizeof(gpuObject::VertexPushConstant), fragmentCamera);
-        drawCmd.bindVertexBuffers(0, assetStorage.getVertexBuffer().buffer, offset);
-        drawCmd.bindIndexBuffer(assetStorage.getIndexBuffer().buffer, 0, vk::IndexType::eUint32);
+        if (drawResolver.getFrameData(currentFrame).packedDraws.size() > 0) {
+            drawCmd.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
+            drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0,
+                                       drawResolver.getFrameData(currentFrame).objectDescriptor, nullptr);
+            drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, ressourceDescriptorSet,
+                                       nullptr);
+            drawCmd.pushConstants<gpuObject::VertexPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0,
+                                                                 vertexCamere);
+            drawCmd.pushConstants<gpuObject::FragmentPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eFragment,
+                                                                   sizeof(gpuObject::VertexPushConstant),
+                                                                   fragmentCamera);
+            drawCmd.bindVertexBuffers(0, assetStorage.getVertexBuffer().buffer, offset);
+            drawCmd.bindIndexBuffer(assetStorage.getIndexBuffer().buffer, 0, vk::IndexType::eUint32);
 
-        if (deviceFeature.multiDrawIndirect == VK_TRUE) {
-            drawCmd.drawIndexedIndirect(drawResolver.getFrameData(currentFrame).indirectBuffer.buffer, 0,
-                                        drawResolver.getFrameData(currentFrame).packedDraws.size(),
-                                        sizeof(vk::DrawIndexedIndirectCommand));
-        } else {
-            for (const auto &draw: drawResolver.getFrameData(currentFrame).packedDraws) {
-                drawCmd.drawIndexedIndirect(drawResolver.getFrameData(currentFrame).indirectBuffer.buffer,
-                                            draw.first * sizeof(vk::DrawIndexedIndirectCommand), draw.count,
+            if (deviceFeature.multiDrawIndirect == VK_TRUE) {
+                drawCmd.drawIndexedIndirect(drawResolver.getFrameData(currentFrame).indirectBuffer.buffer, 0,
+                                            drawResolver.getFrameData(currentFrame).packedDraws.size(),
                                             sizeof(vk::DrawIndexedIndirectCommand));
+            } else {
+                for (const auto &draw: drawResolver.getFrameData(currentFrame).packedDraws) {
+                    drawCmd.drawIndexedIndirect(drawResolver.getFrameData(currentFrame).indirectBuffer.buffer,
+                                                draw.first * sizeof(vk::DrawIndexedIndirectCommand), draw.count,
+                                                sizeof(vk::DrawIndexedIndirectCommand));
+                }
             }
         }
         pivot::graphics::vk_debug::endRegion(drawCmd);

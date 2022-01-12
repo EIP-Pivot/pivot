@@ -60,7 +60,9 @@ void DrawCallResolver::prepareForDraw(const std::vector<std::reference_wrapper<c
         createBuffers(frame, objectGPUData.size());
         createDescriptorSets(frame, objectGPUData.size());
     }
-    if (std::is_lt(bufferCmp) || std::is_gt(descriptorCmp)) { createDescriptorSets(frame, objectGPUData.size()); }
+    if (objectGPUData.size() > 0 && (std::is_lt(bufferCmp) || std::is_gt(descriptorCmp))) {
+        createDescriptorSets(frame, objectGPUData.size());
+    }
 
     if (frame.currentBufferSize > 0) {
         vk_utils::copyBuffer(base_ref->get().allocator, frame.objectBuffer, objectGPUData);
@@ -124,6 +126,7 @@ void DrawCallResolver::createBuffers(Frame &frame, const auto bufferSize)
 
 void DrawCallResolver::createDescriptorSets(Frame &frame, const auto bufferSize)
 {
+    assert(bufferSize > 0);
     if (frame.objectDescriptor) base_ref->get().device.freeDescriptorSets(descriptorPool, frame.objectDescriptor);
 
     vk::DescriptorSetAllocateInfo allocInfo{

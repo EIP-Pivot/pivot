@@ -1,23 +1,33 @@
 #pragma once
 
+#include "pivot/graphics/types/Vertex.hxx"
+
 #include <array>
+#include <cmath>
 #include <glm/vec3.hpp>
-#include <vulkan/vulkan.hpp>
+#include <span>
 
 /// @struct MeshBoundingBox
 ///
 /// @brief Represents the cubic bounding box of a mesh
 struct MeshBoundingBox {
     MeshBoundingBox() = delete;
+
+    /// Construct a Bounding box using a complete mesh
+    explicit constexpr MeshBoundingBox(const std::span<Vertex> &mesh)
+    {
+        for (const auto &point: mesh) addPoint(point.pos);
+    };
+
     /// New bounding box for a model with only one point
     explicit constexpr MeshBoundingBox(glm::vec3 initialPoint): low(initialPoint), high(initialPoint){};
     /// New bounding box with explicitely set low and high point
     explicit constexpr MeshBoundingBox(glm::vec3 low, glm::vec3 high): low(low), high(high){};
 
     /// Lowest point of the bouding box
-    glm::vec3 low;
+    alignas(16) glm::vec3 low;
     /// Highest point of the bounding box
-    glm::vec3 high;
+    alignas(16) glm::vec3 high;
 
     /// Add a point to the bounding box
     constexpr void addPoint(const glm::vec3 point)

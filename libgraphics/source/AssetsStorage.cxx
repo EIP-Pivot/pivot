@@ -86,7 +86,6 @@ bool AssetStorage::loadModel(const std::filesystem::path &path)
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
     std::string warn, err;
-    std::optional<MeshBoundingBox> bounding_box;
 
     tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.string().c_str(), nullptr);
     if (!warn.empty()) {
@@ -135,19 +134,14 @@ bool AssetStorage::loadModel(const std::filesystem::path &path)
                 vertexStagingBuffer.push_back(vertex);
             }
             indexStagingBuffer.push_back(uniqueVertices.at(vertex));
-
-            // Update bounding box if point is outside of it
-            if (!bounding_box) {
-                bounding_box = std::make_optional(MeshBoundingBox(vertex.pos));
-            } else {
-                bounding_box->addPoint(vertex.pos);
-            }
         }
     }
     mesh.indicesSize = indexStagingBuffer.size() - mesh.indicesOffset;
     mesh.vertexSize = vertexStagingBuffer.size() - mesh.vertexOffset;
     meshStorage.insert({path.stem().string(), mesh});
-    meshBoundingBoxStorage.insert({path.stem().string(), bounding_box.value()});
+    meshBoundingBoxStorage.insert(
+        {path.stem().string(),
+         MeshBoundingBox(std::span(vertexStagingBuffer.begin() + mesh.vertexOffset, mesh.vertexSize))});
 
     vertexStagingBuffer.insert(vertexStagingBuffer.end(), currentVertexBuffer.begin(), currentVertexBuffer.end());
     indexStagingBuffer.insert(indexStagingBuffer.end(), currentIndexBuffer.begin(), currentIndexBuffer.end());

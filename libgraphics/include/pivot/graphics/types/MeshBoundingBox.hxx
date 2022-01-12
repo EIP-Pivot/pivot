@@ -16,6 +16,9 @@ struct MeshBoundingBox {
     /// Construct a Bounding box using a complete mesh
     explicit constexpr MeshBoundingBox(const std::span<Vertex> &mesh)
     {
+        if (mesh.empty()) throw std::runtime_error("Can't build a MeshBoundingBox without Vertices");
+        low = mesh.front().pos;
+        high = low;
         for (const auto &point: mesh) addPoint(point.pos);
     };
 

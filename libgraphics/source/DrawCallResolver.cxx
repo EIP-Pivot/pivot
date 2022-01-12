@@ -37,7 +37,7 @@ void DrawCallResolver::destroy()
 }
 
 void DrawCallResolver::prepareForDraw(const std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
-                                      const gpuObject::CameraData &camera, const uint32_t frameIndex)
+                                      const CameraData &camera, const uint32_t frameIndex)
 {
     auto &frame = frames.at(frameIndex);
     std::vector<DrawBatch> packedDraws;

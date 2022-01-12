@@ -13,8 +13,7 @@ layout(location = 5) flat in uint materialIndex;
 layout(location = 0) out vec4 outColor;
 
 layout (push_constant) uniform readonly constants {
-    vec3 position;
-	mat4 viewproj;
+    layout(offset = 64) vec3 position;
 } cameraData;
 
 struct Material {

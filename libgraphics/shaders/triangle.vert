@@ -26,7 +26,6 @@ layout (std140, set = 0, binding = 0) readonly buffer ObjectBuffer {
 } objectBuffer;
 
 layout (push_constant) uniform readonly constants {
-    vec3 position;
 	mat4 viewproj;
 } cameraData;
 

@@ -1,6 +1,7 @@
 #include "pivot/graphics/VulkanApplication.hxx"
 #include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/culling.hxx"
+#include "pivot/graphics/math.hxx"
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
@@ -110,10 +111,10 @@ void VulkanApplication::recreateSwapchain()
 }
 
 void VulkanApplication::draw(const std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
-                             const gpuObject::CameraData &gpuCamera
+                             const CameraData &cameraData
 #ifdef CULLING_DEBUG
                              ,
-                             const std::optional<std::reference_wrapper<const gpuObject::CameraData>> cullingCamera
+                             const std::optional<std::reference_wrapper<const CameraData>> cullingCameraData
 #endif
 )
 try {
@@ -152,12 +153,25 @@ try {
         .clearValueCount = static_cast<uint32_t>(clearValues.size()),
         .pClearValues = clearValues.data(),
     };
-#ifdef CULLING_DEBUG
-    auto cullingGPUCamera = cullingCamera.value_or(std::ref(gpuCamera)).get();
+
+    const gpuObject::VertexPushConstant vertexCamere{
+        .viewProjection = cameraData.viewProjection,
+    };
+    const gpuObject::FragmentPushConstant fragmentCamera{
+        .position = cameraData.position,
+    };
+
+#ifdef CULLING_DEBUGv
+    auto cullingCameraDataSelected = cullingCameraData.value_or(std::ref(cameraData)).get();
 #else
-    auto cullingGPUCamera = gpuCamera;
+    auto cullingCameraDataSelected = cameraData;
 #endif
-    drawResolver.prepareForDraw(sceneInformation, cullingGPUCamera, currentFrame);
+    drawResolver.prepareForDraw(sceneInformation, cullingCameraDataSelected, currentFrame);
+
+    const gpuObject::CullingPushConstant cullingCamera{
+        .viewProjection = cullingCameraDataSelected.viewProjection,
+        .drawCount = static_cast<uint32_t>(drawResolver.getFrameData(currentFrame).packedDraws.size()),
+    };
 
     vk::CommandBufferInheritanceInfo inheritanceInfo{
         .renderPass = renderPass,
@@ -172,7 +186,7 @@ try {
             .pInheritanceInfo = &inheritanceInfo,
         };
         VK_TRY(imguiCmd.begin(&imguiBeginInfo));
-        pivot::graphics::vk_debug::beginRegion(imguiCmd, "Imgui Commands", {0.125f, 0.f, 0.f, 1.f});
+        pivot::graphics::vk_debug::beginRegion(imguiCmd, "Imgui Commands", {1.f, 0.f, 0.f, 1.f});
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), imguiCmd);
         pivot::graphics::vk_debug::endRegion(imguiCmd);
         imguiCmd.end();
@@ -187,14 +201,16 @@ try {
             .pInheritanceInfo = &inheritanceInfo,
         };
         VK_TRY(drawCmd.begin(&drawBeginInfo));
-        pivot::graphics::vk_debug::beginRegion(imguiCmd, "Draw Commands", {0.f, 0.125f, 0.f, 1.f});
+        pivot::graphics::vk_debug::beginRegion(imguiCmd, "Draw Commands", {0.f, 1.f, 0.f, 1.f});
         drawCmd.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
         drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0,
                                    drawResolver.getFrameData(currentFrame).objectDescriptor, nullptr);
         drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, ressourceDescriptorSet,
                                    nullptr);
-        drawCmd.pushConstants<gpuObject::CameraData>(
-            pipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, gpuCamera);
+        drawCmd.pushConstants<gpuObject::VertexPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0,
+                                                             vertexCamere);
+        drawCmd.pushConstants<gpuObject::FragmentPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eFragment,
+                                                               sizeof(gpuObject::VertexPushConstant), fragmentCamera);
         drawCmd.bindVertexBuffers(0, assetStorage.getVertexBuffer().buffer, offset);
         drawCmd.bindIndexBuffer(assetStorage.getIndexBuffer().buffer, 0, vk::IndexType::eUint32);
 
@@ -231,11 +247,12 @@ try {
         cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, cullingLayout, 0,
                                drawResolver.getFrameData(currentFrame).objectDescriptor, nullptr);
         cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, cullingLayout, 1, ressourceDescriptorSet, nullptr);
-        cmd.pushConstants<gpuObject::CameraData>(cullingLayout, vk::ShaderStageFlagBits::eCompute, 0, cullingGPUCamera);
+        cmd.pushConstants<gpuObject::CullingPushConstant>(cullingLayout, vk::ShaderStageFlagBits::eCompute, 0,
+                                                          cullingCamera);
         cmd.bindPipeline(vk::PipelineBindPoint::eCompute, cullingPipeline);
         cmd.pipelineBarrier(vk::PipelineStageFlagBits::eDrawIndirect, vk::PipelineStageFlagBits::eComputeShader, {}, {},
                             barrier, {});
-        cmd.dispatch(drawResolver.getFrameData(currentFrame).packedDraws.size(), 1, 1);
+        cmd.dispatch((drawResolver.getFrameData(currentFrame).packedDraws.size() / 256) + 1, 1, 1);
 
         barrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
         barrier.dstAccessMask = vk::AccessFlagBits::eIndirectCommandRead;

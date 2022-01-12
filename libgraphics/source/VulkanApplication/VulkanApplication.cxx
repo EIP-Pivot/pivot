@@ -218,27 +218,32 @@ try {
     VK_TRY(cmd.begin(&beginInfo));
     pivot::graphics::vk_debug::beginRegion(imguiCmd, "main command", {1.f, 1.f, 1.f, 1.f});
 
-    vk::BufferMemoryBarrier barrier{
-        .srcAccessMask = vk::AccessFlagBits::eIndirectCommandRead,
-        .dstAccessMask = vk::AccessFlagBits::eShaderWrite,
-        .srcQueueFamilyIndex = queueIndices.graphicsFamily.value(),
-        .dstQueueFamilyIndex = queueIndices.graphicsFamily.value(),
-        .buffer = drawResolver.getFrameData(currentFrame).indirectBuffer.buffer,
-        .size = drawResolver.getFrameData(currentFrame).indirectBuffer.size,
-    };
-    cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, cullingLayout, 0,
-                           drawResolver.getFrameData(currentFrame).objectDescriptor, nullptr);
-    cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, cullingLayout, 1, ressourceDescriptorSet, nullptr);
-    cmd.pushConstants<gpuObject::CameraData>(cullingLayout, vk::ShaderStageFlagBits::eCompute, 0, cullingGPUCamera);
-    cmd.bindPipeline(vk::PipelineBindPoint::eCompute, cullingPipeline);
-    cmd.pipelineBarrier(vk::PipelineStageFlagBits::eDrawIndirect, vk::PipelineStageFlagBits::eComputeShader, {}, {},
-                        barrier, {});
-    cmd.dispatch(drawResolver.getFrameData(currentFrame).packedDraws.size(), 1, 1);
+    {
+        pivot::graphics::vk_debug::beginRegion(cmd, "culling pass", {1.f, 0.f, 1.f, 1.f});
+        vk::BufferMemoryBarrier barrier{
+            .srcAccessMask = vk::AccessFlagBits::eIndirectCommandRead,
+            .dstAccessMask = vk::AccessFlagBits::eShaderWrite,
+            .srcQueueFamilyIndex = queueIndices.graphicsFamily.value(),
+            .dstQueueFamilyIndex = queueIndices.graphicsFamily.value(),
+            .buffer = drawResolver.getFrameData(currentFrame).indirectBuffer.buffer,
+            .size = drawResolver.getFrameData(currentFrame).indirectBuffer.size,
+        };
+        cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, cullingLayout, 0,
+                               drawResolver.getFrameData(currentFrame).objectDescriptor, nullptr);
+        cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, cullingLayout, 1, ressourceDescriptorSet, nullptr);
+        cmd.pushConstants<gpuObject::CameraData>(cullingLayout, vk::ShaderStageFlagBits::eCompute, 0, cullingGPUCamera);
+        cmd.bindPipeline(vk::PipelineBindPoint::eCompute, cullingPipeline);
+        cmd.pipelineBarrier(vk::PipelineStageFlagBits::eDrawIndirect, vk::PipelineStageFlagBits::eComputeShader, {}, {},
+                            barrier, {});
+        cmd.dispatch(drawResolver.getFrameData(currentFrame).packedDraws.size(), 1, 1);
 
-    barrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
-    barrier.dstAccessMask = vk::AccessFlagBits::eIndirectCommandRead;
-    cmd.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eDrawIndirect, {}, {},
-                        barrier, {});
+        barrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
+        barrier.dstAccessMask = vk::AccessFlagBits::eIndirectCommandRead;
+        cmd.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eDrawIndirect, {}, {},
+                            barrier, {});
+        pivot::graphics::vk_debug::endRegion(cmd);
+    }
+
     cmd.beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
     cmd.executeCommands(secondaryBuffer);
     cmd.endRenderPass();

@@ -84,5 +84,6 @@ void main() {
         visible = visible && one_point_inside;
     }
 
-    drawIndexedIndirectBuffer.drawIndexedIndirect[gID].instanceCount += visible ? 1 : 0;
+    //atomicAdd(drawIndexedIndirectBuffer.drawIndexedIndirect[gID].instanceCount, visible ? 1 : 0);
+    atomicAdd(drawIndexedIndirectBuffer.drawIndexedIndirect[gID].instanceCount, 1);
 }

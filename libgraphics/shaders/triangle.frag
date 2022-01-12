@@ -31,7 +31,7 @@ layout(set = 1, binding = 2) uniform sampler2D texSampler[];
 
 const vec3 lightDirection = vec3(11.0, 16.0, 24.0);
 
-vec4 calculateLight(Material mat) {
+vec4 calculateLight(in Material mat) {
     // ambient
     float ambientStrength = 0.1;
     vec3 ambient = ambientStrength * mat.ambientColor;

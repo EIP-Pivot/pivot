@@ -1,9 +1,10 @@
 #pragma once
 
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/matrix_decompose.hpp>
+#include <glm/geometric.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 
 namespace pivot::graphics::math
 {
-bool decomposeMatrix(const glm::mat4 &transform, glm::vec3 &translation, glm::vec3 &rotation, glm::vec3 &scale);
+inline glm::vec4 normalizePlane(glm::vec4 p) { return p / glm::length(glm::vec3(p)); }
 }    // namespace pivot::graphics::math

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "pivot/graphics/math.hxx"
 #include "pivot/graphics/types/vk_types.hxx"
 
 #include <stdexcept>
 
 #define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
 
 /// @struct Transform

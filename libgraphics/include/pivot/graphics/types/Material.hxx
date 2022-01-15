@@ -10,6 +10,8 @@ namespace gpuObject
 ///
 /// @brief Hold color information for the light calculations
 struct Material {
+    /// Shininess of the material
+    alignas(4) float shininess;
     /// RGB values for the ambient color
     alignas(16) glm::vec3 ambientColor;
     /// RGB values for the diffuse color
@@ -18,6 +20,6 @@ struct Material {
     alignas(16) glm::vec3 specular;
 };
 static_assert(sizeof(Material) % 4 == 0);
-static_assert(sizeof(Material) == (sizeof(float) * 4 * 3));
+static_assert(sizeof(Material) == (sizeof(float) * 4 * 3) + sizeof(float) * 4);
 
 }    // namespace gpuObject

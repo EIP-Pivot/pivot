@@ -171,6 +171,7 @@ bool AssetStorage::loadModel(const std::filesystem::path &path)
 bool AssetStorage::loadMaterial(const tinyobj::material_t &material)
 {
     gpuObject::Material mat{
+        .shininess = material.shininess,
         .ambientColor = glm::make_vec3(material.ambient),
         .diffuse = glm::make_vec3(material.diffuse),
         .specular = glm::make_vec3(material.specular),

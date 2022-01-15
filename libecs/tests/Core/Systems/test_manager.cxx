@@ -13,7 +13,9 @@ void test_manager_registration(std::vector<std::any> components) {
     std::cout << "I'm a system with components:\n";
     for(const auto &component: components)
         std::cout << "\t" << component.type().name() << "\n";
-    std::cout << std::endl;
+    auto tag = std::any_cast<std::reference_wrapper<Tag>>(components[1]);
+    std::cout << tag.get().name << std::endl;
+    tag.get().name = "oui";
 }
 
 TEST_CASE("Manager register system", "[description][registration][manager]")
@@ -32,7 +34,7 @@ TEST_CASE("Manager register system", "[description][registration][manager]")
 
     EntityManager eManager;
     Entity entity = eManager.CreateEntity();
-    cManager.AddComponent(entity, Tag{}, tagId);
+    cManager.AddComponent(entity, Tag{ .name = "non"}, tagId);
     cManager.AddComponent(entity, RigidBody{}, rigidId);
     cManager.AddComponent(entity, Gravity{}, gravId);
     
@@ -48,5 +50,6 @@ TEST_CASE("Manager register system", "[description][registration][manager]")
     };
     GlobalIndex::getSingleton().registerSystem(description);
     manager.useSystem(description);
+    manager.execute(cManager, eManager);
     manager.execute(cManager, eManager);
 }

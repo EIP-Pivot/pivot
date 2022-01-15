@@ -17,7 +17,7 @@ class VulkanBase : public VulkanLoader, public abstract::AImmediateCommand
 {
 protected:
     /// Default ctor
-    VulkanBase(const std::string &windowName = "VulkanBase");
+    VulkanBase(const std::string &windowName = "VulkanBase", const bool bForceValidation = false);
     /// Default ctor
     ~VulkanBase();
 

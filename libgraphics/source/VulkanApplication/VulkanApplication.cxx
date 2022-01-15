@@ -12,7 +12,7 @@
 #include <algorithm>
 
 VulkanApplication::VulkanApplication()
-    : pivot::graphics::VulkanBase(), assetStorage(*this), drawResolver(*this, assetStorage)
+    : pivot::graphics::VulkanBase("Pivot Game Engine", true), assetStorage(*this), drawResolver(*this, assetStorage)
 {
     DEBUG_FUNCTION;
     if (bEnableValidationLayers && !VulkanBase::checkValidationLayerSupport(validationLayers)) {

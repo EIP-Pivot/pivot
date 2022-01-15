@@ -22,10 +22,10 @@ void Index::registerSystem(const Description &description)
              for (const auto &component: description.arguments) {
                  componentsId.push_back(componentManager.GetComponentId(component).value());
              }
-            std::vector<std::any> args;
+             std::vector<std::any> args;
              for (const auto &entity: entityManager.getEntities()) {
                  for (const auto &componentId: componentsId) {
-                     args.push_back(componentManager.GetComponent(entity.first, componentId).value());
+                     args.push_back(componentManager.GetComponentRef(entity.first, componentId).value());
                  }
              }
              description.system(args);

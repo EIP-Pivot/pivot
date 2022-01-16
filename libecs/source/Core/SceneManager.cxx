@@ -1,10 +1,5 @@
 #include "pivot/ecs/Core/SceneManager.hxx"
 
-void SceneManager::Init() {
-    _levels.clear();
-    _currentActiveLevel = LevelId(-1);
-}
-
 LevelId SceneManager::registerLevel(std::string name)
 {
     _levels[LevelId(_levels.size())] = Scene(name);

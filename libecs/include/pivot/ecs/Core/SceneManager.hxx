@@ -4,8 +4,8 @@
 #include "pivot/ecs/Core/Scene.hxx"
 #include <string>
 
-using LevelId = std::uint16_t;
-const LevelId MAX_LEVELS = UINT16_MAX;    // 65535
+using LevelId = std::int16_t;
+const LevelId MAX_LEVELS = INT16_MAX; // 65535
 
 /// @class SceneManager
 ///
@@ -14,8 +14,7 @@ const LevelId MAX_LEVELS = UINT16_MAX;    // 65535
 class SceneManager
 {
 public:
-    /// Init scene list
-    void Init();
+    SceneManager(): _currentActiveLevel(-1) {};
 
     /// Create new scene with scene name
     LevelId registerLevel(std::string name);

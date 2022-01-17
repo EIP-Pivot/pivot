@@ -22,6 +22,7 @@ public:
 
     void execute(component::Manager &componentManager, EntityManager &entityManager);
 
+    std::vector<std::string> getSystemUsed();
 private:
     std::unordered_map<std::string, std::function<void(component::Manager &, EntityManager &)>> m_systems;
 };

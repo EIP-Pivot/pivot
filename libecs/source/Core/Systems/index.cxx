@@ -25,7 +25,8 @@ void Index::registerSystem(const Description &description)
              std::vector<std::any> args;
              for (const auto &entity: entityManager.getEntities()) {
                  for (const auto &componentId: componentsId) {
-                     args.push_back(componentManager.GetComponentRef(entity.first, componentId).value());
+                     if (componentManager.GetComponent(entity.first, componentId) != std::nullopt)
+                        args.push_back(componentManager.GetComponentRef(entity.first, componentId).value());
                  }
              }
              description.system(args);

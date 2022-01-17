@@ -19,7 +19,7 @@ struct Description {
 
     std::vector<std::string> arguments;
 
-    std::function<void(std::vector<std::any>)> system;
+    std::function<void(std::vector<std::vector<std::any>>)> system;
 
     void validate() const;
 

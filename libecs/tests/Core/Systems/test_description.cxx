@@ -8,7 +8,7 @@
 
 using namespace pivot::ecs::systems;
 
-void test_description(std::vector<std::any> components) {}
+void test_description(std::vector<std::vector<std::any>> components) {}
 
 TEST_CASE("valid system description", "[description]")
 {

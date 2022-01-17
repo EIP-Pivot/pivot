@@ -5,8 +5,7 @@ namespace pivot::ecs::systems
 
 bool Manager::useSystem(const Description &description)
 {
-    if (m_systems.contains(description.name))
-        throw EcsException("System already use.");
+    if (m_systems.contains(description.name)) throw EcsException("System already use.");
 
     std::optional<std::function<void(component::Manager &, EntityManager &)>> system =
         GlobalIndex::getSingleton().getSystemByDescription(description);
@@ -23,8 +22,7 @@ bool Manager::useSystem(const std::string &systemName)
 
     std::optional<Description> description = GlobalIndex::getSingleton().getDescription(systemName);
 
-    if (!description.has_value())
-        return false;
+    if (!description.has_value()) return false;
 
     std::optional<std::function<void(component::Manager &, EntityManager &)>> system =
         GlobalIndex::getSingleton().getSystemByDescription(description.value());
@@ -37,18 +35,13 @@ bool Manager::useSystem(const std::string &systemName)
 
 void Manager::execute(component::Manager &componentManager, EntityManager &entityManager)
 {
-    for (const auto &[name, system]: m_systems) {
-        std::cout << "Executing: " + name << std::endl;
-        system(componentManager, entityManager);
-    }
+    for (const auto &[name, system]: m_systems) system(componentManager, entityManager);
 }
 
 std::vector<std::string> Manager::getSystemUsed()
 {
     std::vector<std::string> systems;
-    for (const auto &[name, system]: m_systems) {
-        systems.push_back(name);
-    }
+    for (const auto &[name, system]: m_systems) { systems.push_back(name); }
     return systems;
 }
 

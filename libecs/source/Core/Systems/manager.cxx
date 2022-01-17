@@ -43,4 +43,13 @@ void Manager::execute(component::Manager &componentManager, EntityManager &entit
     }
 }
 
+std::vector<std::string> Manager::getSystemUsed()
+{
+    std::vector<std::string> systems;
+    for (const auto &[name, system]: m_systems) {
+        systems.push_back(name);
+    }
+    return systems;
+}
+
 }    // namespace pivot::ecs::systems

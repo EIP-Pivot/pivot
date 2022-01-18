@@ -22,15 +22,20 @@ void Index::registerSystem(const Description &description)
              for (const auto &component: description.arguments) {
                  componentsId.push_back(componentManager.GetComponentId(component).value());
              }
-             std::vector<std::vector<std::any>> args;
-             for (const auto &entity: entityManager.getEntities()) {
-                 std::vector<std::any> components;
+             Description::systemArgs args;
+             for (const auto &[entity, _]: entityManager.getEntities()) {
+                 std::vector<std::pair<component::Description, std::any>> components;
                  for (const auto &componentId: componentsId) {
-                     if (componentManager.GetComponent(entity.first, componentId) != std::nullopt)
-                         components.push_back(componentManager.GetComponentRef(entity.first, componentId).value());
+                     for (auto component: componentManager.GetAllComponents(entity))
+                         if (componentManager.GetComponentId(component.first.name).value() == componentId) {
+                             components.push_back(component);
+                             break;
+                         }
                  }
-                 args.push_back(components);
+                 if (components.size() == componentsId.size())
+                    args.push_back(components);
              }
+
              description.system(args);
          }});
 }

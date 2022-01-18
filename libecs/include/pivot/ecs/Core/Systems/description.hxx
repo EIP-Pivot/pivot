@@ -15,11 +15,13 @@ namespace pivot::ecs::systems
 
 struct Description {
 
+    using systemArgs = std::vector<std::vector<std::pair<component::Description, std::any>>>;
+
     std::string name;
 
     std::vector<std::string> arguments;
 
-    std::function<void(std::vector<std::vector<std::any>>)> system;
+    std::function<void(systemArgs &)> system;
 
     void validate() const;
 

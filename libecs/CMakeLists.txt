@@ -67,6 +67,7 @@ add_library(${PROJECT_NAME} source/Systems/ControlSystem.cxx
                             source/Core/Event/description.cxx
                             source/Core/Event/manager.cxx
                             source/Components/TagArray.cxx
+                            source/Core/Scripting/ScriptEngine.cxx
 )
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 

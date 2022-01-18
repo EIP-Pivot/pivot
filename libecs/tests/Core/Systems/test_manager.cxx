@@ -9,15 +9,18 @@
 
 using namespace pivot::ecs::systems;
 
-void test_manager_registration(std::vector<std::vector<std::any>> entities) {
+void test_manager_registration(Description::systemArgs &entities)
+{
     std::cout << "I'm a system with components:\n";
-    for (const auto &entity: entities) {
+    for (auto &entity: entities) {
         for (const auto &component: entity) {
-            std::cout << "\t" << component.type().name() << "\n";
+            std::cout << "\t" << component.second.type().name() << "\n";
         }
-        auto tag = std::any_cast<std::reference_wrapper<Tag>>(entity[1]);
-        std::cout << tag.get().name << std::endl;
-        tag.get().name = "oui";
+
+        auto &[description, component] = entity[1];
+        auto tag = std::any_cast<Tag>(component);
+        std::cout << tag.name << std::endl;
+        tag.name = "oui";
     }
 }
 

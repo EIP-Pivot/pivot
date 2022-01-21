@@ -187,7 +187,9 @@ try {
         };
         VK_TRY(imguiCmd.begin(&imguiBeginInfo));
         pivot::graphics::vk_debug::beginRegion(imguiCmd, "Imgui Commands", {1.f, 0.f, 0.f, 1.f});
-        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), imguiCmd);
+        if (auto imguiData = ImGui::GetDrawData(); imguiData != nullptr) {
+            ImGui_ImplVulkan_RenderDrawData(imguiData, imguiCmd);
+        }
         pivot::graphics::vk_debug::endRegion(imguiCmd);
         imguiCmd.end();
     }

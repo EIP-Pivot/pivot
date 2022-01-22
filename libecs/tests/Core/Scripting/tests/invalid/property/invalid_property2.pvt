@@ -1,0 +1,3 @@
+component Test
+    Vector3 pos;
+    # No un-necesserary tokens at start or end of line

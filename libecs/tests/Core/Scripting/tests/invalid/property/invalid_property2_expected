@@ -1,0 +1,4 @@
+
+ERROR:	../libecs/tests/Core/Scripting/tests/invalid/property/invalid_property2.pvt
+		line 2:	pos Vector3
+LogicError: Unknown expression.

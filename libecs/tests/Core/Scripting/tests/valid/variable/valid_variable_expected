@@ -1,0 +1,2 @@
+system Physics {Position, Velocity, Acceleration}
+    Vector3 newVel = Velocity + Acceleration

@@ -1,0 +1,3 @@
+component Test
+    pos Vector3
+# Specify the type of the variable first, and then its name

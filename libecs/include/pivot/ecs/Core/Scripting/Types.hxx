@@ -21,6 +21,7 @@ struct SystemDescription {
 struct LoadResult {
 	std::vector<ComponentDescription> components;
 	std::vector<SystemDescription> systems;
+	std::string output;
 };
 
 enum IndentType {

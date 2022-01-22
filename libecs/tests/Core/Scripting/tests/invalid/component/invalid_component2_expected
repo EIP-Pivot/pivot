@@ -1,0 +1,4 @@
+
+ERROR:	tests/scripts/invalid/component/invalid_component2.pvt
+	line 1:	component Transform { 
+SyntaxError: Invalid component declaration. Try declaring it like this : 'component Name'.

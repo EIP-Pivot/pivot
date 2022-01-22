@@ -1,0 +1,5 @@
+component Transform { # Component declaration blocks don't need curly brackets
+    Vector3 position
+    Vector3 rotation
+    Vector3 scale
+}

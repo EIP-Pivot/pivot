@@ -31,8 +31,11 @@ class ScriptEngine {
 public:
 	ScriptEngine();
 	~ScriptEngine();
-	LoadResult loadFile(const std::string &fileName);
+	LoadResult loadFile(const std::string &fileName, bool verbose);
 	void executeSystem(const std::string &systemName, std::vector<std::vector<std::pair<ComponentDescription, std::any>>> &entities);
+
+	void totalReset(); // This is to reset the entire file (for tests notably)
+	void softReset(); // This is to reset the data needed to read files but not the already registered data
 protected:
 
 	void executeSystem(const std::string &systemName, std::vector<std::pair<ComponentDescription, std::any>> &entity, size_t entityId);
@@ -63,13 +66,14 @@ protected:
 	void printStack();
 	void printValue(const std::any &value, const std::string &type);
 
+
 	std::vector<std::string> _lines;
 	std::string _line;
 	size_t _currentLine;
 	Indent _fileIndent;
+	bool _fileIndentSet;
 	size_t _currentIndent;
 	State _currentState;
-	bool _fileIndentSet;
 	ComponentDescription _phComponent;
 	SystemDescription _phSystem;
 	Property _phProperty;

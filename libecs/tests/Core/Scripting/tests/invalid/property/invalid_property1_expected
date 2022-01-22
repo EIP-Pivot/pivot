@@ -1,0 +1,4 @@
+
+ERROR:	tests/scripts/invalid/property/invalid_property1.pvt
+	line 2:	    pos Vector3
+LogicError: Unknown expression.

@@ -1,0 +1,4 @@
+Transform # Component declaration needs the 'component' keyword
+    Vector3 position
+    Vector3 rotation
+    Vector3 scale

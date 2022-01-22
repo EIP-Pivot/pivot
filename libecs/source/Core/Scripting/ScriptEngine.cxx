@@ -24,9 +24,10 @@ ScriptEngine::ScriptEngine()
 ScriptEngine::~ScriptEngine() {
 }
 
-LoadResult ScriptEngine::loadFile(const std::string &fileName) {
+LoadResult ScriptEngine::loadFile(const std::string &fileName, bool verbose = false) {
 	LoadResult result;
 
+	softReset();
 try {
 	if (!populateLinesFromFile(fileName))
 		return result;
@@ -57,17 +58,23 @@ try {
 	_components = result.components;
 }
 catch (BadIndentException e) {
-	std::cout << "\n" << e.what() << ":\t" << fileName << "\n\tline " << e.get_line_nb() << ":\t" << e.get_line() << "\nIndentError: " << e.get_info() << std::endl;
+	result.output = std::string("\n") + e.what() + ":\t" + fileName + "\n\tline " + std::to_string(e.get_line_nb()) + ":\t" + e.get_line() + "\nIndentError: " + e.get_info() + "\n";
+	if (verbose)
+		std::cout << result.output << std::flush;
 }
 catch (InvalidSyntaxException e) {
-	std::cout << "\n" << e.what() << ":\t" << fileName << "\n\tline " << e.get_line_nb() << ":\t" << e.get_line() << "\nSyntaxError: " << e.get_info() << std::endl;
+	result.output = std::string("\n") + e.what() + ":\t" + fileName + "\n\tline " + std::to_string(e.get_line_nb()) + ":\t" + e.get_line() + "\nSyntaxError: " + e.get_info() + "\n";
+	if (verbose)
+		std::cout << result.output << std::flush;
 }
 catch (UnexpectedStateException e) {
-	std::cout << "\n" << e.what() << ":\t" << fileName << "\n\tline " << e.get_line_nb() << ":\t" << e.get_line() << "\nLogicError: ";
+	result.output = std::string("\n") + e.what() + ":\t" + fileName + "\n\tline " + std::to_string(e.get_line_nb()) + ":\t" + e.get_line() + "\nLogicError: ";
 	if (e.get_new_state() == INVALID)
-		std::cout << "Unknown expression." << std::endl;
+		result.output += "Unknown expression.\n";
 	else
-		std::cout << "State " << StateToString(e.get_prev_state()) << " did not expect new state " << StateToString(e.get_new_state());
+		result.output += "State " + StateToString(e.get_prev_state()) + " did not expect new state " + StateToString(e.get_new_state());
+	if (verbose)
+		std::cout << result.output << std::flush;
 }
 	return result;
 }
@@ -254,6 +261,32 @@ void ScriptEngine::cleanInstruction(std::string &instruction) {
 	while (instruction.find_first_of(" \t") != std::string::npos)
 		instruction.erase(instruction.find_first_of(" \t"), 1);
 }
+
+void ScriptEngine::totalReset() {
+	softReset();
+	_systems.clear();
+	_systemsInstructions.clear();
+	_components.clear();
+	_variables.clear();
+}
+
+void ScriptEngine::softReset() {
+	_lines.clear();
+	_line.clear();
+	_currentLine = 0;
+	_fileIndent = Indent{NOINDENT, 0};
+	_fileIndentSet = false;
+	_currentIndent = 0;
+	_currentState = START;
+	_phComponent.name = "";
+	_phComponent.properties.clear();
+	_phSystem.name = "";
+	_phSystem.inputComponents.clear();
+	_phProperty.name = "";
+	_phProperty.type = "";
+	_phInstructions.clear();
+}
+
 
 void ScriptEngine::printStack() {
 	std::cout << "-----------------------------------\t\t\t\t\t\nPRINTING STACK\n\n" << std::endl;

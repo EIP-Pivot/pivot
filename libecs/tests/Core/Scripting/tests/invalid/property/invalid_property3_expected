@@ -1,0 +1,4 @@
+
+ERROR:	tests/scripts/invalid/property/invalid_property3.pvt
+	line 2:	    pos
+LogicError: Unknown expression.

@@ -1,0 +1,3 @@
+component Test
+    pos
+    # Statically typed, variable declarations require type specification

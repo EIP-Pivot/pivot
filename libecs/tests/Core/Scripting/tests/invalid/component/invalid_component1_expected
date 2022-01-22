@@ -1,0 +1,4 @@
+
+ERROR:	tests/scripts/invalid/component/invalid_component1.pvt
+	line 1:	Transform 
+LogicError: Unknown expression.

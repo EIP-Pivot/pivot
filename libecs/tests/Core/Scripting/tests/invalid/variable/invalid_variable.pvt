@@ -1,0 +1,3 @@
+system Physics {Position, Velocity, Acceleration}
+    newVel = Velocity + Acceleration
+    # Variable initialization needs typing

@@ -1,0 +1,3 @@
+Error (line 2)
+	    newVel = Velocity + Acceleration
+Variable initialization needs type

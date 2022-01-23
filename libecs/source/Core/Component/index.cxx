@@ -1,3 +1,5 @@
+// #include <Logger.hpp>
+
 #include <pivot/ecs/Core/Component/index.hxx>
 
 namespace pivot::ecs::component
@@ -38,9 +40,9 @@ std::vector<std::string> Index::getAllComponentsNames() const
 
 void GlobalIndex::registerComponent(const Description &description)
 {
-    if (m_read_only) { throw std::logic_error("Cannot modify global component index after program started"); }
-
     const std::lock_guard<std::mutex> guard(m_mutex);
+
+    if (m_read_only) { throw std::logic_error("Cannot modify global component index after program started"); }
 
     this->Index::registerComponent(description);
 }
@@ -53,13 +55,15 @@ std::optional<Description> GlobalIndex::getDescription(const std::string &compon
 
 std::vector<std::string> GlobalIndex::getAllComponentsNames()
 {
-
     this->lockReadOnly();
     return this->Index::getAllComponentsNames();
 }
 
 void GlobalIndex::lockReadOnly()
 {
+    // TODO: Reenable when logger initiialization is fixed
+    // logger->info() << "Locking global component index in read-only mode";
+    // LOGGER_ENDL;
     if (!m_read_only) {
         const std::lock_guard<std::mutex> guard(m_mutex);
         m_read_only.store(true);

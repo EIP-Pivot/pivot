@@ -97,13 +97,13 @@ public:
      * Throws if the GlobalIndex is in read only mode
      */
     void registerComponent(const Description &description);
-    /// See Index::getDescription()
+    /// Locks the index in readonly mode. See Index::getDescription()
     std::optional<Description> getDescription(const std::string &componentName);
-    /// See Index::getAllComponentsNames()
+    /// Locks the index in readonly mode. See Index::getAllComponentsNames()
     std::vector<std::string> getAllComponentsNames();
-    /// See Index::begin()
+    /// Locks the index in readonly mode. See Index::begin()
     Index::const_iterator begin();
-    /// See Index::end()
+    /// Locks the index in readonly mode. See Index::end()
     Index::const_iterator end();
 
     /** \brief See Index::registerComponentWithType()
@@ -121,7 +121,7 @@ public:
         this->Index::registerComponentWithType<T>(description);
     }
 
-    /// See Index::getComponentNameByType()
+    /// Locks the index in readonly mode. See Index::getComponentNameByType()
     template <typename T>
     std::optional<std::string> getComponentNameByType()
     {

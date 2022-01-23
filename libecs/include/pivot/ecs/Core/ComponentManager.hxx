@@ -1,4 +1,0 @@
-#ifndef COMPONENTMANAGER_H_
-#define COMPONENTMANAGER_H_
-
-#endif    // COMPONENTMANAGER_H_

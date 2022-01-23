@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Logger.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <stdexcept>
@@ -78,6 +79,17 @@ bool hasStencilComponent(vk::Format format) noexcept;
 
 namespace tools
 {
+    template <typename T>
+    void print_array(Logger::Stream stream, const std::string_view &message, const std::vector<T> &val)
+    {
+        stream << message << ": [";
+        for (const auto &i: val) {
+            stream << i;
+            if (i != val.back()) stream << ", ";
+        }
+        stream << "]";
+    }
+
     const std::string to_string(vk::SampleCountFlagBits count) noexcept;
     const std::string to_string(vk::CullModeFlagBits count) noexcept;
 

@@ -37,7 +37,7 @@ void VulkanBase::createInstance(const std::vector<const char *> &instanceExtensi
         createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
         createInfo.ppEnabledLayerNames = validationLayers.data();
     }
-    PRINT_STRING_ARRAY(logger->info("Instance"), "Instance extensions: ", extensions);
+    vk_utils::tools::print_array(logger->info("Instance"), "Instance extensions: ", extensions);
     this->VulkanLoader::createInstance(createInfo);
     baseDeletionQueue.push([&] { instance.destroy(); });
 }
@@ -79,7 +79,7 @@ void VulkanBase::selectPhysicalDevice(const std::vector<const char *> &deviceExt
         throw VulkanException("failed to find a suitable GPU!");
     }
 
-    PRINT_STRING_ARRAY(logger->info("Physical Device"), "Device extensions", deviceExtensions);
+    vk_utils::tools::print_array(logger->info("Physical Device"), "Device extensions", deviceExtensions);
     const auto deviceProperties = physical_device.getProperties();
     logger->info("Physical Device") << vk::to_string(deviceProperties.deviceType) << ": "
                                     << deviceProperties.deviceName;

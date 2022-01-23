@@ -1,6 +1,8 @@
 #include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/QueueFamilyIndices.hxx"
-#include "pivot/graphics/VulkanApplication.hxx"
+#include "pivot/graphics/VulkanBase.hxx"
+#include "pivot/graphics/VulkanSwapchain.hxx"
+#include "pivot/graphics/types/vk_types.hxx"
 
 #include <Logger.hpp>
 #include <ostream>
@@ -11,7 +13,7 @@
 #include <vector>
 #include <vulkan/vulkan.hpp>
 
-static const char *to_string_message_type(VkDebugUtilsMessageTypeFlagsEXT s)
+constexpr static const char *to_string_message_type(const VkDebugUtilsMessageTypeFlagsEXT &s)
 {
     if (s == 7) return "General | Validation | Performance";
     if (s == 6) return "Validation | Performance";
@@ -23,11 +25,14 @@ static const char *to_string_message_type(VkDebugUtilsMessageTypeFlagsEXT s)
     return "Unknown";
 }
 
-uint32_t VulkanApplication::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                                          VkDebugUtilsMessageTypeFlagsEXT messageType,
-                                          const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *)
+namespace pivot::graphics
 {
-    std::stringstream &(Logger::*severity)(const std::string &) = nullptr;
+
+std::uint32_t VulkanBase::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                                        VkDebugUtilsMessageTypeFlagsEXT messageType,
+                                        const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *)
+{
+    decltype(&Logger::debug) severity;
     switch (messageSeverity) {
         case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
             severity = &Logger::debug;
@@ -43,28 +48,13 @@ uint32_t VulkanApplication::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT
             break;
         default: severity = &Logger::err; break;
     }
-    (logger->*severity)(to_string_message_type(messageType)) << pCallbackData->pMessage;
-    logger->endl();
+    vk::to_string(vk::DebugUtilsMessageTypeFlagsEXT(messageType));
+    (logger.*severity)(to_string_message_type(messageType)) << pCallbackData->pMessage;
+
     return VK_FALSE;
 }
 
-vk::SampleCountFlagBits VulkanApplication::getMexUsableSampleCount(vk::PhysicalDevice &physical_device)
-{
-    vk::PhysicalDeviceProperties physicalDeviceProperties = physical_device.getProperties();
-
-    vk::SampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts &
-                                  physicalDeviceProperties.limits.framebufferDepthSampleCounts;
-    if (counts & vk::SampleCountFlagBits::e64) { return vk::SampleCountFlagBits::e64; }
-    if (counts & vk::SampleCountFlagBits::e32) { return vk::SampleCountFlagBits::e32; }
-    if (counts & vk::SampleCountFlagBits::e16) { return vk::SampleCountFlagBits::e16; }
-    if (counts & vk::SampleCountFlagBits::e8) { return vk::SampleCountFlagBits::e8; }
-    if (counts & vk::SampleCountFlagBits::e4) { return vk::SampleCountFlagBits::e4; }
-    if (counts & vk::SampleCountFlagBits::e2) { return vk::SampleCountFlagBits::e2; }
-
-    return vk::SampleCountFlagBits::e1;
-}
-
-bool VulkanApplication::checkValidationLayerSupport()
+bool VulkanBase::checkValidationLayerSupport(const std::vector<const char *> &validationLayers)
 {
     auto availableLayers = vk::enumerateInstanceLayerProperties();
 
@@ -82,37 +72,40 @@ bool VulkanApplication::checkValidationLayerSupport()
     return true;
 }
 
-bool VulkanApplication::isDeviceSuitable(const vk::PhysicalDevice &gpu, const vk::SurfaceKHR &surface)
+bool VulkanBase::isDeviceSuitable(const vk::PhysicalDevice &gpu, const vk::SurfaceKHR &surface,
+                                  const std::vector<const char *> &deviceExtensions)
 {
     DEBUG_FUNCTION
     auto indices = QueueFamilyIndices::findQueueFamilies(gpu, surface);
-    bool extensionsSupported = checkDeviceExtensionSupport(gpu);
-    vk::PhysicalDeviceProperties deviceProperties = gpu.getProperties();
-    vk::PhysicalDeviceFeatures deviceFeatures = gpu.getFeatures();
+    bool extensionsSupported = checkDeviceExtensionSupport(gpu, deviceExtensions);
+    auto deviceProperties = gpu.getProperties();
+    auto deviceFeatures = gpu.getFeatures();
 
     bool swapChainAdequate = false;
     if (extensionsSupported) {
-        auto swapChainSupport = Swapchain::SupportDetails::querySwapChainSupport(gpu, surface);
+        auto swapChainSupport = VulkanSwapchain::SupportDetails::querySwapChainSupport(gpu, surface);
         swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
     }
     return indices.isComplete() && extensionsSupported && swapChainAdequate && deviceFeatures.samplerAnisotropy &&
-           deviceProperties.limits.maxPushConstantsSize >= sizeof(gpuObject::CameraData);
+           deviceProperties.limits.maxPushConstantsSize >= gpuObject::pushConstantsSize;
 }
 
-uint32_t VulkanApplication::rateDeviceSuitability(const vk::PhysicalDevice &gpu)
+std::uint32_t VulkanBase::rateDeviceSuitability(const vk::PhysicalDevice &gpu)
 {
     vk::PhysicalDeviceProperties deviceProperties = gpu.getProperties();
-    // vk::PhysicalDeviceFeatures deviceFeatures = gpu.getFeatures();
+    vk::PhysicalDeviceFeatures deviceFeatures = gpu.getFeatures();
     int32_t score = 0;
 
     if (deviceProperties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu) score += 1000;
+    if (deviceFeatures.multiDrawIndirect == VK_TRUE) score += 100;
 
     score += deviceProperties.limits.maxPushConstantsSize;
     score += deviceProperties.limits.maxImageDimension2D;
     return score;
 }
 
-bool VulkanApplication::checkDeviceExtensionSupport(const vk::PhysicalDevice &device)
+bool VulkanBase::checkDeviceExtensionSupport(const vk::PhysicalDevice &device,
+                                             const std::vector<const char *> &deviceExtensions)
 {
     DEBUG_FUNCTION
     auto availableExtensions = device.enumerateDeviceExtensionProperties();
@@ -121,3 +114,5 @@ bool VulkanApplication::checkDeviceExtensionSupport(const vk::PhysicalDevice &de
     for (const auto &extension: availableExtensions) { requiredExtensions.erase(extension.extensionName); }
     return requiredExtensions.empty();
 }
+
+}    // namespace pivot::graphics

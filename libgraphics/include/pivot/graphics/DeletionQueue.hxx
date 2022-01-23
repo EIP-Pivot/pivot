@@ -13,7 +13,13 @@ class DeletionQueue
 public:
     /// Push new function in the DeletionQueue
     /// @param function The function to be pushed into the queue
-    inline void push(std::function<void()> &&function) { deletor.push_back(function); }
+    template <typename F>
+    requires std::is_invocable_v<F>
+    inline void push(F &&function)
+    {
+        static_assert(sizeof(F) < 200, "Don't capture too much in the lambda !");
+        deletor.push_back([function] { function(); });
+    }
 
     /// Flush the queue and execute all the function in reverse order
     ///

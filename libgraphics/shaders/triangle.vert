@@ -18,14 +18,14 @@ struct UniformBufferObject {
     mat4 modelMatrix;
     uint textureIndex;
     uint materialIndex;
+    uint boundingBoxIndex;
 };
 
 layout (std140, set = 0, binding = 0) readonly buffer ObjectBuffer {
     UniformBufferObject objects[];
 } objectBuffer;
 
-layout (push_constant) uniform constants {
-    vec4 position;
+layout (push_constant) uniform readonly constants {
 	mat4 viewproj;
 } cameraData;
 

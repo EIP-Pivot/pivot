@@ -1,6 +1,8 @@
 
 #include "pivot/graphics/Window.hxx"
 #include "pivot/graphics/DebugMacros.hxx"
+
+#include <Logger.hpp>
 #include <stdexcept>
 
 Window::Window(std::string n, unsigned w, unsigned h): windowName(n) { initWindow(w, h); }
@@ -51,14 +53,12 @@ void Window::captureCursor(bool capture) noexcept
 
 bool Window::captureCursor() noexcept { return glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED; }
 
-// static
 std::vector<const char *> Window::getRequiredExtensions()
 {
     uint32_t glfwExtensionCount = 0;
     const char **glfwExtentsions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
-    std::vector<const char *> extensions(glfwExtentsions, glfwExtentsions + glfwExtensionCount);
-    return extensions;
+    return {glfwExtentsions, glfwExtentsions + glfwExtensionCount};
 }
 
 void Window::setKeyCallback(GLFWkeyfun &&f) noexcept { glfwSetKeyCallback(window, f); }
@@ -89,19 +89,15 @@ glm::ivec2 Window::updateSize() const noexcept
     return size;
 };
 
-void Window::error_callback(int code, const char *msg) noexcept
-{
-    logger->err("Window") << msg;
-    LOGGER_ENDL;
-}
+void Window::error_callback(int code, const char *msg) noexcept { logger.err("Window") << msg; }
 
-void cursor_callback(GLFWwindow *win, double xpos, double ypos)
+void Window::cursor_callback(GLFWwindow *win, double xpos, double ypos)
 {
     auto window = (Window *)glfwGetWindowUserPointer(win);
     if (window->mouseCallback) (*window->mouseCallback)(*window, glm::dvec2(xpos, ypos));
 }
 
-void keyboard_callback(GLFWwindow *win, int key, int, int action, int)
+void Window::keyboard_callback(GLFWwindow *win, int key, int, int action, int)
 {
     auto window = (Window *)glfwGetWindowUserPointer(win);
     auto _key = static_cast<Window::Key>(key);

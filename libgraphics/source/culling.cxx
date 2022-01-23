@@ -5,7 +5,7 @@
 namespace pivot::graphics::culling
 {
 
-constexpr static std::array<glm::vec4, 6> PLANES = {{
+const static std::array<glm::vec4, 6> PLANES = {{
     {-1, 0, 0, 1},
     {1, 0, 0, 1},
     {0, -1, 0, 1},
@@ -14,10 +14,9 @@ constexpr static std::array<glm::vec4, 6> PLANES = {{
     {0, 0, 1, 0},
 }};
 
-bool should_object_be_rendered(const Transform &transform, const MeshBoundingBox &box,
-                               const gpuObject::CameraData &camera)
+bool should_object_be_rendered(const Transform &transform, const MeshBoundingBox &box, const CameraData &camera)
 {
-    auto projection = camera.viewproj * transform.getModelMatrix();
+    auto projection = camera.viewProjection * transform.getModelMatrix();
     auto bounding_box = box.vertices();
     std::array<glm::vec4, bounding_box.size()> projected_points;
     for (unsigned i = 0; i < bounding_box.size(); i++) {

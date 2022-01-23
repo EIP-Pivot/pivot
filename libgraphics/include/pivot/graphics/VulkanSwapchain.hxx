@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <stdint.h>
 #include <vector>
 #include <vulkan/vulkan.hpp>
@@ -8,36 +9,42 @@
 
 class Window;
 
-/// @class Swapchain
+/// @class VulkanSwapchain
 ///
 /// @brief Utility class to ease the creation of Vulkan swapchains
-class Swapchain
+class VulkanSwapchain
 {
 public:
     /// @struct SupportDetails
     ///
     /// @brief Helper class to gather all information required for swapchain creation
     struct SupportDetails {
-        /// @cond
+        /// surface capability
         vk::SurfaceCapabilitiesKHR capabilities;
+        /// List of supported format
         std::vector<vk::SurfaceFormatKHR> formats;
+        /// List of supported presentation modes
         std::vector<vk::PresentModeKHR> presentModes;
 
+        /// Choose a fitting format
         vk::SurfaceFormatKHR chooseSwapSurfaceFormat() noexcept;
+        /// Choose a presentation mode
         vk::PresentModeKHR chooseSwapPresentMode() noexcept;
-        vk::Extent2D chooseSwapExtent(Window &window) noexcept;
+        /// Check if the size if supported
+        vk::Extent2D chooseSwapExtent(const vk::Extent2D &size) noexcept;
+        /// Gather swapchain support information
         static SupportDetails querySwapChainSupport(const vk::PhysicalDevice &device, const vk::SurfaceKHR &surface);
         /// @endcond
     };
 
 public:
     /// Constructor
-    Swapchain();
+    VulkanSwapchain();
     /// Destructor
-    ~Swapchain();
+    ~VulkanSwapchain();
 
     /// Create a new swapchain
-    void init(Window &win, vk::PhysicalDevice &gpu, vk::Device &device, vk::SurfaceKHR &surface);
+    void create(const vk::Extent2D &size, vk::PhysicalDevice &gpu, vk::Device &device, vk::SurfaceKHR &surface);
 
     /// Destroy the swapchain
     void destroy();
@@ -49,12 +56,15 @@ public:
     /// swapchain.destroy();
     /// swapchain.init(...);
     /// @endcode
-    void recreate(Window &win, vk::PhysicalDevice &gpu, vk::Device &device, vk::SurfaceKHR &surface);
+    void recreate(const vk::Extent2D &size, vk::PhysicalDevice &gpu, vk::Device &device, vk::SurfaceKHR &surface);
 
     /// Return the number of images in the swapchain
     /// @throw std::length_error if the number of images and the number of imageViews are not equal. (Unlikely to
     /// happend)
     uint32_t nbOfImage() const;
+
+    /// Return the index of the next available swapchain image
+    uint32_t getNextImageIndex(const uint64_t maxDelay, vk::Semaphore semaphore);
 
     /// Return the Vulkan object
     constexpr const vk::SwapchainKHR &getSwapchain() const noexcept { return swapChain; }
@@ -87,11 +97,12 @@ public:
     inline operator bool() const noexcept { return swapChain; }
 
 private:
-    void createSwapchain(Window &win, vk::PhysicalDevice &gpu, vk::Device &device, vk::SurfaceKHR &surface);
-    void getImages(vk::Device &device);
-    void createImageViews(vk::Device &device);
+    void createSwapchain(const vk::Extent2D &size, vk::PhysicalDevice &gpu, vk::SurfaceKHR &surface);
+    void getImages();
+    void createImageViews();
 
 private:
+    std::optional<vk::Device> device = std::nullopt;
     DeletionQueue chainDeletionQueue;
     vk::Extent2D swapChainExtent;
     vk::Format swapChainImageFormat;

@@ -6,8 +6,7 @@
 
 namespace pivot::graphics::culling
 {
-bool should_object_be_rendered(const Transform &transform, const MeshBoundingBox &box,
-                               const gpuObject::CameraData &camera);
+bool should_object_be_rendered(const Transform &transform, const MeshBoundingBox &box, const CameraData &camera);
 }
 
 #endif    // PIVOT_ENGINE_GRAPHICS_CULLING_HXX

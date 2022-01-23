@@ -1,51 +1,39 @@
 #pragma once
 
 #include "pivot/graphics/types/Vertex.hxx"
-#include <vector>
 
-#include <vulkan/vulkan.hpp>
-
-/// @struct CPUMesh
-///
-/// @brief Represent a 3D model loaded in CPU memory
-struct CPUMesh {
-    /// All the verticies of the models
-    std::vector<Vertex> verticies;
-    /// The indices of the models
-    std::vector<uint32_t> indices;
-};
-
-/// @struct GPUMesh
-///
-/// @brief Represent a 3D model loaded in GPU memory
-struct GPUMesh {
-    /// Offset of the begining of the vertices
-    vk::DeviceSize verticiesOffset = 0;
-    /// Number of vertex for the mesh
-    vk::DeviceSize verticiesSize = 0;
-    /// Offset of the begining of the indices
-    vk::DeviceSize indicesOffset = 0;
-    /// Number of indice for the mesh
-    vk::DeviceSize indicesSize = 0;
-};
+#include <array>
+#include <cmath>
+#include <glm/vec3.hpp>
+#include <span>
 
 /// @struct MeshBoundingBox
 ///
 /// @brief Represents the cubic bounding box of a mesh
 struct MeshBoundingBox {
     MeshBoundingBox() = delete;
+
+    /// Construct a Bounding box using a complete mesh
+    explicit constexpr MeshBoundingBox(const std::span<Vertex> &mesh)
+    {
+        if (mesh.empty()) throw std::runtime_error("Can't build a MeshBoundingBox without Vertices");
+        low = mesh.front().pos;
+        high = low;
+        for (const auto &point: mesh) addPoint(point.pos);
+    };
+
     /// New bounding box for a model with only one point
-    explicit MeshBoundingBox(glm::vec3 initialPoint): low(initialPoint), high(initialPoint){};
+    explicit constexpr MeshBoundingBox(glm::vec3 initialPoint): low(initialPoint), high(initialPoint){};
     /// New bounding box with explicitely set low and high point
-    MeshBoundingBox(glm::vec3 low, glm::vec3 high): low(low), high(high){};
+    explicit constexpr MeshBoundingBox(glm::vec3 low, glm::vec3 high): low(low), high(high){};
 
     /// Lowest point of the bouding box
-    glm::vec3 low;
+    alignas(16) glm::vec3 low;
     /// Highest point of the bounding box
-    glm::vec3 high;
+    alignas(16) glm::vec3 high;
 
     /// Add a point to the bounding box
-    void addPoint(glm::vec3 point)
+    constexpr void addPoint(const glm::vec3 point)
     {
         high.x = std::max(point.x, high.x);
         high.y = std::max(point.y, high.y);
@@ -56,7 +44,7 @@ struct MeshBoundingBox {
     }
 
     /// Returns an array of the 8 vertices of the bounding box
-    std::array<glm::vec3, 8> vertices() const
+    inline const std::array<glm::vec3, 8> vertices() const
     {
         return {
             low,
@@ -71,3 +59,5 @@ struct MeshBoundingBox {
         };
     }
 };
+static_assert(sizeof(MeshBoundingBox) % 4 == 0);
+static_assert(sizeof(MeshBoundingBox) == sizeof(float) * 4 * 2);

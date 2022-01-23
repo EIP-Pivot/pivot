@@ -21,7 +21,7 @@ endif()
 FetchContent_Declare(
     vma
     GIT_REPOSITORY https://github.com/malte-v/VulkanMemoryAllocator-Hpp.git
-    GIT_TAG 3a61240a5354ce56c222969a69825aabb6ba0a21
+    GIT_TAG 658904b881a6ca8b7dd56b81aca7d81b410060a5
 )
 if (NOT vma_POPULATED)
     message(STATUS "Populating vma")
@@ -32,7 +32,7 @@ if (NOT vma_POPULATED)
         LANGUAGE CXX
     )
     target_include_directories(VulkanMemoryAllocator PUBLIC ${vma_SOURCE_DIR})
-    target_compile_definitions(VulkanMemoryAllocator PRIVATE VMA_IMPLEMENTATION VMA_USE_STL_CONTAINERS)
+    target_compile_definitions(VulkanMemoryAllocator PRIVATE VMA_IMPLEMENTATION)
     set_target_properties(VulkanMemoryAllocator PROPERTIES LINKER_LANGUAGE CXX)
     target_link_libraries(VulkanMemoryAllocator PUBLIC Vulkan::Vulkan)
 endif()
@@ -69,14 +69,13 @@ endif()
 
 FetchContent_Declare(
     imgui
-    GIT_REPOSITORY https://github.com/ocornut/imgui.git
-    GIT_TAG v1.84.2
+    GIT_REPOSITORY https://github.com/EIP-Pivot/imgui.git
+    GIT_TAG 6a52ef987ff9003f763f7afc512bc48a752f3086
 )
 if (NOT imgui_POPULATED)
     message(STATUS "Populating imgui")
     FetchContent_Populate(imgui)
     add_library(imgui ${imgui_SOURCE_DIR}/imgui.cpp
-                    ${imgui_SOURCE_DIR}/imgui_widgets.cpp
 
                     ${imgui_SOURCE_DIR}/imgui_draw.cpp
                     ${imgui_SOURCE_DIR}/imgui_widgets.cpp
@@ -86,6 +85,7 @@ if (NOT imgui_POPULATED)
                     ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
                     ${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp
     )
+    target_compile_definitions(imgui PUBLIC IMGUI_IMPL_VULKAN_NO_PROTOTYPES)
     target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR}/)
     target_link_libraries(imgui PRIVATE Vulkan::Vulkan glfw)
 endif()
@@ -109,27 +109,30 @@ if (NOT imguizmo_POPULATED)
 endif()
 
 add_library(${PROJECT_NAME} STATIC source/lib.cxx
+                                   source/types/Vertex.cxx
+                                   source/types/UniformBufferObject.cxx
                                    source/Window.cxx
                                    source/vk_utils.cxx
                                    source/vk_init.cxx
-                                   source/Swapchain.cxx
+                                   source/vk_debug.cxx
                                    source/SwapchainSupportDetails.cxx
-                                   source/PipelineBuilder.cxx
+                                   source/PipelineBuilders/GraphicsPipelineBuilder.cxx
+                                   source/PipelineBuilders/ComputePipelineBuilder.cxx
                                    source/VulkanLoader.cxx
-                                   source/UniformBufferObject.cxx
-                                   source/Transform.cxx
-                                   source/VulkanApplication.cxx
-                                   source/VulkanApplication_init.cxx
-                                   source/VulkanApplication_static.cxx
-                                   source/VulkanApplication_helper.cxx
-                                   source/VulkanApplication_loader.cxx
+                                   source/VulkanSwapchain.cxx
+                                   source/AssetsStorage.cxx
+                                   source/VulkanApplication/VulkanApplication.cxx
+                                   source/VulkanApplication/VulkanApplication_init.cxx
+                                   source/VulkanBase/VulkanBase.cxx
+                                   source/VulkanBase/VulkanBase_init.cxx
+                                   source/VulkanBase/VulkanBase_static.cxx
+                                   source/abstract/AImmediateCommand.cxx
                                    source/culling.cxx
-                                   source/math.cxx
+                                   source/DrawCallResolver.cxx
 )
 
-target_precompile_headers(${PROJECT_NAME} PRIVATE <Logger.hpp> <glm/glm.hpp> <vulkan/vulkan.hpp>)
+target_precompile_headers(${PROJECT_NAME} PRIVATE <vulkan/vulkan.hpp> <vk_mem_alloc.hpp>)
 
-target_precompile_headers(${PROJECT_NAME} PUBLIC <pivot/graphics/VulkanApplication.hxx>)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC
   VULKAN_HPP_NO_CONSTRUCTORS
@@ -139,6 +142,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
 
 add_shader(${PROJECT_NAME} triangle.vert)
 add_shader(${PROJECT_NAME} triangle.frag)
+add_shader(${PROJECT_NAME} culling.comp)
 
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 

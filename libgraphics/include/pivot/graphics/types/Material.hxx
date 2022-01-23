@@ -1,8 +1,7 @@
 #pragma once
 
-#include <glm/glm.hpp>
-#include <optional>
-#include <vulkan/vulkan_core.h>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 
 namespace gpuObject
 {
@@ -11,12 +10,14 @@ namespace gpuObject
 ///
 /// @brief Hold color information for the light calculations
 struct Material {
-    /// RGBA values for the ambient color
-    glm::vec4 ambientColor;
-    /// RGBA values for the diffuse color
-    glm::vec4 diffuse;
-    /// RGBA values for the specular color
-    glm::vec4 specular;
+    /// RGB values for the ambient color
+    alignas(16) glm::vec3 ambientColor;
+    /// RGB values for the diffuse color
+    alignas(16) glm::vec3 diffuse;
+    /// RGB values for the specular color
+    alignas(16) glm::vec3 specular;
 };
+static_assert(sizeof(Material) % 4 == 0);
+static_assert(sizeof(Material) == (sizeof(float) * 4 * 3));
 
 }    // namespace gpuObject

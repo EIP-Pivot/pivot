@@ -3,6 +3,18 @@ project(pivot)
 
 include(FetchContent)
 include(CTest)
+include(CheckIPOSupported)
+
+check_ipo_supported(RESULT supported)
+if(supported)
+    message(STATUS "LTO enabled")
+    cmake_policy(SET CMP0069 NEW)
+    set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
+    set_property(GLOBAL PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+else()
+    message(STATUS "LTO not supported")
+endif()
+
 
 if(MSVC)
     # see https://gitlab.kitware.com/cmake/cmake/-/issues/22606
@@ -30,13 +42,13 @@ endif()
 FetchContent_Declare(
     logger
     GIT_REPOSITORY https://github.com/zcorniere/logger-cpp.git
-    GIT_TAG v0.6
+    GIT_TAG v0.7
 )
 if (NOT logger_POPULATED)
     message(STATUS "Populating logger")
     FetchContent_Populate(logger)
     add_subdirectory(${logger_SOURCE_DIR} ${logger_BINARY_DIR})
-    target_compile_definitions(logger PUBLIC LOGGER_EXTERN_DECLARATION_PTR)
+    target_compile_definitions(logger PUBLIC LOGGER_EXTERN_DECLARATION)
 endif()
 
 FetchContent_Declare(
@@ -54,6 +66,7 @@ if (NOT glm_POPULATED)
     target_compile_definitions(glm INTERFACE
         GLM_FORCE_INLINE
         GLM_FORCE_RADIANS
+        GLM_FORCE_INTRINSICS
         GLM_FORCE_DEPTH_ZERO_TO_ONE
         GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
     )
@@ -101,14 +114,15 @@ add_subdirectory(libecs/)
 add_subdirectory(libgraphics/)
 target_link_libraries(pivot-ecs PUBLIC pivot-graphics)
 
+
 target_compile_options(pivot-ecs PRIVATE
      $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
           -Wall>
      $<$<CXX_COMPILER_ID:MSVC>:
-          /W4>)
+          /W3 /wd4267 /wd4201 /wd4244>)
 
 target_compile_options(pivot-graphics PRIVATE
      $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
           -Wall>
      $<$<CXX_COMPILER_ID:MSVC>:
-          /W3>)
+          /W3 /wd4267 /wd4201 /wd4244>)

@@ -1,7 +1,12 @@
 #pragma once
 
-#include "pivot/graphics/math.hxx"
 #include "pivot/graphics/types/vk_types.hxx"
+
+#include <stdexcept>
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 /// @struct Transform
 ///
@@ -22,29 +27,48 @@ public:
     Transform() = default;
 
     /// Constructor from vector
-    Transform(const glm::vec3 &translation, const glm::vec3 &rotation, const glm::vec3 &scale);
+    inline Transform(const glm::vec3 &translation, const glm::vec3 &rotation, const glm::vec3 &scale)
+        : Transform(glm::translate(glm::mat4(1.0f), translation), glm::toMat4(glm::quat(rotation)),
+                    glm::scale(glm::mat4(1.0f), scale))
+    {
+    }
 
     /// Constructor from matrices
-    Transform(const glm::mat4 &translation, const glm::mat4 &rotation, const glm::mat4 &scale);
+    inline Transform(const glm::mat4 &translation, const glm::mat4 &rotation, const glm::mat4 &scale)
+        : m_matrix(decomposeMatrix(translation * rotation * scale))
+    {
+    }
 
-    /// Get a reference of the model matrix
-    constexpr glm::mat4 &getModelMatrix() noexcept { return modelMatrix; }
-    /// Get a constant reference of the model matrix
-    constexpr const glm::mat4 &getModelMatrix() const noexcept { return modelMatrix; }
+    /// Get the model matrix
+    inline glm::mat4 getModelMatrix() const noexcept { return recomposeMatrix(m_matrix); }
+    /// Set the model matrix
+    inline void setModelMatrix(const glm::mat4 &matrix) { m_matrix = decomposeMatrix(matrix); }
 
     /// Set the rotation of the model matrix;
-    void setRotation(const glm::vec3 &rotation);
+    inline void setRotation(const glm::vec3 &rotation) { m_matrix.orientation = rotation; }
     /// Set the position of the model matrix;
-    void setPosition(const glm::vec3 &position);
+    inline void setPosition(const glm::vec3 &position) { m_matrix.translation = position; }
     /// Set the scale of the model matrix;
-    void setScale(const glm::vec3 &scale);
+    inline void setScale(const glm::vec3 &scale) { m_matrix.scale = scale; }
     /// Add position to the model matrix;
-    void addPosition(const glm::vec3 &position);
+    inline void addPosition(const glm::vec3 &position) { m_matrix.translation += position; }
 
 private:
-    static DecomposedMatrix decomposeMatrix(const glm::mat4 &modelMatrix);
-    static glm::mat4 recomposeMatrix(const DecomposedMatrix &modelMatrix);
+    inline static DecomposedMatrix decomposeMatrix(const glm::mat4 &modelMatrix)
+    {
+        DecomposedMatrix ret;
+
+        if (!glm::decompose(modelMatrix, ret.scale, ret.orientation, ret.translation, ret.skew, ret.perspective)) {
+            throw std::runtime_error("Error while decomposing matrix");
+        }
+        return ret;
+    }
+    inline static glm::mat4 recomposeMatrix(const DecomposedMatrix &decom)
+    {
+        return glm::translate(glm::mat4(1.0f), decom.translation) * glm::toMat4(decom.orientation) *
+               glm::scale(glm::mat4(1.0f), decom.scale);
+    }
 
 private:
-    glm::mat4 modelMatrix;
+    DecomposedMatrix m_matrix;
 };

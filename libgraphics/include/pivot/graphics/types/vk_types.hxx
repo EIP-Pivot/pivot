@@ -1,15 +1,7 @@
 #pragma once
-#include "pivot/graphics/types/AllocatedBuffer.hxx"
-#include "pivot/graphics/types/Material.hxx"
-#include "pivot/graphics/types/Mesh.hxx"
 
-#include <string>
-#include <unordered_map>
-
-using ImageStorage = std::unordered_map<std::string, AllocatedImage>;
-using MeshStorage = std::unordered_map<std::string, GPUMesh>;
-using MeshBoundingBoxStorage = std::unordered_map<std::string, MeshBoundingBox>;
-using MaterialStorage = std::unordered_map<std::string, gpuObject::Material>;
+#include <glm/mat4x4.hpp>
+#include <glm/vec4.hpp>
 
 /// @namespace gpuObject
 /// @brief Containing all the classes that will be used in a GLSL shader
@@ -18,15 +10,52 @@ using MaterialStorage = std::unordered_map<std::string, gpuObject::Material>;
 /// really important. As such, they need to be separated to avoid misuse
 namespace gpuObject
 {
+/// The push constant data for the vertex shader
+struct VertexPushConstant {
+    /// The camera viewproj matrix
+    alignas(16) glm::mat4 viewProjection;
+};
+static_assert(sizeof(VertexPushConstant) % 4 == 0);
+static_assert(sizeof(VertexPushConstant) == sizeof(float) * (4 * 4));
+
+/// The push constant data for the fragment shader
+struct FragmentPushConstant {
+    /// The position of the camera
+    alignas(16) glm::vec3 position;
+};
+static_assert(sizeof(FragmentPushConstant) % 4 == 0);
+static_assert(sizeof(FragmentPushConstant) == sizeof(float) * 4);
+
+/// The push constant data for the culling shader
+struct CullingPushConstant {
+    /// The camera viewproj matrix
+    alignas(16) glm::mat4 viewProjection;
+    /// The amount of item
+    alignas(4) std::uint32_t drawCount;
+};
+static_assert(sizeof(CullingPushConstant) % 4 == 0);
+static_assert(sizeof(CullingPushConstant) == (sizeof(float) * (4 * 4)) + sizeof(std::uint32_t) * 4);
+
+/// The size of the required pushConstants
+constexpr const auto pushConstantsSize =
+    std::max(sizeof(CullingPushConstant), sizeof(VertexPushConstant) + sizeof(FragmentPushConstant));
+
+}    // namespace gpuObject
+
 /// @struct CameraData
 ///
-/// @brief Hold the camera data, ready to be send to the GPU
+/// @brief Hold the camera data
 struct CameraData {
     /// @brief Position of the camera.
     ///
     /// This is a vec4 for easier alignment
-    glm::vec4 position;
+    glm::vec3 position;
+    /// The camera view matrix
+    glm::mat4 view;
+    /// The camera projection matrix
+    glm::mat4 projection;
     /// The camera projected view matrix
-    glm::mat4 viewproj;
+    glm::mat4 viewProjection;
 };
-}    // namespace gpuObject
+
+constexpr const auto MaxFrameInFlight = 3;

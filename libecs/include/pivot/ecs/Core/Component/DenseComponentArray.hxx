@@ -56,7 +56,12 @@ public:
         }
     }
 
+    /// Returns a mutable view into the components values. Some of those values can be nonsensical as the entity can
+    /// miss this component.
     std::span<T> getData() { return this->m_components; }
+
+    /// Returns a constant view into the components values. Some of those values can be nonsensical as the entity can
+    /// miss this component.
     std::span<const T> getData() const { return this->m_components; }
 
 protected:

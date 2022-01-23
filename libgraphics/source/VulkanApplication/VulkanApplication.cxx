@@ -18,6 +18,12 @@ VulkanApplication::VulkanApplication()
     : VulkanBase("Pivot Game Engine", true), assetStorage(*this), drawResolver(*this, assetStorage)
 {
     DEBUG_FUNCTION;
+
+#if defined(CULLING_DEBUG)
+    logger->warn("Culling") << "Culling camera are enabled !";
+    LOGGER_ENDL
+#endif
+
     if (bEnableValidationLayers && !VulkanBase::checkValidationLayerSupport(validationLayers)) {
         logger->warn("Vulkan Instance") << "Validation layers requested, but not available!";
         LOGGER_ENDL;
@@ -164,11 +170,12 @@ try {
         .position = cameraData.position,
     };
 
-#ifdef CULLING_DEBUGv
+#ifdef CULLING_DEBUG
     auto cullingCameraDataSelected = cullingCameraData.value_or(std::ref(cameraData)).get();
 #else
     auto cullingCameraDataSelected = cameraData;
 #endif
+
     drawResolver.prepareForDraw(sceneInformation, cullingCameraDataSelected, currentFrame);
 
     const gpuObject::CullingPushConstant cullingCamera{

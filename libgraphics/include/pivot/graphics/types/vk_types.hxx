@@ -15,20 +15,26 @@ struct VertexPushConstant {
     /// The camera viewproj matrix
     alignas(16) glm::mat4 viewProjection;
 };
+static_assert(sizeof(VertexPushConstant) % 4 == 0);
+static_assert(sizeof(VertexPushConstant) == sizeof(float) * (4 * 4));
 
 /// The push constant data for the fragment shader
 struct FragmentPushConstant {
     /// The position of the camera
     alignas(16) glm::vec3 position;
 };
+static_assert(sizeof(FragmentPushConstant) % 4 == 0);
+static_assert(sizeof(FragmentPushConstant) == sizeof(float) * 4);
 
 /// The push constant data for the culling shader
 struct CullingPushConstant {
     /// The camera viewproj matrix
     alignas(16) glm::mat4 viewProjection;
     /// The amount of item
-    alignas(16) std::uint32_t drawCount;
+    alignas(4) std::uint32_t drawCount;
 };
+static_assert(sizeof(CullingPushConstant) % 4 == 0);
+static_assert(sizeof(CullingPushConstant) == (sizeof(float) * (4 * 4)) + sizeof(std::uint32_t) * 4);
 
 /// The size of the required pushConstants
 constexpr const auto pushConstantsSize =

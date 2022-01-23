@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 
 namespace gpuObject
 {
@@ -16,5 +17,7 @@ struct Material {
     /// RGB values for the specular color
     alignas(16) glm::vec3 specular;
 };
+static_assert(sizeof(Material) % 4 == 0);
+static_assert(sizeof(Material) == (sizeof(float) * 4 * 3));
 
 }    // namespace gpuObject

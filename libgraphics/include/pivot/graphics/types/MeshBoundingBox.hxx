@@ -59,3 +59,5 @@ struct MeshBoundingBox {
         };
     }
 };
+static_assert(sizeof(MeshBoundingBox) % 4 == 0);
+static_assert(sizeof(MeshBoundingBox) == sizeof(float) * 4 * 2);

@@ -18,6 +18,9 @@
 #include <numeric>
 #include <set>
 
+namespace pivot::graphics
+{
+
 void VulkanApplication::createRenderPass()
 {
     DEBUG_FUNCTION
@@ -554,3 +557,5 @@ void VulkanApplication::initDearImGui()
         ImGui::DestroyContext();
     });
 }
+
+}    // namespace pivot::graphics

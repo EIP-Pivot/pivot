@@ -11,8 +11,11 @@
 
 #include <algorithm>
 
+namespace pivot::graphics
+{
+
 VulkanApplication::VulkanApplication()
-    : pivot::graphics::VulkanBase("Pivot Game Engine", true), assetStorage(*this), drawResolver(*this, assetStorage)
+    : VulkanBase("Pivot Game Engine", true), assetStorage(*this), drawResolver(*this, assetStorage)
 {
     DEBUG_FUNCTION;
     if (bEnableValidationLayers && !VulkanBase::checkValidationLayerSupport(validationLayers)) {
@@ -295,3 +298,5 @@ try {
 } catch (const vk::OutOfDateKHRError &) {
     return recreateSwapchain();
 }
+
+}    // namespace pivot::graphics

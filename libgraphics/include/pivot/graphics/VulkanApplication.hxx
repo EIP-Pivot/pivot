@@ -37,6 +37,9 @@
 #define MAX_MATERIALS 100
 #endif
 
+namespace pivot::graphics
+{
+
 const std::vector<const char *> validationLayers = {
     "VK_LAYER_KHRONOS_validation",
 };
@@ -53,7 +56,7 @@ const std::vector<const char *> deviceExtensions = {
 /// Then you will call the init() method, to initialise the Vulkan ressources
 ///
 /// You can now call the draw() method when you are ready to render a new frame
-class VulkanApplication : public pivot::graphics::VulkanBase
+class VulkanApplication : public VulkanBase
 {
 public:
     /// Default constructor
@@ -112,7 +115,7 @@ private:
 
 public:
     /// The application asssets storage
-    pivot::graphics::AssetStorage assetStorage;
+    AssetStorage assetStorage;
 
 private:
     /// @cond
@@ -158,3 +161,5 @@ private:
     std::vector<vk::Framebuffer> swapChainFramebuffers;
     /// @endcond
 };
+
+}    // namespace pivot::graphics

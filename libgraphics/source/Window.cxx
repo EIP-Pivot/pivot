@@ -90,7 +90,7 @@ glm::ivec2 Window::updateSize() const noexcept
 void Window::error_callback(int code, const char *msg) noexcept
 {
     logger->err("Window") << msg;
-    LOGGER_ENDL;
+    
 }
 
 void Window::cursor_callback(GLFWwindow *win, double xpos, double ypos)

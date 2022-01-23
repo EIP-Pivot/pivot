@@ -10,10 +10,10 @@ using namespace pivot::graphics;
     catch (const AssetStorage::AssetStorageException &ase) \
     {                                                      \
         logger->err("THROW/Asset Storage") << ase.what();  \
-        LOGGER_ENDL;                                       \
+                                               \
     }                                                      \
     catch (const VulkanException &ve)                      \
     {                                                      \
         logger->err("THROW/VulkanException") << ve.what(); \
-        LOGGER_ENDL;                                       \
+                                               \
     }

@@ -21,12 +21,11 @@ VulkanApplication::VulkanApplication()
 
 #if defined(CULLING_DEBUG)
     logger->warn("Culling") << "Culling camera are enabled !";
-    LOGGER_ENDL
 #endif
 
     if (bEnableValidationLayers && !VulkanBase::checkValidationLayerSupport(validationLayers)) {
         logger->warn("Vulkan Instance") << "Validation layers requested, but not available!";
-        LOGGER_ENDL;
+
         bEnableValidationLayers = false;
     }
     window.setKeyPressCallback(Window::Key::ESCAPE,
@@ -99,7 +98,6 @@ void VulkanApplication::recreateSwapchain()
     }
 
     logger->info("VulkanSwapchain") << "Recreating swapchain...";
-    LOGGER_ENDL;
 
     device.waitIdle();
     swapchainDeletionQueue.flush();
@@ -115,7 +113,7 @@ void VulkanApplication::recreateSwapchain()
     logger->info("Swapchain recreation") << "New height = " << swapchain.getSwapchainExtent().height
                                          << ", New width =" << swapchain.getSwapchainExtent().width
                                          << ", numberOfImage = " << swapchain.nbOfImage();
-    LOGGER_ENDL;
+
     postInitialization();
 }
 

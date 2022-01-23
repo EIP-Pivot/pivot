@@ -28,11 +28,11 @@ constexpr static const char *to_string_message_type(const VkDebugUtilsMessageTyp
 namespace pivot::graphics
 {
 
-uint32_t VulkanBase::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                                   VkDebugUtilsMessageTypeFlagsEXT messageType,
-                                   const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *)
+std::uint32_t VulkanBase::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                                        VkDebugUtilsMessageTypeFlagsEXT messageType,
+                                        const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *)
 {
-    std::stringstream &(Logger::*severity)(const std::string &) = nullptr;
+    Logger::Stream (Logger::*severity)(const std::string_view &) = nullptr;
     switch (messageSeverity) {
         case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
             severity = &Logger::debug;
@@ -50,7 +50,7 @@ uint32_t VulkanBase::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messag
     }
     vk::to_string(vk::DebugUtilsMessageTypeFlagsEXT(messageType));
     (logger->*severity)(to_string_message_type(messageType)) << pCallbackData->pMessage;
-    logger->endl();
+
     return VK_FALSE;
 }
 
@@ -90,7 +90,7 @@ bool VulkanBase::isDeviceSuitable(const vk::PhysicalDevice &gpu, const vk::Surfa
            deviceProperties.limits.maxPushConstantsSize >= gpuObject::pushConstantsSize;
 }
 
-uint32_t VulkanBase::rateDeviceSuitability(const vk::PhysicalDevice &gpu)
+std::uint32_t VulkanBase::rateDeviceSuitability(const vk::PhysicalDevice &gpu)
 {
     vk::PhysicalDeviceProperties deviceProperties = gpu.getProperties();
     vk::PhysicalDeviceFeatures deviceFeatures = gpu.getFeatures();

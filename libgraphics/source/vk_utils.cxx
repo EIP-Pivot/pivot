@@ -14,7 +14,7 @@ AllocatedBuffer createBuffer(vma::Allocator &allocator, uint32_t allocSize, vk::
 {
     if (allocSize == 0) {
         LOGGER_ERR << "Can't allocate empty buffer !";
-        LOGGER_ENDL;
+
         abort();
     }
     vk::BufferCreateInfo bufferInfo{

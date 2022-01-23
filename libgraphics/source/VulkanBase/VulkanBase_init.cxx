@@ -50,7 +50,7 @@ void VulkanBase::createDebugMessenger()
     debugUtilsMessenger = instance.createDebugUtilsMessengerEXT(debugInfo);
 
     logger->warn("Validation Layers") << "Validation Layers are activated !";
-    LOGGER_ENDL;
+
     baseDeletionQueue.push([&] { instance.destroyDebugUtilsMessengerEXT(debugUtilsMessenger); });
 }
 
@@ -83,12 +83,10 @@ void VulkanBase::selectPhysicalDevice(const std::vector<const char *> &deviceExt
     const auto deviceProperties = physical_device.getProperties();
     logger->info("Physical Device") << vk::to_string(deviceProperties.deviceType) << ": "
                                     << deviceProperties.deviceName;
-    LOGGER_ENDL;
 
     deviceFeature = physical_device.getFeatures();
     logger->info("Physical Device") << "multiDrawIndirect available: " << std::boolalpha
                                     << (deviceFeature.multiDrawIndirect == VK_TRUE);
-    LOGGER_ENDL;
 }
 
 void VulkanBase::createLogicalDevice(const std::vector<const char *> &deviceExtensions)

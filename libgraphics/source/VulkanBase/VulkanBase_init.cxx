@@ -37,7 +37,7 @@ void VulkanBase::createInstance(const std::vector<const char *> &instanceExtensi
         createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
         createInfo.ppEnabledLayerNames = validationLayers.data();
     }
-    vk_utils::tools::print_array(logger->info("Instance"), "Instance extensions: ", extensions);
+    vk_utils::tools::print_array(logger.info("Instance"), "Instance extensions: ", extensions);
     this->VulkanLoader::createInstance(createInfo);
     baseDeletionQueue.push([&] { instance.destroy(); });
 }
@@ -49,7 +49,7 @@ void VulkanBase::createDebugMessenger()
     auto debugInfo = vk_init::populateDebugUtilsMessengerCreateInfoEXT(&VulkanBase::debugCallback);
     debugUtilsMessenger = instance.createDebugUtilsMessengerEXT(debugInfo);
 
-    logger->warn("Validation Layers") << "Validation Layers are activated !";
+    logger.warn("Validation Layers") << "Validation Layers are activated !";
 
     baseDeletionQueue.push([&] { instance.destroyDebugUtilsMessengerEXT(debugUtilsMessenger); });
 }
@@ -79,14 +79,13 @@ void VulkanBase::selectPhysicalDevice(const std::vector<const char *> &deviceExt
         throw VulkanException("failed to find a suitable GPU!");
     }
 
-    vk_utils::tools::print_array(logger->info("Physical Device"), "Device extensions", deviceExtensions);
+    vk_utils::tools::print_array(logger.info("Physical Device"), "Device extensions", deviceExtensions);
     const auto deviceProperties = physical_device.getProperties();
-    logger->info("Physical Device") << vk::to_string(deviceProperties.deviceType) << ": "
-                                    << deviceProperties.deviceName;
+    logger.info("Physical Device") << vk::to_string(deviceProperties.deviceType) << ": " << deviceProperties.deviceName;
 
     deviceFeature = physical_device.getFeatures();
-    logger->info("Physical Device") << "multiDrawIndirect available: " << std::boolalpha
-                                    << (deviceFeature.multiDrawIndirect == VK_TRUE);
+    logger.info("Physical Device") << "multiDrawIndirect available: " << std::boolalpha
+                                   << (deviceFeature.multiDrawIndirect == VK_TRUE);
 }
 
 void VulkanBase::createLogicalDevice(const std::vector<const char *> &deviceExtensions)

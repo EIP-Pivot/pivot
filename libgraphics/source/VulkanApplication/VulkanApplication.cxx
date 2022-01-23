@@ -20,11 +20,11 @@ VulkanApplication::VulkanApplication()
     DEBUG_FUNCTION;
 
 #if defined(CULLING_DEBUG)
-    logger->warn("Culling") << "Culling camera are enabled !";
+    logger.warn("Culling") << "Culling camera are enabled !";
 #endif
 
     if (bEnableValidationLayers && !VulkanBase::checkValidationLayerSupport(validationLayers)) {
-        logger->warn("Vulkan Instance") << "Validation layers requested, but not available!";
+        logger.warn("Vulkan Instance") << "Validation layers requested, but not available!";
 
         bEnableValidationLayers = false;
     }
@@ -97,7 +97,7 @@ void VulkanApplication::recreateSwapchain()
         size = window.getSize();
     }
 
-    logger->info("VulkanSwapchain") << "Recreating swapchain...";
+    logger.info("VulkanSwapchain") << "Recreating swapchain...";
 
     device.waitIdle();
     swapchainDeletionQueue.flush();
@@ -110,9 +110,9 @@ void VulkanApplication::recreateSwapchain()
     createFramebuffers();
     createCommandBuffers();
     initDearImGui();
-    logger->info("Swapchain recreation") << "New height = " << swapchain.getSwapchainExtent().height
-                                         << ", New width =" << swapchain.getSwapchainExtent().width
-                                         << ", numberOfImage = " << swapchain.nbOfImage();
+    logger.info("Swapchain recreation") << "New height = " << swapchain.getSwapchainExtent().height
+                                        << ", New width =" << swapchain.getSwapchainExtent().width
+                                        << ", numberOfImage = " << swapchain.nbOfImage();
 
     postInitialization();
 }

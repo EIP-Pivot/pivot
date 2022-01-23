@@ -27,18 +27,18 @@ AssetStorage::~AssetStorage() {}
 void AssetStorage::build()
 {
     DEBUG_FUNCTION
-    logger->info("ASSET STORAGE") << "Pushing models onto the GPU";
+    logger.info("ASSET STORAGE") << "Pushing models onto the GPU";
 
     pushModelsOnGPU();
     vk_debug::setObjectName(base_ref->get().device, vertexBuffer.buffer, "Vertex Buffer");
     vk_debug::setObjectName(base_ref->get().device, indicesBuffer.buffer, "Indices Buffer");
 
-    logger->info("ASSET STORAGE") << "Pushing bounding boxes onto the GPU";
+    logger.info("ASSET STORAGE") << "Pushing bounding boxes onto the GPU";
 
     pushBoundingBoxesOnGPU();
     vk_debug::setObjectName(base_ref->get().device, boundingboxbuffer.buffer, "BoundingBox Buffer");
 
-    logger->info("ASSET STORAGE") << "Pushing textures onto the GPU";
+    logger.info("ASSET STORAGE") << "Pushing textures onto the GPU";
 
     pushTexturesOnGPU();
     for (auto &[name, image]: textureStorage) {
@@ -47,7 +47,7 @@ void AssetStorage::build()
         vk_debug::setObjectName(base_ref->get().device, im.imageView, "Texture " + name + "ImageView");
     }
 
-    logger->info("ASSET STORAGE") << "Pushing materials onto the GPU";
+    logger.info("ASSET STORAGE") << "Pushing materials onto the GPU";
 
     pushMaterialOnGPU();
     vk_debug::setObjectName(base_ref->get().device, materialBuffer.buffer, "Material Buffer");
@@ -75,7 +75,7 @@ bool AssetStorage::loadModel(const std::filesystem::path &path)
 {
     DEBUG_FUNCTION
     if (std::find(supportedObject.begin(), supportedObject.end(), path.extension()) == supportedObject.end()) {
-        logger->err("LOAD MODEL") << "Non supported model extension: " << path.extension();
+        logger.err("LOAD MODEL") << "Non supported model extension: " << path.extension();
 
         return false;
     }
@@ -88,12 +88,9 @@ bool AssetStorage::loadModel(const std::filesystem::path &path)
     std::string warn, err;
 
     tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.string().c_str(), nullptr);
-    if (!warn.empty()) {
-        logger->warn("LOADING_OBJ") << warn;
-        
-    }
+    if (!warn.empty()) { logger.warn("LOADING_OBJ") << warn; }
     if (!err.empty()) {
-        logger->err("LOADING_OBJ") << err;
+        logger.err("LOADING_OBJ") << err;
 
         return false;
     }
@@ -152,7 +149,7 @@ bool AssetStorage::loadTexture(const std::filesystem::path &path)
 {
     DEBUG_FUNCTION
     if (std::find(supportedTexture.begin(), supportedTexture.end(), path.extension()) == supportedTexture.end()) {
-        logger->err("LOAD MODEL") << "Non supported texture extension: " << path.extension();
+        logger.err("LOAD MODEL") << "Non supported texture extension: " << path.extension();
 
         return false;
     }
@@ -189,7 +186,7 @@ void AssetStorage::pushModelsOnGPU()
     auto vertexSize = vertexStagingBuffer.size() * sizeof(Vertex);
 
     if (vertexSize == 0) {
-        logger->warn("Asset Storage") << "No model to push";
+        logger.warn("Asset Storage") << "No model to push";
 
         return;
     }
@@ -225,7 +222,7 @@ void AssetStorage::pushTexturesOnGPU()
     DEBUG_FUNCTION
 
     if (textureStorage.empty()) {
-        logger->warn("Asset Storage") << "No textures to push";
+        logger.warn("Asset Storage") << "No textures to push";
 
         return;
     }
@@ -274,7 +271,7 @@ void AssetStorage::pushMaterialOnGPU()
     DEBUG_FUNCTION
     auto size = sizeof(gpuObject::Material) * materialStorage.size();
     if (size == 0) {
-        logger->warn("Asset Storage") << "No material to push";
+        logger.warn("Asset Storage") << "No material to push";
 
         return;
     }
@@ -298,7 +295,7 @@ void AssetStorage::pushBoundingBoxesOnGPU()
     DEBUG_FUNCTION
     auto size = sizeof(MeshBoundingBox) * materialStorage.size();
     if (size == 0) {
-        logger->warn("Asset Storage") << "No material to push";
+        logger.warn("Asset Storage") << "No material to push";
 
         return;
     }

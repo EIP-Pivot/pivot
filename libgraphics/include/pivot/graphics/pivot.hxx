@@ -9,11 +9,11 @@ using namespace pivot::graphics;
 #define CATCH_PIVOT_EXCEPTIONS                             \
     catch (const AssetStorage::AssetStorageException &ase) \
     {                                                      \
-        logger->err("THROW/Asset Storage") << ase.what();  \
+        logger.err("THROW/Asset Storage") << ase.what();  \
                                                \
     }                                                      \
     catch (const VulkanException &ve)                      \
     {                                                      \
-        logger->err("THROW/VulkanException") << ve.what(); \
+        logger.err("THROW/VulkanException") << ve.what(); \
                                                \
     }

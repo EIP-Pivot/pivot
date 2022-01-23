@@ -1,4 +1,4 @@
-// #include <Logger.hpp>
+#include <Logger.hpp>
 
 #include <pivot/ecs/Core/Component/index.hxx>
 
@@ -61,9 +61,7 @@ std::vector<std::string> GlobalIndex::getAllComponentsNames()
 
 void GlobalIndex::lockReadOnly()
 {
-    // TODO: Reenable when logger initiialization is fixed
-    // logger->info() << "Locking global component index in read-only mode";
-    // LOGGER_ENDL;
+    logger.info() << "Locking global component index in read-only mode";
     if (!m_read_only) {
         const std::lock_guard<std::mutex> guard(m_mutex);
         m_read_only.store(true);

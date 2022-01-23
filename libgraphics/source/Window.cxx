@@ -1,6 +1,8 @@
 
 #include "pivot/graphics/Window.hxx"
 #include "pivot/graphics/DebugMacros.hxx"
+
+#include <Logger.hpp>
 #include <stdexcept>
 
 Window::Window(std::string n, unsigned w, unsigned h): windowName(n) { initWindow(w, h); }
@@ -87,11 +89,7 @@ glm::ivec2 Window::updateSize() const noexcept
     return size;
 };
 
-void Window::error_callback(int code, const char *msg) noexcept
-{
-    logger->err("Window") << msg;
-    
-}
+void Window::error_callback(int code, const char *msg) noexcept { logger.err("Window") << msg; }
 
 void Window::cursor_callback(GLFWwindow *win, double xpos, double ypos)
 {

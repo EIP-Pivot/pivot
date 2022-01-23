@@ -49,7 +49,7 @@ std::uint32_t VulkanBase::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT m
         default: severity = &Logger::err; break;
     }
     vk::to_string(vk::DebugUtilsMessageTypeFlagsEXT(messageType));
-    (logger->*severity)(to_string_message_type(messageType)) << pCallbackData->pMessage;
+    (logger.*severity)(to_string_message_type(messageType)) << pCallbackData->pMessage;
 
     return VK_FALSE;
 }

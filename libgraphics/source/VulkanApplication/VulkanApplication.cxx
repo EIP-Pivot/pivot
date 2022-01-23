@@ -122,7 +122,7 @@ void VulkanApplication::draw(const std::vector<std::reference_wrapper<const Rend
 )
 try {
     auto &frame = frames[currentFrame];
-    VK_TRY(device.waitForFences(frame.inFlightFences, VK_TRUE, UINT64_MAX));
+    vk_utils::vk_try(device.waitForFences(frame.inFlightFences, VK_TRUE, UINT64_MAX));
 
     uint32_t imageIndex = swapchain.getNextImageIndex(UINT64_MAX, frame.imageAvailableSemaphore);
     allocator.setCurrentFrameIndex(imageIndex);
@@ -188,7 +188,7 @@ try {
             .flags = vk::CommandBufferUsageFlagBits::eRenderPassContinue,
             .pInheritanceInfo = &inheritanceInfo,
         };
-        VK_TRY(imguiCmd.begin(&imguiBeginInfo));
+        vk_utils::vk_try(imguiCmd.begin(&imguiBeginInfo));
         pivot::graphics::vk_debug::beginRegion(imguiCmd, "Imgui Commands", {1.f, 0.f, 0.f, 1.f});
         if (auto imguiData = ImGui::GetDrawData(); imguiData != nullptr) {
             ImGui_ImplVulkan_RenderDrawData(imguiData, imguiCmd);
@@ -205,7 +205,7 @@ try {
             .flags = vk::CommandBufferUsageFlagBits::eRenderPassContinue,
             .pInheritanceInfo = &inheritanceInfo,
         };
-        VK_TRY(drawCmd.begin(&drawBeginInfo));
+        vk_utils::vk_try(drawCmd.begin(&drawBeginInfo));
         pivot::graphics::vk_debug::beginRegion(imguiCmd, "Draw Commands", {0.f, 1.f, 0.f, 1.f});
         if (drawResolver.getFrameData(currentFrame).packedDraws.size() > 0) {
             drawCmd.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
@@ -239,7 +239,7 @@ try {
 
     std::array<vk::CommandBuffer, 2> secondaryBuffer{drawCmd, imguiCmd};
     vk::CommandBufferBeginInfo beginInfo;
-    VK_TRY(cmd.begin(&beginInfo));
+    vk_utils::vk_try(cmd.begin(&beginInfo));
     pivot::graphics::vk_debug::beginRegion(imguiCmd, "main command", {1.f, 1.f, 1.f, 1.f});
 
     {

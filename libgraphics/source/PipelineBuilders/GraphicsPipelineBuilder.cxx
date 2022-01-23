@@ -125,7 +125,7 @@ vk::Pipeline GraphicsPipelineBuilder::build(vk::Device &device, vk::PipelineCach
     std::tie(result, newPipeline) = device.createGraphicsPipeline(pipelineCache, pipelineInfo);
     device.destroy(fragShaderModule);
     device.destroy(vertShaderModule);
-    VK_TRY(result);
+    vk_utils::vk_try(result);
     return newPipeline;
 }
 

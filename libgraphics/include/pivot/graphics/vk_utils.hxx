@@ -12,12 +12,6 @@
 #include "pivot/graphics/abstract/AImmediateCommand.hxx"
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 
-#define VK_TRY(x)                                                       \
-    {                                                                   \
-        vk::Result err = x;                                             \
-        if (err < vk::Result::eSuccess) { throw VulkanException(err); } \
-    }
-
 namespace pivot::graphics::vk_utils
 {
 template <typename T>
@@ -27,7 +21,10 @@ concept is_copyable = requires
     typename std::vector<T>;
 };
 
-constexpr void vk_try(vk::Result res) { VK_TRY(res); }
+constexpr void vk_try(vk::Result err)
+{
+    if (err < vk::Result::eSuccess) throw VulkanException(err);
+}
 
 constexpr void vk_try(VkResult res) { vk_try(vk::Result(res)); }
 

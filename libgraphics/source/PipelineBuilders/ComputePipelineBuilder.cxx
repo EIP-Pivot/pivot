@@ -34,7 +34,7 @@ vk::Pipeline ComputePipelineBuilder::build(vk::Device &device, vk::PipelineCache
     vk::Result result;
     std::tie(result, newPipeline) = device.createComputePipeline(pipelineCache, pipelineInfo);
     device.destroy(computeShaderModule);
-    VK_TRY(result);
+    vk_utils::vk_try(result);
     return newPipeline;
 }
 

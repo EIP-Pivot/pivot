@@ -55,7 +55,7 @@ void AImmediateCommand::immediateCommand(std::function<void(vk::CommandBuffer &)
     };
 
     immediateQueue.submit(submit, immediateFence);
-    VK_TRY(device_ref->get().waitForFences(immediateFence, VK_TRUE, UINT64_MAX));
+    vk_utils::vk_try(device_ref->get().waitForFences(immediateFence, VK_TRUE, UINT64_MAX));
     device_ref->get().resetFences(immediateFence);
     device_ref->get().resetCommandPool(immediateCommandPool);
 }

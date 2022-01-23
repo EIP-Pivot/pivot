@@ -4,7 +4,7 @@
 
 /// @struct Tag
 ///
-/// @brief Tag component, use to name entities
+/// @brief Tag component, used to name entities
 struct Tag {
     /// Name of an entity
     std::string name;

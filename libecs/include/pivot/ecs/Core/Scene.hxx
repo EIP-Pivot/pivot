@@ -1,10 +1,11 @@
 #pragma once
 
-#include "pivot/ecs/Core/types.hxx"
-#include "pivot/ecs/Core/ComponentManager.hxx"
+#include "pivot/ecs/Core/Component/index.hxx"
+#include "pivot/ecs/Core/Component/manager.hxx"
 #include "pivot/ecs/Core/EntityManager.hxx"
-#include "pivot/ecs/Core/SystemManager.hxx"
 #include "pivot/ecs/Core/EventManager.hxx"
+#include "pivot/ecs/Core/SystemManager.hxx"
+#include "pivot/ecs/Core/types.hxx"
 #include <memory>
 
 #include "pivot/ecs/Components/Camera.hxx"
@@ -13,18 +14,19 @@
 /// @class IScene
 ///
 /// @brief Scene interface for transitional event
-class IScene {
+class IScene
+{
 protected:
     /// Called when scene is create
-    virtual void OnCreate() {};
+    virtual void OnCreate(){};
     /// Called every frame
-    virtual void OnTick() {};
+    virtual void OnTick(){};
     /// Called when scene is set to pause
-    virtual void OnPause() {};
+    virtual void OnPause(){};
     /// Called when scene is resume
-    virtual void OnResume() {};
+    virtual void OnResume(){};
     /// Called when scene is delete
-    virtual void OnStop() {};
+    virtual void OnStop(){};
 };
 
 /// @class Scene
@@ -34,16 +36,13 @@ class Scene : public IScene
 {
 public:
     /// Default constructor, if no name specified it will generate a name like Scene 1
-    Scene(std::string sceneName = "Scene"): name(sceneName){};
-
-    /// Init manager
-    void Init();
+    Scene(std::string sceneName = "Scene");
 
     /// Get scene name
     std::string getName();
 
     /// Set scene name
-    void setName(std::string newName){ name = newName; }
+    void setName(std::string newName) { name = newName; }
 
     // Entity methods
 
@@ -62,17 +61,17 @@ public:
 
     /// Check if entity get a component
     template <typename T>
-    bool hasComponent(Entity entity)
+    [[deprecated]] bool hasComponent(Entity entity)
     {
         Signature entitySignature = mEntityManager->GetSignature(entity);
-        return isRegister<T>() && entitySignature.test(mComponentManager->GetComponentType<T>());
+        auto id = GetComponentType<T>();
+        return entitySignature.test(id);
     }
-
     /// Get signature of an entity
     Signature getSignature(Entity entity);
 
     /// Get name of an entity
-    std::string &getEntityName(Entity entity);
+    std::string getEntityName(Entity entity);
 
     /// Get the number of entity in the scene
     uint32_t getLivingEntityCount();
@@ -84,16 +83,19 @@ public:
     /// gCoordinator.RegisterComponent<{YourComponent}>();
     /// @endcode
     template <typename T>
-    void RegisterComponent()
+    [[deprecated]] void RegisterComponent()
     {
-        mComponentManager->RegisterComponent<T>();
+        auto name = mComponentIndex.getComponentNameByType<T>();
+        auto description = mComponentIndex.getDescription(name.value());
+        mComponentManager->RegisterComponent(description.value());
     }
 
     /// Check if the component is register in the scene
     template <typename T>
-    bool isRegister()
+    [[deprecated]] bool isRegister()
     {
-        return mComponentManager->isRegister<T>();
+        auto name = mComponentIndex.getComponentNameByType<T>();
+        return mComponentManager->GetComponentId(name.value()).has_value();
     }
 
     /// Add a component to Entity
@@ -101,12 +103,14 @@ public:
     /// gCoordinator.AddComponent<{YourComponent}>({YourEntity});
     /// @endcode
     template <typename T>
-    void AddComponent(Entity entity, T component)
+    [[deprecated]] void AddComponent(Entity entity, T component)
     {
-        mComponentManager->AddComponent<T>(entity, component);
+        auto name = mComponentIndex.getComponentNameByType<T>();
+        auto id = mComponentManager->GetComponentId(name.value());
+        mComponentManager->AddComponent(entity, std::any(component), id.value());
 
         auto signature = mEntityManager->GetSignature(entity);
-        signature.set(mComponentManager->GetComponentType<T>(), true);
+        signature.set(id.value(), true);
         mEntityManager->SetSignature(entity, signature);
 
         mSystemManager->EntitySignatureChanged(entity, signature);
@@ -117,12 +121,14 @@ public:
     /// gCoordinator.RemoveComponent<{YourComponent}>({YourEntity});
     /// @endcode
     template <typename T>
-    void RemoveComponent(Entity entity)
+    [[deprecated]] void RemoveComponent(Entity entity)
     {
-        mComponentManager->RemoveComponent<T>(entity);
+        auto name = mComponentIndex.getComponentNameByType<T>();
+        auto id = mComponentManager->GetComponentId(name.value());
+        mComponentManager->RemoveComponent(entity, id.value());
 
         auto signature = mEntityManager->GetSignature(entity);
-        signature.set(mComponentManager->GetComponentType<T>(), false);
+        signature.set(id.value(), false);
         mEntityManager->SetSignature(entity, signature);
 
         mSystemManager->EntitySignatureChanged(entity, signature);
@@ -133,9 +139,11 @@ public:
     /// gCoordinator.GetComponent<{YourComponent}>({YourEntity});
     /// @endcode
     template <typename T>
-    T &GetComponent(Entity entity)
+    [[deprecated]] T &GetComponent(Entity entity)
     {
-        return mComponentManager->GetComponent<T>(entity);
+        auto id = GetComponentType<T>();
+        auto component = mComponentManager->GetComponentRef(entity, id);
+        return std::any_cast<std::reference_wrapper<T>>(component).get();
     }
 
     /// Get component type, return in uint8_t;
@@ -144,13 +152,18 @@ public:
     /// gCoordinator.GetComponentType<{YourComponent}>();
     /// @endcode
     template <typename T>
-    ComponentType GetComponentType()
+    [[deprecated]] pivot::ecs::component::Manager::ComponentId GetComponentType()
     {
-        return mComponentManager->GetComponentType<T>();
+        auto name = mComponentIndex.getComponentNameByType<T>();
+        auto id = mComponentManager->GetComponentId(name.value());
+        return id.value();
     }
 
-    /// Get the list of component type use in signature
-    std::unordered_map<const char *, ComponentType> getComponentsTypes();
+    /// Get the component manager
+    pivot::ecs::component::Manager &getComponentManager();
+
+    /// Get the component manager (const)
+    const pivot::ecs::component::Manager &getComponentManager() const;
 
     // System methods
 
@@ -179,8 +192,7 @@ public:
     {
         mSystemManager->SetSignature<T>(signature);
         for (Entity entity = 0; entity < getLivingEntityCount(); entity++) {
-            if ( (getSignature(entity) & signature) == signature)
-                mSystemManager->setEntityToSystem<T>(entity);
+            if ((getSignature(entity) & signature) == signature) mSystemManager->setEntityToSystem<T>(entity);
         }
     }
 
@@ -231,11 +243,13 @@ public:
 
 private:
     std::string name;
-    std::unique_ptr<ComponentManager> mComponentManager;
+    std::unique_ptr<pivot::ecs::component::Manager> mComponentManager;
     std::unique_ptr<EntityManager> mEntityManager;
     std::unique_ptr<EventManager> mEventManager;
     std::unique_ptr<SystemManager> mSystemManager;
     std::vector<std::shared_ptr<System>> mSystems;
     std::vector<Entity> mCamera;
     std::uint16_t mCurrentCamera;
+    pivot::ecs::component::Manager::ComponentId mTagId;
+    pivot::ecs::component::Index mComponentIndex;
 };

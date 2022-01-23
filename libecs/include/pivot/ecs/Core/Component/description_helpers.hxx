@@ -153,7 +153,6 @@ Description build_component_description(const char *name, bool registerComponent
                             helpers::create<T>,
                             helpers::createContainer<A>};
     if (registerComponent) {
-        std::clog << "Registering " << name << std::endl;
         GlobalIndex::getSingleton().registerComponentWithType<T>(description);
     }
     return description;

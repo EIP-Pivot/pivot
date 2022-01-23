@@ -1,5 +1,7 @@
 #pragma once
 
+#include <span>
+
 #include <pivot/ecs/Core/Component/array.hxx>
 #include <pivot/ecs/Core/types.hxx>
 
@@ -18,8 +20,7 @@ class DenseTypedComponentArray : public IComponentArray
 {
 public:
     /// Creates a DenseTypedComponentArray from the Description of its component
-    DenseTypedComponentArray(Description description)
-        : m_description(description), m_component_exist(MAX_ENTITIES, false), m_components(MAX_ENTITIES)
+    DenseTypedComponentArray(Description description): m_description(description), m_component_exist(), m_components()
     {
     }
 
@@ -29,14 +30,14 @@ public:
     /// \copydoc pivot::ecs::component::IComponentArray::getValueForEntity()
     std::optional<std::any> getValueForEntity(Entity entity) const override
     {
-        if (!m_component_exist.at(entity)) return std::nullopt;
+        if (entity >= m_components.size() || !m_component_exist[entity]) return std::nullopt;
         return std::make_any<T>(m_components.at(entity));
     }
 
     /// \copydoc pivot::ecs::component::IComponentArray::getRefForEntity()
     std::optional<std::any> getRefForEntity(Entity entity) override
     {
-        if (!m_component_exist.at(entity)) return std::nullopt;
+        if (entity >= m_components.size() || !m_component_exist[entity]) return std::nullopt;
         return std::make_any<std::reference_wrapper<T>>(m_components.at(entity));
     }
 
@@ -44,12 +45,19 @@ public:
     void setValueForEntity(Entity entity, std::optional<std::any> value) override
     {
         if (!value.has_value()) {
-            m_component_exist.at(entity) = false;
+            if (entity < m_components.size()) m_component_exist.at(entity) = false;
         } else {
+            if (entity >= m_components.size()) {
+                m_components.resize(entity + 1);
+                m_component_exist.resize(entity + 1, false);
+            }
             m_components.at(entity) = std::any_cast<T>(value.value());
             m_component_exist.at(entity) = true;
         }
     }
+
+    std::span<T> getData() { return this->m_components; }
+    std::span<const T> getData() const { return this->m_components; }
 
 protected:
     /// Description of the component

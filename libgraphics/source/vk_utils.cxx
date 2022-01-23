@@ -222,7 +222,7 @@ vk::ShaderModule createShaderModule(const vk::Device &device, const std::vector<
     return device.createShaderModule(createInfo);
 }
 
-vk::SampleCountFlagBits getMexUsableSampleCount(vk::PhysicalDevice &physical_device)
+vk::SampleCountFlagBits getMaxUsableSampleCount(vk::PhysicalDevice &physical_device)
 {
     vk::PhysicalDeviceProperties physicalDeviceProperties = physical_device.getProperties();
 

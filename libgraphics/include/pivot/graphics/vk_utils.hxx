@@ -72,7 +72,7 @@ void generateMipmaps(VulkanBase &, vk::Image &image, vk::Format imageFormat, vk:
 std::vector<std::byte> readFile(const std::string &filename);
 vk::ShaderModule createShaderModule(const vk::Device &device, const std::vector<std::byte> &code);
 
-vk::SampleCountFlagBits getMexUsableSampleCount(vk::PhysicalDevice &physical_device);
+vk::SampleCountFlagBits getMaxUsableSampleCount(vk::PhysicalDevice &physical_device);
 vk::Format findSupportedFormat(vk::PhysicalDevice &gpu, const std::vector<vk::Format> &candidates,
                                vk::ImageTiling tiling, vk::FormatFeatureFlags features);
 bool hasStencilComponent(vk::Format format) noexcept;

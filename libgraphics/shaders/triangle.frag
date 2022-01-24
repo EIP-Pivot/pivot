@@ -17,6 +17,7 @@ layout (push_constant) uniform readonly constants {
 } cameraData;
 
 struct Material {
+    float shininess;
     vec3 ambientColor;
     vec3 diffuse;
     vec3 specular;
@@ -30,28 +31,38 @@ layout(set = 1, binding = 2) uniform sampler2D texSampler[];
 
 const vec3 lightDirection = vec3(11.0, 16.0, 24.0);
 
-vec4 calculateLight(in Material mat) {
+const float ambientStrength = 0.1;
+const float specularStrength = 0.5;
+const float diffuseStrength = 5.0;
+
+vec3 calculateLight(in Material mat) {
     // ambient
-    float ambientStrength = 0.1;
     vec3 ambient = ambientStrength * mat.ambientColor;
 
     // diffuse
-    vec3 norm = normalize(fragNormal);
     vec3 lightDir = normalize(lightDirection - fragPosition);
+    vec3 norm = normalize(fragNormal);
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * mat.diffuse;
+    vec3 diffuse = diffuseStrength * (diff * mat.diffuse);
 
     // specular
-    float specularStrength = 0.5;
     vec3 viewDir = normalize(cameraData.position - fragPosition);
-    vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-    vec3 specular = specularStrength * spec * mat.specular;
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(norm, halfwayDir), 0.0), 64.0);
+    vec3 specular = specularStrength *  (spec * mat.specular);
 
-    return vec4(ambient + diffuse + specular, 1.0);
+    float attenuation = 1.0 / length(lightDirection - fragPosition);
+    diffuse *= attenuation;
+    specular *= attenuation;
+
+    return ambient + diffuse + specular;
 }
 
 void main() {
-    vec4 light = calculateLight(objectMaterials.materials[materialIndex]);
-    outColor = light * texture(texSampler[textureIndex], fragTextCoords);
+    vec3 diffuseColor = texture(texSampler[textureIndex], fragTextCoords).rgb;
+    vec3 light = calculateLight(objectMaterials.materials[materialIndex]);
+    outColor =  vec4(light * diffuseColor, 1.0);
+
+    float gamma = 2.2;
+    outColor.rgb = pow(outColor.rgb, vec3(1.0/gamma));
 }

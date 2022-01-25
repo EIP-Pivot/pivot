@@ -17,12 +17,16 @@ class AllocatedImage;
 class AllocatedBuffer
 {
 public:
+    /// Constructor
     AllocatedBuffer();
+    /// Destructor
     ~AllocatedBuffer();
 
+    /// Clone the buffer into a new one
     AllocatedBuffer cloneBuffer(VulkanBase &i, const vk::BufferUsageFlags usage, const vma::MemoryUsage memoryUsage);
 
     template <vk_utils::is_copyable T>
+    /// Copy the data into a buffer
     void copyBuffer(vma::Allocator &allocator, const T *data, size_t size)
     {
         void *mapped = allocator.mapMemory(memory);
@@ -31,6 +35,7 @@ public:
     }
 
     template <vk_utils::is_copyable T>
+    /// Copy the vector into the buffer
     void copyBuffer(vma::Allocator &allocator, const std::vector<T> &data)
     {
         void *mapped = allocator.mapMemory(memory);
@@ -38,12 +43,16 @@ public:
         allocator.unmapMemory(memory);
     }
 
+    /// Copy buffer to image
     void copyToImage(abstract::AImmediateCommand &, AllocatedImage &dstImage) const;
+    /// Test if the Vulkan buffer is created
     operator bool() const noexcept;
 
 public:
+    /// Create a buffer
     static AllocatedBuffer create(VulkanBase &base, uint32_t allocSize, vk::BufferUsageFlags usage,
                                   vma::MemoryUsage memoryUsage);
+    /// Destroy a buffer
     static void destroy(VulkanBase &base, AllocatedBuffer &buffer);
 
 public:

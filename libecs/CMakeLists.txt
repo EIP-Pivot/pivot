@@ -62,6 +62,9 @@ add_library(${PROJECT_NAME} source/Systems/ControlSystem.cxx
                             source/Core/Data/value.cxx
                             source/Core/Data/value_serialization.cxx
                             source/Core/Data/type.cxx
+                            source/Core/Event/index.cxx
+                            source/Core/Event/description.cxx
+                            source/Core/Event/manager.cxx
                             source/Components/TagArray.cxx
 )
 target_include_directories(${PROJECT_NAME} PUBLIC include/)

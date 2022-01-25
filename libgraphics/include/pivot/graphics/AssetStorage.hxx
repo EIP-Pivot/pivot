@@ -42,9 +42,11 @@ public:
 
 public:
     /// List of supported texture extensions
-    static constexpr const std::array<const std::string_view, 1> supportedTexture{".png"};
+    static const std::unordered_map<std::string, bool (AssetStorage::*)(const std::filesystem::path &)>
+        supportedTexture;
+
     /// List of supported object extensions
-    static constexpr const std::array<const std::string_view, 1> supportedObject{".obj"};
+    static const std::unordered_map<std::string, bool (AssetStorage::*)(const std::filesystem::path &)> supportedObject;
 
     /// @struct Mesh
     /// Represent a mesh in the buffers
@@ -140,7 +142,13 @@ public:
 
 private:
     bool loadModel(const std::filesystem::path &path);
+    bool loadObjModel(const std::filesystem::path &path);
+    bool loadGltfModel(const std::filesystem::path &path);
+
     bool loadTexture(const std::filesystem::path &path);
+    bool loadPngTexture(const std::filesystem::path &path);
+    bool loadKtxTexture(const std::filesystem::path &path);
+
     bool loadMaterial(const tinyobj::material_t &material);
     void pushModelsOnGPU();
     void pushBoundingBoxesOnGPU();

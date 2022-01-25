@@ -12,6 +12,18 @@
 namespace pivot::graphics
 {
 
+const std::unordered_map<std::string, bool (AssetStorage::*)(const std::filesystem::path &)>
+    AssetStorage::supportedTexture = {
+        {".png", &AssetStorage::loadPngTexture},
+        {".ktx", &AssetStorage::loadKtxTexture},
+};
+
+const std::unordered_map<std::string, bool (AssetStorage::*)(const std::filesystem::path &)>
+    AssetStorage::supportedObject = {
+        {".obj", &AssetStorage::loadObjModel},
+        {".gltf", &AssetStorage::loadGltfModel},
+};
+
 AssetStorage::AssetStorage(VulkanBase &base): base_ref(base)
 {
     // Initiate a default "white" material
@@ -73,13 +85,21 @@ void AssetStorage::destroy()
 
 bool AssetStorage::loadModel(const std::filesystem::path &path)
 {
-    DEBUG_FUNCTION
-    if (std::find(supportedObject.begin(), supportedObject.end(), path.extension()) == supportedObject.end()) {
-        logger.err("LOAD MODEL") << "Non supported model extension: " << path.extension();
-
+    const auto extension = path.extension();
+    auto iter = supportedObject.find(extension.string());
+    if (iter == supportedObject.end()) {
+        logger.err("LOAD MODEL") << "Not supported model extension: " << path.extension();
         return false;
     }
     logger.info("Asset Storage") << "Loading model at : " << path;
+    return std::apply(iter->second, std::make_tuple(this, path));
+}
+
+bool AssetStorage::loadGltfModel(const std::filesystem::path &path) { return false; }
+
+bool AssetStorage::loadObjModel(const std::filesystem::path &path)
+{
+    DEBUG_FUNCTION
     auto base_dir = path.parent_path();
     std::vector<Vertex> currentVertexBuffer;
     std::vector<uint32_t> currentIndexBuffer;
@@ -183,13 +203,19 @@ bool AssetStorage::loadMaterial(const tinyobj::material_t &material)
 bool AssetStorage::loadTexture(const std::filesystem::path &path)
 {
     DEBUG_FUNCTION
-    if (std::find(supportedTexture.begin(), supportedTexture.end(), path.extension()) == supportedTexture.end()) {
-        logger.err("Load model") << "Non supported texture extension: " << path.extension();
-
+    const auto extension = path.extension();
+    const auto iter = supportedTexture.find(extension.string().c_str());
+    if (iter == supportedTexture.end()) {
+        logger.err("Load Texture") << "Not supported texture extension: " << path.extension();
         return false;
     }
     logger.info("Asset Storage") << "Loading texture at : " << path;
+    return std::apply(iter->second, std::make_tuple(this, path));
+}
 
+bool AssetStorage::loadPngTexture(const std::filesystem::path &path)
+{
+    DEBUG_FUNCTION
     int texWidth, texHeight, texChannels;
     stbi_uc *pixels = stbi_load(path.string().c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
     VkDeviceSize imageSize = texWidth * texHeight * 4;
@@ -211,6 +237,8 @@ bool AssetStorage::loadTexture(const std::filesystem::path &path)
                                                                }));
     return true;
 }
+
+bool AssetStorage::loadKtxTexture(const std::filesystem::path &path) { return false; }
 
 void AssetStorage::pushModelsOnGPU()
 {

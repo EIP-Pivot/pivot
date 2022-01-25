@@ -42,7 +42,7 @@ endif()
 FetchContent_Declare(
     logger
     GIT_REPOSITORY https://github.com/zcorniere/logger-cpp.git
-    GIT_TAG v0.7
+    GIT_TAG v0.7.1
 )
 if (NOT logger_POPULATED)
     message(STATUS "Populating logger")

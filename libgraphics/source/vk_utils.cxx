@@ -9,40 +9,6 @@
 namespace pivot::graphics::vk_utils
 {
 
-void copyBufferToBuffer(abstract::AImmediateCommand &i, const vk::Buffer &srcBuffer, vk::Buffer &dstBuffer,
-                        const vk::DeviceSize &size)
-{
-    i.immediateCommand([=](vk::CommandBuffer &cmd) {
-        vk::BufferCopy copyRegion{
-            .srcOffset = 0,
-            .dstOffset = 0,
-            .size = size,
-        };
-        cmd.copyBuffer(srcBuffer, dstBuffer, copyRegion);
-    });
-}
-void copyBufferToImage(abstract::AImmediateCommand &i, const vk::Buffer &srcBuffer, vk::Image &dstImage,
-                       const vk::Extent3D &extent)
-{
-    i.immediateCommand([=](vk::CommandBuffer &cmd) {
-        vk::BufferImageCopy region{
-            .bufferOffset = 0,
-            .bufferRowLength = 0,
-            .bufferImageHeight = 0,
-            .imageSubresource =
-                {
-                    .aspectMask = vk::ImageAspectFlagBits::eColor,
-                    .mipLevel = 0,
-                    .baseArrayLayer = 0,
-                    .layerCount = 1,
-                },
-            .imageOffset = {0, 0, 0},
-            .imageExtent = extent,
-        };
-        cmd.copyBufferToImage(srcBuffer, dstImage, vk::ImageLayout::eTransferDstOptimal, region);
-    });
-}
-
 std::vector<std::byte> readFile(const std::string &filename)
 {
     size_t fileSize = 0;

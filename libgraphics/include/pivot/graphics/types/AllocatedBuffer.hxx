@@ -4,9 +4,12 @@
 #include <vulkan/vulkan.hpp>
 
 #include "pivot/graphics/VulkanBase.hxx"
+#include "pivot/graphics/vk_utils.hxx"
 
 namespace pivot::graphics
 {
+
+class AllocatedImage;
 
 /// @class AllocatedBuffer
 ///
@@ -17,6 +20,25 @@ public:
     AllocatedBuffer();
     ~AllocatedBuffer();
 
+    AllocatedBuffer cloneBuffer(VulkanBase &i, const vk::BufferUsageFlags usage, const vma::MemoryUsage memoryUsage);
+
+    template <vk_utils::is_copyable T>
+    void copyBuffer(vma::Allocator &allocator, const T *data, size_t size)
+    {
+        void *mapped = allocator.mapMemory(memory);
+        std::memcpy(mapped, data, size);
+        allocator.unmapMemory(memory);
+    }
+
+    template <vk_utils::is_copyable T>
+    void copyBuffer(vma::Allocator &allocator, const std::vector<T> &data)
+    {
+        void *mapped = allocator.mapMemory(memory);
+        std::memcpy(mapped, data.data(), sizeof(T) * data.size());
+        allocator.unmapMemory(memory);
+    }
+
+    void copyToImage(abstract::AImmediateCommand &, AllocatedImage &dstImage) const;
     operator bool() const noexcept;
 
 public:

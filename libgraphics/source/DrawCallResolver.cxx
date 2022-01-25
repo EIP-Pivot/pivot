@@ -73,7 +73,7 @@ void DrawCallResolver::prepareForDraw(const std::vector<std::reference_wrapper<c
     }
 
     if (frame.currentBufferSize > 0) {
-        vk_utils::copyBuffer(base_ref->get().allocator, frame.objectBuffer, objectGPUData);
+        frame.objectBuffer.copyBuffer(base_ref->get().allocator, objectGPUData);
 
         auto *sceneData =
             (vk::DrawIndexedIndirectCommand *)base_ref->get().allocator.mapMemory(frame.indirectBuffer.memory);

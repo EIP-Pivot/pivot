@@ -224,23 +224,20 @@ void AssetStorage::pushModelsOnGPU()
     }
     auto stagingVertex = AllocatedBuffer::create(base_ref->get(), vertexSize, vk::BufferUsageFlagBits::eTransferSrc,
                                                  vma::MemoryUsage::eCpuToGpu);
-    vertexBuffer = AllocatedBuffer::create(
-        base_ref->get(), vertexSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
+    stagingVertex.copyBuffer(base_ref->get().allocator, vertexStagingBuffer);
+    vertexBuffer = stagingVertex.cloneBuffer(
+        base_ref->get(), vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
         vma::MemoryUsage::eGpuOnly);
-    vk_utils::copyBuffer(base_ref->get().allocator, stagingVertex, vertexStagingBuffer);
-    vk_utils::copyBufferToBuffer(*base_ref, stagingVertex.buffer, vertexBuffer.buffer, vertexSize);
+    AllocatedBuffer::destroy(base_ref->get(), stagingVertex);
 
     auto indexSize = indexStagingBuffer.size() * sizeof(uint32_t);
     auto stagingIndex = AllocatedBuffer::create(base_ref->get(), indexSize, vk::BufferUsageFlagBits::eTransferSrc,
                                                 vma::MemoryUsage::eCpuToGpu);
-    indicesBuffer = AllocatedBuffer::create(
-        base_ref->get(), indexSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
+    stagingIndex.copyBuffer(base_ref->get().allocator, indexStagingBuffer);
+    indicesBuffer = stagingIndex.cloneBuffer(
+        base_ref->get(), vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
         vma::MemoryUsage::eGpuOnly);
-    vk_utils::copyBuffer(base_ref->get().allocator, stagingIndex, indexStagingBuffer);
-    vk_utils::copyBufferToBuffer(*base_ref, stagingIndex.buffer, indicesBuffer.buffer, indexSize);
-
-    base_ref->get().allocator.destroyBuffer(stagingVertex.buffer, stagingVertex.memory);
-    base_ref->get().allocator.destroyBuffer(stagingIndex.buffer, stagingIndex.memory);
+    AllocatedBuffer::destroy(base_ref->get(), stagingIndex);
 
     // clear CPU storage, as it is not needed anymore
     vertexStagingBuffer.clear();
@@ -262,7 +259,7 @@ void AssetStorage::pushTexturesOnGPU()
         auto &bytes = std::get<std::vector<std::byte>>(texture.image);
         AllocatedBuffer stagingBuffer = AllocatedBuffer::create(
             base_ref->get(), bytes.size(), vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);
-        vk_utils::copyBuffer(base_ref->get().allocator, stagingBuffer, bytes);
+        stagingBuffer.copyBuffer(base_ref->get().allocator, bytes);
 
         AllocatedImage image;
         image.size = texture.size;
@@ -288,10 +285,10 @@ void AssetStorage::pushTexturesOnGPU()
         image.imageView = base_ref->get().device.createImageView(createInfo);
 
         image.transitionLayout(base_ref->get(), vk::Format::eR8G8B8A8Srgb, vk::ImageLayout::eTransferDstOptimal);
-        vk_utils::copyBufferToImage(*base_ref, stagingBuffer.buffer, image.image, texture.size);
+        stagingBuffer.copyToImage(base_ref->get(), image);
         image.generateMipmaps(base_ref->get(), vk::Format::eR8G8B8A8Srgb, image.mipLevels);
 
-        base_ref->get().allocator.destroyBuffer(stagingBuffer.buffer, stagingBuffer.memory);
+        AllocatedBuffer::destroy(base_ref->get(), stagingBuffer);
         texture.image = std::move(image);
     }
 }
@@ -307,16 +304,15 @@ void AssetStorage::pushMaterialOnGPU()
     auto materialStaging = AllocatedBuffer::create(
         base_ref->get(), size, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferSrc,
         vma::MemoryUsage::eCpuToGpu);
-    materialBuffer = AllocatedBuffer::create(
-        base_ref->get(), size, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst,
-        vma::MemoryUsage::eGpuOnly);
-
     std::vector<gpuObject::Material> materialStor;
     std::transform(materialStorage.begin(), materialStorage.end(), std::back_inserter(materialStor),
                    [](const auto &i) { return i.second; });
-    vk_utils::copyBuffer(base_ref->get().allocator, materialStaging, materialStor);
-    vk_utils::copyBufferToBuffer(*base_ref, materialStaging.buffer, materialBuffer.buffer, size);
-    base_ref->get().allocator.destroyBuffer(materialStaging.buffer, materialStaging.memory);
+
+    materialStaging.copyBuffer(base_ref->get().allocator, materialStor);
+    materialBuffer = materialStaging.cloneBuffer(
+        base_ref->get(), vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst,
+        vma::MemoryUsage::eGpuOnly);
+    AllocatedBuffer::destroy(base_ref->get(), materialStaging);
 }
 
 void AssetStorage::pushBoundingBoxesOnGPU()
@@ -330,16 +326,15 @@ void AssetStorage::pushBoundingBoxesOnGPU()
     auto boundingboxStaging = AllocatedBuffer::create(
         base_ref->get(), size, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferSrc,
         vma::MemoryUsage::eCpuToGpu);
-    boundingboxbuffer = AllocatedBuffer::create(
-        base_ref->get(), size, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst,
-        vma::MemoryUsage::eGpuOnly);
-
     std::vector<MeshBoundingBox> boundingStor;
     std::transform(meshBoundingBoxStorage.begin(), meshBoundingBoxStorage.end(), std::back_inserter(boundingStor),
                    [](const auto &i) { return i.second; });
-    vk_utils::copyBuffer(base_ref->get().allocator, boundingboxStaging, boundingStor);
-    vk_utils::copyBufferToBuffer(*base_ref, boundingboxStaging.buffer, boundingboxbuffer.buffer, size);
-    base_ref->get().allocator.destroyBuffer(boundingboxStaging.buffer, boundingboxStaging.memory);
+
+    boundingboxStaging.copyBuffer(base_ref->get().allocator, boundingStor);
+    boundingboxbuffer = boundingboxStaging.cloneBuffer(
+        base_ref->get(), vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst,
+        vma::MemoryUsage::eGpuOnly);
+    AllocatedBuffer::destroy(base_ref->get(), boundingboxStaging);
 }
 
 }    // namespace pivot::graphics

@@ -3,25 +3,34 @@
 #include <vk_mem_alloc.hpp>
 #include <vulkan/vulkan.hpp>
 
-/// @struct AllocatedBuffer
+#include "pivot/graphics/VulkanBase.hxx"
+
+namespace pivot::graphics
+{
+
+/// @class AllocatedBuffer
 ///
-/// @brief Utility structure to keep track of a Vulkan buffer and its allocated memory
-struct AllocatedBuffer {
+/// @brief Utility class to keep track of a Vulkan buffer and its allocated memory
+class AllocatedBuffer
+{
+public:
+    AllocatedBuffer();
+    ~AllocatedBuffer();
+
+    operator bool() const noexcept;
+
+public:
+    static AllocatedBuffer create(VulkanBase &base, uint32_t allocSize, vk::BufferUsageFlags usage,
+                                  vma::MemoryUsage memoryUsage);
+    static void destroy(VulkanBase &base, AllocatedBuffer &buffer);
+
+public:
     //// @cond
     vk::Buffer buffer = VK_NULL_HANDLE;
     vma::Allocation memory = VK_NULL_HANDLE;
     std::uint32_t size = 0;
-    inline operator bool() { return buffer && memory; }
+
     //// @endcond
 };
 
-/// @struct AllocatedImage
-///
-/// @brief Utility structure to keep track of a Vulkan image,  its allocated memory et ImageView
-struct AllocatedImage {
-    //// @cond
-    vk::Image image = VK_NULL_HANDLE;
-    vk::ImageView imageView = VK_NULL_HANDLE;
-    vma::Allocation memory = VK_NULL_HANDLE;
-    /// @endcond
-};
+}    // namespace pivot::graphics

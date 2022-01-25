@@ -118,15 +118,14 @@ void DrawCallResolver::createBuffers(Frame &frame, const auto bufferSize)
         base_ref->get().allocator.destroyBuffer(frame.objectBuffer.buffer, frame.objectBuffer.memory);
 
     frame.indirectBuffer =
-        vk_utils::createBuffer(base_ref->get().allocator, sizeof(vk::DrawIndexedIndirectCommand) * bufferSize,
-                               vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer,
-                               vma::MemoryUsage::eCpuToGpu);
+        AllocatedBuffer::create(base_ref->get(), sizeof(vk::DrawIndexedIndirectCommand) * bufferSize,
+                                vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer,
+                                vma::MemoryUsage::eCpuToGpu);
     vk_debug::setObjectName(base_ref->get().device, frame.indirectBuffer.buffer,
                             "Indirect Command Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
 
-    frame.objectBuffer =
-        vk_utils::createBuffer(base_ref->get().allocator, sizeof(gpuObject::UniformBufferObject) * bufferSize,
-                               vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
+    frame.objectBuffer = AllocatedBuffer::create(base_ref->get(), sizeof(gpuObject::UniformBufferObject) * bufferSize,
+                                                 vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
     vk_debug::setObjectName(base_ref->get().device, frame.objectBuffer.buffer,
                             "Object Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
     frame.currentBufferSize = bufferSize;

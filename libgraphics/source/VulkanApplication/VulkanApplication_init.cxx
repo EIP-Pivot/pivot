@@ -449,9 +449,7 @@ void VulkanApplication::createDepthResources()
     createInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eDepth;
     depthResources.imageView = device.createImageView(createInfo);
 
-    pivot::graphics::vk_utils::transitionImageLayout(*this, depthResources.image, depthFormat,
-                                                     vk::ImageLayout::eUndefined,
-                                                     vk::ImageLayout::eDepthStencilAttachmentOptimal);
+    depthResources.transitionLayout(*this, depthFormat, vk::ImageLayout::eDepthStencilAttachmentOptimal);
     pivot::graphics::vk_debug::setObjectName(device, depthResources.image, "Depth Image");
     pivot::graphics::vk_debug::setObjectName(device, depthResources.imageView, "Depth Image view");
     swapchainDeletionQueue.push([&] {

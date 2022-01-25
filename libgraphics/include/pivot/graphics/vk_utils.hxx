@@ -40,9 +40,6 @@ constexpr bool vk_try_mutiple(const vk::Result result, const FailedValue... fail
     }
 }
 
-AllocatedBuffer createBuffer(vma::Allocator &allocator, uint32_t allocSize, vk::BufferUsageFlags usage,
-                             vma::MemoryUsage memoryUsage);
-
 template <pivot::graphics::vk_utils::is_copyable T>
 void copyBuffer(vma::Allocator &allocator, AllocatedBuffer &buffer, const T *data, size_t size)
 {
@@ -60,15 +57,11 @@ void copyBuffer(vma::Allocator &allocator, AllocatedBuffer &buffer, const std::v
     allocator.unmapMemory(buffer.memory);
 }
 
-AllocatedBuffer createBuffer(vma::Allocator &allocator, uint32_t allocSize, vk::BufferUsageFlags usage,
-                             vma::MemoryUsage memoryUsage);
 void copyBufferToBuffer(abstract::AImmediateCommand &, const vk::Buffer &srcBuffer, vk::Buffer &dstBuffer,
                         const vk::DeviceSize &size);
 void copyBufferToImage(abstract::AImmediateCommand &, const vk::Buffer &srcBuffer, vk::Image &dstImage,
                        const vk::Extent3D &extent);
-void transitionImageLayout(abstract::AImmediateCommand &, vk::Image &image, vk::Format format,
-                           vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t mipLevels = 1);
-void generateMipmaps(VulkanBase &, vk::Image &image, vk::Format imageFormat, vk::Extent3D size, uint32_t mipLevel);
+
 std::vector<std::byte> readFile(const std::string &filename);
 vk::ShaderModule createShaderModule(const vk::Device &device, const std::vector<std::byte> &code);
 

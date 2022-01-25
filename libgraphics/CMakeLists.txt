@@ -19,6 +19,33 @@ if (NOT glfw_POPULATED)
 endif()
 
 FetchContent_Declare(
+    ktx
+    GIT_REPOSITORY https://github.com/KhronosGroup/KTX-Software.git
+    GIT_TAG v4.0.0
+)
+if (NOT ktx_POPULATED)
+    message(STATUS "Populating ktx")
+    FetchContent_Populate(ktx)
+    set(KTX_FEATURE_STATIC_LIBRARY ON)
+    set(KTX_FEATURE_TESTS OFF)
+    add_subdirectory(${ktx_SOURCE_DIR} ${ktx_SOURCE_DIR})
+endif()
+
+FetchContent_Declare(
+    tinygltf
+    GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
+    GIT_TAG e7f1ff5c59d3ca2489923beb239bdf93d863498f
+)
+if (NOT tinygltf_POPULATED)
+    message(STATUS "Populating tinygltf")
+    FetchContent_Populate(tinygltf)
+    set(TINYGLTF_HEADER_ONLY OFF)
+    set(TINYGLTF_BUILD_LOADER_EXAMPLE OFF)
+    set(TINYGLTF_INSTALL OFF)
+    add_subdirectory(${tinygltf_SOURCE_DIR} ${tinygltf_SOURCE_DIR})
+endif()
+
+FetchContent_Declare(
     vma
     GIT_REPOSITORY https://github.com/malte-v/VulkanMemoryAllocator-Hpp.git
     GIT_TAG 658904b881a6ca8b7dd56b81aca7d81b410060a5
@@ -154,6 +181,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC logger
                                       PUBLIC glfw
                                       PUBLIC glm
                                       PUBLIC tinyobjloader
+                                      PUBLIC ktx
+                                      PUBLIC tinygltf
                                       PUBLIC stb
                                       PUBLIC Vulkan::Vulkan
 )

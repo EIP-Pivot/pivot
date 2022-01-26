@@ -96,20 +96,24 @@ public:
     /// @brief load the 3D models into CPU memory
     ///
     /// @arg the path for all individual file to load
-    /// @return the number of file successfully loaded
-    unsigned loadModels(Path... p)
+    void loadModels(Path... p)
     {
-        return ((loadModel(p)) + ...);
+        auto i = ((loadModel(p)) + ...);
+        if (i < sizeof...(Path)) {
+            throw AssetStorageException("A model file failed to load. See above for further errors");
+        }
     }
 
     template <is_valid_path... Path>
     /// @brief load the textures into CPU memory
     ///
     /// @arg the path for all individual file to load
-    /// @return the number of file successfully loaded
-    unsigned loadTextures(Path... p)
+    void loadTextures(Path... p)
     {
-        return ((loadTexture(p)) + ...);
+        auto i = ((loadTexture(p)) + ...);
+        if (i < sizeof...(Path)) {
+            throw AssetStorageException("A model file failed to load. See above for further errors");
+        }
     }
 
     /// Push the ressource into GPU memory

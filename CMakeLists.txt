@@ -59,10 +59,10 @@ FetchContent_Declare(
 if (NOT glm_POPULATED)
     message(STATUS "Populating glm")
     FetchContent_Populate(glm)
+    set(GLFW_BUILD_DOCS OFF CACHE INTERNAL "" FORCE)
+    set(GLFW_BUILD_TESTS OFF CACHE INTERNAL "" FORCE)
+    set(GLFW_BUILD_EXAMPLES OFF CACHE INTERNAL "" FORCE)
     add_subdirectory(${glm_SOURCE_DIR} ${glm_BINARY_DIR})
-    set(GLFW_BUILD_DOCS OFF)
-    set(GLFW_BUILD_TESTS OFF)
-    set(GLFW_BUILD_EXAMPLES OFF)
     target_compile_definitions(glm INTERFACE
         GLM_FORCE_INLINE
         GLM_FORCE_RADIANS
@@ -114,6 +114,9 @@ endif()
 add_subdirectory(libecs/)
 add_subdirectory(libgraphics/)
 target_link_libraries(pivot-ecs PUBLIC pivot-graphics)
+
+add_library(pivot INTERFACE)
+target_link_libraries(pivot INTERFACE pivot-graphics pivot-ecs)
 
 
 target_compile_options(pivot-ecs PRIVATE

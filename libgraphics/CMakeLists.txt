@@ -150,7 +150,11 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/PipelineBuilders/ComputePipelineBuilder.cxx
                                    source/VulkanLoader.cxx
                                    source/VulkanSwapchain.cxx
-                                   source/AssetsStorage.cxx
+                                   source/AssetsStorage/AssetsStorage.cxx
+                                   source/AssetsStorage/Loaders/AssetsStorage_obj.cxx
+                                   source/AssetsStorage/Loaders/AssetsStorage_png.cxx
+                                   source/AssetsStorage/Loaders/AssetsStorage_gltf.cxx
+                                   source/AssetsStorage/Loaders/AssetsStorage_ktx.cxx
                                    source/VulkanApplication/VulkanApplication.cxx
                                    source/VulkanApplication/VulkanApplication_init.cxx
                                    source/VulkanBase/VulkanBase.cxx

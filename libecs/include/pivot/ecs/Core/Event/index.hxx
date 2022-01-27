@@ -1,7 +1,10 @@
 #pragma once
 
 #include "pivot/ecs/Core/Event/description.hxx"
+
 #include <vector>
+#include <mutex>
+#include <atomic>
 
 namespace pivot::ecs::event
 {
@@ -34,4 +37,24 @@ private:
     std::map<std::string, Description> m_events;
 };
 
-}
+class GlobalIndex : private Index
+{
+public:
+    void registerEvent(const Description &description);
+
+    std::optional<Description> getDescription(const std::string &eventName);
+
+    Index::const_iterator begin();
+    Index::const_iterator end();
+    std::vector<std::string> getAllEventsNames();
+
+    static GlobalIndex &getSingleton();
+
+private:
+    std::atomic<bool> m_read_only;
+    std::mutex m_mutex;
+
+    void lockReadOnly();
+};
+
+}    // namespace pivot::ecs::event

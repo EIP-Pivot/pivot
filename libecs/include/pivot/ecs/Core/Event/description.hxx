@@ -2,6 +2,7 @@
 
 #include "pivot/ecs/Core/Data/type.hxx"
 #include <string>
+#include <vector>
 
 namespace pivot::ecs::event
 {
@@ -11,7 +12,7 @@ namespace pivot::ecs::event
 
         std::vector<std::string> entities; // débat 
 
-        pivot::ecs::data::Type payload;
+        data::Type payload;
 
         /// Convenience method used to check if any error exist the component's definition
         void validate() const;

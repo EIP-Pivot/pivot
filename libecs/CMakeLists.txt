@@ -99,6 +99,9 @@ if (BUILD_TESTING)
     tests/Core/Systems/test_description.cxx
     tests/Core/Systems/test_global_registration.cxx
     tests/Core/Systems/test_manager.cxx
+    tests/Core/Event/test_description.cxx
+    tests/Core/Event/test_global_registration.cxx
+    tests/Core/Event/test_manager.cxx
     )
   target_include_directories(${TEST_NAME} PRIVATE tests/)
   target_link_libraries(${TEST_NAME} Catch2 ${PROJECT_NAME})

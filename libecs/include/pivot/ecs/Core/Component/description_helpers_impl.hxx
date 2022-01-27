@@ -35,6 +35,10 @@ concept ComponentComplexType =
 template <typename T>
 concept ComponentType = ComponentBaseType<T> || ComponentComplexType<T>;
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+/* code that must be skipped by doxygen */
+
 template <ComponentComplexType T>
 struct Helpers<T> {
     static data::Type getType()
@@ -78,12 +82,14 @@ struct Helpers<T> {
     }
 };
 
+/// Specialization of the helpers for basic types
 template <ComponentBaseType T>
 struct Helpers<T> {
     static data::Type getType() { return data::Type{data::basic_type_representation<T>.value()}; }
     static data::Value createValueFromType(const T &v) { return data::Value(v); }
     static void updateTypeWithValue(T &data, const data::Value &value) { data = std::get<T>(value); }
 };
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 template <typename A>
 std::unique_ptr<IComponentArray> createContainer(Description description)

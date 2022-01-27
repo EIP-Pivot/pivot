@@ -37,6 +37,7 @@ using RecordType = std::map<std::string, Type>;
 struct Type : public std::variant<BasicType, RecordType> {
     using variant::variant;
 
+    /// Converts to a human readable text representation of the type
     std::string toString() const;
 };
 

@@ -8,9 +8,9 @@ AllocatedImage::AllocatedImage() {}
 
 AllocatedImage::~AllocatedImage() {}
 
-void AllocatedImage::generateMipmaps(VulkanBase &base, vk::Format imageFormat, uint32_t mipLevel)
+void AllocatedImage::generateMipmaps(VulkanBase &base, uint32_t mipLevel)
 {
-    vk::FormatProperties formatProperties = base.physical_device.getFormatProperties(imageFormat);
+    vk::FormatProperties formatProperties = base.physical_device.getFormatProperties(format);
     if (!(formatProperties.optimalTilingFeatures & vk::FormatFeatureFlagBits::eSampledImageFilterLinear)) {
         throw std::runtime_error("texture image format does not support linear tilting!");
     }
@@ -86,7 +86,7 @@ void AllocatedImage::generateMipmaps(VulkanBase &base, vk::Format imageFormat, u
     mipLevels = mipLevel;
 }
 
-void AllocatedImage::transitionLayout(abstract::AImmediateCommand &i, vk::Format format, vk::ImageLayout layout)
+void AllocatedImage::transitionLayout(abstract::AImmediateCommand &i, vk::ImageLayout layout)
 {
     if (imageLayout == layout) {
         logger.warn("Transition layout") << "Transfert layout is unecessary, already " << vk::to_string(layout);

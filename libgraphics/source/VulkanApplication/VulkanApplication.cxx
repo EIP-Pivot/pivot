@@ -47,6 +47,8 @@ VulkanApplication::~VulkanApplication()
 void VulkanApplication::init()
 {
     VulkanBase::init({}, deviceExtensions, validationLayers);
+    drawResolver.init();
+    assetStorage.build();
     initVulkanRessources();
 }
 
@@ -54,7 +56,6 @@ void VulkanApplication::initVulkanRessources()
 {
     DEBUG_FUNCTION
 
-    drawResolver.init();
     createPipelineCache();
     createSyncStructure();
     createRessourcesDescriptorSetLayout();
@@ -73,8 +74,6 @@ void VulkanApplication::initVulkanRessources()
     createDepthResources();
     createColorResources();
     createFramebuffers();
-
-    assetStorage.build();
 
     createTextureSampler();
     createRessourcesDescriptorSets();

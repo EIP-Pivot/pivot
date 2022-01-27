@@ -20,15 +20,15 @@ bool AssetStorage::loadPngTexture(const std::filesystem::path &path)
     std::memcpy(image.data(), pixels, imageSize);
     stbi_image_free(pixels);
 
-    textureStorage.insert(std::make_pair(path.stem().string(), Texture{
-                                                                   .image = std::move(image),
-                                                                   .size =
-                                                                       {
-                                                                           .width = static_cast<uint32_t>(texWidth),
-                                                                           .height = static_cast<uint32_t>(texHeight),
-                                                                           .depth = 1,
-                                                                       },
-                                                               }));
+    cpuStorage.textureStaging.add(path.stem().string(), CPUTexture{
+                                                            .image = std::move(image),
+                                                            .size =
+                                                                {
+                                                                    .width = static_cast<uint32_t>(texWidth),
+                                                                    .height = static_cast<uint32_t>(texHeight),
+                                                                    .depth = 1,
+                                                                },
+                                                        });
     return true;
 }
 

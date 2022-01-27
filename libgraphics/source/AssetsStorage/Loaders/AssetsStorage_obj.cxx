@@ -7,6 +7,24 @@
 namespace pivot::graphics
 {
 
+static std::pair<std::string, AssetStorage::CPUMaterial> loadMaterial(const tinyobj::material_t &material)
+{
+    std::filesystem::path diffuse = material.diffuse_texname;
+    AssetStorage::CPUMaterial materia{
+        .metallic = material.metallic,
+        .roughness = material.roughness,
+        .baseColor =
+            {
+                material.diffuse[0],
+                material.diffuse[1],
+                material.diffuse[2],
+                0.0f,
+            },
+        .baseColorTexture = diffuse.stem().string(),
+    };
+    return std::make_pair(material.name, std::move(materia));
+}
+
 bool AssetStorage::loadObjModel(const std::filesystem::path &path)
 {
     DEBUG_FUNCTION
@@ -29,10 +47,10 @@ bool AssetStorage::loadObjModel(const std::filesystem::path &path)
     }
 
     for (const auto &m: materials) {
-        loadMaterial(m);
-        if (!m.diffuse_texname.empty() && !getTextures().contains(m.diffuse_texname)) {
+        if (!m.diffuse_texname.empty() && cpuStorage.textureStaging.getIndex(m.diffuse_texname) == -1) {
             loadTexture(base_dir / m.diffuse_texname);
         }
+        cpuStorage.materialStaging.add(loadMaterial(m));
     }
 
     std::unordered_map<Vertex, uint32_t> uniqueVertices{};
@@ -41,18 +59,12 @@ bool AssetStorage::loadObjModel(const std::filesystem::path &path)
         Model model{
             .mesh =
                 {
-                    .vertexOffset = static_cast<uint32_t>(vertexStagingBuffer.size()),
-                    .indicesOffset = static_cast<uint32_t>(indexStagingBuffer.size()),
+                    .vertexOffset = static_cast<uint32_t>(cpuStorage.vertexStagingBuffer.size()),
+                    .indicesOffset = static_cast<uint32_t>(cpuStorage.indexStagingBuffer.size()),
                 },
         };
         if (!shape.mesh.material_ids.empty() && shape.mesh.material_ids.at(0) >= 0) {
             model.default_material = materials.at(shape.mesh.material_ids.at(0)).name;
-            if (std::filesystem::path name = materials.at(shape.mesh.material_ids.at(0)).diffuse_texname;
-                !name.empty()) {
-                model.default_texture = name.stem().string();
-            } else if (!prefab.modelIds.empty()) {
-                model.default_texture = get<Model>(prefab.modelIds.at(0)).default_texture;
-            }
         }
         for (const auto &index: shape.mesh.indices) {
             Vertex vertex{
@@ -79,34 +91,24 @@ bool AssetStorage::loadObjModel(const std::filesystem::path &path)
             }
 
             if (!uniqueVertices.contains(vertex)) {
-                uniqueVertices[vertex] = vertexStagingBuffer.size() - model.mesh.vertexOffset;
-                vertexStagingBuffer.push_back(vertex);
+                uniqueVertices[vertex] = cpuStorage.vertexStagingBuffer.size() - model.mesh.vertexOffset;
+                cpuStorage.vertexStagingBuffer.push_back(vertex);
             }
-            indexStagingBuffer.push_back(uniqueVertices.at(vertex));
+            cpuStorage.indexStagingBuffer.push_back(uniqueVertices.at(vertex));
         }
-        model.mesh.indicesSize = indexStagingBuffer.size() - model.mesh.indicesOffset;
-        model.mesh.vertexSize = vertexStagingBuffer.size() - model.mesh.vertexOffset;
+        model.mesh.indicesSize = cpuStorage.indexStagingBuffer.size() - model.mesh.indicesOffset;
+        model.mesh.vertexSize = cpuStorage.vertexStagingBuffer.size() - model.mesh.vertexOffset;
         prefab.modelIds.push_back(shape.name);
         modelStorage.insert({shape.name, model});
-        meshBoundingBoxStorage.insert(
-            {shape.name,
-             MeshBoundingBox(std::span(vertexStagingBuffer.begin() + model.mesh.vertexOffset, model.mesh.vertexSize))});
+        meshBoundingBoxStorage.add(
+            shape.name, MeshBoundingBox(std::span(cpuStorage.vertexStagingBuffer.begin() + model.mesh.vertexOffset,
+                                                  model.mesh.vertexSize)));
     }
     prefabStorage.insert({path.stem().string(), prefab});
-    vertexStagingBuffer.insert(vertexStagingBuffer.end(), currentVertexBuffer.begin(), currentVertexBuffer.end());
-    indexStagingBuffer.insert(indexStagingBuffer.end(), currentIndexBuffer.begin(), currentIndexBuffer.end());
-    return true;
-}
-
-bool AssetStorage::loadMaterial(const tinyobj::material_t &material)
-{
-    gpuObject::Material mat{
-        .shininess = material.shininess,
-        .ambientColor = glm::make_vec3(material.ambient),
-        .diffuse = glm::make_vec3(material.diffuse),
-        .specular = glm::make_vec3(material.specular),
-    };
-    materialStorage.insert({material.name, mat});
+    cpuStorage.vertexStagingBuffer.insert(cpuStorage.vertexStagingBuffer.end(), currentVertexBuffer.begin(),
+                                          currentVertexBuffer.end());
+    cpuStorage.indexStagingBuffer.insert(cpuStorage.indexStagingBuffer.end(), currentIndexBuffer.begin(),
+                                         currentIndexBuffer.end());
     return true;
 }
 

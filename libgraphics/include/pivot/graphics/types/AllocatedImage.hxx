@@ -26,9 +26,9 @@ public:
     ~AllocatedImage();
 
     /// Generate mipmaps for the image
-    void generateMipmaps(VulkanBase &base, vk::Format imageFormat, uint32_t mipLevel);
+    void generateMipmaps(VulkanBase &base, uint32_t mipLevel);
     /// Transition image layout to given format
-    void transitionLayout(abstract::AImmediateCommand &i, vk::Format format, vk::ImageLayout layout);
+    void transitionLayout(abstract::AImmediateCommand &i, vk::ImageLayout layout);
     /// Destroy a image
     static void destroy(VulkanBase &base, AllocatedImage &image);
 
@@ -38,6 +38,7 @@ public:
     vk::ImageView imageView = VK_NULL_HANDLE;
     vma::Allocation memory = VK_NULL_HANDLE;
     vk::ImageLayout imageLayout = vk::ImageLayout::eUndefined;
+    vk::Format format;
     vk::Extent3D size = {0, 0};
     uint32_t mipLevels = 1;
     /// @endcond

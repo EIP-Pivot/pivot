@@ -22,16 +22,7 @@ const std::unordered_map<std::string, bool (AssetStorage::*)(const std::filesyst
         {".gltf", &AssetStorage::loadGltfModel},
 };
 
-AssetStorage::AssetStorage(VulkanBase &base): base_ref(base)
-{
-    // Initiate a default "white" material
-    materialStorage["white"] = {
-        .ambientColor = {1.0f, 1.0f, 1.0f},
-        .diffuse = {1.0f, 1.0f, 1.0f},
-        .specular = {1.0f, 1.0f, 1.0f},
-    };
-    loadMaterial(tinyobj::material_t{});
-}
+AssetStorage::AssetStorage(VulkanBase &base): base_ref(base) {}
 
 AssetStorage::~AssetStorage() {}
 
@@ -50,35 +41,31 @@ void AssetStorage::build()
     pushBoundingBoxesOnGPU();
     vk_debug::setObjectName(base_ref->get().device, boundingboxbuffer.buffer, "BoundingBox Buffer");
 
-    logger.info("Asset Storage") << "Pushing " << textureStorage.size() << " textures onto the GPU";
+    logger.info("Asset Storage") << "Pushing " << cpuStorage.textureStaging.size() << " textures onto the GPU";
     pushTexturesOnGPU();
-    for (auto &[name, image]: textureStorage) {
-        auto &im = std::get<AllocatedImage>(image.image);
-        vk_debug::setObjectName(base_ref->get().device, im.image, "Texture " + name);
-        vk_debug::setObjectName(base_ref->get().device, im.imageView, "Texture " + name + "ImageView");
+    for (const auto &[name, idex]: textureStorage) {
+        const auto &im = textureStorage.get(idex);
+        vk_debug::setObjectName(base_ref->get().device, im.image.image, "Texture " + name);
+        vk_debug::setObjectName(base_ref->get().device, im.image.imageView, "Texture " + name + " ImageView");
     }
 
-    logger.info("Asset Storage") << "Pushing " << materialStorage.size() << " materials onto the GPU";
+    logger.info("Asset Storage") << "Pushing " << cpuStorage.materialStaging.size() << " materials onto the GPU";
     pushMaterialOnGPU();
     vk_debug::setObjectName(base_ref->get().device, materialBuffer.buffer, "Material Buffer");
+
+    cpuStorage = {};
 }
 
 void AssetStorage::destroy()
 {
     DEBUG_FUNCTION
     if (vertexBuffer && indicesBuffer) {
-        base_ref->get().allocator.destroyBuffer(vertexBuffer.buffer, vertexBuffer.memory);
-        base_ref->get().allocator.destroyBuffer(indicesBuffer.buffer, indicesBuffer.memory);
+        AllocatedBuffer::destroy(base_ref->get(), vertexBuffer);
+        AllocatedBuffer::destroy(base_ref->get(), indicesBuffer);
     }
-    if (boundingboxbuffer) base_ref->get().allocator.destroyBuffer(boundingboxbuffer.buffer, boundingboxbuffer.memory);
-    if (materialBuffer) base_ref->get().allocator.destroyBuffer(materialBuffer.buffer, materialBuffer.memory);
-    for (auto &[_, i]: textureStorage) {
-        if (std::holds_alternative<AllocatedImage>(i.image)) {
-            auto &image = std::get<AllocatedImage>(i.image);
-            base_ref->get().device.destroy(image.imageView);
-            base_ref->get().allocator.destroyImage(image.image, image.memory);
-        }
-    }
+    if (boundingboxbuffer) AllocatedBuffer::destroy(base_ref->get(), boundingboxbuffer);
+    if (materialBuffer) AllocatedBuffer::destroy(base_ref->get(), materialBuffer);
+    for (auto &image: textureStorage.getStorage()) { AllocatedImage::destroy(base_ref->get(), image.image); }
 }
 
 bool AssetStorage::loadModel(const std::filesystem::path &path)
@@ -110,7 +97,7 @@ void AssetStorage::pushModelsOnGPU()
 {
     DEBUG_FUNCTION
 
-    auto vertexSize = vertexStagingBuffer.size() * sizeof(Vertex);
+    auto vertexSize = cpuStorage.vertexStagingBuffer.size() * sizeof(Vertex);
 
     if (vertexSize == 0) {
         logger.warn("Asset Storage") << "No model to push";
@@ -118,50 +105,49 @@ void AssetStorage::pushModelsOnGPU()
     }
     auto stagingVertex = AllocatedBuffer::create(base_ref->get(), vertexSize, vk::BufferUsageFlagBits::eTransferSrc,
                                                  vma::MemoryUsage::eCpuToGpu);
-    stagingVertex.copyBuffer(base_ref->get().allocator, vertexStagingBuffer);
+    stagingVertex.copyBuffer(base_ref->get().allocator, cpuStorage.vertexStagingBuffer);
     vertexBuffer = stagingVertex.cloneBuffer(
         base_ref->get(), vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
         vma::MemoryUsage::eGpuOnly);
     AllocatedBuffer::destroy(base_ref->get(), stagingVertex);
 
-    auto indexSize = indexStagingBuffer.size() * sizeof(uint32_t);
+    auto indexSize = cpuStorage.indexStagingBuffer.size() * sizeof(uint32_t);
     auto stagingIndex = AllocatedBuffer::create(base_ref->get(), indexSize, vk::BufferUsageFlagBits::eTransferSrc,
                                                 vma::MemoryUsage::eCpuToGpu);
-    stagingIndex.copyBuffer(base_ref->get().allocator, indexStagingBuffer);
+    stagingIndex.copyBuffer(base_ref->get().allocator, cpuStorage.indexStagingBuffer);
     indicesBuffer = stagingIndex.cloneBuffer(
         base_ref->get(), vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
         vma::MemoryUsage::eGpuOnly);
     AllocatedBuffer::destroy(base_ref->get(), stagingIndex);
 
     // clear CPU storage, as it is not needed anymore
-    vertexStagingBuffer.clear();
-    vertexStagingBuffer.shrink_to_fit();
-    indexStagingBuffer.clear();
-    indexStagingBuffer.shrink_to_fit();
+    cpuStorage.vertexStagingBuffer.clear();
+    cpuStorage.vertexStagingBuffer.shrink_to_fit();
+    cpuStorage.indexStagingBuffer.clear();
+    cpuStorage.indexStagingBuffer.shrink_to_fit();
 }
 
 void AssetStorage::pushTexturesOnGPU()
 {
     DEBUG_FUNCTION
-
-    if (textureStorage.empty()) {
+    if (cpuStorage.textureStaging.size() == 0) {
         logger.warn("Asset Storage") << "No textures to push";
         return;
     }
-    for (auto &[name, texture]: textureStorage) {
-
-        auto &bytes = std::get<std::vector<std::byte>>(texture.image);
+    for (const auto &[name, idx]: cpuStorage.textureStaging) {
+        const auto &img = cpuStorage.textureStaging.get(idx);
         AllocatedBuffer stagingBuffer = AllocatedBuffer::create(
-            base_ref->get(), bytes.size(), vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);
-        stagingBuffer.copyBuffer(base_ref->get().allocator, bytes);
+            base_ref->get(), img.image.size(), vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);
+        stagingBuffer.copyBuffer(base_ref->get().allocator, img.image);
 
         AllocatedImage image;
-        image.size = texture.size;
-        image.mipLevels = std::floor(std::log2(std::max(texture.size.width, texture.size.height))) + 1;
+        image.size = img.size;
+        image.format = vk::Format::eR8G8B8A8Srgb;
+        image.mipLevels = std::floor(std::log2(std::max(img.size.width, img.size.height))) + 1;
         vk::ImageCreateInfo imageInfo{
             .imageType = vk::ImageType::e2D,
-            .format = vk::Format::eR8G8B8A8Srgb,
-            .extent = texture.size,
+            .format = image.format,
+            .extent = img.size,
             .mipLevels = image.mipLevels,
             .arrayLayers = 1,
             .samples = vk::SampleCountFlagBits::e1,
@@ -174,23 +160,25 @@ void AssetStorage::pushTexturesOnGPU()
         vma::AllocationCreateInfo allocInfo;
         allocInfo.usage = vma::MemoryUsage::eGpuOnly;
         std::tie(image.image, image.memory) = base_ref->get().allocator.createImage(imageInfo, allocInfo);
-        auto createInfo =
-            vk_init::populateVkImageViewCreateInfo(image.image, vk::Format::eR8G8B8A8Srgb, image.mipLevels);
+        auto createInfo = vk_init::populateVkImageViewCreateInfo(image.image, image.format, image.mipLevels);
         image.imageView = base_ref->get().device.createImageView(createInfo);
 
-        image.transitionLayout(base_ref->get(), vk::Format::eR8G8B8A8Srgb, vk::ImageLayout::eTransferDstOptimal);
+        image.transitionLayout(base_ref->get(), vk::ImageLayout::eTransferDstOptimal);
         stagingBuffer.copyToImage(base_ref->get(), image);
-        image.generateMipmaps(base_ref->get(), vk::Format::eR8G8B8A8Srgb, image.mipLevels);
+        image.generateMipmaps(base_ref->get(), image.mipLevels);
 
         AllocatedBuffer::destroy(base_ref->get(), stagingBuffer);
-        texture.image = std::move(image);
+        textureStorage.add(name, Texture{
+                                     .image = std::move(image),
+                                     .size = img.size,
+                                 });
     }
 }
 
 void AssetStorage::pushMaterialOnGPU()
 {
     DEBUG_FUNCTION
-    auto size = sizeof(gpuObject::Material) * materialStorage.size();
+    auto size = sizeof(Material) * cpuStorage.materialStaging.size();
     if (size == 0) {
         logger.warn("Asset Storage") << "No material to push";
         return;
@@ -198,11 +186,29 @@ void AssetStorage::pushMaterialOnGPU()
     auto materialStaging = AllocatedBuffer::create(
         base_ref->get(), size, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferSrc,
         vma::MemoryUsage::eCpuToGpu);
-    std::vector<gpuObject::Material> materialStor;
-    std::transform(materialStorage.begin(), materialStorage.end(), std::back_inserter(materialStor),
-                   [](const auto &i) { return i.second; });
 
-    materialStaging.copyBuffer(base_ref->get().allocator, materialStor);
+    for (auto &[name, idx]: cpuStorage.materialStaging) {
+        const auto &mat = cpuStorage.materialStaging.getStorage()[idx];
+        materialStorage.add(
+            name,
+            Material{
+                .metallic = mat.metallic,
+                .roughness = mat.roughness,
+                .baseColor = mat.baseColor,
+                .baseColorTexture =
+                    (mat.baseColorTexture.empty()) ? (-1) : (textureStorage.getIndex(mat.baseColorTexture)),
+                .metallicRoughnessTexture = (mat.metallicRoughnessTexture.empty())
+                                                ? (-1)
+                                                : (textureStorage.getIndex(mat.metallicRoughnessTexture)),
+                .normalTexture = (mat.normalTexture.empty()) ? (-1) : (textureStorage.getIndex(mat.normalTexture)),
+                .occlusionTexture =
+                    (mat.occlusionTexture.empty()) ? (-1) : (textureStorage.getIndex(mat.occlusionTexture)),
+                .emissiveTexture =
+                    (mat.emissiveTexture.empty()) ? (-1) : (textureStorage.getIndex(mat.emissiveTexture)),
+            });
+    }
+
+    materialStaging.copyBuffer(base_ref->get().allocator, materialStorage.getStorage());
     materialBuffer = materialStaging.cloneBuffer(
         base_ref->get(), vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst,
         vma::MemoryUsage::eGpuOnly);
@@ -212,19 +218,16 @@ void AssetStorage::pushMaterialOnGPU()
 void AssetStorage::pushBoundingBoxesOnGPU()
 {
     DEBUG_FUNCTION
-    auto size = sizeof(MeshBoundingBox) * materialStorage.size();
+    auto size = sizeof(MeshBoundingBox) * meshBoundingBoxStorage.size();
     if (size == 0) {
-        logger.warn("Asset Storage") << "No material to push";
+        logger.warn("Asset Storage") << "No bounding box to push";
         return;
     }
     auto boundingboxStaging = AllocatedBuffer::create(
         base_ref->get(), size, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferSrc,
         vma::MemoryUsage::eCpuToGpu);
-    std::vector<MeshBoundingBox> boundingStor;
-    std::transform(meshBoundingBoxStorage.begin(), meshBoundingBoxStorage.end(), std::back_inserter(boundingStor),
-                   [](const auto &i) { return i.second; });
 
-    boundingboxStaging.copyBuffer(base_ref->get().allocator, boundingStor);
+    boundingboxStaging.copyBuffer(base_ref->get().allocator, meshBoundingBoxStorage.getStorage());
     boundingboxbuffer = boundingboxStaging.cloneBuffer(
         base_ref->get(), vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst,
         vma::MemoryUsage::eGpuOnly);

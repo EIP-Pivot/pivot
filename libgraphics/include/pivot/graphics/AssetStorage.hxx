@@ -34,6 +34,52 @@ concept is_valid_path = requires
 class AssetStorage
 {
 public:
+    template <typename T, typename Idx = typename std::vector<T>::size_type>
+    /// Store a type in a vector, while keeping a map to the indexes
+    class IndexedStorage
+    {
+    public:
+        IndexedStorage() = default;
+        ~IndexedStorage() = default;
+
+        /// return an iterator over the indexes
+        auto begin() { return index.begin(); }
+        /// return the end iterator
+        auto end() { return index.end(); }
+        /// Add a new item to the storage
+        inline void add(const std::string &i, T value)
+        {
+            storage.push_back(std::move(value));
+            index.insert(std::make_pair(i, storage.size() - 1));
+        }
+        /// @copydoc add
+        inline void add(const std::pair<std::string, T> &value) { add(value.first, std::move(value.second)); }
+        /// return the number of item in the storage
+        constexpr auto size() const noexcept
+        {
+            assert(storage.size() == index.size());
+            return storage.size();
+        }
+        /// return the internal vector
+        constexpr const auto &getStorage() const noexcept { return storage; }
+        /// @copydoc getStorage
+        constexpr auto &getStorage() noexcept { return storage; }
+        /// return the item at a given index
+        constexpr const T &get(const std::int32_t &i) const { return storage.at(i); }
+        /// return the index of an item name
+        inline const std::int32_t getIndex(const std::string &i) const noexcept
+        {
+            if (index.contains(i))
+                return index.at(i);
+            else
+                return -1;
+        }
+
+    private:
+        std::vector<T> storage;
+        std::unordered_map<std::string, Idx> index;
+    };
+
     /// @struct AssetStorageException
     /// Exception type for the AssetStorage
     struct AssetStorageException : public std::out_of_range {
@@ -61,12 +107,40 @@ public:
         std::uint32_t indicesSize;
     };
 
+    /// @struct CPUMaterial
+    /// Represent a CPU-side material
+    struct CPUMaterial {
+        /// @cond
+        float metallic = 1.0f;
+        float roughness = 1.0f;
+        glm::vec4 baseColor = glm::vec4(1.0f);
+        std::string baseColorTexture;
+        std::string metallicRoughnessTexture;
+        std::string normalTexture;
+        std::string occlusionTexture;
+        std::string emissiveTexture;
+        ///@endcond
+    };
+
+    /// @struct Material
+    /// Represent a GPU side material
+    struct Material {
+        /// @cond
+        float metallic = 1.0f;
+        float roughness = 1.0f;
+        glm::vec4 baseColor = glm::vec4(1.0f);
+        std::int32_t baseColorTexture = -1;
+        std::int32_t metallicRoughnessTexture = -1;
+        std::int32_t normalTexture = -1;
+        std::int32_t occlusionTexture = -1;
+        std::int32_t emissiveTexture = -1;
+        /// @endcond
+    };
+
     /// A mesh with a default texture and a default material
     struct Model {
         /// Model mesh
         Mesh mesh;
-        /// Default texture id
-        std::optional<std::string> default_texture;
         /// Default material id
         std::optional<std::string> default_material;
     };
@@ -77,11 +151,20 @@ public:
         std::vector<std::string> modelIds;
     };
 
+    /// @struct CPUTexture
+    /// Represent a cpu-side Texture
+    struct CPUTexture {
+        /// The vulkan image containing the texture
+        std::vector<std::byte> image;
+        /// The size of the texture
+        vk::Extent3D size;
+    };
+
     /// @struct Texture
-    /// Represent a Texture
+    /// Represent a vulkan texture
     struct Texture {
         /// The vulkan image containing the texture
-        std::variant<AllocatedImage, std::vector<std::byte>> image;
+        AllocatedImage image;
         /// The size of the texture
         vk::Extent3D size;
     };
@@ -112,7 +195,7 @@ public:
     {
         auto i = ((loadTexture(p)) + ...);
         if (i < sizeof...(Path)) {
-            throw AssetStorageException("A model file failed to load. See above for further errors");
+            throw AssetStorageException("A texture file failed to load. See above for further errors");
         }
     }
 
@@ -128,7 +211,7 @@ public:
 
     template <typename T>
     /// Get the index of the asset of type T named name
-    inline std::uint32_t getIndex(const std::string &name) const;
+    inline std::int32_t getIndex(const std::string &name) const;
 
     /// @return Get the Index buffer
     constexpr const AllocatedBuffer &getIndexBuffer() const noexcept { return indicesBuffer; }
@@ -153,7 +236,6 @@ private:
     bool loadPngTexture(const std::filesystem::path &path);
     bool loadKtxTexture(const std::filesystem::path &path);
 
-    bool loadMaterial(const tinyobj::material_t &material);
     void pushModelsOnGPU();
     void pushBoundingBoxesOnGPU();
     void pushTexturesOnGPU();
@@ -161,14 +243,21 @@ private:
 
 private:
     OptionalRef<VulkanBase> base_ref;
+
     std::unordered_map<std::string, Model> modelStorage;
     std::unordered_map<std::string, Prefab> prefabStorage;
-    std::unordered_map<std::string, MeshBoundingBox> meshBoundingBoxStorage;
-    std::unordered_map<std::string, Texture> textureStorage;
-    std::unordered_map<std::string, gpuObject::Material> materialStorage;
 
-    std::vector<Vertex> vertexStagingBuffer;
-    std::vector<std::uint32_t> indexStagingBuffer;
+    IndexedStorage<MeshBoundingBox> meshBoundingBoxStorage;
+    IndexedStorage<Texture> textureStorage;
+    IndexedStorage<Material> materialStorage;
+
+    struct CPUStorage {
+        std::vector<Vertex> vertexStagingBuffer;
+        std::vector<std::uint32_t> indexStagingBuffer;
+        IndexedStorage<CPUTexture> textureStaging;
+        IndexedStorage<CPUMaterial> materialStaging;
+    };
+    CPUStorage cpuStorage = {};
 
     AllocatedBuffer vertexBuffer;
     AllocatedBuffer indicesBuffer;
@@ -203,60 +292,29 @@ inline const AssetStorage::Mesh &AssetStorage::get(const std::string &p) const
     return get<Model>(p).mesh;
 }
 
-template <>
-inline const MeshBoundingBox &AssetStorage::get(const std::string &p) const
-{
-    PIVOT_TEST_CONTAINS(meshBoundingBoxStorage, p);
-    return meshBoundingBoxStorage.at(p);
-}
-
-template <>
-inline const AssetStorage::Texture &AssetStorage::get(const std::string &p) const
-{
-    PIVOT_TEST_CONTAINS(textureStorage, p);
-    return textureStorage.at(p);
-}
+#undef PIVOT_TEST_CONTAINS
 
 // Get Index of asset in the buffers
 
 template <>
 /// @cond
-inline std::uint32_t AssetStorage::getIndex<AssetStorage::Model>(const std::string &i) const
+inline std::int32_t AssetStorage::getIndex<MeshBoundingBox>(const std::string &i) const
 {
-    PIVOT_TEST_CONTAINS(modelStorage, i);
-    return std::distance(modelStorage.begin(), modelStorage.find(i));
+    return meshBoundingBoxStorage.getIndex(i);
 }
 
 template <>
-inline std::uint32_t AssetStorage::getIndex<AssetStorage::Mesh>(const std::string &i) const
+inline std::int32_t AssetStorage::getIndex<AssetStorage::Texture>(const std::string &i) const
 {
-    return getIndex<AssetStorage::Model>(i);
+    return textureStorage.getIndex(i);
 }
 
 template <>
-inline std::uint32_t AssetStorage::getIndex<MeshBoundingBox>(const std::string &i) const
-{
-    PIVOT_TEST_CONTAINS(meshBoundingBoxStorage, i);
-    return std::distance(meshBoundingBoxStorage.begin(), meshBoundingBoxStorage.find(i));
-}
-
-template <>
-inline std::uint32_t AssetStorage::getIndex<AssetStorage::Texture>(const std::string &i) const
-{
-    PIVOT_TEST_CONTAINS(textureStorage, i);
-    return std::distance(textureStorage.begin(), textureStorage.find(i));
-}
-
-template <>
-inline std::uint32_t AssetStorage::getIndex<gpuObject::Material>(const std::string &i) const
-{
-    PIVOT_TEST_CONTAINS(materialStorage, i);
-    return std::distance(materialStorage.begin(), materialStorage.find(i));
-}
-
 ///@endcond
-
-#undef PIVOT_TEST_CONTAINS
+inline std::int32_t AssetStorage::getIndex<AssetStorage::Material>(const std::string &i) const
+{
+    return materialStorage.getIndex(i);
+}
 
 #endif
 

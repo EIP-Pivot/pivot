@@ -332,11 +332,25 @@ void VulkanApplication::createDescriptorPool()
 void VulkanApplication::createRessourcesDescriptorSets()
 {
     DEBUG_FUNCTION
+
+    uint32_t counts[] = {static_cast<uint32_t>(assetStorage.getTextures().size())};
+    vk::DescriptorSetVariableDescriptorCountAllocateInfo set_counts{
+        .descriptorSetCount = std::size(counts),
+        .pDescriptorCounts = counts,
+    };
+    vk::DescriptorSetAllocateInfo allocInfo{
+        .pNext = &set_counts,
+        .descriptorPool = descriptorPool,
+        .descriptorSetCount = 1,
+        .pSetLayouts = &ressourcesSetLayout,
+    };
+    ressourceDescriptorSet = device.allocateDescriptorSets(allocInfo).front();
+
     std::vector<vk::DescriptorImageInfo> imagesInfos;
-    for (auto &[_, t]: assetStorage.getTextures()) {
+    for (auto &t: assetStorage.getTextures().getStorage()) {
         imagesInfos.push_back({
             .sampler = textureSampler,
-            .imageView = std::get<AllocatedImage>(t.image).imageView,
+            .imageView = t.image.imageView,
             .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
         });
     }
@@ -352,20 +366,6 @@ void VulkanApplication::createRessourcesDescriptorSets()
         .offset = 0,
         .range = boundingBoxBuffer.size,
     };
-
-    uint32_t counts[] = {static_cast<uint32_t>(imagesInfos.size())};
-    vk::DescriptorSetVariableDescriptorCountAllocateInfo set_counts{
-        .descriptorSetCount = std::size(counts),
-        .pDescriptorCounts = counts,
-    };
-    vk::DescriptorSetAllocateInfo allocInfo{
-        .pNext = &set_counts,
-        .descriptorPool = descriptorPool,
-        .descriptorSetCount = 1,
-        .pSetLayouts = &ressourcesSetLayout,
-    };
-    ressourceDescriptorSet = device.allocateDescriptorSets(allocInfo).front();
-
     std::vector<vk::WriteDescriptorSet> descriptorWrite{
         {
             .dstSet = ressourceDescriptorSet,
@@ -413,7 +413,7 @@ void VulkanApplication::createTextureSampler()
         .compareEnable = VK_FALSE,
         .compareOp = vk::CompareOp::eAlways,
         .minLod = 0.0f,
-        .maxLod = static_cast<float>(mipLevels),
+        .maxLod = 100,
         .borderColor = vk::BorderColor::eIntOpaqueBlack,
         .unnormalizedCoordinates = VK_FALSE,
     };
@@ -429,6 +429,8 @@ void VulkanApplication::createDepthResources()
         physical_device, {vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint},
         vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
 
+    depthResources.size = swapchain.getSwapchainExtent3D();
+    depthResources.format = depthFormat;
     vk::ImageCreateInfo imageInfo{
         .imageType = vk::ImageType::e2D,
         .format = depthFormat,
@@ -449,7 +451,7 @@ void VulkanApplication::createDepthResources()
     createInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eDepth;
     depthResources.imageView = device.createImageView(createInfo);
 
-    depthResources.transitionLayout(*this, depthFormat, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+    depthResources.transitionLayout(*this, vk::ImageLayout::eDepthStencilAttachmentOptimal);
     pivot::graphics::vk_debug::setObjectName(device, depthResources.image, "Depth Image");
     pivot::graphics::vk_debug::setObjectName(device, depthResources.imageView, "Depth Image view");
     swapchainDeletionQueue.push([&] {

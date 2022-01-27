@@ -95,7 +95,7 @@ template <typename T, typename A>
 Description build_component_description(const char *name, bool registerComponent = true)
 {
     Description description{name, helpers::Helpers<T>::getType(), helpers::createContainer<A>};
-    if (registerComponent) { GlobalIndex::getSingleton().registerComponentWithType<T>(description); }
+    if (registerComponent) { GlobalIndex::getSingleton().registerComponent(description); }
     return description;
 }
 }    // namespace pivot::ecs::component::helpers

@@ -26,13 +26,7 @@ TEST_CASE("correct synchronisation", "[component][index]")
     REQUIRE_THROWS_AS(index.registerComponent(emptyComponent("Test Component")), Index::DuplicateError);
     index.registerComponent(emptyComponent("Test Component 2"));
 
-    index.registerComponentWithType<TestType1>(emptyComponent("TestType1"));
-    REQUIRE_THROWS_AS(index.registerComponentWithType<TestType1>(emptyComponent("TestType1")), Index::DuplicateError);
-
     REQUIRE(index.getDescription("Unknown") == std::nullopt);
-    REQUIRE(index.getComponentNameByType<TestType2>() == std::nullopt);
     REQUIRE_THROWS(index.registerComponent(emptyComponent("Unknown")));
-
     REQUIRE(index.getDescription("Test Component").value().name == "Test Component");
-    REQUIRE(index.getComponentNameByType<TestType1>().value() == "TestType1");
 }

@@ -154,7 +154,6 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/AssetsStorage/Loaders/AssetsStorage_obj.cxx
                                    source/AssetsStorage/Loaders/AssetsStorage_png.cxx
                                    source/AssetsStorage/Loaders/AssetsStorage_gltf.cxx
-                                   source/AssetsStorage/Loaders/AssetsStorage_ktx.cxx
                                    source/VulkanApplication/VulkanApplication.cxx
                                    source/VulkanApplication/VulkanApplication_init.cxx
                                    source/VulkanBase/VulkanBase.cxx

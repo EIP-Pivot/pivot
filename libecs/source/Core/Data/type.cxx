@@ -1,4 +1,6 @@
 #include <magic_enum.hpp>
+#include <sstream>
+
 #include <pivot/ecs/Core/Data/type.hxx>
 
 namespace pivot::ecs::data
@@ -27,5 +29,12 @@ std::ostream &operator<<(std::ostream &stream, const Type &type)
     // FIXME: Remove the static_cast when GCC 12 releases
     std::visit([&](const auto &value) { stream << value; }, static_cast<const Type::variant &>(type));
     return stream << " }";
+}
+
+std::string Type::toString() const
+{
+    std::ostringstream oss;
+    oss << *this;
+    return oss.str();
 }
 }    // namespace pivot::ecs::data

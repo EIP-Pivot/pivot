@@ -35,6 +35,9 @@ using RecordType = std::map<std::string, Type>;
 
 /// A type in the pivot data model
 struct Type : public std::variant<BasicType, RecordType> {
+    using variant::variant;
+
+    std::string toString() const;
 };
 
 std::ostream &operator<<(std::ostream &stream, const BasicType &type);
@@ -42,7 +45,7 @@ std::ostream &operator<<(std::ostream &stream, const RecordType &type);
 std::ostream &operator<<(std::ostream &stream, const Type &type);
 
 template <typename T>
-constexpr std::optional<BasicType> basic_type_representation;
+constexpr std::optional<BasicType> basic_type_representation = std::nullopt;
 
 template <>
 constexpr std::optional<BasicType> basic_type_representation<std::string> = BasicType::String;

@@ -5,7 +5,7 @@ namespace pivot::ecs::event
 
 void Description::validate() const
 {
-    if (this->name.empty()) { throw ValidationError("Empty system name"); }
+    if (this->name.empty()) { throw ValidationError("Empty event name"); }
 }
 
 }

@@ -4,8 +4,8 @@
 #include <unordered_map>
 
 #include <pivot/ecs/Core/Component/description.hxx>
-#include <pivot/ecs/Core/types.hxx>
 #include <pivot/ecs/Core/Data/value.hxx>
+#include <pivot/ecs/Core/types.hxx>
 
 namespace pivot::ecs::component
 {

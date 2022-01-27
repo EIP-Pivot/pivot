@@ -24,14 +24,14 @@ std::string Scene::getName() { return name; }
 Entity Scene::CreateEntity()
 {
     Entity newEntity = mEntityManager->CreateEntity();
-    mComponentManager->AddComponent(newEntity, std::make_any<Tag>("Entity " + std::to_string(newEntity)), mTagId);
+    mComponentManager->AddComponent(newEntity, "Entity " + std::to_string(newEntity), mTagId);
     return newEntity;
 }
 
 Entity Scene::CreateEntity(std::string newName)
 {
     Entity newEntity = mEntityManager->CreateEntity();
-    mComponentManager->AddComponent(newEntity, std::make_any<Tag>(newName), mTagId);
+    mComponentManager->AddComponent(newEntity, data::Value{data::Record{{"name", newName}}}, mTagId);
     return newEntity;
 }
 
@@ -48,15 +48,11 @@ Signature Scene::getSignature(Entity entity) { return mEntityManager->GetSignatu
 
 std::string Scene::getEntityName(Entity entity)
 {
-    return std::any_cast<Tag>(mComponentManager->GetComponent(entity, mTagId).value()).name;
+    return std::get<std::string>(
+        std::get<data::Record>(mComponentManager->GetComponent(entity, mTagId).value()).at("name"));
 }
 
 uint32_t Scene::getLivingEntityCount() { return mEntityManager->getLivingEntityCount(); }
-
-// std::unordered_map<const char *, ComponentType> Scene::getComponentsTypes()
-// {
-//     return mComponentManager->getComponentsTypes();
-// }
 
 void Scene::Update(float dt)
 {

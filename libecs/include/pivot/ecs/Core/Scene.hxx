@@ -59,14 +59,6 @@ public:
     /// @param[in] entity  Entity to remove.
     void DestroyEntity(Entity entity);
 
-    /// Check if entity get a component
-    template <typename T>
-    [[deprecated]] bool hasComponent(Entity entity)
-    {
-        Signature entitySignature = mEntityManager->GetSignature(entity);
-        auto id = GetComponentType<T>();
-        return entitySignature.test(id);
-    }
     /// Get signature of an entity
     Signature getSignature(Entity entity);
 
@@ -76,88 +68,6 @@ public:
     /// Get the number of entity in the scene
     uint32_t getLivingEntityCount();
 
-    // Component methods
-
-    /// Register a new component before its usage
-    /// @code
-    /// gCoordinator.RegisterComponent<{YourComponent}>();
-    /// @endcode
-    template <typename T>
-    [[deprecated]] void RegisterComponent()
-    {
-        auto name = mComponentIndex.getComponentNameByType<T>();
-        auto description = mComponentIndex.getDescription(name.value());
-        mComponentManager->RegisterComponent(description.value());
-    }
-
-    /// Check if the component is register in the scene
-    template <typename T>
-    [[deprecated]] bool isRegister()
-    {
-        auto name = mComponentIndex.getComponentNameByType<T>();
-        return mComponentManager->GetComponentId(name.value()).has_value();
-    }
-
-    /// Add a component to Entity
-    /// @code
-    /// gCoordinator.AddComponent<{YourComponent}>({YourEntity});
-    /// @endcode
-    template <typename T>
-    [[deprecated]] void AddComponent(Entity entity, T component)
-    {
-        auto name = mComponentIndex.getComponentNameByType<T>();
-        auto id = mComponentManager->GetComponentId(name.value());
-        mComponentManager->AddComponent(entity, std::any(component), id.value());
-
-        auto signature = mEntityManager->GetSignature(entity);
-        signature.set(id.value(), true);
-        mEntityManager->SetSignature(entity, signature);
-
-        mSystemManager->EntitySignatureChanged(entity, signature);
-    }
-
-    /// Remove a component to Entity
-    /// @code
-    /// gCoordinator.RemoveComponent<{YourComponent}>({YourEntity});
-    /// @endcode
-    template <typename T>
-    [[deprecated]] void RemoveComponent(Entity entity)
-    {
-        auto name = mComponentIndex.getComponentNameByType<T>();
-        auto id = mComponentManager->GetComponentId(name.value());
-        mComponentManager->RemoveComponent(entity, id.value());
-
-        auto signature = mEntityManager->GetSignature(entity);
-        signature.set(id.value(), false);
-        mEntityManager->SetSignature(entity, signature);
-
-        mSystemManager->EntitySignatureChanged(entity, signature);
-    }
-
-    /// Get component from Entity
-    /// @code
-    /// gCoordinator.GetComponent<{YourComponent}>({YourEntity});
-    /// @endcode
-    template <typename T>
-    [[deprecated]] T &GetComponent(Entity entity)
-    {
-        auto id = GetComponentType<T>();
-        auto component = mComponentManager->GetComponentRef(entity, id);
-        return std::any_cast<std::reference_wrapper<T>>(component).get();
-    }
-
-    /// Get component type, return in uint8_t;
-    /// Needed to create signature
-    /// @code
-    /// gCoordinator.GetComponentType<{YourComponent}>();
-    /// @endcode
-    template <typename T>
-    [[deprecated]] pivot::ecs::component::Manager::ComponentId GetComponentType()
-    {
-        auto name = mComponentIndex.getComponentNameByType<T>();
-        auto id = mComponentManager->GetComponentId(name.value());
-        return id.value();
-    }
 
     /// Get the component manager
     pivot::ecs::component::Manager &getComponentManager();

@@ -22,7 +22,7 @@ public:
     /// Creates a TagArray using the Description of Tag.
     TagArray(Description d): DenseTypedComponentArray<Tag>(d) {}
 
-    void setValueForEntity(Entity entity, std::optional<std::any> value) override;
+    void setValueForEntity(Entity entity, std::optional<data::Value> value) override;
 
     /// Error thrown when a duplicate Tag is registered
     class DuplicateEntityTag : public std::logic_error

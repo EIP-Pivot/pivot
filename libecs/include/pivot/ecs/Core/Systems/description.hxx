@@ -1,17 +1,16 @@
 #pragma once
 
+#include "pivot/ecs/Core/Component/array.hxx"
 #include "pivot/ecs/Core/Component/description.hxx"
 #include "pivot/ecs/Core/Data/value.hxx"
 #include "pivot/ecs/Core/Event/description.hxx"
-#include "pivot/ecs/Core/Component/array.hxx"
 
+#include <any>
 #include <functional>
 #include <iostream>
 #include <stdexcept>
 #include <string>
-#include <any>
 #include <vector>
-
 
 namespace pivot::ecs::systems
 {
@@ -20,11 +19,13 @@ struct Description {
 
     using systemArgs = std::vector<std::reference_wrapper<component::IComponentArray>>;
 
+    using availableEntities = std::unordered_map<Entity, Signature>;
+
     std::string name;
 
     std::vector<std::string> arguments;
 
-    std::function<void(const Description &, systemArgs &, const event::Event &)> system;
+    std::function<void(const availableEntities &, const Description &, const systemArgs &, const event::Event &)> system;
 
     void validate() const;
 

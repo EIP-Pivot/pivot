@@ -25,7 +25,7 @@ void Index::registerSystem(const Description &description)
              event::Event event{
                  .payload = data::Value{1},
              };
-             description.system(description, componentArray, event);
+             description.system(entityManager.getEntities(), description, componentArray, event);
          }});
 }
 

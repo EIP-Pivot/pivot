@@ -29,8 +29,6 @@ bool AssetStorage::loadObjModel(const std::filesystem::path &path)
 {
     DEBUG_FUNCTION
     auto base_dir = path.parent_path();
-    std::vector<Vertex> currentVertexBuffer;
-    std::vector<uint32_t> currentIndexBuffer;
 
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
@@ -105,10 +103,6 @@ bool AssetStorage::loadObjModel(const std::filesystem::path &path)
                                                   model.mesh.vertexSize)));
     }
     prefabStorage.insert({path.stem().string(), prefab});
-    cpuStorage.vertexStagingBuffer.insert(cpuStorage.vertexStagingBuffer.end(), currentVertexBuffer.begin(),
-                                          currentVertexBuffer.end());
-    cpuStorage.indexStagingBuffer.insert(cpuStorage.indexStagingBuffer.end(), currentIndexBuffer.begin(),
-                                         currentIndexBuffer.end());
     return true;
 }
 

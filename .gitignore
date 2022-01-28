@@ -1,6 +1,7 @@
 # Ignore the deps and obj files
 *.o
 *.d
+*.spv
 .clangd/
 .ccls-cache/
 compile_commands.json

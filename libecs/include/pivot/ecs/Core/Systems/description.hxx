@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pivot/ecs/Core/Systems/function_traits.hxx"
+#include "pivot/ecs/Core/Component/description.hxx"
 
 #include <functional>
 #include <iostream>

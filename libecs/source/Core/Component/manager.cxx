@@ -23,7 +23,7 @@ std::optional<Manager::ComponentId> Manager::GetComponentId(std::string_view nam
     }
 }
 
-void Manager::AddComponent(Entity entity, std::any component, Manager::ComponentId index)
+void Manager::AddComponent(Entity entity, data::Value component, Manager::ComponentId index)
 {
     m_componentArrays.at(index)->setValueForEntity(entity, component);
 }
@@ -34,15 +34,9 @@ void Manager::RemoveComponent(Entity entity, Manager::ComponentId index)
 }
 
 /// Get the value of a component associated to an entity
-const std::optional<std::any> Manager::GetComponent(Entity entity, Manager::ComponentId index) const
+const std::optional<data::Value> Manager::GetComponent(Entity entity, Manager::ComponentId index) const
 {
     return m_componentArrays.at(index)->getValueForEntity(entity);
-}
-
-/// Get a reference to the value of a component associated to an entity
-[[deprecated]] const std::optional<std::any> Manager::GetComponentRef(Entity entity, Manager::ComponentId index)
-{
-    return m_componentArrays.at(index)->getRefForEntity(entity);
 }
 
 /// Removes the component for every entity.

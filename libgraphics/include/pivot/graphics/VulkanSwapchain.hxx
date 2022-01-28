@@ -34,7 +34,6 @@ public:
         vk::Extent2D chooseSwapExtent(const vk::Extent2D &size) noexcept;
         /// Gather swapchain support information
         static SupportDetails querySwapChainSupport(const vk::PhysicalDevice &device, const vk::SurfaceKHR &surface);
-        /// @endcond
     };
 
 public:

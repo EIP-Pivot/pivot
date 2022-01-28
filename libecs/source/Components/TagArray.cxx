@@ -2,19 +2,21 @@
 
 namespace pivot::ecs::component
 {
-void TagArray::setValueForEntity(Entity entity, std::optional<std::any> value)
+void TagArray::setValueForEntity(Entity entity, std::optional<data::Value> value)
 {
+    std::optional<std::string> old_name = (entity < m_component_exist.size() && m_component_exist[entity])
+                                              ? std::make_optional(m_components[entity].name)
+                                              : std::nullopt;
+
+    this->DenseTypedComponentArray<Tag>::setValueForEntity(entity, value);
+
     // Remove old tag from tag set
-    if (entity < m_component_exist.size() && m_component_exist[entity]) {
-        m_tag_names.erase(m_components[entity].name);
-    }
+    if (old_name.has_value()) { m_tag_names.erase(old_name.value()); }
 
     // Add new tag to tag set
     if (value.has_value()) {
-        auto tag = std::any_cast<Tag>(*value);
-        m_tag_names.insert(tag.name);
+        auto tag = std::get<std::string>(std::get<data::Record>(value.value()).at("name"));
+        m_tag_names.insert(tag);
     }
-
-    this->DenseTypedComponentArray<Tag>::setValueForEntity(entity, value);
 }
 }    // namespace pivot::ecs::component

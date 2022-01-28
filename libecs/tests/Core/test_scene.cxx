@@ -1,12 +1,13 @@
 #include <boost/fusion/include/adapt_struct.hpp>
 #include <catch2/catch.hpp>
 #include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
-#include <pivot/ecs/Core/Component/description_helpers.hxx>
+#include <pivot/ecs/Core/Component/description_helpers_impl.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
 #include <pivot/ecs/Core/Scene.hxx>
 
 
 using namespace pivot::ecs::component;
+using namespace pivot::ecs::data;
 
 struct TestComponent {
     int data;
@@ -50,10 +51,10 @@ TEST_CASE("A scene can register components and add entities", "[component][scene
     REQUIRE(scene.getEntityName(entity) == entityName);
 
     REQUIRE(!cm.GetComponent(entity, test_component_id).has_value());
-    cm.AddComponent(entity, std::make_any<TestComponent>(42), test_component_id);
+    cm.AddComponent(entity, Value{Record{{"data", 42}}}, test_component_id);
     auto test_component_value = cm.GetComponent(entity, test_component_id);
     REQUIRE(test_component_value.has_value());
-    REQUIRE(std::any_cast<TestComponent>(test_component_value.value()).data == 42);
+    REQUIRE(test_component_value.value() == Value{Record{{"data", 42}}});
 
     for (auto [description, value]: cm.GetAllComponents(entity)) {
         REQUIRE((description.name == "TestComponent" || description.name == "Tag"));

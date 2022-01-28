@@ -33,23 +33,20 @@ public:
     std::optional<ComponentId> GetComponentId(std::string_view name);
 
     /// Add or replace the component associated to an entity
-    void AddComponent(Entity entity, std::any component, ComponentId index);
+    void AddComponent(Entity entity, data::Value component, ComponentId index);
 
     /// Remove the component associated to an entity
     void RemoveComponent(Entity entity, ComponentId index);
 
     /// Get the value of a component associated to an entity
-    const std::optional<std::any> GetComponent(Entity entity, ComponentId index) const;
-
-    /// Get a reference to the value of a component associated to an entity
-    [[deprecated]] const std::optional<std::any> GetComponentRef(Entity entity, ComponentId index);
+    const std::optional<data::Value> GetComponent(Entity entity, ComponentId index) const;
 
     /// Removes the component for every entity.
     void EntityDestroyed(Entity entity);
 
 private:
     using component_array_type = std::vector<std::unique_ptr<IComponentArray>>;
-    using value_type = std::pair<const Description &, std::optional<std::any>>;
+    using value_type = std::pair<const Description &, std::optional<data::Value>>;
 
     component_array_type m_componentArrays;
     std::map<std::string, ComponentId, std::less<>> m_componentNameToIndex;

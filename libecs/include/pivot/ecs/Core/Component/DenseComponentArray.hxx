@@ -3,6 +3,8 @@
 #include <span>
 
 #include <pivot/ecs/Core/Component/array.hxx>
+#include <pivot/ecs/Core/Component/description_helpers.hxx>
+#include <pivot/ecs/Core/Component/error.hxx>
 #include <pivot/ecs/Core/types.hxx>
 
 namespace pivot::ecs::component
@@ -28,30 +30,27 @@ public:
     const Description &getDescription() const override { return m_description; }
 
     /// \copydoc pivot::ecs::component::IComponentArray::getValueForEntity()
-    std::optional<std::any> getValueForEntity(Entity entity) const override
+    std::optional<data::Value> getValueForEntity(Entity entity) const override
     {
         if (entity >= m_components.size() || !m_component_exist[entity]) return std::nullopt;
-        return std::make_any<T>(m_components.at(entity));
-    }
-
-    /// \copydoc pivot::ecs::component::IComponentArray::getRefForEntity()
-    std::optional<std::any> getRefForEntity(Entity entity) override
-    {
-        if (entity >= m_components.size() || !m_component_exist[entity]) return std::nullopt;
-        return std::make_any<std::reference_wrapper<T>>(m_components.at(entity));
+        return helpers::Helpers<T>::createValueFromType(m_components.at(entity));
     }
 
     /// \copydoc pivot::ecs::component::IComponentArray::setValueForEntity()
-    void setValueForEntity(Entity entity, std::optional<std::any> value) override
+    void setValueForEntity(Entity entity, std::optional<data::Value> value) override
     {
         if (!value.has_value()) {
             if (entity < m_components.size()) m_component_exist.at(entity) = false;
         } else {
+            auto value_type = value->type();
+            if (value_type != m_description.type) {
+                throw InvalidComponentValue(m_description.name, m_description.type, value_type);
+            }
             if (entity >= m_components.size()) {
                 m_components.resize(entity + 1);
                 m_component_exist.resize(entity + 1, false);
             }
-            m_components.at(entity) = std::any_cast<T>(value.value());
+            helpers::Helpers<T>::updateTypeWithValue(m_components.at(entity), value.value());
             m_component_exist.at(entity) = true;
         }
     }

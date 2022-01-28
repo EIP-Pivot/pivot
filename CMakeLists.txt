@@ -101,6 +101,7 @@ if (BUILD_DOCUMENTATION)
     if (DOXYGEN_FOUND)
         set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
         set(DOXYGEN_WARN_LOGFILE ${CMAKE_BINARY_DIR}/doxygen-warnings.log)
+        set(DOXYGEN_PREDEFINED DOXYGEN_SHOULD_SKIP_THIS)
         doxygen_add_docs(doc
             libgraphics/include
             libecs/include

@@ -23,7 +23,7 @@ gpuObject::UniformBufferObject::UniformBufferObject(const RenderObject &obj,
     {
         auto tmpIndex = getDefault<pivot::graphics::AssetStorage::Texture>(
             assetStorage, obj.objectInformation.textureIndex, model.default_texture);
-        if (tmpIndex)
+        if (!tmpIndex)
             throw pivot::graphics::AssetStorage::AssetStorageException("Missing texture for "
                                                                        "obj " +
                                                                        obj.meshID);
@@ -32,10 +32,11 @@ gpuObject::UniformBufferObject::UniformBufferObject(const RenderObject &obj,
     {
         auto tmpIndex =
             getDefault<gpuObject::Material>(assetStorage, obj.objectInformation.materialIndex, model.default_material);
-        if (tmpIndex)
+        if (!tmpIndex)
             throw pivot::graphics::AssetStorage::AssetStorageException("Missing material for "
                                                                        "obj " +
                                                                        obj.meshID);
+        materialIndex = tmpIndex.value();
     }
     boundingBoxIndex = assetStorage.getIndex<MeshBoundingBox>(obj.meshID);
 }

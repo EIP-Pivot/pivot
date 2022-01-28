@@ -20,9 +20,10 @@ void test_manager_registration(Description::systemArgs &entities)
         }
 
         auto &[description, component] = entity[1];
-        auto tag = std::any_cast<Tag>(component);
-        std::cout << tag.name << std::endl;
-        tag.name = "oui";
+        auto tag = std::any_cast<Value>(component);
+        std::cout << std::get<std::string>( std::get<Record>(tag).at("name") ) << std::endl;
+        std::get<std::string>( std::get<Record>(tag).at("name") ) = "non";
+        std::cout << std::get<std::string>(std::get<Record>(tag).at("name")) << std::endl;
     }
 }
 

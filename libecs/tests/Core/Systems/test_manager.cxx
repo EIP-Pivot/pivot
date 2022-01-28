@@ -8,38 +8,38 @@
 #include <pivot/ecs/Core/Systems/description.hxx>
 #include <pivot/ecs/Core/Data/value.hxx>
 
-using namespace pivot::ecs::systems;
+using namespace pivot::ecs;
 using namespace pivot::ecs::data;
 
-void test_manager_registration(Description::systemArgs &entities)
+void test_manager_registration(const systems::Description &description, systems::Description::systemArgs &entities, const event::Event &event)
 {
     std::cout << "I'm a system with components:\n";
-    for (auto &entity: entities) {
-        for (const auto &component: entity) {
-            std::cout << "\t" << component.second.type().name() << "\n";
-        }
+    std::cout << entities.size() << std::endl;
+    auto &tagArray = entities[1].get();
+    auto tag = tagArray.getValueForEntity(0).value();
 
-        auto &[description, component] = entity[1];
-        auto tag = std::any_cast<Value>(component);
-        std::cout << std::get<std::string>( std::get<Record>(tag).at("name") ) << std::endl;
-        std::get<std::string>( std::get<Record>(tag).at("name") ) = "non";
-        std::cout << std::get<std::string>(std::get<Record>(tag).at("name")) << std::endl;
-    }
+    std::cout << std::get<std::string>(std::get<Record>(tag).at("name")) << std::endl;
+
+    std::get<std::string>(std::get<Record>(tag).at("name")) = "edit";
+
+    std::cout << std::get<std::string>(std::get<Record>(tag).at("name") ) << std::endl;
+
+    tagArray.setValueForEntity(0, tag);
 }
 
 TEST_CASE("Manager register system", "[description][registration][manager]")
 {
-    pivot::ecs::component::Manager cManager;
-    pivot::ecs::component::Description tag =
-        pivot::ecs::component::GlobalIndex::getSingleton().getDescription("Tag").value();
-    pivot::ecs::component::Description rigid =
-        pivot::ecs::component::GlobalIndex::getSingleton().getDescription("RigidBody").value();
-    pivot::ecs::component::Description grav =
-        pivot::ecs::component::GlobalIndex::getSingleton().getDescription("Gravity").value();
+    component::Manager cManager;
+    component::Description tag =
+        component::GlobalIndex::getSingleton().getDescription("Tag").value();
+    component::Description rigid =
+        component::GlobalIndex::getSingleton().getDescription("RigidBody").value();
+    component::Description grav =
+        component::GlobalIndex::getSingleton().getDescription("Gravity").value();
 
-    pivot::ecs::component::Manager::ComponentId tagId = cManager.RegisterComponent(tag);
-    pivot::ecs::component::Manager::ComponentId rigidId = cManager.RegisterComponent(rigid);
-    pivot::ecs::component::Manager::ComponentId gravId = cManager.RegisterComponent(grav);
+    component::Manager::ComponentId tagId = cManager.RegisterComponent(tag);
+    component::Manager::ComponentId rigidId = cManager.RegisterComponent(rigid);
+    component::Manager::ComponentId gravId = cManager.RegisterComponent(grav);
 
     EntityManager eManager;
     Entity entity = eManager.CreateEntity();
@@ -48,8 +48,8 @@ TEST_CASE("Manager register system", "[description][registration][manager]")
                           rigidId);
     cManager.AddComponent(entity, Value{Record{{"force", glm::vec3(0.0f)}}}, gravId);
 
-    Manager manager;
-    Description description {
+    systems::Manager manager;
+    systems::Description description{
         .name = "Manager",
         .arguments =
             {
@@ -58,7 +58,7 @@ TEST_CASE("Manager register system", "[description][registration][manager]")
             },
         .system = &test_manager_registration,
     };
-    GlobalIndex::getSingleton().registerSystem(description);
+    systems::GlobalIndex::getSingleton().registerSystem(description);
     manager.useSystem(description);
     manager.execute(cManager, eManager);
     manager.execute(cManager, eManager);

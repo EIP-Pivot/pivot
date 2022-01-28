@@ -1,6 +1,9 @@
 #pragma once
 
 #include "pivot/ecs/Core/Component/description.hxx"
+#include "pivot/ecs/Core/Data/value.hxx"
+#include "pivot/ecs/Core/Event/description.hxx"
+#include "pivot/ecs/Core/Component/array.hxx"
 
 #include <functional>
 #include <iostream>
@@ -15,13 +18,13 @@ namespace pivot::ecs::systems
 
 struct Description {
 
-    using systemArgs = std::vector<std::vector<std::pair<component::Description, std::any>>>;
+    using systemArgs = std::vector<std::reference_wrapper<component::IComponentArray>>;
 
     std::string name;
 
     std::vector<std::string> arguments;
 
-    std::function<void(systemArgs &)> system;
+    std::function<void(const Description &, systemArgs &, const event::Event &)> system;
 
     void validate() const;
 

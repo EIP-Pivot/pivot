@@ -13,13 +13,6 @@ namespace pivot::ecs::event
 class Manager
 {
 public:
-    using Entities = std::vector<std::vector<data::Value>>;
-
-    struct Event
-    {
-        Entities entities;
-        data::Value payload;
-    };
     
     void registerEvent(const Description &description);
 

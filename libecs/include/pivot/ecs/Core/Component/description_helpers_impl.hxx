@@ -17,10 +17,6 @@
 namespace pivot::ecs::component::helpers
 {
 
-namespace
-{
-}    // namespace
-
 template <typename T>
 constexpr const char *component_name = nullptr;
 
@@ -114,6 +110,6 @@ Description build_component_description(const char *name, bool registerComponent
         constexpr const char *component_name<component_type> = #component_type;                                   \
                                                                                                                   \
         template struct Helpers<std::string>;                                                                     \
-                                                                                                                  \
+        template struct Helpers<component_type>;                                                                  \
         static const auto description = build_component_description<component_type, array_type>(#component_type); \
     }

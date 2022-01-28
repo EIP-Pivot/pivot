@@ -11,19 +11,15 @@
 using namespace pivot::ecs;
 using namespace pivot::ecs::data;
 
-void test_manager_registration(const systems::Description &description, systems::Description::systemArgs &entities, const event::Event &event)
+void test_manager_registration(const systems::Description::availableEntities &e, const systems::Description &description,
+                               const systems::Description::systemArgs &entities, const event::Event &event)
 {
-    std::cout << "I'm a system with components:\n";
-    std::cout << entities.size() << std::endl;
+    std::cout << "I'm a system:\n";
     auto &tagArray = entities[1].get();
+    tagArray.getValueForEntity(0).has_value();
     auto tag = tagArray.getValueForEntity(0).value();
-
     std::cout << std::get<std::string>(std::get<Record>(tag).at("name")) << std::endl;
-
     std::get<std::string>(std::get<Record>(tag).at("name")) = "edit";
-
-    std::cout << std::get<std::string>(std::get<Record>(tag).at("name") ) << std::endl;
-
     tagArray.setValueForEntity(0, tag);
 }
 

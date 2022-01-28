@@ -36,6 +36,7 @@ gpuObject::UniformBufferObject::UniformBufferObject(const RenderObject &obj,
             throw pivot::graphics::AssetStorage::AssetStorageException("Missing material for "
                                                                        "obj " +
                                                                        obj.meshID);
+        materialIndex = tmpIndex.value();
     }
     boundingBoxIndex = assetStorage.getIndex<MeshBoundingBox>(obj.meshID);
 }

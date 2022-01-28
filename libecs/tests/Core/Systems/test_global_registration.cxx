@@ -5,15 +5,15 @@
 #include <pivot/ecs/Core/Systems/description.hxx>
 #include <pivot/ecs/Core/Systems/index.hxx>
 
-using namespace pivot::ecs::systems;
+using namespace pivot::ecs;
 
-GlobalIndex indexForRegistrationTest;
+systems::GlobalIndex indexForRegistrationTest;
 
-void test_global_registration(Description::systemArgs &components) {}
+void test_global_registration(const systems::Description &, systems::Description::systemArgs &, const event::Event &) {}
 
 TEST_CASE("Register same system in Global Index", "[description][registration]")
 {
-    Description description{
+    systems::Description description{
         .name = "Duplicate",
         .arguments =
             {
@@ -23,12 +23,12 @@ TEST_CASE("Register same system in Global Index", "[description][registration]")
         .system = &test_global_registration,
     };
     REQUIRE_NOTHROW(indexForRegistrationTest.registerSystem(description));
-    REQUIRE_THROWS_AS(indexForRegistrationTest.registerSystem(description), Index::DuplicateError);
+    REQUIRE_THROWS_AS(indexForRegistrationTest.registerSystem(description), systems::Index::DuplicateError);
 }
 
 TEST_CASE("Register valid system in Global Index", "[description][registration]")
 {
-    Description description{
+    systems::Description description{
         .name = "Valid",
         .arguments =
             {
@@ -42,9 +42,8 @@ TEST_CASE("Register valid system in Global Index", "[description][registration]"
 
 TEST_CASE("Register invalid system in Global Index", "[description][registration]")
 {
-    Description description;
-    REQUIRE_THROWS_AS(indexForRegistrationTest.registerSystem(description),
-                      Description::ValidationError);
+    systems::Description description;
+    REQUIRE_THROWS_AS(indexForRegistrationTest.registerSystem(description), systems::Description::ValidationError);
 }
 
 TEST_CASE("Get system in Global Index", "[description][registration]")

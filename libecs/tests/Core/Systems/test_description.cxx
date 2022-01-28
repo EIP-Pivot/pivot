@@ -6,13 +6,13 @@
 
 #include <iostream>
 
-using namespace pivot::ecs::systems;
+using namespace pivot::ecs;
 
-void test_description(Description::systemArgs &components) {}
+void test_description(const systems::Description &, systems::Description::systemArgs &, const event::Event &) {}
 
 TEST_CASE("valid system description", "[description]")
 {
-    Description description {
+    systems::Description description {
         .name = "Test Description",
         .arguments = {
             "RigidBody",
@@ -25,13 +25,13 @@ TEST_CASE("valid system description", "[description]")
 
 TEST_CASE("Empty system description", "[description]")
 {
-    Description description;
+    systems::Description description;
     REQUIRE_THROWS_WITH(description.validate(), "Empty system name");
 }
 
 TEST_CASE("Empty args system description", "[description]")
 {
-    Description description{
+    systems::Description description{
         .name = "Invalid",
     };
     REQUIRE_THROWS_WITH(description.validate(), "Empty system argument");
@@ -39,7 +39,7 @@ TEST_CASE("Empty args system description", "[description]")
 
 TEST_CASE("Invalid args system description", "[description]")
 {
-    Description description{
+    systems::Description description{
         .name = "Invalid",
         .arguments = {"NOT REGISTERED"},
     };

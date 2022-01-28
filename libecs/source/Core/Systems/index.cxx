@@ -16,27 +16,16 @@ void Index::registerSystem(const Description &description)
 
     m_systemsByName.insert(
         {description.name, [description](component::Manager &componentManager, EntityManager &entityManager) {
-             std::vector<component::Manager::ComponentId> componentsId;
-             componentsId.reserve(description.arguments.size());
+             Description::systemArgs componentArray;
 
              for (const auto &component: description.arguments) {
-                 componentsId.push_back(componentManager.GetComponentId(component).value());
+                 auto index = componentManager.GetComponentId(component).value();
+                 componentArray.push_back(componentManager.GetComponentArray(index).value());
              }
-             Description::systemArgs args;
-             for (const auto &[entity, _]: entityManager.getEntities()) {
-                 std::vector<std::pair<component::Description, std::any>> components;
-                 for (const auto &componentId: componentsId) {
-                     for (auto component: componentManager.GetAllComponents(entity))
-                         if (componentManager.GetComponentId(component.first.name).value() == componentId) {
-                             components.push_back(component);
-                             break;
-                         }
-                 }
-                 if (components.size() == componentsId.size())
-                    args.push_back(components);
-             }
-
-             description.system(args);
+             event::Event event{
+                 .payload = data::Value{1},
+             };
+             description.system(description, componentArray, event);
          }});
 }
 

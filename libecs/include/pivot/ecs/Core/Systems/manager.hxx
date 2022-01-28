@@ -4,7 +4,6 @@
 #include "pivot/ecs/Core/EcsException.hxx"
 #include "pivot/ecs/Core/EntityManager.hxx"
 #include "pivot/ecs/Core/Systems/description.hxx"
-#include "pivot/ecs/Core/Systems/function_traits.hxx"
 #include "pivot/ecs/Core/Systems/index.hxx"
 
 #include <tuple>

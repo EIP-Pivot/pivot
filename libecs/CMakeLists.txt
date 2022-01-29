@@ -58,6 +58,7 @@ add_library(${PROJECT_NAME} source/Core/Scene.cxx
                             source/Core/Component/manager.cxx
                             source/Core/Component/ref.cxx
                             source/Core/Component/combination.cxx
+                            source/Core/Component/ScriptingComponentArray.cxx
                             source/Core/Data/value.cxx
                             source/Core/Data/value_serialization.cxx
                             source/Core/Data/type.cxx

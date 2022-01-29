@@ -14,13 +14,14 @@ using namespace pivot::ecs::data;
 void test_manager_registration(const systems::Description::availableEntities &e, const systems::Description &description,
                                const systems::Description::systemArgs &entities, const event::Event &event)
 {
-    std::cout << "I'm a system:\n";
+    std::cout << "I'm a tick system:\n";
     auto &tagArray = entities[1].get();
-    tagArray.getValueForEntity(0).has_value();
-    auto tag = tagArray.getValueForEntity(0).value();
-    std::cout << std::get<std::string>(std::get<Record>(tag).at("name")) << std::endl;
-    std::get<std::string>(std::get<Record>(tag).at("name")) = "edit";
-    tagArray.setValueForEntity(0, tag);
+    for (const auto &entity: e) {
+        auto tag = tagArray.getValueForEntity(entity).value();
+        std::cout << std::get<std::string>(std::get<Record>(tag).at("name")) << std::endl;
+        std::get<std::string>(std::get<Record>(tag).at("name")) = "edit";
+        tagArray.setValueForEntity(entity, tag);
+    }
 }
 
 TEST_CASE("Manager register system", "[description][registration][manager]")
@@ -40,10 +41,24 @@ TEST_CASE("Manager register system", "[description][registration][manager]")
     component::Manager::ComponentId rigidId = cManager->RegisterComponent(rigid);
     component::Manager::ComponentId gravId = cManager->RegisterComponent(grav);
 
+    // entity that match with system
     Entity entity = eManager->CreateEntity();
-    cManager->AddComponent(entity, Value{Record{{"name", "oui"}}}, tagId);
+    cManager->AddComponent(entity, Value{Record{{"name", "entity 0"}}}, tagId);
     cManager->AddComponent(entity, Value{Record{{"velocity", glm::vec3(0.0f)}, {"acceleration", glm::vec3(0.0f)}}},
                           rigidId);
+    cManager->AddComponent(entity, Value{Record{{"force", glm::vec3(0.0f)}}}, gravId);
+
+    // entity that match with system
+    entity = eManager->CreateEntity();
+    cManager->AddComponent(entity, Value{Record{{"name", "entity 1"}}}, tagId);
+    cManager->AddComponent(entity, Value{Record{{"velocity", glm::vec3(0.0f)}, {"acceleration", glm::vec3(0.0f)}}},
+                           rigidId);
+    cManager->AddComponent(entity, Value{Record{{"force", glm::vec3(0.0f)}}}, gravId);
+
+    // entity not matching with system
+    entity = eManager->CreateEntity();
+    cManager->AddComponent(entity, Value{Record{{"velocity", glm::vec3(0.0f)}, {"acceleration", glm::vec3(0.0f)}}},
+                           rigidId);
     cManager->AddComponent(entity, Value{Record{{"force", glm::vec3(0.0f)}}}, gravId);
 
     event::Description eventDescription {

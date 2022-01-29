@@ -18,7 +18,7 @@ TEST_CASE("Register same system in Global Index", "[description][registration]")
 {
     systems::Description description{
         .name = "Duplicate",
-        .arguments =
+        .components =
             {
                 "RigidBody",
                 "Tag",
@@ -33,7 +33,7 @@ TEST_CASE("Register valid system in Global Index", "[description][registration]"
 {
     systems::Description description{
         .name = "Valid",
-        .arguments =
+        .components =
             {
                 "RigidBody",
                 "Tag",

@@ -23,7 +23,7 @@ struct Description {
 
     std::string name;
 
-    std::vector<std::string> arguments;
+    std::vector<std::string> components;
 
     event::Description eventListener;
 

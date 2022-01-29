@@ -17,7 +17,7 @@ TEST_CASE("valid system description", "[description]")
 {
     systems::Description description {
         .name = "Test Description",
-        .arguments = {
+        .components = {
             "RigidBody",
             "Tag",
         },
@@ -44,7 +44,7 @@ TEST_CASE("Invalid args system description", "[description]")
 {
     systems::Description description{
         .name = "Invalid",
-        .arguments = {"NOT REGISTERED"},
+        .components = {"NOT REGISTERED"},
     };
     REQUIRE_THROWS_WITH(description.validate(), Catch::Matchers::Contains("Component ") && Catch::Matchers::Contains(" his not registered."));
 }

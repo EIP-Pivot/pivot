@@ -9,12 +9,15 @@ void Manager::registerEvent(const Description &description)
     
 }
 
-void Manager::sendEvent(const std::string &eventName, const data::Value &value, const std::vector<Entity> &entities)
+void Manager::sendEvent(const std::string &eventName, const data::Value &payload, const Entities &entities)
 {
-    const auto &decription = GlobalIndex::getSingleton().getDescription(eventName).value();
-    Event event {
-        .payload = value,
+    const auto &description = GlobalIndex::getSingleton().getDescription(eventName).value();
+    Event event{
+        .description = description,
+        .entities = entities,
+        .payload = payload,
     };
+    m_systemManager->execute(event);
 }
 
 }

@@ -11,7 +11,7 @@ void Manager::registerEvent(const Description &description)
 
 void Manager::sendEvent(const std::string &eventName, const data::Value &payload, const Entities &entities)
 {
-    const auto &description = GlobalIndex::getSingleton().getDescription(eventName).value();
+    const auto description = GlobalIndex::getSingleton().getDescription(eventName).value();
     Event event{
         .description = description,
         .entities = entities,

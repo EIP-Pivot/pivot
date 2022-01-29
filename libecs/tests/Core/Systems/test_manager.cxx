@@ -53,7 +53,7 @@ TEST_CASE("Manager register system", "[description][registration][manager]")
     };
     systems::Description description{
         .name = "Manager",
-        .arguments =
+        .components =
             {
                 "RigidBody",
                 "Tag",

@@ -25,7 +25,7 @@ void Manager::execute(const event::Event &event)
         if (event.description.name == description.eventListener.name) {
             Description::systemArgs componentArrays;
 
-            for (const auto &component: description.arguments) {
+            for (const auto &component: description.components) {
                 auto index = m_componentManager->GetComponentId(component).value();
                 componentArrays.push_back(m_componentManager->GetComponentArray(index).value());
             }

@@ -19,13 +19,14 @@ void tickSystem(const systems::Description::availableEntities &e,
                                const systems::Description &description,
                                const systems::Description::systemArgs &entities, const event::Event &event)
 {
-    std::cout << "I'm a system:\n";
+    std::cout << "I'm a tick system:\n";
     auto &tagArray = entities[1].get();
-    tagArray.getValueForEntity(0).has_value();
-    auto tag = tagArray.getValueForEntity(0).value();
-    std::cout << std::get<std::string>(std::get<Record>(tag).at("name")) << std::endl;
-    std::get<std::string>(std::get<Record>(tag).at("name")) = "edit";
-    tagArray.setValueForEntity(0, tag);
+    for (const auto &entity: e) {
+        auto tag = tagArray.getValueForEntity(entity).value();
+        std::cout << std::get<std::string>(std::get<Record>(tag).at("name")) << std::endl;
+        std::get<std::string>(std::get<Record>(tag).at("name")) = "edit";
+        tagArray.setValueForEntity(entity, tag);
+    }
 }
 
 TEST_CASE("Manager event", "[description][registration][manager]")

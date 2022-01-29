@@ -20,12 +20,6 @@ public:
 
     std::optional<Description> getDescription(const std::string &systemName) const;
 
-    std::optional<std::function<void(component::Manager &, EntityManager &)>>
-    getSystemByName(const std::string &systemName);
-
-    std::optional<std::function<void(component::Manager &, EntityManager &)>>
-    getSystemByDescription(const Description &description);
-
     using const_iterator = std::map<std::string, Description>::const_iterator;
     const_iterator begin() const;
     const_iterator end() const;
@@ -40,7 +34,6 @@ public:
 
 private:
     std::map<std::string, Description> m_descriptionByName;
-    std::map<std::string, std::function<void(component::Manager &, EntityManager &)>> m_systemsByName;
 };
 
 class GlobalIndex : private Index
@@ -49,12 +42,6 @@ public:
     void registerSystem(const Description &description);
 
     std::optional<Description> getDescription(const std::string &componentName);
-
-    std::optional<std::function<void(component::Manager &, EntityManager &)>>
-    getSystemByName(const std::string &systemName);
-
-    std::optional<std::function<void(component::Manager &, EntityManager &)>>
-    getSystemByDescription(const Description &description);
     
     Index::const_iterator begin();
     Index::const_iterator end();

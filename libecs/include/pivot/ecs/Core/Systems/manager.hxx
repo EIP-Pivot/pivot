@@ -16,14 +16,20 @@ namespace pivot::ecs::systems
 class Manager
 {
 public:
-    bool useSystem(const Description &description);
+    Manager(std::unique_ptr<component::Manager> &componentManager, std::unique_ptr<EntityManager> &entityManager)
+        : m_componentManager(componentManager), m_entityManager(entityManager) {};
+    
     bool useSystem(const std::string &systemName);
+    bool useSystem(const Description &description);
 
-    void execute(component::Manager &componentManager, EntityManager &entityManager);
+    void execute(const event::Event &event);
 
     std::vector<std::string> getSystemUsed();
 private:
-    std::unordered_map<std::string, std::function<void(component::Manager &, EntityManager &)>> m_systems;
+    bool hasAllComponents(Entity entity, const Description::systemArgs &componentArrays);
+    std::unique_ptr<component::Manager> &m_componentManager;
+    std::unique_ptr<EntityManager> &m_entityManager;
+    std::unordered_map<std::string, Description> m_systems;
 };
 
 }    // namespace pivot::ecs::systems

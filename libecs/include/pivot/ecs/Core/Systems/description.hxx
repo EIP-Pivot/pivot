@@ -19,11 +19,13 @@ struct Description {
 
     using systemArgs = std::vector<std::reference_wrapper<component::IComponentArray>>;
 
-    using availableEntities = std::unordered_map<Entity, Signature>;
+    using availableEntities = std::vector<Entity>;
 
     std::string name;
 
     std::vector<std::string> arguments;
+
+    event::Description eventListener;
 
     std::function<void(const availableEntities &, const Description &, const systemArgs &, const event::Event &)> system;
 

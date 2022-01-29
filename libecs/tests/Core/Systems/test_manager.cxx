@@ -25,7 +25,10 @@ void test_manager_registration(const systems::Description::availableEntities &e,
 
 TEST_CASE("Manager register system", "[description][registration][manager]")
 {
-    component::Manager cManager;
+    std::unique_ptr<component::Manager> cManager = std::make_unique<component::Manager>();
+    std::unique_ptr<EntityManager> eManager = std::make_unique<EntityManager>();
+    systems::Manager manager(cManager, eManager);
+
     component::Description tag =
         component::GlobalIndex::getSingleton().getDescription("Tag").value();
     component::Description rigid =
@@ -33,18 +36,21 @@ TEST_CASE("Manager register system", "[description][registration][manager]")
     component::Description grav =
         component::GlobalIndex::getSingleton().getDescription("Gravity").value();
 
-    component::Manager::ComponentId tagId = cManager.RegisterComponent(tag);
-    component::Manager::ComponentId rigidId = cManager.RegisterComponent(rigid);
-    component::Manager::ComponentId gravId = cManager.RegisterComponent(grav);
+    component::Manager::ComponentId tagId = cManager->RegisterComponent(tag);
+    component::Manager::ComponentId rigidId = cManager->RegisterComponent(rigid);
+    component::Manager::ComponentId gravId = cManager->RegisterComponent(grav);
 
-    EntityManager eManager;
-    Entity entity = eManager.CreateEntity();
-    cManager.AddComponent(entity, Value{Record{{"name", "oui"}}}, tagId);
-    cManager.AddComponent(entity, Value{Record{{"velocity", glm::vec3(0.0f)}, {"acceleration", glm::vec3(0.0f)}}},
+    Entity entity = eManager->CreateEntity();
+    cManager->AddComponent(entity, Value{Record{{"name", "oui"}}}, tagId);
+    cManager->AddComponent(entity, Value{Record{{"velocity", glm::vec3(0.0f)}, {"acceleration", glm::vec3(0.0f)}}},
                           rigidId);
-    cManager.AddComponent(entity, Value{Record{{"force", glm::vec3(0.0f)}}}, gravId);
+    cManager->AddComponent(entity, Value{Record{{"force", glm::vec3(0.0f)}}}, gravId);
 
-    systems::Manager manager;
+    event::Description eventDescription {
+        .name = "Tick",
+        .entities = {},
+        .payload = pivot::ecs::data::BasicType::Number,
+    };
     systems::Description description{
         .name = "Manager",
         .arguments =
@@ -52,10 +58,17 @@ TEST_CASE("Manager register system", "[description][registration][manager]")
                 "RigidBody",
                 "Tag",
             },
+        .eventListener = eventDescription,
         .system = &test_manager_registration,
     };
     systems::GlobalIndex::getSingleton().registerSystem(description);
     manager.useSystem(description);
-    manager.execute(cManager, eManager);
-    manager.execute(cManager, eManager);
+
+    event::Event event {
+        .description = eventDescription,
+        .entities = {},
+        .payload = data::Value{1},
+    };
+    manager.execute(event);
+    manager.execute(event);
 }

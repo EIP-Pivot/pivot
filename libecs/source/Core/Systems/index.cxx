@@ -13,20 +13,6 @@ void Index::registerSystem(const Description &description)
     if (m_descriptionByName.contains(description.name)) { throw DuplicateError(description.name); }
 
     m_descriptionByName.insert({description.name, description});
-
-    m_systemsByName.insert(
-        {description.name, [description](component::Manager &componentManager, EntityManager &entityManager) {
-             Description::systemArgs componentArray;
-
-             for (const auto &component: description.arguments) {
-                 auto index = componentManager.GetComponentId(component).value();
-                 componentArray.push_back(componentManager.GetComponentArray(index).value());
-             }
-             event::Event event{
-                 .payload = data::Value{1},
-             };
-             description.system(entityManager.getEntities(), description, componentArray, event);
-         }});
 }
 
 std::optional<Description> Index::getDescription(const std::string &systemName) const
@@ -37,23 +23,6 @@ std::optional<Description> Index::getDescription(const std::string &systemName) 
     } else {
         return std::make_optional(it->second);
     }
-}
-
-std::optional<std::function<void(component::Manager &, EntityManager &)>>
-Index::getSystemByName(const std::string &systemName)
-{
-    auto it = m_systemsByName.find(systemName);
-    if (it == m_systemsByName.end()) {
-        return std::nullopt;
-    } else {
-        return std::make_optional(std::ref(it->second));
-    }
-}
-
-std::optional<std::function<void(component::Manager &, EntityManager &)>>
-Index::getSystemByDescription(const Description &description)
-{
-    return getSystemByName(description.name);
 }
 
 std::vector<std::string> Index::getAllSystemsNames() const
@@ -79,19 +48,6 @@ std::optional<Description> GlobalIndex::getDescription(const std::string &compon
 {
     this->lockReadOnly();
     return this->Index::getDescription(componentName);
-}
-
-std::optional<std::function<void(component::Manager &, EntityManager &)>>
-GlobalIndex::getSystemByName(const std::string &systemName)
-{
-    this->lockReadOnly();
-    return this->Index::getSystemByName(systemName);
-}
-std::optional<std::function<void(component::Manager &, EntityManager &)>>
-GlobalIndex::getSystemByDescription(const Description &description)
-{
-    this->lockReadOnly();
-    return this->Index::getSystemByDescription(description);
 }
 
 std::vector<std::string> GlobalIndex::getAllSystemsNames()

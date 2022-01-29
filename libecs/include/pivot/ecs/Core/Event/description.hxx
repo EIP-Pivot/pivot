@@ -2,6 +2,7 @@
 
 #include "pivot/ecs/Core/Data/type.hxx"
 #include "pivot/ecs/Core/Data/value.hxx"
+#include "pivot/ecs/Core/types.hxx"
 #include <string>
 #include <vector>
 
@@ -25,9 +26,10 @@ namespace pivot::ecs::event
         };
     };
 
-    using Entities = std::vector<std::vector<data::Value>>;
+    using Entities = std::vector<Entity>;
 
     struct Event {
+        Description description;
         Entities entities;
         data::Value payload;
     };

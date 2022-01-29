@@ -27,7 +27,6 @@ void Manager::execute(const event::Description &eventDescription, const data::Va
             Description::systemArgs componentArrays;
             for (const auto index: getComponentsId(description.systemComponents))
                 componentArrays.push_back(m_componentManager->GetComponentArray(index).value());
-            std::cout << description.eventComponents.size() << std::endl;
             if (entities.size() != description.eventComponents.size())
                 throw std::logic_error("This system expect " + std::to_string(description.eventComponents.size()) + " entity.");
             std::vector<std::vector<data::Value>> entitiesComponents;

@@ -20,6 +20,7 @@ void test_manager_registration(const systems::Description &description,
     std::cout << std::get<std::string>(std::get<Record>(tag).at("name")) << std::endl;
     std::get<std::string>(std::get<Record>(tag).at("name")) = "edit";
     tagArray.setValueForEntity(0, tag);
+    std::cout << event.payload.type() << std::endl;
     for (const auto &enitity: event.entities)
         for (const auto &value: enitity)
             std::cout << value.type() << std::endl;

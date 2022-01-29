@@ -69,6 +69,6 @@ TEST_CASE("Manager event", "[description][registration][manager]")
     systems::GlobalIndex::getSingleton().registerSystem(description);
     sManager->useSystem(description);
 
-    eventManager.sendEvent("Tick", Value{1});
-    eventManager.sendEvent("Tick", Value{1});
+    eventManager.sendEvent("Tick", Value{0.0f});
+    eventManager.sendEvent("Tick", Value{0.0f});
 }

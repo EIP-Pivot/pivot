@@ -8,7 +8,7 @@
 
 using namespace pivot::ecs;
 
-void test_description(const systems::Description::availableEntities &, const systems::Description &,
+void test_description(const systems::Description &,
                       const systems::Description::systemArgs &, const event::Event &)
 {
 }
@@ -17,7 +17,7 @@ TEST_CASE("valid system description", "[description]")
 {
     systems::Description description {
         .name = "Test Description",
-        .components = {
+        .systemComponents = {
             "RigidBody",
             "Tag",
         },
@@ -44,7 +44,7 @@ TEST_CASE("Invalid args system description", "[description]")
 {
     systems::Description description{
         .name = "Invalid",
-        .components = {"NOT REGISTERED"},
+        .systemComponents = {"NOT REGISTERED"},
     };
     REQUIRE_THROWS_WITH(description.validate(), Catch::Matchers::Contains("Component ") && Catch::Matchers::Contains(" his not registered."));
 }

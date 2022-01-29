@@ -19,15 +19,15 @@ struct Description {
 
     using systemArgs = std::vector<std::reference_wrapper<component::IComponentArray>>;
 
-    using availableEntities = std::vector<Entity>;
-
     std::string name;
 
-    std::vector<std::string> components;
+    std::vector<std::string> systemComponents;
 
     event::Description eventListener;
 
-    std::function<void(const availableEntities &, const Description &, const systemArgs &, const event::Event &)> system;
+    std::vector<std::vector<std::string>> eventComponents;
+
+    std::function<void(const Description &, const systemArgs &, const event::Event &)> system;
 
     void validate() const;
 

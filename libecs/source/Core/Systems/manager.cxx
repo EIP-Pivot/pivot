@@ -19,23 +19,30 @@ bool Manager::useSystem(const Description &description)
     return true;
 }
 
-void Manager::execute(const event::Event &event)
+void Manager::execute(const event::Description &eventDescription, const data::Value &payload, const std::vector<Entity> &entities)
 {
     for (const auto &[name, description]: m_systems) {
-        if (event.description.name == description.eventListener.name) {
+        if (eventDescription.name == description.eventListener.name) {
+
             Description::systemArgs componentArrays;
-
-            for (const auto &component: description.components) {
-                auto index = m_componentManager->GetComponentId(component).value();
+            for (const auto index: getComponentsId(description.systemComponents))
                 componentArrays.push_back(m_componentManager->GetComponentArray(index).value());
+            std::cout << description.eventComponents.size() << std::endl;
+            if (entities.size() != description.eventComponents.size())
+                throw std::logic_error("This system expect " + std::to_string(description.eventComponents.size()) + " entity.");
+            std::vector<std::vector<data::Value>> entitiesComponents;
+            for (std::size_t i = 0; i < entities.size(); i++) {
+                std::vector<data::Value> entityComponents;
+                for (const auto index: getComponentsId(description.eventComponents[i]))
+                    entityComponents.push_back(m_componentManager->GetComponent(entities[i], index).value());
+                entitiesComponents.push_back(entityComponents);
             }
-
-            Description::availableEntities a;
-            for (const auto &[entity, _]: m_entityManager->getEntities()) {
-                if (hasAllComponents(entity, componentArrays))
-                    a.push_back(entity);
-            }
-            description.system(a, description, componentArrays, event);
+            event::Event event{
+                .description = eventDescription,
+                .entities = entitiesComponents,
+                .payload = payload,
+            };
+            description.system(description, componentArrays, event);
         }
     }
 }
@@ -47,14 +54,13 @@ std::vector<std::string> Manager::getSystemUsed()
     return systems;
 }
 
-bool Manager::hasAllComponents(Entity entity, const Description::systemArgs &componentArrays)
+std::vector<component::Manager::ComponentId> Manager::getComponentsId(const std::vector<std::string> &components)
 {
-    for (const auto &componentArray: componentArrays) {
-        auto &array = componentArray.get();
-        if (!array.getValueForEntity(entity).has_value())
-            return false;
-    }
-    return true;
+    std::vector<component::Manager::ComponentId> componentsId;
+
+    for (const auto &component: components)
+        componentsId.push_back(m_componentManager->GetComponentId(component).value());
+    return componentsId;
 }
 
 }    // namespace pivot::ecs::systems

@@ -81,9 +81,6 @@ public:
 
     // System methods
 
-    /// Update used systems
-    void Update(float dt);
-
     /// Get the system manager
     pivot::ecs::systems::Manager &getSystemManager();
 

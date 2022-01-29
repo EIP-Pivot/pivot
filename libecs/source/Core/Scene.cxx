@@ -5,11 +5,10 @@ using namespace pivot::ecs;
 
 Scene::Scene(std::string sceneName)
     : name(sceneName),
-
       mComponentManager(std::make_unique<component::Manager>()),
       mEntityManager(std::make_unique<EntityManager>()),
       mEventManager(std::make_unique<EventManager>()),
-      mSystemManager(std::make_unique<systems::Manager>()),
+      mSystemManager(std::make_unique<systems::Manager>(mComponentManager, mEntityManager)),
       mCurrentCamera(0)
 {
     auto &global_index = component::GlobalIndex::getSingleton();
@@ -52,13 +51,6 @@ std::string Scene::getEntityName(Entity entity)
 }
 
 uint32_t Scene::getLivingEntityCount() { return mEntityManager->getLivingEntityCount(); }
-
-// std::unordered_map<const char *, ComponentType> Scene::getComponentsTypes()
-// {
-//     return mComponentManager->getComponentsTypes();
-// }
-
-void Scene::Update(float dt) { this->mSystemManager->execute(*this->mComponentManager.get(), *this->mEntityManager.get()); }
 
 void Scene::AddEventListener(EventId eventId, std::function<void(Event &)> const &listener)
 {

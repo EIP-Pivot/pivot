@@ -43,6 +43,7 @@ add_library(${PROJECT_NAME} source/Systems/ControlSystem.cxx
                             source/Core/Component/description.cxx
                             source/Core/Component/index.cxx
                             source/Core/Component/manager.cxx
+                            source/Core/Component/ref.cxx
                             source/Core/Data/value.cxx
                             source/Core/Data/type.cxx
                             source/Components/TagArray.cxx

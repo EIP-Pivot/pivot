@@ -17,8 +17,8 @@ public:
     Manager(std::unique_ptr<systems::Manager> &systemManager): m_systemManager(systemManager){};
     void registerEvent(const Description &description);
 
-    void sendEvent(const std::string &eventName, const data::Value &value, const Entities &entities = {});
-    void sendEvent(const Description &description, const data::Value &value, const Entities &entities = {});
+    void sendEvent(const std::string &eventName, const data::Value &value, const std::vector<Entity> &entities = {});
+    void sendEvent(const Description &description, const data::Value &value, const std::vector<Entity> &entities = {});
 
 private:
     std::unique_ptr<systems::Manager> &m_systemManager;

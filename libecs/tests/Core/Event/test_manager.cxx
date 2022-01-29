@@ -1,11 +1,13 @@
 #include "pivot/ecs/Core/EntityManager.hxx"
 
-#include "pivot/ecs/Core/Event/manager.hxx"
 #include "pivot/ecs/Core/Event/description.hxx"
 #include "pivot/ecs/Core/Event/index.hxx"
+#include "pivot/ecs/Core/Event/manager.hxx"
 
-#include "pivot/ecs/Core/Systems/manager.hxx"
+
 #include "pivot/ecs/Core/Systems/description.hxx"
+#include "pivot/ecs/Core/Systems/manager.hxx"
+
 
 #include "pivot/ecs/Core/Data/value.hxx"
 #include "pivot/ecs/Core/Scene.hxx"
@@ -15,18 +17,15 @@
 using namespace pivot::ecs;
 using namespace pivot::ecs::data;
 
-void tickSystem(const systems::Description::availableEntities &e,
-                               const systems::Description &description,
-                               const systems::Description::systemArgs &entities, const event::Event &event)
+void tickSystem(const systems::Description &description, const systems::Description::systemArgs &entities,
+                const event::Event &event)
 {
     std::cout << "I'm a tick system:\n";
     auto &tagArray = entities[1].get();
-    for (const auto &entity: e) {
-        auto tag = tagArray.getValueForEntity(entity).value();
-        std::cout << std::get<std::string>(std::get<Record>(tag).at("name")) << std::endl;
-        std::get<std::string>(std::get<Record>(tag).at("name")) = "edit";
-        tagArray.setValueForEntity(entity, tag);
-    }
+    auto tag = tagArray.getValueForEntity(0).value();
+    std::cout << std::get<std::string>(std::get<Record>(tag).at("name")) << std::endl;
+    std::get<std::string>(std::get<Record>(tag).at("name")) = "edit";
+    tagArray.setValueForEntity(0, tag);
 }
 
 TEST_CASE("Manager event", "[description][registration][manager]")
@@ -50,7 +49,6 @@ TEST_CASE("Manager event", "[description][registration][manager]")
                            rigidId);
     cManager->AddComponent(entity, Value{Record{{"force", glm::vec3(0.0f)}}}, gravId);
 
-
     event::Description eventDescription{
         .name = "Tick",
         .entities = {},
@@ -60,7 +58,7 @@ TEST_CASE("Manager event", "[description][registration][manager]")
 
     systems::Description description{
         .name = "tickSystem",
-        .components =
+        .systemComponents =
             {
                 "RigidBody",
                 "Tag",

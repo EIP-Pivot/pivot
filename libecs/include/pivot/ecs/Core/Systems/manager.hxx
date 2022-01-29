@@ -22,11 +22,11 @@ public:
     bool useSystem(const std::string &systemName);
     bool useSystem(const Description &description);
 
-    void execute(const event::Event &event);
+    void execute(const event::Description &eventDescription, const data::Value &payload, const std::vector<Entity> &entities = {});
 
     std::vector<std::string> getSystemUsed();
 private:
-    bool hasAllComponents(Entity entity, const Description::systemArgs &componentArrays);
+    std::vector<component::Manager::ComponentId> getComponentsId(const std::vector<std::string> &components);
     std::unique_ptr<component::Manager> &m_componentManager;
     std::unique_ptr<EntityManager> &m_entityManager;
     std::unordered_map<std::string, Description> m_systems;

@@ -4,9 +4,16 @@
 
 namespace pivot::ecs::component
 {
+
+/** \brief A reference to a component of an entity
+ *
+ * This class wraps an entity and a component array to allow retrieving and
+ * modifying the value of the component as if it was a normal reference.
+ */
 class ComponentRef
 {
 public:
+    /// Basic ComponentRef constructor
     ComponentRef(IComponentArray &array, Entity entity): m_array(array), m_entity(entity) {}
 
     /// Throws MissingComponent error if the component has no value
@@ -23,9 +30,13 @@ public:
 
     /// Error thrown when a component ref not refering to an existing compoent is dereference
     struct MissingComponent : std::logic_error {
+        /// Creates a MissingComponent error
         MissingComponent(const Description &component, Entity entity);
 
+        /// The component that was not found
         const Description &component;
+
+        /// The entity on which the component was not found
         Entity entity;
     };
 

@@ -23,7 +23,7 @@ void tickSystem(const systems::Description &description, const systems::Descript
     std::cout << "I'm a tick system:\n";
     auto &tagArray = entities[1].get();
     auto tag = tagArray.getValueForEntity(0).value();
-    std::cout << std::get<std::string>(std::get<Record>(tag).at("name")) << std::endl;
+    std::cout << "\tComponent Tag.name = " << std::get<std::string>(std::get<Record>(tag).at("name")) << std::endl;
     std::get<std::string>(std::get<Record>(tag).at("name")) = "edit";
     tagArray.setValueForEntity(0, tag);
 }
@@ -49,12 +49,7 @@ TEST_CASE("Manager event", "[description][registration][manager]")
                            rigidId);
     cManager->AddComponent(entity, Value{Record{{"force", glm::vec3(0.0f)}}}, gravId);
 
-    event::Description eventDescription{
-        .name = "Tick",
-        .entities = {},
-        .payload = pivot::ecs::data::BasicType::Number,
-    };
-    event::GlobalIndex::getSingleton().registerEvent(eventDescription);
+    auto eventDescription = event::GlobalIndex::getSingleton().getDescription("Tick").value();
 
     systems::Description description{
         .name = "tickSystem",

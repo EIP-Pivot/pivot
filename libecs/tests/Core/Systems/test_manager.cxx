@@ -17,13 +17,14 @@ void test_manager_registration(const systems::Description &description,
     std::cout << "I'm a tick system:\n";
     auto &tagArray = entities[1].get();
     auto tag = tagArray.getValueForEntity(0).value();
-    std::cout << std::get<std::string>(std::get<Record>(tag).at("name")) << std::endl;
+    std::cout << "\tComponent Tag.name = " << std::get<std::string>(std::get<Record>(tag).at("name")) << std::endl;
     std::get<std::string>(std::get<Record>(tag).at("name")) = "edit";
     tagArray.setValueForEntity(0, tag);
-    std::cout << event.payload.type() << std::endl;
+    std::cout << "\tPayload type = " << event.payload.type() << std::endl;
     for (const auto &enitity: event.entities)
-        for (const auto &value: enitity)
-            std::cout << value.type() << std::endl;
+        for (const auto &value: enitity){
+            std::cout << "\tEvent entity component = " << ((Value)value).type() << std::endl;
+        }
 }
 
 TEST_CASE("Manager register system", "[description][registration][manager]")
@@ -65,7 +66,7 @@ TEST_CASE("Manager register system", "[description][registration][manager]")
         .entities = {
             {"Oui"}
         },
-        .payload = pivot::ecs::data::BasicType::Number,
+        .payload = BasicType::Number,
     };
     systems::Description description{
         .name = "Manager",
@@ -76,13 +77,13 @@ TEST_CASE("Manager register system", "[description][registration][manager]")
             },
         .eventListener = eventDescription,
         .eventComponents = {
-            {"RigidBody"}
+            {"Tag"}
         },
         .system = &test_manager_registration,
     };
     systems::GlobalIndex::getSingleton().registerSystem(description);
     manager.useSystem(description);
 
-    manager.execute(eventDescription, data::Value{1}, {0});
-    manager.execute(eventDescription, data::Value{1}, {1});
+    manager.execute(eventDescription, Value{1}, {0});
+    manager.execute(eventDescription, Value{1}, {1});
 }

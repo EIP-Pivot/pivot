@@ -1,17 +1,23 @@
 #ifndef __SCRIPTING__TYPES__
 #define __SCRIPTING__TYPES__
 
+#include "pivot/ecs/Core/Systems/description.hxx"
+#include "pivot/ecs/Core/Component/description.hxx"
+#include "pivot/ecs/Core/Component/ScriptingComponentArray.hxx"
+
 // TODO : replace these by the actual components and descriptions
 
-struct Property {
-	std::string name;
-	std::string type;
-};
+// struct Property {
+// 	std::string name;
+// 	std::string type;
+// };
 
-struct ComponentDescription {
-	std::string name;
-	std::vector<Property> properties;
-};
+// struct ComponentDescription {
+// 	std::string name;
+// 	std::vector<Property> properties;
+// };
+
+using ComponentDescription = pivot::ecs::component::Description;
 
 struct SystemDescription {
 	std::string name;
@@ -19,7 +25,7 @@ struct SystemDescription {
 };
 
 struct LoadResult {
-	std::vector<ComponentDescription> components;
+	std::vector<pivot::ecs::component::Description> components;
 	std::vector<SystemDescription> systems;
 	std::string output;
 };

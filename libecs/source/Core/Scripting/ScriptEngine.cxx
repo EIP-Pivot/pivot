@@ -1,10 +1,20 @@
 #include "pivot/ecs/Core/Scripting/ScriptEngine.hxx"
 
+using namespace pivot::ecs;
+
+// static std::map<std::string, data::BasicType> variableTypes {
+// 	{"Vector3", data::BasicType::Vec3},
+// 	{"Number", data::BasicType::Number},
+// 	{"Boolean", data::BasicType::Boolean},
+// 	{"String", data::BasicType::String}
+// };
+
+
 static const std::vector<std::string> variableTypes {
 	"Vector3",
 	"Number",
 	"Boolean",
-	"Color"
+	"String"
 };
 
 static const std::vector<std::string> blockOperators {
@@ -12,13 +22,16 @@ static const std::vector<std::string> blockOperators {
 	"while",
 };
 
+
 ScriptEngine::ScriptEngine()
+:	_phComponent ( {"", data::BasicType::String, arrayFunctor})
 {
 	_currentLine = 0;
 	_fileIndent = Indent{NOINDENT, 0};
 	_fileIndentSet = false;
 	_currentState = START;
 	_currentIndent = 0;
+	// _phComponent.createContainer = arrayFunctor;
 }
 
 ScriptEngine::~ScriptEngine() {
@@ -55,7 +68,7 @@ try {
 	if (_currentState == PROPERTY_DECL)
 		result.components.push_back(_phComponent);
 	_systems = result.systems;
-	_components = result.components;
+	// _components = result.components;
 }
 catch (BadIndentException e) {
 	result.output = std::string("\n") + e.what() + ":\t" + fileName + "\n\tline " + std::to_string(e.get_line_nb()) + ":\t" + e.get_line() + "\nIndentError: " + e.get_info() + "\n";
@@ -124,14 +137,14 @@ void ScriptEngine::executeSystem(const std::string &systemName, std::vector<std:
 				.type = "Struct",
 				.value = nullptr
 			};
-			for (Property p : description.properties) {
-				Variable vv {
-					.name = p.name,
-					.type = p.type,
-					.value = getField(component, description.name, p.name)
-				};
-				v.fields.push_back(vv);
-			}
+			// for (Property p : description.properties) {
+			// 	Variable vv {
+			// 		.name = p.name,
+			// 		.type = p.type,
+			// 		.value = getField(component, description.name, p.name)
+			// 	};
+			// 	v.fields.push_back(vv);
+			// }
 			_variables.push_back(v);
 		}
 		else if (description.name == "Velocity") {
@@ -141,14 +154,14 @@ void ScriptEngine::executeSystem(const std::string &systemName, std::vector<std:
 				.type = "Struct",
 				.value = nullptr
 			};
-			for (Property p : description.properties) {
-				Variable vv {
-					.name = p.name,
-					.type = p.type,
-					.value = getField(component, description.name, p.name)
-				};
-				v.fields.push_back(vv);
-			}
+			// for (Property p : description.properties) {
+			// 	Variable vv {
+			// 		.name = p.name,
+			// 		.type = p.type,
+			// 		.value = getField(component, description.name, p.name)
+			// 	};
+			// 	v.fields.push_back(vv);
+			// }
 			_variables.push_back(v);
 		}
 		else
@@ -266,7 +279,7 @@ void ScriptEngine::totalReset() {
 	softReset();
 	_systems.clear();
 	_systemsInstructions.clear();
-	_components.clear();
+	// _components.clear();
 	_variables.clear();
 }
 
@@ -278,13 +291,6 @@ void ScriptEngine::softReset() {
 	_fileIndentSet = false;
 	_currentIndent = 0;
 	_currentState = START;
-	_phComponent.name = "";
-	_phComponent.properties.clear();
-	_phSystem.name = "";
-	_phSystem.inputComponents.clear();
-	_phProperty.name = "";
-	_phProperty.type = "";
-	_phInstructions.clear();
 }
 
 
@@ -363,9 +369,12 @@ bool ScriptEngine::handleStart() {
 	return true;
 }
 bool ScriptEngine::handleComponentDecl(LoadResult &result) {
+	int data = 0;
 	if (_currentState == PROPERTY_DECL) {
 		result.components.push_back(_phComponent);
-		_phComponent.properties.clear();
+		try {
+			std::get<data::RecordType>(_phComponent.type).clear();
+		} catch (std::bad_variant_access e) {}
 	}
 	if (_currentState == INSTRUCTION) {
 		result.systems.push_back(_phSystem);
@@ -384,7 +393,9 @@ bool ScriptEngine::handleComponentDecl(LoadResult &result) {
 bool ScriptEngine::handleSystemDecl(LoadResult &result) {
 	if (_currentState == PROPERTY_DECL) {
 		result.components.push_back(_phComponent);
-		_phComponent.properties.clear();
+		try {
+			std::get<data::RecordType>(_phComponent.type).clear();
+		} catch (std::bad_variant_access e) {}
 	}
 	if (_currentState == INSTRUCTION) {
 		result.systems.push_back(_phSystem);
@@ -408,9 +419,13 @@ bool ScriptEngine::handlePropertyDecl() {
 	std::vector<std::string> keyWords = split(_line, " \t");
 	if (keyWords.size() != 2) // TODO: handle one line declaration of components
 		throw InvalidSyntaxException("ERROR", _line.data(), _currentLine, "Invalid property declaration. Try declaring it like this : 'propertyType propertyName' ex. 'Vector3 position'.");
-	_phProperty.type = keyWords[0];
-	_phProperty.name = keyWords[1];
-	_phComponent.properties.push_back(_phProperty);
+	try {
+		// std::get<data::RecordType>(_phComponent.type)[keyWords[1]] = variableTypes[keyWords[0]];
+	} catch (std::bad_variant_access e) {
+	} catch (...) {}
+	// _phProperty.type = keyWords[0];
+	// _phProperty.name = keyWords[1];
+	// _phComponent.properties.push_back(_phProperty);
 	return true;
 }
 bool ScriptEngine::handleInstructionDecl() {
@@ -587,4 +602,8 @@ Indent ScriptEngine::getIndent(const std::string &line) {
 			break ;
 	}
 	return r;
+}
+
+std::unique_ptr<pivot::ecs::component::IComponentArray> arrayFunctor(pivot::ecs::component::Description description) {
+	return std::make_unique<component::ScriptingComponentArray>(description);
 }

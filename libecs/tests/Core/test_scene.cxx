@@ -45,7 +45,7 @@ TEST_CASE("A scene can register components and add entities", "[component][scene
     auto test_component_id = cm.GetComponentId("TestComponent").value();
 
     const auto entityName = "Test entity";
-    Entity entity;
+    Entity entity = 0;
     REQUIRE_NOTHROW(entity = scene.CreateEntity(entityName));
     REQUIRE(scene.getEntityName(entity) == entityName);
 

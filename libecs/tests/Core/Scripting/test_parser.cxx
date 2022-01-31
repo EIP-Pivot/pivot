@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-TEST_CASE("parser") {
+TEST_CASE("Scripting-parser") {
 	std::cout << "--------- Start Parser tests --------" << std::endl;
 	std::vector<std::pair<std::string, std::string>> testFilesOutput = {
 		{ "../libecs/tests/Core/Scripting/tests/invalid/component/invalid_component1.pvt",
@@ -23,6 +23,8 @@ TEST_CASE("parser") {
 	ScriptEngine engine;
 	for (auto [file, output] : testFilesOutput) {
 		LoadResult r = engine.loadFile(file, false);
+		for (auto c : r.components)
+			std::cout << "name:'" << c.name << "'" << std::endl;
 		if (output != r.output) {
 			std::cout << "--------------------------------" << std::endl;
 			std::cout << output << std::endl;
@@ -46,5 +48,6 @@ Description qui contient un any de ce type
 et les fonctions pour le lire et le changer
 
 push ces descriptions dans le global index
+
 */
 

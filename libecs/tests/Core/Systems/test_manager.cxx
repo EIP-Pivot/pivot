@@ -88,3 +88,4 @@ TEST_CASE("Manager register system", "[description][registration][manager]")
     manager.execute(eventDescription, Value{1}, {0});
     manager.execute(eventDescription, Value{1}, {1});
 }
+

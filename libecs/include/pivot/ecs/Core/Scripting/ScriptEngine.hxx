@@ -28,14 +28,18 @@ struct Variable {
 };
 
 class ScriptEngine {
+
 public:
 	ScriptEngine();
 	~ScriptEngine();
 	LoadResult loadFile(const std::string &fileName, bool verbose);
 	void executeSystem(const std::string &systemName, std::vector<std::vector<std::pair<ComponentDescription, std::any>>> &entities);
 
+	void executeSystemNew(const pivot::ecs::systems::Description &toExec, const std::vector<std::vector<pivot::ecs::data::Value>> &components, const pivot::ecs::event::Event &event);
+
 	void totalReset(); // This is to reset the entire file (for tests notably)
 	void softReset(); // This is to reset the data needed to read files but not the already registered data
+
 protected:
 
 	void executeSystem(const std::string &systemName, std::vector<std::pair<ComponentDescription, std::any>> &entity, size_t entityId);
@@ -76,16 +80,17 @@ protected:
 	State _currentState;
 	ComponentDescription _phComponent;
 	SystemDescription _phSystem;
-	Property _phProperty;
 	std::vector<std::string> _phInstructions;
 
 	std::vector<SystemDescription> _systems;
 	std::vector<std::vector<std::string>> _systemsInstructions;
-	std::vector<ComponentDescription> _components;
+	// std::vector<ComponentDescription> _components;
 
 	std::vector<Variable> _variables;
 };
 
 std::vector<std::string> split(const std::string& str, const std::string& delim);
+std::unique_ptr<pivot::ecs::component::IComponentArray> arrayFunctor(pivot::ecs::component::Description description);
+
 
 #endif

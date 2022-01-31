@@ -21,7 +21,7 @@ const std::unordered_map<std::string, bool (AssetStorage::*)(const std::filesyst
         {".gltf", &AssetStorage::loadGltfModel},
 };
 
-AssetStorage::AssetStorage(VulkanBase &base): base_ref(base) {}
+AssetStorage::AssetStorage(VulkanBase &base): base_ref(base) { cpuStorage.materialStaging.add("white", {}); }
 
 AssetStorage::~AssetStorage() {}
 

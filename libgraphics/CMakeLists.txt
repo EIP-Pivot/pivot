@@ -44,6 +44,7 @@ if (NOT tinygltf_POPULATED)
     set(TINYGLTF_BUILD_LOADER_EXAMPLE OFF CACHE INTERNAL "" FORCE)
     set(TINYGLTF_INSTALL OFF CACHE INTERNAL "" FORCE)
     add_subdirectory(${tinygltf_SOURCE_DIR} ${tinygltf_SOURCE_DIR})
+    target_compile_definitions(tinygltf PUBLIC TINYGLTF_NO_STB_IMAGE_WRITE TINYGLTF_NO_INCLUDE_RAPIDJSON)
 endif()
 
 FetchContent_Declare(
@@ -92,7 +93,6 @@ if (NOT tinyobjloader_POPULATED)
     message(STATUS "Populating tinyobjloader")
     FetchContent_Populate(tinyobjloader)
     add_subdirectory(${tinyobjloader_SOURCE_DIR} ${tinyobjloader_BINARY_DIR})
-    set(TINYOBJLOADER_USE_DOUBLE ON)
 endif()
 
 FetchContent_Declare(

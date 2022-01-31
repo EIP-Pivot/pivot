@@ -14,7 +14,6 @@
 #include <optional>
 #include <span>
 #include <string>
-#include <tiny_obj_loader.h>
 #include <unordered_map>
 #include <utility>
 #include <variant>

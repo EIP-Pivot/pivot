@@ -2,6 +2,7 @@
 
 #include "pivot/graphics/DebugMacros.hxx"
 
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <ktx.h>
 #include <ktxvulkan.h>
@@ -10,12 +11,26 @@
 static bool loadImageDataFunc(tinygltf::Image *image, const int imageIndex, std::string *error, std::string *warning,
                               int req_width, int req_height, const unsigned char *bytes, int size, void *userData)
 {
-    // KTX files will be handled by our own code
     if (image->uri.find_last_of(".") != std::string::npos) {
         if (image->uri.substr(image->uri.find_last_of(".") + 1) == "ktx") { return true; }
     }
 
     return tinygltf::LoadImageData(image, imageIndex, error, warning, req_width, req_height, bytes, size, userData);
+}
+
+static std::pair<const float *const, const tinygltf::Accessor &>
+getGltfBuffer(const tinygltf::Model &model, const tinygltf::Primitive &primitive, const std::string &name)
+{
+    auto iter = primitive.attributes.find(name);
+    if (iter != primitive.attributes.end()) {
+        const tinygltf::Accessor &accessor = model.accessors.at(iter->second);
+        const tinygltf::BufferView &view = model.bufferViews.at(accessor.bufferView);
+        assert(view.byteStride == 0);
+        return {reinterpret_cast<const float *>(
+                    &(model.buffers.at(view.buffer).data.at(accessor.byteOffset + view.byteOffset))),
+                accessor};
+    }
+    return {nullptr, {}};
 }
 
 namespace pivot::graphics
@@ -26,6 +41,7 @@ static std::vector<std::pair<std::string, AssetStorage::Model>> loadGltfNode(con
                                                                              std::vector<Vertex> &vertexBuffer,
                                                                              std::vector<uint32_t> &indexBuffer)
 {
+    logger.info("AssetStorage/Gltf") << "Loading node: " << node.name;
     std::vector<std::pair<std::string, AssetStorage::Model>> loaded;
     for (const auto &i: node.children) {
         auto child = loadGltfNode(gltfModel, gltfModel.nodes.at(i), vertexBuffer, indexBuffer);
@@ -40,56 +56,49 @@ static std::vector<std::pair<std::string, AssetStorage::Model>> loadGltfNode(con
                 .indicesOffset = static_cast<uint32_t>(indexBuffer.size()),
             },
     };
+    // glm::mat4 matrix;
+    // if (node.translation.size() == 3) {
+    //     matrix = glm::translate(matrix, glm::vec3(glm::make_vec3(node.translation.data())));
+    // }
+    // if (node.rotation.size() == 4) {
+    //     glm::quat q = glm::make_quat(node.rotation.data());
+    //     matrix *= glm::mat4(q);
+    // }
+    // if (node.scale.size() == 3) { matrix = glm::scale(matrix, glm::vec3(glm::make_vec3(node.scale.data()))); }
+    // if (node.matrix.size() == 16) { matrix = glm::make_mat4x4(node.matrix.data()); }
+
     for (const tinygltf::Primitive &primitive: mesh.primitives) {
-        if (primitive.indices < 0) continue;
         // Vertices
         {
-            const float *bufferPos = nullptr;
-            const float *bufferNormals = nullptr;
-            const float *bufferTexCoords = nullptr;
-            const float *bufferColors = nullptr;
-            uint32_t numColorComponents = 0;
+            const auto &[positionBuffer, positionAccessor] = getGltfBuffer(gltfModel, primitive, "POSITION");
+            const auto &[normalsBuffer, normalAccessor] = getGltfBuffer(gltfModel, primitive, "NORMAL");
+            const auto &[texCoordsBuffer, texCoordsAccessor] = getGltfBuffer(gltfModel, primitive, "TEXCOORD_0");
+            const auto &[colorBuffer, colorAccessor] = getGltfBuffer(gltfModel, primitive, "TEXCOORD_0");
+            auto numColorComponents = colorAccessor.type == TINYGLTF_PARAMETER_TYPE_FLOAT_VEC3 ? 3 : 4;
 
-            assert(primitive.attributes.find("POSITION") != primitive.attributes.end());
-            const tinygltf::Accessor &posAccessor = gltfModel.accessors[primitive.attributes.find("POSITION")->second];
-            const tinygltf::BufferView &posView = gltfModel.bufferViews[posAccessor.bufferView];
-            bufferPos = reinterpret_cast<const float *>(
-                &(gltfModel.buffers[posView.buffer].data[posAccessor.byteOffset + posView.byteOffset]));
-            if (primitive.attributes.find("NORMAL") != primitive.attributes.end()) {
-                const tinygltf::Accessor &normAccessor =
-                    gltfModel.accessors[primitive.attributes.find("NORMAL")->second];
-                const tinygltf::BufferView &normView = gltfModel.bufferViews[normAccessor.bufferView];
-                bufferNormals = reinterpret_cast<const float *>(
-                    &(gltfModel.buffers[normView.buffer].data[normAccessor.byteOffset + normView.byteOffset]));
+            for (std::size_t i = 0; i < positionAccessor.count; i++) {
+                logger.debug() << i << "(" << positionBuffer[i * 3] << ", " << positionBuffer[i * 3 + 1] << ", "
+                               << positionBuffer[i * 3 + 2] << ")";
+                if (std::isnan(positionBuffer[i * 3]) || std::isnan(positionBuffer[i * 3 + 1]),
+                    std::isnan(positionBuffer[i * 3 + 2])) {
+                    abort();
+                }
             }
 
-            if (primitive.attributes.find("TEXCOORD_0") != primitive.attributes.end()) {
-                const tinygltf::Accessor &uvAccessor =
-                    gltfModel.accessors[primitive.attributes.find("TEXCOORD_0")->second];
-                const tinygltf::BufferView &uvView = gltfModel.bufferViews[uvAccessor.bufferView];
-                bufferTexCoords = reinterpret_cast<const float *>(
-                    &(gltfModel.buffers[uvView.buffer].data[uvAccessor.byteOffset + uvView.byteOffset]));
-            }
-            if (primitive.attributes.find("COLOR_0") != primitive.attributes.end()) {
-                const tinygltf::Accessor &colorAccessor =
-                    gltfModel.accessors[primitive.attributes.find("COLOR_0")->second];
-                const tinygltf::BufferView &colorView = gltfModel.bufferViews[colorAccessor.bufferView];
-                // Color buffer are either of type vec3 or vec4
-                numColorComponents = colorAccessor.type == TINYGLTF_PARAMETER_TYPE_FLOAT_VEC3 ? 3 : 4;
-                bufferColors = reinterpret_cast<const float *>(
-                    &(gltfModel.buffers[colorView.buffer].data[colorAccessor.byteOffset + colorView.byteOffset]));
-            }
-            model.mesh.vertexSize = posAccessor.count;
-            for (size_t v = 0; v < posAccessor.count; v++) {
+            assert(positionBuffer);
+            model.mesh.vertexSize = positionAccessor.count;
+            for (std::size_t v = 0; v < positionAccessor.count; v++) {
                 Vertex vert{};
-                vert.pos = glm::vec4(glm::make_vec3(&bufferPos[v * 3]), 1.0f);
-                vert.normal =
-                    glm::normalize(glm::vec3(bufferNormals ? glm::make_vec3(&bufferNormals[v * 3]) : glm::vec3(0.0f)));
-                vert.texCoord = bufferTexCoords ? glm::make_vec2(&bufferTexCoords[v * 2]) : glm::vec3(0.0f);
-                if (bufferColors) {
+                vert.pos = glm::make_vec3(&positionBuffer[v * 3]);
+                vert.normal = normalsBuffer ? (glm::normalize(glm::make_vec3(&normalsBuffer[v * 3]))) : glm::vec3(0.0f);
+                vert.texCoord = texCoordsBuffer ? glm::make_vec2(&texCoordsBuffer[v * 2]) : glm::vec3(0.0f);
+                if (colorBuffer) {
                     switch (numColorComponents) {
-                        case 3: vert.color = glm::vec4(glm::make_vec3(&bufferColors[v * 3]), 1.0f);
-                        case 4: vert.color = glm::make_vec4(&bufferColors[v * 4]);
+                        case 3: vert.color = glm::vec4(glm::make_vec3(&colorBuffer[v * 3]), 1.0f); break;
+                        case 4: vert.color = glm::make_vec4(&colorBuffer[v * 4]); break;
+                        default:
+                            throw AssetStorage::AssetStorageException(std::to_string(numColorComponents) +
+                                                                      " colors components is not supported");
                     }
                 } else {
                     vert.color = glm::vec4(1.0f);
@@ -104,31 +113,29 @@ static std::vector<std::pair<std::string, AssetStorage::Model>> loadGltfNode(con
             const tinygltf::BufferView &bufferView = gltfModel.bufferViews[accessor.bufferView];
             const tinygltf::Buffer &buffer = gltfModel.buffers[bufferView.buffer];
 
-            model.mesh.indicesSize = static_cast<uint32_t>(accessor.count);
+            model.mesh.indicesSize += static_cast<uint32_t>(accessor.count);
 
+            // glTF supports different component types of indices
             switch (accessor.componentType) {
                 case TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT: {
-                    uint32_t *buf = new uint32_t[accessor.count];
-                    memcpy(buf, &buffer.data[accessor.byteOffset + bufferView.byteOffset],
-                           accessor.count * sizeof(uint32_t));
+                    const uint32_t *buf = reinterpret_cast<const uint32_t *>(
+                        &buffer.data.at(accessor.byteOffset + bufferView.byteOffset));
                     for (size_t index = 0; index < accessor.count; index++) {
                         indexBuffer.push_back(buf[index] + model.mesh.vertexOffset);
                     }
                     break;
                 }
                 case TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT: {
-                    uint16_t *buf = new uint16_t[accessor.count];
-                    memcpy(buf, &buffer.data[accessor.byteOffset + bufferView.byteOffset],
-                           accessor.count * sizeof(uint16_t));
+                    const uint16_t *buf = reinterpret_cast<const uint16_t *>(
+                        &buffer.data.at(accessor.byteOffset + bufferView.byteOffset));
                     for (size_t index = 0; index < accessor.count; index++) {
                         indexBuffer.push_back(buf[index] + model.mesh.vertexOffset);
                     }
                     break;
                 }
                 case TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE: {
-                    uint8_t *buf = new uint8_t[accessor.count];
-                    memcpy(buf, &buffer.data[accessor.byteOffset + bufferView.byteOffset],
-                           accessor.count * sizeof(uint8_t));
+                    const uint8_t *buf =
+                        reinterpret_cast<const uint8_t *>(&buffer.data.at(accessor.byteOffset + bufferView.byteOffset));
                     for (size_t index = 0; index < accessor.count; index++) {
                         indexBuffer.push_back(buf[index] + model.mesh.vertexOffset);
                     }
@@ -138,6 +145,10 @@ static std::vector<std::pair<std::string, AssetStorage::Model>> loadGltfNode(con
             }
         }
         /// End of Indices
+        if (primitive.material > -1)
+            model.default_material = gltfModel.materials.at(primitive.material).name;
+        else
+            model.default_material = "white";
     }
     loaded.push_back(std::make_pair(node.name, model));
     return loaded;
@@ -178,8 +189,8 @@ static std::pair<std::string, AssetStorage::CPUMaterial> loadGltfMaterial(const 
     return std::make_pair(mat.name, material);
 }
 
-static AssetStorage::CPUTexture loadGltfTexture(const tinygltf::Image &gltfimage,
-                                                const std::filesystem::path &base_path)
+static std::pair<std::string, AssetStorage::CPUTexture> loadGltfTexture(const tinygltf::Image &gltfimage,
+                                                                        const std::filesystem::path &base_path)
 {
     AssetStorage::CPUTexture texture;
     auto path = base_path / gltfimage.uri;
@@ -208,7 +219,7 @@ static AssetStorage::CPUTexture loadGltfTexture(const tinygltf::Image &gltfimage
             .depth = 1,
         };
     }
-    return texture;
+    return {gltfimage.name, texture};
 }
 
 bool AssetStorage::loadGltfModel(const std::filesystem::path &path)
@@ -226,14 +237,16 @@ bool AssetStorage::loadGltfModel(const std::filesystem::path &path)
         return false;
     }
     try {
-        for (auto &image: gltfModel.images) {
-            cpuStorage.textureStaging.add(image.name, loadGltfTexture(image, path.parent_path()));
+        for (const auto &image: gltfModel.images) {
+            logger.info("Asset Storage/Texture") << "Loaded texture: " << image.name;
+            cpuStorage.textureStaging.add(loadGltfTexture(image, path.parent_path()));
         }
-        for (auto &material: gltfModel.materials) {
-            cpuStorage.materialStaging.add(loadGltfMaterial(gltfModel, material));
+        for (const auto &material: gltfModel.materials) {
+            auto mat = loadGltfMaterial(gltfModel, material);
+            cpuStorage.materialStaging.add(mat);
         }
-        for (auto &node: gltfModel.nodes) {
-            for (auto &i:
+        for (const auto &node: gltfModel.nodes) {
+            for (const auto &i:
                  loadGltfNode(gltfModel, node, cpuStorage.vertexStagingBuffer, cpuStorage.indexStagingBuffer)) {
                 modelStorage.insert(i);
                 prefab.modelIds.push_back(i.first);
@@ -243,7 +256,7 @@ bool AssetStorage::loadGltfModel(const std::filesystem::path &path)
             }
         }
     } catch (const AssetStorageException &ase) {
-        logger.err("THROW/Asset Storage/GLTF") << "Error while loaded GLTF file :" << ase.what();
+        logger.err("THROW/Asset Storage/GLTF") << "Error while loaded GLTF file : " << ase.what();
         return false;
     }
     prefabStorage.insert(std::make_pair(path.stem().string(), prefab));

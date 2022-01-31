@@ -54,6 +54,7 @@ add_library(${PROJECT_NAME} source/Systems/ControlSystem.cxx
                             source/Core/Component/description.cxx
                             source/Core/Component/index.cxx
                             source/Core/Component/manager.cxx
+                            source/Core/Component/ref.cxx
                             source/Core/Data/value.cxx
                             source/Core/Data/value_serialization.cxx
                             source/Core/Data/type.cxx
@@ -83,6 +84,7 @@ if (BUILD_TESTING)
     tests/Core/Component/test_tag.cxx
     tests/Core/Component/test_global_registration.cxx
     tests/Core/Component/test_dense_component_array.cxx
+    tests/Core/Component/test_ref.cxx
     tests/Core/Data/test_value_and_type.cxx
     tests/Core/Data/test_serialization.cxx
     tests/Core/test_scene.cxx

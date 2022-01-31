@@ -34,6 +34,17 @@ fetch_boost_library(utility)
 fetch_boost_library(predef)
 fetch_boost_library(io)
 
+FetchContent_Declare(
+    nlohmann_json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG v3.10.4
+)
+if (NOT nlohmann_json_POPULATED)
+    message(STATUS "Populating json")
+    FetchContent_Populate(nlohmann_json)
+    add_subdirectory(${nlohmann_json_SOURCE_DIR} ${nlohmann_json_BINARY_DIR})
+endif()
+
 add_library(${PROJECT_NAME} source/Systems/ControlSystem.cxx
                             source/Core/Scene.cxx
                             source/Core/EntityManager.cxx
@@ -44,12 +55,19 @@ add_library(${PROJECT_NAME} source/Systems/ControlSystem.cxx
                             source/Core/Component/index.cxx
                             source/Core/Component/manager.cxx
                             source/Core/Data/value.cxx
+                            source/Core/Data/value_serialization.cxx
                             source/Core/Data/type.cxx
                             source/Components/TagArray.cxx
 )
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC glm magic_enum boost_fusion)
+target_link_libraries(${PROJECT_NAME} PUBLIC
+  glm
+  magic_enum
+  boost_fusion
+  nlohmann_json::nlohmann_json
+)
+
 target_sources(${PROJECT_NAME} INTERFACE source/Components/Tag.cxx
                                          source/Components/RigidBody.cxx
                                          source/Components/Gravity.cxx
@@ -66,6 +84,7 @@ if (BUILD_TESTING)
     tests/Core/Component/test_global_registration.cxx
     tests/Core/Component/test_dense_component_array.cxx
     tests/Core/Data/test_value_and_type.cxx
+    tests/Core/Data/test_serialization.cxx
     tests/Core/test_scene.cxx
     )
   target_include_directories(${TEST_NAME} PRIVATE tests/)

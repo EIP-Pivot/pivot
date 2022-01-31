@@ -29,13 +29,15 @@ void Manager::execute(const event::Description &eventDescription, const data::Va
                 componentArrays.push_back(m_componentManager->GetComponentArray(index).value());
             if (entities.size() != description.eventComponents.size())
                 throw std::logic_error("This system expect " + std::to_string(description.eventComponents.size()) + " entity.");
-            std::vector<std::vector<data::Value>> entitiesComponents;
+
+            event::Entities entitiesComponents;
             for (std::size_t i = 0; i < entities.size(); i++) {
-                std::vector<data::Value> entityComponents;
+                std::vector<component::ComponentRef> entityComponents;
                 for (const auto index: getComponentsId(description.eventComponents[i]))
-                    entityComponents.push_back(m_componentManager->GetComponent(entities[i], index).value());
+                    entityComponents.push_back(component::ComponentRef(m_componentManager->GetComponentArray(index).value().get(), entities[i]));
                 entitiesComponents.push_back(entityComponents);
             }
+
             event::Event event{
                 .description = eventDescription,
                 .entities = entitiesComponents,

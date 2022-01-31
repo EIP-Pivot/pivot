@@ -14,7 +14,7 @@ namespace pivot::ecs::event
 class Manager
 {
 public:
-    Manager(std::unique_ptr<systems::Manager> &systemManager): m_systemManager(systemManager){};
+    Manager(std::unique_ptr<systems::Manager> &systemManager);
     void registerEvent(const Description &description);
 
     void sendEvent(const std::string &eventName, const data::Value &value, const std::vector<Entity> &entities = {});

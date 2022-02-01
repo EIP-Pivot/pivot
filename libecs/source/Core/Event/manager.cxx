@@ -5,13 +5,7 @@ namespace pivot::ecs::event
 {
 Manager::Manager(std::unique_ptr<systems::Manager> &systemManager)
 : m_systemManager(systemManager)
-{
-    GlobalIndex::getSingleton().registerEvent(Description{
-        .name = "Tick",
-        .entities = {},
-        .payload = pivot::ecs::data::BasicType::Number,
-    });
-}
+{}
 
 void Manager::sendEvent(const std::string &eventName, const data::Value &payload, const std::vector<Entity> &entities)
 {

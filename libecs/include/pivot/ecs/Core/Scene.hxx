@@ -111,10 +111,10 @@ public:
 
 private:
     std::string name;
-    std::unique_ptr<pivot::ecs::component::Manager> mComponentManager;
-    std::unique_ptr<EntityManager> mEntityManager;
-    std::unique_ptr<pivot::ecs::systems::Manager> mSystemManager;
-    std::unique_ptr<pivot::ecs::event::Manager> mEventManager;
+    pivot::ecs::component::Manager mComponentManager;
+    EntityManager mEntityManager;
+    pivot::ecs::systems::Manager mSystemManager;
+    pivot::ecs::event::Manager mEventManager;
     std::vector<std::shared_ptr<System>> mSystems;
     std::vector<Entity> mCamera;
     std::uint16_t mCurrentCamera;

@@ -16,7 +16,7 @@ namespace pivot::ecs::systems
 class Manager
 {
 public:
-    Manager(std::unique_ptr<component::Manager> &componentManager, std::unique_ptr<EntityManager> &entityManager)
+    Manager(component::Manager &componentManager, EntityManager &entityManager)
         : m_componentManager(componentManager), m_entityManager(entityManager) {};
     
     bool useSystem(const std::string &systemName);
@@ -27,8 +27,8 @@ public:
     std::vector<std::string> getSystemUsed();
 private:
     std::vector<component::Manager::ComponentId> getComponentsId(const std::vector<std::string> &components);
-    std::unique_ptr<component::Manager> &m_componentManager;
-    std::unique_ptr<EntityManager> &m_entityManager;
+    component::Manager &m_componentManager;
+    EntityManager &m_entityManager;
     std::unordered_map<std::string, Description> m_systems;
 };
 

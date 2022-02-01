@@ -2,13 +2,13 @@
 
 LevelId SceneManager::registerLevel(std::string name)
 {
-    _levels[LevelId(_levels.size())] = Scene(name);
+    _levels.insert({_levels.size(), Scene(name)});
     return (LevelId(_levels.size() - 1));
 }
 
 LevelId SceneManager::registerLevel()
 {
-    _levels[LevelId(_levels.size())] = Scene("Scene " + std::to_string(LevelId(_levels.size())));
+    _levels.insert({_levels.size(), Scene("Scene " + std::to_string(LevelId(_levels.size())))});
     return (LevelId(_levels.size() - 1));
 }
 

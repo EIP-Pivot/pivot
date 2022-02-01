@@ -14,13 +14,13 @@ namespace pivot::ecs::event
 class Manager
 {
 public:
-    Manager(std::unique_ptr<systems::Manager> &systemManager);
+    Manager(systems::Manager &systemManager);
 
     void sendEvent(const std::string &eventName, const data::Value &value, const std::vector<Entity> &entities = {});
     void sendEvent(const Description &description, const data::Value &value, const std::vector<Entity> &entities = {});
 
 private:
-    std::unique_ptr<systems::Manager> &m_systemManager;
+    systems::Manager &m_systemManager;
 };
 
 }    // namespace pivot::ecs::event

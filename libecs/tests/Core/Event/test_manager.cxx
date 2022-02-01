@@ -30,24 +30,24 @@ void tickSystem(const systems::Description &description, const systems::Descript
 
 TEST_CASE("Manager event", "[description][registration][manager]")
 {
-    std::unique_ptr<component::Manager> cManager = std::make_unique<component::Manager>();
-    std::unique_ptr<EntityManager> eManager = std::make_unique<EntityManager>();
-    std::unique_ptr<systems::Manager> sManager = std::make_unique<systems::Manager>(cManager, eManager);
+    component::Manager cManager;
+    EntityManager eManager;
+    systems::Manager sManager(cManager, eManager);
     event::Manager eventManager(sManager);
 
     component::Description tag = component::GlobalIndex::getSingleton().getDescription("Tag").value();
     component::Description rigid = component::GlobalIndex::getSingleton().getDescription("RigidBody").value();
     component::Description grav = component::GlobalIndex::getSingleton().getDescription("Gravity").value();
 
-    component::Manager::ComponentId tagId = cManager->RegisterComponent(tag);
-    component::Manager::ComponentId rigidId = cManager->RegisterComponent(rigid);
-    component::Manager::ComponentId gravId = cManager->RegisterComponent(grav);
+    component::Manager::ComponentId tagId = cManager.RegisterComponent(tag);
+    component::Manager::ComponentId rigidId = cManager.RegisterComponent(rigid);
+    component::Manager::ComponentId gravId = cManager.RegisterComponent(grav);
 
-    Entity entity = eManager->CreateEntity();
-    cManager->AddComponent(entity, Value{Record{{"name", "oui"}}}, tagId);
-    cManager->AddComponent(entity, Value{Record{{"velocity", glm::vec3(0.0f)}, {"acceleration", glm::vec3(0.0f)}}},
+    Entity entity = eManager.CreateEntity();
+    cManager.AddComponent(entity, Value{Record{{"name", "oui"}}}, tagId);
+    cManager.AddComponent(entity, Value{Record{{"velocity", glm::vec3(0.0f)}, {"acceleration", glm::vec3(0.0f)}}},
                            rigidId);
-    cManager->AddComponent(entity, Value{Record{{"force", glm::vec3(0.0f)}}}, gravId);
+    cManager.AddComponent(entity, Value{Record{{"force", glm::vec3(0.0f)}}}, gravId);
 
     event::Description eventDescription {
         .name = "Tick",
@@ -68,7 +68,7 @@ TEST_CASE("Manager event", "[description][registration][manager]")
         .system = &tickSystem,
     };
     systems::GlobalIndex::getSingleton().registerSystem(description);
-    sManager->useSystem(description);
+    sManager.useSystem(description);
 
     eventManager.sendEvent("Tick", Value{0.0f});
     eventManager.sendEvent("Tick", Value{0.0f});

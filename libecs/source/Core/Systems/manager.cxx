@@ -26,7 +26,7 @@ void Manager::execute(const event::Description &eventDescription, const data::Va
 
             Description::systemArgs componentArrays;
             for (const auto index: getComponentsId(description.systemComponents))
-                componentArrays.push_back(m_componentManager->GetComponentArray(index).value());
+                componentArrays.push_back(m_componentManager.GetComponentArray(index).value());
             if (entities.size() != description.eventComponents.size())
                 throw std::logic_error("This system expect " + std::to_string(description.eventComponents.size()) + " entity.");
 
@@ -34,7 +34,7 @@ void Manager::execute(const event::Description &eventDescription, const data::Va
             for (std::size_t i = 0; i < entities.size(); i++) {
                 std::vector<component::ComponentRef> entityComponents;
                 for (const auto index: getComponentsId(description.eventComponents[i]))
-                    entityComponents.push_back(component::ComponentRef(m_componentManager->GetComponentArray(index).value().get(), entities[i]));
+                    entityComponents.push_back(component::ComponentRef(m_componentManager.GetComponentArray(index).value().get(), entities[i]));
                 entitiesComponents.push_back(entityComponents);
             }
 
@@ -60,7 +60,7 @@ std::vector<component::Manager::ComponentId> Manager::getComponentsId(const std:
     std::vector<component::Manager::ComponentId> componentsId;
 
     for (const auto &component: components)
-        componentsId.push_back(m_componentManager->GetComponentId(component).value());
+        componentsId.push_back(m_componentManager.GetComponentId(component).value());
     return componentsId;
 }
 

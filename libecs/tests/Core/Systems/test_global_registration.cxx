@@ -16,6 +16,11 @@ void test_global_registration(const systems::Description &, const systems::Descr
 
 TEST_CASE("Register same system in Global Index", "[description][registration]")
 {
+    event::Description event{
+        .name = "Colid",
+        .entities = {},
+        .payload = pivot::ecs::data::BasicType::Number,
+    };
     systems::Description description{
         .name = "Duplicate",
         .systemComponents =
@@ -23,6 +28,7 @@ TEST_CASE("Register same system in Global Index", "[description][registration]")
                 "RigidBody",
                 "Tag",
             },
+        .eventListener = event,
         .system = &test_global_registration,
     };
     REQUIRE_NOTHROW(indexForRegistrationTest.registerSystem(description));
@@ -31,6 +37,11 @@ TEST_CASE("Register same system in Global Index", "[description][registration]")
 
 TEST_CASE("Register valid system in Global Index", "[description][registration]")
 {
+    event::Description event{
+        .name = "Colid",
+        .entities = {},
+        .payload = pivot::ecs::data::BasicType::Number,
+    };
     systems::Description description{
         .name = "Valid",
         .systemComponents =
@@ -38,6 +49,7 @@ TEST_CASE("Register valid system in Global Index", "[description][registration]"
                 "RigidBody",
                 "Tag",
             },
+        .eventListener = event,
         .system = &test_global_registration,
     };
     REQUIRE_NOTHROW(indexForRegistrationTest.registerSystem(description));

@@ -1,8 +1,9 @@
 #include <pivot/ecs/Core/Component/index.hxx>
 #include <pivot/ecs/Core/Systems/description.hxx>
 
-#include <stdexcept>
 #include <iostream>
+#include <stdexcept>
+
 
 namespace pivot::ecs::systems
 {
@@ -17,6 +18,12 @@ void Description::validate() const
         if (!ecs::component::GlobalIndex::getSingleton().getDescription(arg).has_value())
             throw ValidationError("Component " + arg + " his not registered.");
     }
+
+    this->eventListener.validate();
+
+    if (this->eventComponents.size() != this->eventListener.entities.size())
+        throw ValidationError("Event require " + std::to_string(this->eventListener.entities.size()) + " given " +
+                              std::to_string(this->eventComponents.size()));
 }
 
 }    // namespace pivot::ecs::systems

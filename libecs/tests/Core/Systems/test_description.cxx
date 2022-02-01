@@ -15,12 +15,18 @@ void test_description(const systems::Description &,
 
 TEST_CASE("valid system description", "[description]")
 {
+    event::Description event{
+        .name = "Colid",
+        .entities = {},
+        .payload = pivot::ecs::data::BasicType::Number,
+    };
     systems::Description description {
         .name = "Test Description",
         .systemComponents = {
             "RigidBody",
             "Tag",
         },
+        .eventListener = event,
         .system = &test_description,
     };
     REQUIRE_NOTHROW(description.validate());

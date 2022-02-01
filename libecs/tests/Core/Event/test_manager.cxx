@@ -49,7 +49,13 @@ TEST_CASE("Manager event", "[description][registration][manager]")
                            rigidId);
     cManager->AddComponent(entity, Value{Record{{"force", glm::vec3(0.0f)}}}, gravId);
 
-    auto eventDescription = event::GlobalIndex::getSingleton().getDescription("Tick").value();
+    event::Description eventDescription {
+        .name = "Tick",
+        .entities = {},
+        .payload = pivot::ecs::data::BasicType::Number,
+    };
+
+    event::GlobalIndex::getSingleton().registerEvent(eventDescription);
 
     systems::Description description{
         .name = "tickSystem",

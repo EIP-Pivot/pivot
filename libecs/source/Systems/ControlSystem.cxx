@@ -7,10 +7,10 @@ extern SceneManager gSceneManager;
 
 void ControlSystem::Init()
 {
-    gSceneManager.getCurrentLevel().AddEventListener(Events::Window::INPUT,
-                                  std::bind(&ControlSystem::InputListener, this, std::placeholders::_1));
-    gSceneManager.getCurrentLevel().AddEventListener(Events::Window::MOUSE,
-                                  std::bind(&ControlSystem::MouseListener, this, std::placeholders::_1));
+    // gSceneManager.getCurrentLevel().AddEventListener(Events::Window::INPUT,
+    //                               std::bind(&ControlSystem::InputListener, this, std::placeholders::_1));
+    // gSceneManager.getCurrentLevel().AddEventListener(Events::Window::MOUSE,
+    //                               std::bind(&ControlSystem::MouseListener, this, std::placeholders::_1));
 }
 
 void ControlSystem::Update(float dt)

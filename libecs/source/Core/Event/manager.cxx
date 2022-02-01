@@ -13,11 +13,6 @@ Manager::Manager(std::unique_ptr<systems::Manager> &systemManager)
     });
 }
 
-void Manager::registerEvent(const Description &description)
-{
-    
-}
-
 void Manager::sendEvent(const std::string &eventName, const data::Value &payload, const std::vector<Entity> &entities)
 {
     const auto description = GlobalIndex::getSingleton().getDescription(eventName).value();

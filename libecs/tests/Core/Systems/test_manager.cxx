@@ -29,37 +29,37 @@ void test_manager_registration(const systems::Description &description,
 
 TEST_CASE("Manager register system", "[description][registration][manager]")
 {
-    std::unique_ptr<component::Manager> cManager = std::make_unique<component::Manager>();
-    std::unique_ptr<EntityManager> eManager = std::make_unique<EntityManager>();
+    component::Manager cManager;
+    EntityManager eManager;
     systems::Manager manager(cManager, eManager);
 
     component::Description tag = component::GlobalIndex::getSingleton().getDescription("Tag").value();
     component::Description rigid = component::GlobalIndex::getSingleton().getDescription("RigidBody").value();
     component::Description grav = component::GlobalIndex::getSingleton().getDescription("Gravity").value();
 
-    component::Manager::ComponentId tagId = cManager->RegisterComponent(tag);
-    component::Manager::ComponentId rigidId = cManager->RegisterComponent(rigid);
-    component::Manager::ComponentId gravId = cManager->RegisterComponent(grav);
+    component::Manager::ComponentId tagId = cManager.RegisterComponent(tag);
+    component::Manager::ComponentId rigidId = cManager.RegisterComponent(rigid);
+    component::Manager::ComponentId gravId = cManager.RegisterComponent(grav);
 
     // entity that match with system
-    Entity entity = eManager->CreateEntity();
-    cManager->AddComponent(entity, Value{Record{{"name", "entity 0"}}}, tagId);
-    cManager->AddComponent(entity, Value{Record{{"velocity", glm::vec3(0.0f)}, {"acceleration", glm::vec3(0.0f)}}},
+    Entity entity = eManager.CreateEntity();
+    cManager.AddComponent(entity, Value{Record{{"name", "entity 0"}}}, tagId);
+    cManager.AddComponent(entity, Value{Record{{"velocity", glm::vec3(0.0f)}, {"acceleration", glm::vec3(0.0f)}}},
                            rigidId);
-    cManager->AddComponent(entity, Value{Record{{"force", glm::vec3(0.0f)}}}, gravId);
+    cManager.AddComponent(entity, Value{Record{{"force", glm::vec3(0.0f)}}}, gravId);
 
     // entity that match with system
-    entity = eManager->CreateEntity();
-    cManager->AddComponent(entity, Value{Record{{"name", "entity 1"}}}, tagId);
-    cManager->AddComponent(entity, Value{Record{{"velocity", glm::vec3(0.0f)}, {"acceleration", glm::vec3(0.0f)}}},
+    entity = eManager.CreateEntity();
+    cManager.AddComponent(entity, Value{Record{{"name", "entity 1"}}}, tagId);
+    cManager.AddComponent(entity, Value{Record{{"velocity", glm::vec3(0.0f)}, {"acceleration", glm::vec3(0.0f)}}},
                            rigidId);
-    cManager->AddComponent(entity, Value{Record{{"force", glm::vec3(0.0f)}}}, gravId);
+    cManager.AddComponent(entity, Value{Record{{"force", glm::vec3(0.0f)}}}, gravId);
 
     // entity not matching with system
-    entity = eManager->CreateEntity();
-    cManager->AddComponent(entity, Value{Record{{"velocity", glm::vec3(0.0f)}, {"acceleration", glm::vec3(0.0f)}}},
+    entity = eManager.CreateEntity();
+    cManager.AddComponent(entity, Value{Record{{"velocity", glm::vec3(0.0f)}, {"acceleration", glm::vec3(0.0f)}}},
                            rigidId);
-    cManager->AddComponent(entity, Value{Record{{"force", glm::vec3(0.0f)}}}, gravId);
+    cManager.AddComponent(entity, Value{Record{{"force", glm::vec3(0.0f)}}}, gravId);
 
     event::Description eventDescription{
         .name = "Tick",

@@ -11,7 +11,7 @@ TEST_CASE("Register same event in Global Index", "[description][registration]")
         .name = "Duplicate",
     };
     REQUIRE_NOTHROW(eventIndexForRegistrationTest.registerEvent(description));
-    // REQUIRE_THROWS_AS(eventIndexForRegistrationTest.registerEvent(description), Index::DuplicateError);
+    REQUIRE_THROWS_AS(eventIndexForRegistrationTest.registerEvent(description), Index::DuplicateError);
 }
 
 TEST_CASE("Register valid event in Global Index", "[description][registration]")

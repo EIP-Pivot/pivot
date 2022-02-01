@@ -15,7 +15,6 @@ class Manager
 {
 public:
     Manager(std::unique_ptr<systems::Manager> &systemManager);
-    void registerEvent(const Description &description);
 
     void sendEvent(const std::string &eventName, const data::Value &value, const std::vector<Entity> &entities = {});
     void sendEvent(const Description &description, const data::Value &value, const std::vector<Entity> &entities = {});

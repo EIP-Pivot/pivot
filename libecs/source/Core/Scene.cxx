@@ -7,8 +7,8 @@ Scene::Scene(std::string sceneName)
     : name(sceneName),
       mComponentManager(std::make_unique<component::Manager>()),
       mEntityManager(std::make_unique<EntityManager>()),
-      mEventManager(std::make_unique<EventManager>()),
       mSystemManager(std::make_unique<systems::Manager>(mComponentManager, mEntityManager)),
+      mEventManager(std::make_unique<event::Manager>(mSystemManager)),
       mCurrentCamera(0)
 {
     auto &global_index = component::GlobalIndex::getSingleton();
@@ -52,15 +52,6 @@ std::string Scene::getEntityName(Entity entity)
 
 uint32_t Scene::getLivingEntityCount() { return mEntityManager->getLivingEntityCount(); }
 
-void Scene::AddEventListener(EventId eventId, std::function<void(Event &)> const &listener)
-{
-    mEventManager->AddListener(eventId, listener);
-}
-
-void Scene::SendEvent(Event &event) { mEventManager->SendEvent(event); }
-
-void Scene::SendEvent(EventId eventId) { mEventManager->SendEvent(eventId); }
-
 void Scene::setCamera(std::uint16_t camera) { mCurrentCamera = camera; }
 
 void Scene::addCamera(Entity camera) { mCamera.push_back(camera); }
@@ -84,3 +75,7 @@ const pivot::ecs::component::Manager &Scene::getComponentManager() const { retur
 pivot::ecs::systems::Manager &Scene::getSystemManager() { return *this->mSystemManager.get(); }
 
 const pivot::ecs::systems::Manager &Scene::getSystemManager() const { return *this->mSystemManager.get(); }
+
+pivot::ecs::event::Manager &Scene::getEventManager() { return *this->mEventManager.get(); }
+
+const pivot::ecs::event::Manager &Scene::getEventManager() const { return *this->mEventManager.get(); }

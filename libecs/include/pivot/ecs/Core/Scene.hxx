@@ -6,6 +6,8 @@
 #include "pivot/ecs/Core/Systems/index.hxx"
 #include "pivot/ecs/Core/Systems/manager.hxx"
 
+#include "pivot/ecs/Core/Event/manager.hxx"
+
 #include "pivot/ecs/Core/EntityManager.hxx"
 #include "pivot/ecs/Core/EventManager.hxx"
 #include "pivot/ecs/Core/SystemManager.hxx"
@@ -88,26 +90,11 @@ public:
 
     // Event methods
 
-    /// Add a event listener who will treat the Event that as been send
-    /// The eventId is a uint32_t
-    /// @code
-    /// gCoordinator.AddEventListener({YourEventId}, {YourFunction});
-    /// @endcode
-    void AddEventListener(EventId eventId, std::function<void(Event &)> const &listener);
+    /// Get the event manager
+    pivot::ecs::event::Manager &getEventManager();
 
-    /// Send an Event (with data)
-    /// @code
-    /// Event event({YourEventId});
-    /// event.SetParam({ParamID}, {YourData});
-    /// gCoordinator.SendEvent(event);
-    /// @endcode
-    void SendEvent(Event &event);
-
-    /// Send an EventId
-    /// @code
-    /// gCoordinator.SendEvent({YourEventId});
-    /// @endcode
-    void SendEvent(EventId eventId);
+    /// Get the event manager (const)
+    const pivot::ecs::event::Manager &getEventManager() const;
 
     // Camera
     /// Set camera to use
@@ -125,8 +112,8 @@ private:
     std::string name;
     std::unique_ptr<pivot::ecs::component::Manager> mComponentManager;
     std::unique_ptr<EntityManager> mEntityManager;
-    std::unique_ptr<EventManager> mEventManager;
     std::unique_ptr<pivot::ecs::systems::Manager> mSystemManager;
+    std::unique_ptr<pivot::ecs::event::Manager> mEventManager;
     std::vector<std::shared_ptr<System>> mSystems;
     std::vector<Entity> mCamera;
     std::uint16_t mCurrentCamera;

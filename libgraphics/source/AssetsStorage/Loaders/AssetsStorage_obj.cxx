@@ -36,14 +36,11 @@ bool AssetStorage::loadObjModel(const std::filesystem::path &path)
     std::vector<tinyobj::material_t> materials;
     std::string warn, err;
 
-    /// TODO: check return value
-    tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.string().c_str(), base_dir.string().c_str(), false,
-                     false);
-    if (!warn.empty()) { logger.warn("LOADING_OBJ") << warn; }
-    if (!err.empty()) {
-        logger.err("LOADING_OBJ") << err;
-        return false;
-    }
+    bool loadSuccess = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.string().c_str(),
+                                        base_dir.string().c_str(), false, false);
+    if (!warn.empty()) logger.warn("LOADING_OBJ") << warn;
+    if (!err.empty()) logger.err("LOADING_OBJ") << err;
+    if (!loadSuccess) return false;
 
     for (const auto &m: materials) {
         if (!m.diffuse_texname.empty() && cpuStorage.textureStaging.getIndex(m.diffuse_texname) == -1) {
@@ -66,6 +63,7 @@ bool AssetStorage::loadObjModel(const std::filesystem::path &path)
             model.default_material = materials.at(shape.mesh.material_ids.at(0)).name;
         }
         for (const auto &index: shape.mesh.indices) {
+            assert(index.vertex_index >= 0);
             Vertex vertex{
                 .pos =
                     {
@@ -75,17 +73,24 @@ bool AssetStorage::loadObjModel(const std::filesystem::path &path)
                     },
                 .color = {1.0f, 1.0f, 1.0f},
             };
-            if (!attrib.normals.empty()) {
+            if (!attrib.normals.empty() && index.normal_index >= 0) {
                 vertex.normal = {
                     attrib.normals[3 * index.normal_index + 0],
                     attrib.normals[3 * index.normal_index + 1],
                     attrib.normals[3 * index.normal_index + 2],
                 };
             }
-            if (!attrib.texcoords.empty()) {
+            if (!attrib.texcoords.empty() && index.texcoord_index >= 0) {
                 vertex.texCoord = {
                     attrib.texcoords[2 * index.texcoord_index + 0],
-                    1.0f - attrib.texcoords[2 * index.texcoord_index + 1],
+                    attrib.texcoords[2 * index.texcoord_index + 1],
+                };
+            }
+            if (!attrib.colors.empty()) {
+                vertex.color = {
+                    attrib.colors[3 * index.vertex_index + 0],
+                    attrib.colors[3 * index.vertex_index + 1],
+                    attrib.colors[3 * index.vertex_index + 2],
                 };
             }
 

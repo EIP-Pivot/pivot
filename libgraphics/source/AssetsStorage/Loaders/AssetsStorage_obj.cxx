@@ -38,8 +38,8 @@ bool AssetStorage::loadObjModel(const std::filesystem::path &path)
 
     bool loadSuccess = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.string().c_str(),
                                         base_dir.string().c_str(), false, false);
-    if (!warn.empty()) logger.warn("LOADING_OBJ") << warn;
-    if (!err.empty()) logger.err("LOADING_OBJ") << err;
+    if (!warn.empty()) logger.warn("Asset Storage/OBJ") << warn;
+    if (!err.empty()) logger.err("Asset Storage/OBJ") << err;
     if (!loadSuccess) return false;
 
     for (const auto &m: materials) {

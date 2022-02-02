@@ -65,6 +65,16 @@ public:
         constexpr auto &getStorage() noexcept { return storage; }
         /// return the item at a given index
         constexpr const T &get(const std::int32_t &i) const { return storage.at(i); }
+
+        /// Get the name associated to givent idx
+        constexpr const std::string &getName(const std::size_t &idx) const
+        {
+            auto findResult =
+                std::find_if(index.begin(), index.end(), [&](const auto &pair) { return pair.second == idx; });
+            if (findResult != index.end()) return findResult->first;
+            throw std::out_of_range("Out of range index: ");
+        }
+
         /// return the index of an item name
         inline const std::int32_t getIndex(const std::string &i) const noexcept
         {

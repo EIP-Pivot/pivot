@@ -90,7 +90,8 @@ bool AssetStorage::loadObjModel(const std::filesystem::path &path)
             }
 
             if (!uniqueVertices.contains(vertex)) {
-                uniqueVertices[vertex] = cpuStorage.vertexStagingBuffer.size() - model.mesh.vertexOffset;
+                uniqueVertices.insert(
+                    std::make_pair(vertex, cpuStorage.vertexStagingBuffer.size() - model.mesh.vertexOffset));
                 cpuStorage.vertexStagingBuffer.push_back(vertex);
             }
             cpuStorage.indexStagingBuffer.push_back(uniqueVertices.at(vertex));

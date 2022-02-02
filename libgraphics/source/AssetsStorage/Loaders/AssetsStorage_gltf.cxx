@@ -8,16 +8,6 @@
 #include <ktxvulkan.h>
 #include <tiny_gltf.h>
 
-static bool loadImageDataFunc(tinygltf::Image *image, const int imageIndex, std::string *error, std::string *warning,
-                              int req_width, int req_height, const unsigned char *bytes, int size, void *userData)
-{
-    if (image->uri.find_last_of(".") != std::string::npos) {
-        if (image->uri.substr(image->uri.find_last_of(".") + 1) == "ktx") { return true; }
-    }
-
-    return tinygltf::LoadImageData(image, imageIndex, error, warning, req_width, req_height, bytes, size, userData);
-}
-
 static std::pair<const float *const, const tinygltf::Accessor &>
 getGltfBuffer(const tinygltf::Model &model, const tinygltf::Primitive &primitive, const std::string &name)
 {
@@ -189,44 +179,10 @@ static std::pair<std::string, AssetStorage::CPUMaterial> loadGltfMaterial(const 
     return std::make_pair(mat.name, material);
 }
 
-static std::pair<std::string, AssetStorage::CPUTexture> loadGltfTexture(const tinygltf::Image &gltfimage,
-                                                                        const std::filesystem::path &base_path)
-{
-    AssetStorage::CPUTexture texture;
-    auto path = base_path / gltfimage.uri;
-    if (path.extension() == ".ktx") {
-        ktxTexture *ktxTexture = nullptr;
-        auto result =
-            ktxTexture_CreateFromNamedFile(path.string().c_str(), KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &ktxTexture);
-        if (result != KTX_SUCCESS) throw AssetStorage::AssetStorageException("Failed to load ktx texture");
-        ktx_uint8_t *ktxTextureData = ktxTexture_GetData(ktxTexture);
-        ktx_size_t ktxTextureSize = ktxTexture_GetDataSize(ktxTexture);
-        texture.image.resize(ktxTextureSize);
-        std::memcpy(texture.image.data(), ktxTextureData, ktxTextureSize);
-        texture.size = vk::Extent3D{
-            .width = ktxTexture->baseWidth,
-            .height = ktxTexture->baseHeight,
-            .depth = ktxTexture->baseDepth,
-        };
-        ktxTexture_Destroy(ktxTexture);
-    } else {
-        auto size = gltfimage.width * gltfimage.height * 4;
-        texture.image.resize(size);
-        std::memcpy(texture.image.data(), gltfimage.image.data(), size);
-        texture.size = vk::Extent3D{
-            .width = static_cast<uint32_t>(gltfimage.width),
-            .height = static_cast<uint32_t>(gltfimage.height),
-            .depth = 1,
-        };
-    }
-    return {gltfimage.name, texture};
-}
-
 bool AssetStorage::loadGltfModel(const std::filesystem::path &path)
 {
     tinygltf::Model gltfModel;
     tinygltf::TinyGLTF gltfContext;
-    gltfContext.SetImageLoader(loadImageDataFunc, nullptr);
     std::string error, warning;
     Prefab prefab;
 
@@ -238,8 +194,8 @@ bool AssetStorage::loadGltfModel(const std::filesystem::path &path)
     }
     try {
         for (const auto &image: gltfModel.images) {
-            logger.info("Asset Storage/Texture") << "Loaded texture: " << image.name;
-            cpuStorage.textureStaging.add(loadGltfTexture(image, path.parent_path()));
+            auto filepath = path.parent_path() / image.uri;
+            loadTexture(filepath);
         }
         for (const auto &material: gltfModel.materials) {
             auto mat = loadGltfMaterial(gltfModel, material);

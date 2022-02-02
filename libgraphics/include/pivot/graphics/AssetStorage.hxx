@@ -233,6 +233,7 @@ private:
 
     bool loadTexture(const std::filesystem::path &path);
     bool loadPngTexture(const std::filesystem::path &path);
+    bool loadKtxImage(const std::filesystem::path &path);
 
     void pushModelsOnGPU();
     void pushBoundingBoxesOnGPU();

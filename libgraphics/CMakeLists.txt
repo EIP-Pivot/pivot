@@ -44,7 +44,13 @@ if (NOT tinygltf_POPULATED)
     set(TINYGLTF_BUILD_LOADER_EXAMPLE OFF CACHE INTERNAL "" FORCE)
     set(TINYGLTF_INSTALL OFF CACHE INTERNAL "" FORCE)
     add_subdirectory(${tinygltf_SOURCE_DIR} ${tinygltf_SOURCE_DIR})
-    target_compile_definitions(tinygltf PUBLIC TINYGLTF_NO_STB_IMAGE_WRITE TINYGLTF_NO_INCLUDE_RAPIDJSON)
+    target_compile_definitions(tinygltf PUBLIC TINYGLTF_NO_STB_IMAGE
+                                        TINYGLTF_NO_STB_IMAGE_WRITE
+                                        TINYGLTF_NO_INCLUDE_STB_IMAGE 
+                                        TINYGLTF_NO_INCLUDE_STB_IMAGE_WRITE 
+                                        TINYGLTF_NO_EXTERNAL_IMAGE 
+                                        TINYGLTF_NO_INCLUDE_RAPIDJSON
+    )
 endif()
 
 FetchContent_Declare(
@@ -154,6 +160,7 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/AssetsStorage/Loaders/AssetsStorage_obj.cxx
                                    source/AssetsStorage/Loaders/AssetsStorage_png.cxx
                                    source/AssetsStorage/Loaders/AssetsStorage_gltf.cxx
+                                   source/AssetsStorage/Loaders/AssetsStorage_ktx.cxx
                                    source/VulkanApplication/VulkanApplication.cxx
                                    source/VulkanApplication/VulkanApplication_init.cxx
                                    source/VulkanBase/VulkanBase.cxx

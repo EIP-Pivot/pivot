@@ -7,6 +7,7 @@
 #include <ktx.h>
 #include <ktxvulkan.h>
 #include <tiny_gltf.h>
+#include <type_traits>
 
 static std::pair<const float *const, const tinygltf::Accessor &>
 getGltfBuffer(const tinygltf::Model &model, const tinygltf::Primitive &primitive, const std::string &name)
@@ -23,6 +24,15 @@ getGltfBuffer(const tinygltf::Model &model, const tinygltf::Primitive &primitive
                 accessor};
     }
     return {nullptr, {}};
+}
+
+template <typename T>
+requires std::is_unsigned_v<T>
+void fillIndexBuffer(const tinygltf::Buffer &buffer, const tinygltf::Accessor &accessor,
+                     const tinygltf::BufferView &bufferView, std::vector<uint32_t> &indexBuffer)
+{
+    const T *buf = reinterpret_cast<const T *>(&buffer.data.at(accessor.byteOffset + bufferView.byteOffset));
+    for (size_t index = 0; index < accessor.count; index++) { indexBuffer.push_back(buf[index]); }
 }
 
 namespace pivot::graphics
@@ -102,24 +112,15 @@ static std::vector<std::pair<std::string, AssetStorage::Model>> loadGltfNode(con
 
             // glTF supports different component types of indices
             switch (accessor.componentType) {
-                case TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT: {
-                    const uint32_t *buf = reinterpret_cast<const uint32_t *>(
-                        &buffer.data.at(accessor.byteOffset + bufferView.byteOffset));
-                    for (size_t index = 0; index < accessor.count; index++) { indexBuffer.push_back(buf[index]); }
+                case TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT:
+                    fillIndexBuffer<std::uint32_t>(buffer, accessor, bufferView, indexBuffer);
                     break;
-                }
-                case TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT: {
-                    const uint16_t *buf = reinterpret_cast<const uint16_t *>(
-                        &buffer.data.at(accessor.byteOffset + bufferView.byteOffset));
-                    for (size_t index = 0; index < accessor.count; index++) { indexBuffer.push_back(buf[index]); }
+                case TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT:
+                    fillIndexBuffer<std::uint16_t>(buffer, accessor, bufferView, indexBuffer);
                     break;
-                }
-                case TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE: {
-                    const uint8_t *buf =
-                        reinterpret_cast<const uint8_t *>(&buffer.data.at(accessor.byteOffset + bufferView.byteOffset));
-                    for (size_t index = 0; index < accessor.count; index++) { indexBuffer.push_back(buf[index]); }
+                case TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE:
+                    fillIndexBuffer<std::uint8_t>(buffer, accessor, bufferView, indexBuffer);
                     break;
-                }
                 default: throw AssetStorage::AssetStorageException("Index component type not supported!"); break;
             }
         }

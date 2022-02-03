@@ -34,7 +34,7 @@ static std::vector<std::pair<std::string, AssetStorage::Model>> loadGltfNode(con
                                                                              std::vector<uint32_t> &indexBuffer)
 {
     DEBUG_FUNCTION
-    logger.info("Asset Storage/Gltf") << "Loading node: " << node.name;
+    logger.debug("Asset Storage/Gltf") << "Loading node: " << node.name;
     std::vector<std::pair<std::string, AssetStorage::Model>> loaded;
     for (const auto &i: node.children) {
         auto child = loadGltfNode(gltfModel, gltfModel.nodes.at(i), vertexBuffer, indexBuffer);

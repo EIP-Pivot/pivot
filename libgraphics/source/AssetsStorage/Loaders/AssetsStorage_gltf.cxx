@@ -28,8 +28,8 @@ getGltfBuffer(const tinygltf::Model &model, const tinygltf::Primitive &primitive
 
 template <typename T>
 requires std::is_unsigned_v<T>
-void fillIndexBuffer(const tinygltf::Buffer &buffer, const tinygltf::Accessor &accessor,
-                     const tinygltf::BufferView &bufferView, std::vector<uint32_t> &indexBuffer)
+static inline void fillIndexBuffer(const tinygltf::Buffer &buffer, const tinygltf::Accessor &accessor,
+                                   const tinygltf::BufferView &bufferView, std::vector<uint32_t> &indexBuffer)
 {
     const T *buf = reinterpret_cast<const T *>(&buffer.data.at(accessor.byteOffset + bufferView.byteOffset));
     for (size_t index = 0; index < accessor.count; index++) { indexBuffer.push_back(buf[index]); }
@@ -38,21 +38,14 @@ void fillIndexBuffer(const tinygltf::Buffer &buffer, const tinygltf::Accessor &a
 namespace pivot::graphics
 {
 
-static std::vector<std::pair<std::string, AssetStorage::Model>> loadGltfNode(const tinygltf::Model &gltfModel,
-                                                                             const tinygltf::Node &node,
-                                                                             std::vector<Vertex> &vertexBuffer,
-                                                                             std::vector<uint32_t> &indexBuffer)
+static std::vector<std::pair<std::string, AssetStorage::Model>>
+loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::vector<Vertex> &vertexBuffer,
+             std::vector<uint32_t> &indexBuffer, glm::mat4 matrix)
 {
     DEBUG_FUNCTION
     logger.debug("Asset Storage/Gltf") << "Loading node: " << node.name;
-    std::vector<std::pair<std::string, AssetStorage::Model>> loaded;
-    for (const auto &i: node.children) {
-        auto child = loadGltfNode(gltfModel, gltfModel.nodes.at(i), vertexBuffer, indexBuffer);
-        loaded.insert(loaded.end(), child.begin(), child.end());
-    }
+
     if (node.mesh <= -1) return {};
-    const auto &mesh = gltfModel.meshes.at(node.mesh);
-    glm::mat4 matrix(1.0f);
     if (node.translation.size() == 3) {
         matrix = glm::translate(matrix, glm::vec3(glm::make_vec3(node.translation.data())));
     }
@@ -62,6 +55,13 @@ static std::vector<std::pair<std::string, AssetStorage::Model>> loadGltfNode(con
     }
     if (node.scale.size() == 3) { matrix = glm::scale(matrix, glm::vec3(glm::make_vec3(node.scale.data()))); }
     if (node.matrix.size() == 16) { matrix = glm::make_mat4x4(node.matrix.data()); }
+
+    const auto &mesh = gltfModel.meshes.at(node.mesh);
+    std::vector<std::pair<std::string, AssetStorage::Model>> loaded;
+    for (const auto &i: node.children) {
+        auto child = loadGltfNode(gltfModel, gltfModel.nodes.at(i), vertexBuffer, indexBuffer, matrix);
+        loaded.insert(loaded.end(), child.begin(), child.end());
+    }
 
     for (const tinygltf::Primitive &primitive: mesh.primitives) {
         AssetStorage::Model model{
@@ -193,8 +193,8 @@ bool AssetStorage::loadGltfModel(const std::filesystem::path &path)
             cpuStorage.materialStaging.add(std::move(mat));
         }
         for (const auto &node: gltfModel.nodes) {
-            for (const auto &i:
-                 loadGltfNode(gltfModel, node, cpuStorage.vertexStagingBuffer, cpuStorage.indexStagingBuffer)) {
+            for (const auto &i: loadGltfNode(gltfModel, node, cpuStorage.vertexStagingBuffer,
+                                             cpuStorage.indexStagingBuffer, glm::mat4(1.0f))) {
                 prefab.modelIds.push_back(i.first);
                 modelStorage.insert(i);
                 meshBoundingBoxStorage.add(i.first, MeshBoundingBox(std::span(cpuStorage.vertexStagingBuffer.begin() +

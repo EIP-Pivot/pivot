@@ -310,11 +310,11 @@ void VulkanApplication::createDescriptorPool()
     vk::DescriptorPoolSize poolSize[] = {
         {
             .type = vk::DescriptorType::eCombinedImageSampler,
-            .descriptorCount = MAX_TEXTURES,
+            .descriptorCount = static_cast<uint32_t>(assetStorage.getTextures().size()),
         },
         {
             .type = vk::DescriptorType::eStorageBuffer,
-            .descriptorCount = MAX_MATERIALS * MAX_OBJECT,
+            .descriptorCount = assetStorage.getMaterialBuffer().size,
         },
     };
 

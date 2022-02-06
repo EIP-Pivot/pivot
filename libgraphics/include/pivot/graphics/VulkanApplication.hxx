@@ -21,29 +21,14 @@
 #include <vk_mem_alloc.hpp>
 #include <vulkan/vulkan.hpp>
 
-#ifndef MAX_OBJECT
-#define MAX_OBJECT 5000
-#endif
-
-#ifndef MAX_TEXTURES
-#define MAX_TEXTURES 1000
-#endif
-
-#ifndef MAX_COMMANDS
-#define MAX_COMMANDS MAX_OBJECT
-#endif
-
-#ifndef MAX_MATERIALS
-#define MAX_MATERIALS 100
-#endif
-
 namespace pivot::graphics
 {
-
+/// The validation layers used by the engine
 const std::vector<const char *> validationLayers = {
     "VK_LAYER_KHRONOS_validation",
 };
 
+/// The device extensions required by the engine
 const std::vector<const char *> deviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 };

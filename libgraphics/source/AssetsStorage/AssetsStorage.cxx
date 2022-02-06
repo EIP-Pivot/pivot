@@ -10,16 +10,14 @@
 namespace pivot::graphics
 {
 
-const std::unordered_map<std::string, bool (AssetStorage::*)(const std::filesystem::path &)>
-    AssetStorage::supportedTexture = {
-        {".png", &AssetStorage::loadPngTexture},
-        {".ktx", &AssetStorage::loadKtxImage},
+const std::unordered_map<std::string, AssetStorage::AssetHandler> AssetStorage::supportedTexture = {
+    {".png", &AssetStorage::loadPngTexture},
+    {".ktx", &AssetStorage::loadKtxImage},
 };
 
-const std::unordered_map<std::string, bool (AssetStorage::*)(const std::filesystem::path &)>
-    AssetStorage::supportedObject = {
-        {".obj", &AssetStorage::loadObjModel},
-        {".gltf", &AssetStorage::loadGltfModel},
+const std::unordered_map<std::string, AssetStorage::AssetHandler> AssetStorage::supportedObject = {
+    {".obj", &AssetStorage::loadObjModel},
+    {".gltf", &AssetStorage::loadGltfModel},
 };
 
 AssetStorage::AssetStorage(VulkanBase &base): base_ref(base) { cpuStorage.materialStaging.add("white", {}); }

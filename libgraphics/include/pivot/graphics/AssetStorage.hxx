@@ -40,13 +40,15 @@ public:
         using std::out_of_range::out_of_range;
     };
 
+    /// @brief The function signature of an asset handler
+    using AssetHandler = bool (AssetStorage::*)(const std::filesystem::path &);
+
 public:
     /// List of supported texture extensions
-    static const std::unordered_map<std::string, bool (AssetStorage::*)(const std::filesystem::path &)>
-        supportedTexture;
+    static const std::unordered_map<std::string, AssetHandler> supportedTexture;
 
     /// List of supported object extensions
-    static const std::unordered_map<std::string, bool (AssetStorage::*)(const std::filesystem::path &)> supportedObject;
+    static const std::unordered_map<std::string, AssetHandler> supportedObject;
 
     /// @brief Represent a mesh in the buffers
     struct Mesh {

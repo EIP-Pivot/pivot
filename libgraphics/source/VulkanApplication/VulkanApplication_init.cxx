@@ -350,7 +350,7 @@ void VulkanApplication::createRessourcesDescriptorSets()
     for (auto &t: assetStorage.getTextures().getStorage()) {
         imagesInfos.push_back({
             .sampler = textureSampler,
-            .imageView = t.image.imageView,
+            .imageView = t.imageView,
             .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
         });
     }

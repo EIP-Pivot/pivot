@@ -98,13 +98,8 @@ public:
         vk::Extent3D size;
     };
 
-    /// @brief Represent a vulkan texture
-    struct Texture {
-        /// The vulkan image containing the texture
-        AllocatedImage image;
-        /// The size of the texture
-        vk::Extent3D size;
-    };
+    /// Aslias for AllocatedImage
+    using Texture = AllocatedImage;
 
 public:
     /// Constructor

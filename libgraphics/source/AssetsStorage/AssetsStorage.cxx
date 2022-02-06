@@ -49,8 +49,8 @@ void AssetStorage::build()
     pushTexturesOnGPU();
     for (const auto &[name, idex]: textureStorage) {
         const auto &im = textureStorage.get(idex);
-        vk_debug::setObjectName(base_ref->get().device, im.image.image, "Texture " + name);
-        vk_debug::setObjectName(base_ref->get().device, im.image.imageView, "Texture " + name + " ImageView");
+        vk_debug::setObjectName(base_ref->get().device, im.image, "Texture " + name);
+        vk_debug::setObjectName(base_ref->get().device, im.imageView, "Texture " + name + " ImageView");
     }
 
     logger.info("Asset Storage") << "Pushing " << cpuStorage.materialStaging.size() << " materials onto the GPU";
@@ -69,7 +69,7 @@ void AssetStorage::destroy()
     }
     if (boundingboxbuffer) AllocatedBuffer::destroy(base_ref->get(), boundingboxbuffer);
     if (materialBuffer) AllocatedBuffer::destroy(base_ref->get(), materialBuffer);
-    for (auto &image: textureStorage.getStorage()) { AllocatedImage::destroy(base_ref->get(), image.image); }
+    for (auto &image: textureStorage.getStorage()) { AllocatedImage::destroy(base_ref->get(), image); }
 }
 
 bool AssetStorage::loadModel(const std::filesystem::path &path)
@@ -172,10 +172,7 @@ void AssetStorage::pushTexturesOnGPU()
         image.generateMipmaps(base_ref->get(), image.mipLevels);
 
         AllocatedBuffer::destroy(base_ref->get(), stagingBuffer);
-        textureStorage.add(name, Texture{
-                                     .image = std::move(image),
-                                     .size = img.size,
-                                 });
+        textureStorage.add(name, std::move(image));
     }
 }
 

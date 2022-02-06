@@ -4,6 +4,7 @@
 #include "pivot/graphics/abstract/AImmediateCommand.hxx"
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 #include "pivot/graphics/types/AllocatedImage.hxx"
+#include "pivot/graphics/types/IndexedStorage.hxx"
 #include "pivot/graphics/types/Material.hxx"
 #include "pivot/graphics/types/MeshBoundingBox.hxx"
 #include "pivot/graphics/types/Vertex.hxx"
@@ -33,62 +34,6 @@ concept is_valid_path = requires
 class AssetStorage
 {
 public:
-    template <typename T, typename Idx = typename std::vector<T>::size_type>
-    /// Store a type in a vector, while keeping a map to the indexes
-    class IndexedStorage
-    {
-    public:
-        IndexedStorage() = default;
-        ~IndexedStorage() = default;
-
-        /// return an iterator over the indexes
-        auto begin() { return index.begin(); }
-        /// return the end iterator
-        auto end() { return index.end(); }
-        /// Add a new item to the storage
-        inline void add(const std::string &i, T value)
-        {
-            storage.push_back(std::move(value));
-            index.insert(std::make_pair(i, storage.size() - 1));
-        }
-        /// @copydoc add
-        inline void add(const std::pair<std::string, T> &value) { add(value.first, std::move(value.second)); }
-        /// return the number of item in the storage
-        constexpr auto size() const noexcept
-        {
-            assert(storage.size() == index.size());
-            return storage.size();
-        }
-        /// return the internal vector
-        constexpr const auto &getStorage() const noexcept { return storage; }
-        /// @copydoc getStorage
-        constexpr auto &getStorage() noexcept { return storage; }
-        /// return the item at a given index
-        constexpr const T &get(const std::int32_t &i) const { return storage.at(i); }
-
-        /// Get the name associated to givent idx
-        constexpr const std::string &getName(const std::size_t &idx) const
-        {
-            auto findResult =
-                std::find_if(index.begin(), index.end(), [&](const auto &pair) { return pair.second == idx; });
-            if (findResult != index.end()) return findResult->first;
-            throw std::out_of_range("Out of range index: ");
-        }
-
-        /// return the index of an item name
-        inline const std::int32_t getIndex(const std::string &i) const noexcept
-        {
-            if (index.contains(i))
-                return index.at(i);
-            else
-                return -1;
-        }
-
-    private:
-        std::vector<T> storage;
-        std::unordered_map<std::string, Idx> index;
-    };
-
     /// @struct AssetStorageException
     /// Exception type for the AssetStorage
     struct AssetStorageException : public std::out_of_range {
@@ -129,21 +74,6 @@ public:
         std::string occlusionTexture;
         std::string emissiveTexture;
         ///@endcond
-    };
-
-    /// @struct Material
-    /// Represent a GPU side material
-    struct Material {
-        /// @cond
-        float metallic = 1.0f;
-        float roughness = 1.0f;
-        glm::vec4 baseColor = glm::vec4(1.0f);
-        std::int32_t baseColorTexture = -1;
-        std::int32_t metallicRoughnessTexture = -1;
-        std::int32_t normalTexture = -1;
-        std::int32_t occlusionTexture = -1;
-        std::int32_t emissiveTexture = -1;
-        /// @endcond
     };
 
     /// A mesh with a default texture and a default material
@@ -256,9 +186,9 @@ private:
     std::unordered_map<std::string, Model> modelStorage;
     std::unordered_map<std::string, Prefab> prefabStorage;
 
-    IndexedStorage<MeshBoundingBox> meshBoundingBoxStorage;
+    IndexedStorage<gpu_object::MeshBoundingBox> meshBoundingBoxStorage;
     IndexedStorage<Texture> textureStorage;
-    IndexedStorage<Material> materialStorage;
+    IndexedStorage<gpu_object::Material> materialStorage;
 
     struct CPUStorage {
         std::vector<Vertex> vertexStagingBuffer;
@@ -307,7 +237,7 @@ inline const AssetStorage::Mesh &AssetStorage::get(const std::string &p) const
 
 template <>
 /// @cond
-inline std::int32_t AssetStorage::getIndex<MeshBoundingBox>(const std::string &i) const
+inline std::int32_t AssetStorage::getIndex<gpu_object::MeshBoundingBox>(const std::string &i) const
 {
     return meshBoundingBoxStorage.getIndex(i);
 }
@@ -320,7 +250,7 @@ inline std::int32_t AssetStorage::getIndex<AssetStorage::Texture>(const std::str
 
 template <>
 ///@endcond
-inline std::int32_t AssetStorage::getIndex<AssetStorage::Material>(const std::string &i) const
+inline std::int32_t AssetStorage::getIndex<gpu_object::Material>(const std::string &i) const
 {
     return materialStorage.getIndex(i);
 }

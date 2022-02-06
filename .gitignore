@@ -16,3 +16,4 @@ Makefile
 # Ignore the build directory
 build/
 cmake-build-*
+.vscode/*

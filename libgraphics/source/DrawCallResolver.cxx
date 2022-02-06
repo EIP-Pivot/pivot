@@ -41,7 +41,7 @@ void DrawCallResolver::prepareForDraw(const std::vector<std::reference_wrapper<c
 {
     auto &frame = frames.at(frameIndex);
     std::vector<DrawBatch> packedDraws;
-    std::vector<gpuObject::UniformBufferObject> objectGPUData;
+    std::vector<gpu_object::UniformBufferObject> objectGPUData;
     uint32_t drawCount = 0;
 
     for (const auto &object: sceneInformation) {
@@ -52,7 +52,7 @@ void DrawCallResolver::prepareForDraw(const std::vector<std::reference_wrapper<c
                 .first = drawCount++,
                 .count = 1,
             });
-            objectGPUData.push_back(gpuObject::UniformBufferObject(
+            objectGPUData.push_back(gpu_object::UniformBufferObject(
                 {
                     .meshID = model,
                     .objectInformation = object.get().objectInformation,
@@ -124,7 +124,7 @@ void DrawCallResolver::createBuffers(Frame &frame, const auto bufferSize)
     vk_debug::setObjectName(base_ref->get().device, frame.indirectBuffer.buffer,
                             "Indirect Command Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
 
-    frame.objectBuffer = AllocatedBuffer::create(base_ref->get(), sizeof(gpuObject::UniformBufferObject) * bufferSize,
+    frame.objectBuffer = AllocatedBuffer::create(base_ref->get(), sizeof(gpu_object::UniformBufferObject) * bufferSize,
                                                  vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
     vk_debug::setObjectName(base_ref->get().device, frame.objectBuffer.buffer,
                             "Object Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
@@ -147,7 +147,7 @@ void DrawCallResolver::createDescriptorSets(Frame &frame, const auto bufferSize)
     vk::DescriptorBufferInfo bufferInfo{
         .buffer = frame.objectBuffer.buffer,
         .offset = 0,
-        .range = sizeof(gpuObject::UniformBufferObject) * bufferSize,
+        .range = sizeof(gpu_object::UniformBufferObject) * bufferSize,
     };
     vk::DescriptorBufferInfo indirectInfo{
         .buffer = frame.indirectBuffer.buffer,

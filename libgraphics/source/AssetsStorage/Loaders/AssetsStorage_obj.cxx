@@ -106,8 +106,8 @@ bool AssetStorage::loadObjModel(const std::filesystem::path &path)
         prefab.modelIds.push_back(shape.name);
         modelStorage.insert({shape.name, model});
         meshBoundingBoxStorage.add(
-            shape.name, MeshBoundingBox(std::span(cpuStorage.vertexStagingBuffer.begin() + model.mesh.vertexOffset,
-                                                  model.mesh.vertexSize)));
+            shape.name, gpu_object::MeshBoundingBox(std::span(
+                            cpuStorage.vertexStagingBuffer.begin() + model.mesh.vertexOffset, model.mesh.vertexSize)));
     }
     prefabStorage.insert({path.stem().string(), prefab});
     return true;

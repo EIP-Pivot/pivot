@@ -14,7 +14,7 @@ namespace pivot::graphics
 {
 
 /// @class DrawCallResolver
-/// Used to build the per frame draw informations
+/// @brief Used to build the per frame draw informations
 class DrawCallResolver
 {
 public:

@@ -7,18 +7,24 @@ namespace pivot::graphics::gpu_object
 {
 
 /// @struct Material
-/// Represent a GPU side material
+/// @brief Represent a GPU side material
 struct Material {
-    /// @cond
+    /// Metalic factor
     alignas(4) float metallic = 1.0f;
+    /// roughness factor
     alignas(4) float roughness = 1.0f;
+    /// Base color of the material, if no baseColorTexture is provided
     alignas(16) glm::vec4 baseColor = glm::vec4(1.0f);
+    /// Diffuse texture, use to determine the base color of the fragment
     alignas(4) std::int32_t baseColorTexture = -1;
+    /// Metallic/Roughness Texture
     alignas(4) std::int32_t metallicRoughnessTexture = -1;
+    /// Normal Texture
     alignas(4) std::int32_t normalTexture = -1;
+    /// Occlusion Texture
     alignas(4) std::int32_t occlusionTexture = -1;
+    /// Emissive Texture
     alignas(4) std::int32_t emissiveTexture = -1;
-    /// @endcond
 };
 
 static_assert(sizeof(Material) % 4 == 0);

@@ -24,18 +24,18 @@ namespace pivot::graphics
 {
 
 template <typename T>
+/// @brief  Is the type is convertible to filesystem path ?
 concept is_valid_path = requires
 {
     std::is_convertible_v<T, std::filesystem::path>;
 };
 
-/// @class AssetStorage
-/// Store all of the assets used by the game
+/// @brief Store all of the assets used by the game
 class AssetStorage
 {
 public:
     /// @struct AssetStorageException
-    /// Exception type for the AssetStorage
+    /// @brief Exception type for the AssetStorage
     struct AssetStorageException : public std::out_of_range {
         using std::out_of_range::out_of_range;
     };
@@ -48,8 +48,7 @@ public:
     /// List of supported object extensions
     static const std::unordered_map<std::string, bool (AssetStorage::*)(const std::filesystem::path &)> supportedObject;
 
-    /// @struct Mesh
-    /// Represent a mesh in the buffers
+    /// @brief Represent a mesh in the buffers
     struct Mesh {
         /// Starting offset of the mesh in the vertex buffer
         std::uint32_t vertexOffset;
@@ -61,8 +60,7 @@ public:
         std::uint32_t indicesSize;
     };
 
-    /// @struct CPUMaterial
-    /// Represent a CPU-side material
+    /// @brief Represent a CPU-side material
     struct CPUMaterial {
         /// @cond
         float metallic = 1.0f;
@@ -76,7 +74,7 @@ public:
         ///@endcond
     };
 
-    /// A mesh with a default texture and a default material
+    /// @brief A mesh with a default texture and a default material
     struct Model {
         /// Model mesh
         Mesh mesh;
@@ -84,14 +82,13 @@ public:
         std::optional<std::string> default_material;
     };
 
-    /// An group of model
+    /// @brief A group of model
     struct Prefab {
         /// The ids of the composing models
         std::vector<std::string> modelIds;
     };
 
-    /// @struct CPUTexture
-    /// Represent a cpu-side Texture
+    /// @brief Represent a CPU-side Texture
     struct CPUTexture {
         /// The vulkan image containing the texture
         std::vector<std::byte> image;
@@ -99,8 +96,7 @@ public:
         vk::Extent3D size;
     };
 
-    /// @struct Texture
-    /// Represent a vulkan texture
+    /// @brief Represent a vulkan texture
     struct Texture {
         /// The vulkan image containing the texture
         AllocatedImage image;
@@ -211,7 +207,7 @@ private:
     if (!stor.contains(key)) throw AssetStorage::AssetStorageException("Missing " + key + " in " #stor);
 
 template <>
-/// @cond
+/// @copydoc AssetStorage::get
 inline const AssetStorage::Prefab &AssetStorage::get(const std::string &p) const
 {
     PIVOT_TEST_CONTAINS(prefabStorage, p);
@@ -219,6 +215,7 @@ inline const AssetStorage::Prefab &AssetStorage::get(const std::string &p) const
 }
 
 template <>
+/// @copydoc AssetStorage::get
 inline const AssetStorage::Model &AssetStorage::get(const std::string &p) const
 {
     PIVOT_TEST_CONTAINS(modelStorage, p);
@@ -226,6 +223,7 @@ inline const AssetStorage::Model &AssetStorage::get(const std::string &p) const
 }
 
 template <>
+/// @copydoc AssetStorage::get
 inline const AssetStorage::Mesh &AssetStorage::get(const std::string &p) const
 {
     return get<Model>(p).mesh;
@@ -234,22 +232,22 @@ inline const AssetStorage::Mesh &AssetStorage::get(const std::string &p) const
 #undef PIVOT_TEST_CONTAINS
 
 // Get Index of asset in the buffers
-
 template <>
-/// @cond
+/// @copydoc AssetStorage::get
 inline std::int32_t AssetStorage::getIndex<gpu_object::MeshBoundingBox>(const std::string &i) const
 {
     return meshBoundingBoxStorage.getIndex(i);
 }
 
 template <>
+/// @copydoc AssetStorage::get
 inline std::int32_t AssetStorage::getIndex<AssetStorage::Texture>(const std::string &i) const
 {
     return textureStorage.getIndex(i);
 }
 
 template <>
-///@endcond
+/// @copydoc AssetStorage::get
 inline std::int32_t AssetStorage::getIndex<gpu_object::Material>(const std::string &i) const
 {
     return materialStorage.getIndex(i);

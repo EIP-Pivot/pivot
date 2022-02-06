@@ -14,7 +14,8 @@ const static std::array<glm::vec4, 6> PLANES = {{
     {0, 0, 1, 0},
 }};
 
-bool should_object_be_rendered(const Transform &transform, const MeshBoundingBox &box, const CameraData &camera)
+bool should_object_be_rendered(const Transform &transform, const gpu_object::MeshBoundingBox &box,
+                               const CameraData &camera)
 {
     auto projection = camera.viewProjection * transform.getModelMatrix();
     auto bounding_box = box.vertices();

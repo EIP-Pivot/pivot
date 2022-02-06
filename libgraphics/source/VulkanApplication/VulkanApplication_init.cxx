@@ -112,10 +112,10 @@ void VulkanApplication::createPipelineLayout()
 {
     DEBUG_FUNCTION
     std::vector<vk::PushConstantRange> pipelinePushConstant = {
-        vk_init::populateVkPushConstantRange(vk::ShaderStageFlagBits::eVertex, sizeof(gpuObject::VertexPushConstant)),
+        vk_init::populateVkPushConstantRange(vk::ShaderStageFlagBits::eVertex, sizeof(gpu_object::VertexPushConstant)),
         vk_init::populateVkPushConstantRange(vk::ShaderStageFlagBits::eFragment,
-                                             sizeof(gpuObject::FragmentPushConstant),
-                                             sizeof(gpuObject::VertexPushConstant)),
+                                             sizeof(gpu_object::FragmentPushConstant),
+                                             sizeof(gpu_object::VertexPushConstant)),
     };
 
     std::vector<vk::DescriptorSetLayout> setLayout = {drawResolver.getDescriptorSetLayout(), ressourcesSetLayout};
@@ -128,7 +128,7 @@ void VulkanApplication::createCullingPipelineLayout()
 {
     DEBUG_FUNCTION
     std::vector<vk::PushConstantRange> pipelinePushConstant = {vk_init::populateVkPushConstantRange(
-        vk::ShaderStageFlagBits::eCompute, sizeof(gpuObject::CullingPushConstant))};
+        vk::ShaderStageFlagBits::eCompute, sizeof(gpu_object::CullingPushConstant))};
     std::vector<vk::DescriptorSetLayout> setLayout = {drawResolver.getDescriptorSetLayout(), ressourcesSetLayout};
     auto pipelineLayoutCreateInfo = vk_init::populateVkPipelineLayoutCreateInfo(setLayout, pipelinePushConstant);
     cullingLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);

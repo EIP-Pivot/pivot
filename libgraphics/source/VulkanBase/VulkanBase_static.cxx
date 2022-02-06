@@ -87,7 +87,7 @@ bool VulkanBase::isDeviceSuitable(const vk::PhysicalDevice &gpu, const vk::Surfa
         swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
     }
     return indices.isComplete() && extensionsSupported && swapChainAdequate && deviceFeatures.samplerAnisotropy &&
-           deviceProperties.limits.maxPushConstantsSize >= gpuObject::pushConstantsSize;
+           deviceProperties.limits.maxPushConstantsSize >= gpu_object::pushConstantsSize;
 }
 
 std::uint32_t VulkanBase::rateDeviceSuitability(const vk::PhysicalDevice &gpu)

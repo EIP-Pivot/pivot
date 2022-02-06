@@ -7,6 +7,8 @@
 #include <glm/vec3.hpp>
 #include <span>
 
+namespace pivot::graphics::gpu_object
+{
 /// @struct MeshBoundingBox
 ///
 /// @brief Represents the cubic bounding box of a mesh
@@ -59,5 +61,8 @@ struct MeshBoundingBox {
         };
     }
 };
+
 static_assert(sizeof(MeshBoundingBox) % 4 == 0);
 static_assert(sizeof(MeshBoundingBox) == sizeof(float) * 4 * 2);
+
+}    // namespace pivot::graphics::gpu_object

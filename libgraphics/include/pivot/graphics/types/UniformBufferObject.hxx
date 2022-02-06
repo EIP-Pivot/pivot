@@ -7,7 +7,7 @@
 #include <glm/mat4x4.hpp>
 #include <string>
 
-namespace gpuObject
+namespace pivot::graphics::gpu_object
 {
 
 /// @struct UniformBufferObject
@@ -16,7 +16,7 @@ namespace gpuObject
 struct UniformBufferObject {
     /// @param info The object information
     /// @param assetStorage The AssetStorage used to get the indexes
-    UniformBufferObject(const RenderObject &info, const pivot::graphics::AssetStorage &assetStorage);
+    UniformBufferObject(const RenderObject &info, const AssetStorage &assetStorage);
     /// The model matrix
     alignas(16) glm::mat4 modelMatrix;
     /// The index of the material in the buffer
@@ -24,7 +24,8 @@ struct UniformBufferObject {
     /// The index of the bounding box
     alignas(4) std::uint32_t boundingBoxIndex = 0;
 };
-}    // namespace gpuObject
 
-static_assert(sizeof(gpuObject::UniformBufferObject) % 4 == 0);
-static_assert(sizeof(gpuObject::UniformBufferObject) == sizeof(float) * 4 * 4 + sizeof(std::uint32_t) * 4);
+static_assert(sizeof(gpu_object::UniformBufferObject) % 4 == 0);
+static_assert(sizeof(gpu_object::UniformBufferObject) == sizeof(float) * 4 * 4 + sizeof(std::uint32_t) * 4);
+
+}    // namespace pivot::graphics::gpu_object

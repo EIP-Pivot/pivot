@@ -178,7 +178,7 @@ void AssetStorage::pushTexturesOnGPU()
 void AssetStorage::pushMaterialOnGPU()
 {
     DEBUG_FUNCTION
-    auto size = sizeof(Material) * cpuStorage.materialStaging.size();
+    auto size = sizeof(gpu_object::Material) * cpuStorage.materialStaging.size();
     if (size == 0) {
         logger.warn("Asset Storage") << "No material to push";
         return;
@@ -191,7 +191,7 @@ void AssetStorage::pushMaterialOnGPU()
         const auto &mat = cpuStorage.materialStaging.getStorage()[idx];
         materialStorage.add(
             name,
-            Material{
+            {
                 .metallic = mat.metallic,
                 .roughness = mat.roughness,
                 .baseColor = mat.baseColor,
@@ -218,7 +218,7 @@ void AssetStorage::pushMaterialOnGPU()
 void AssetStorage::pushBoundingBoxesOnGPU()
 {
     DEBUG_FUNCTION
-    auto size = sizeof(MeshBoundingBox) * meshBoundingBoxStorage.size();
+    auto size = sizeof(gpu_object::MeshBoundingBox) * meshBoundingBoxStorage.size();
     if (size == 0) {
         logger.warn("Asset Storage") << "No bounding box to push";
         return;

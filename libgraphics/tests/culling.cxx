@@ -2,6 +2,9 @@
 #include <pivot/graphics/culling.hxx>
 #include <pivot/graphics/types/vk_types.hxx>
 
+using namespace pivot::graphics;
+using namespace pivot::graphics::gpu_object;
+
 TEST_CASE("culling works", "[culling]")
 {
     // Raw data of a camera with the following properties:

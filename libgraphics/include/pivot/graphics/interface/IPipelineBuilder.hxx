@@ -2,11 +2,11 @@
 
 #include <vulkan/vulkan.hpp>
 
-namespace pivot::graphics
+namespace pivot::graphics::interface
 {
 
 /// @interface IPipelineBuilder
-/// Used to create the PipelineBuilders
+/// @brief Used to create the PipelineBuilders
 class IPipelineBuilder
 {
 public:

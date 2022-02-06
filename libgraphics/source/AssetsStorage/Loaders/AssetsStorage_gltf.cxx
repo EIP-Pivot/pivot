@@ -197,10 +197,6 @@ bool AssetStorage::loadGltfModel(const std::filesystem::path &path)
                                              cpuStorage.indexStagingBuffer, glm::mat4(1.0f))) {
                 prefab.modelIds.push_back(i.first);
                 modelStorage.insert(i);
-                meshBoundingBoxStorage.add(
-                    i.first, gpu_object::MeshBoundingBox(
-                                 std::span(cpuStorage.vertexStagingBuffer.begin() + i.second.mesh.vertexOffset,
-                                           i.second.mesh.vertexSize)));
             }
         }
     } catch (const AssetStorageException &ase) {

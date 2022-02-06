@@ -27,6 +27,12 @@ AssetStorage::~AssetStorage() {}
 void AssetStorage::build()
 {
     DEBUG_FUNCTION
+
+    for (const auto &[name, model]: modelStorage) {
+        meshBoundingBoxStorage.add(
+            name, gpu_object::MeshBoundingBox(std::span(
+                      cpuStorage.vertexStagingBuffer.begin() + model.mesh.vertexOffset, model.mesh.vertexSize)));
+    }
     assert(modelStorage.size() == meshBoundingBoxStorage.size());
 
     logger.info("Asset Storage") << prefabStorage.size() << " prefab loaded";

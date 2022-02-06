@@ -105,9 +105,6 @@ bool AssetStorage::loadObjModel(const std::filesystem::path &path)
         model.mesh.vertexSize = cpuStorage.vertexStagingBuffer.size() - model.mesh.vertexOffset;
         prefab.modelIds.push_back(shape.name);
         modelStorage.insert({shape.name, model});
-        meshBoundingBoxStorage.add(
-            shape.name, gpu_object::MeshBoundingBox(std::span(
-                            cpuStorage.vertexStagingBuffer.begin() + model.mesh.vertexOffset, model.mesh.vertexSize)));
     }
     prefabStorage.insert({path.stem().string(), prefab});
     return true;

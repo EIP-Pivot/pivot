@@ -1,4 +1,5 @@
 #include "pivot/graphics/types/AllocatedImage.hxx"
+#include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
 namespace pivot::graphics
@@ -7,6 +8,25 @@ namespace pivot::graphics
 AllocatedImage::AllocatedImage() {}
 
 AllocatedImage::~AllocatedImage() {}
+
+void AllocatedImage::createImage(VulkanBase &base, const vk::ImageCreateInfo &info,
+                                 const vma::AllocationCreateInfo &allocInfo)
+{
+    format = info.format;
+    size = info.extent;
+    mipLevels = info.mipLevels;
+    std::tie(image, memory) = base.allocator.createImage(info, allocInfo);
+}
+
+void AllocatedImage::createImageView(VulkanBase &base)
+{
+    createImageView(base, vk_init::populateVkImageViewCreateInfo(image, format, mipLevels));
+}
+
+void AllocatedImage::createImageView(VulkanBase &base, const vk::ImageViewCreateInfo &info)
+{
+    imageView = base.device.createImageView(info);
+}
 
 void AllocatedImage::generateMipmaps(VulkanBase &base, uint32_t mipLevel)
 {

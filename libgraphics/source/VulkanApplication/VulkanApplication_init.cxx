@@ -428,9 +428,6 @@ void VulkanApplication::createDepthResources()
     vk::Format depthFormat = pivot::graphics::vk_utils::findSupportedFormat(
         physical_device, {vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint},
         vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
-
-    depthResources.size = swapchain.getSwapchainExtent3D();
-    depthResources.format = depthFormat;
     vk::ImageCreateInfo imageInfo{
         .imageType = vk::ImageType::e2D,
         .format = depthFormat,
@@ -445,12 +442,12 @@ void VulkanApplication::createDepthResources()
     };
     vma::AllocationCreateInfo allocInfo;
     allocInfo.setUsage(vma::MemoryUsage::eGpuOnly);
-    std::tie(depthResources.image, depthResources.memory) = allocator.createImage(imageInfo, allocInfo);
+    depthResources.createImage(*this, imageInfo, allocInfo);
 
     auto createInfo = vk_init::populateVkImageViewCreateInfo(depthResources.image, depthFormat);
     createInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eDepth;
-    depthResources.imageView = device.createImageView(createInfo);
 
+    depthResources.createImageView(*this, createInfo);
     depthResources.transitionLayout(*this, vk::ImageLayout::eDepthStencilAttachmentOptimal);
     pivot::graphics::vk_debug::setObjectName(device, depthResources.image, "Depth Image");
     pivot::graphics::vk_debug::setObjectName(device, depthResources.imageView, "Depth Image view");
@@ -477,12 +474,8 @@ void VulkanApplication::createColorResources()
     };
     vma::AllocationCreateInfo allocInfo{};
     allocInfo.usage = vma::MemoryUsage::eGpuOnly;
-    std::tie(colorImage.image, colorImage.memory) = allocator.createImage(imageInfo, allocInfo);
-
-    auto createInfo = vk_init::populateVkImageViewCreateInfo(colorImage.image, swapchain.getSwapchainFormat());
-    createInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-    colorImage.imageView = device.createImageView(createInfo);
-
+    colorImage.createImage(*this, imageInfo, allocInfo);
+    colorImage.createImageView(*this);
     pivot::graphics::vk_debug::setObjectName(device, colorImage.image, "Color Image");
     pivot::graphics::vk_debug::setObjectName(device, colorImage.imageView, "Color Image view");
     swapchainDeletionQueue.push([&] {

@@ -25,6 +25,12 @@ public:
     /// Descriptor
     ~AllocatedImage();
 
+    /// Create the image
+    void createImage(VulkanBase &base, const vk::ImageCreateInfo &info, const vma::AllocationCreateInfo &allocInfo);
+    /// Create the image view for this image
+    void createImageView(VulkanBase &base);
+    /// @copydoc createImageView
+    void createImageView(VulkanBase &base, const vk::ImageViewCreateInfo &info);
     /// Generate mipmaps for the image
     void generateMipmaps(VulkanBase &base, uint32_t mipLevel);
     /// Transition image layout to given format

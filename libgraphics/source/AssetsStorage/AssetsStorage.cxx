@@ -145,14 +145,11 @@ void AssetStorage::pushTexturesOnGPU()
         stagingBuffer.copyBuffer(base_ref->get().allocator, img.image);
 
         AllocatedImage image;
-        image.size = img.size;
-        image.format = vk::Format::eR8G8B8A8Srgb;
-        image.mipLevels = std::floor(std::log2(std::max(img.size.width, img.size.height))) + 1;
         vk::ImageCreateInfo imageInfo{
             .imageType = vk::ImageType::e2D,
-            .format = image.format,
+            .format = vk::Format::eR8G8B8A8Srgb,
             .extent = img.size,
-            .mipLevels = image.mipLevels,
+            .mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(img.size.width, img.size.height))) + 1),
             .arrayLayers = 1,
             .samples = vk::SampleCountFlagBits::e1,
             .tiling = vk::ImageTiling::eOptimal,
@@ -163,10 +160,8 @@ void AssetStorage::pushTexturesOnGPU()
         };
         vma::AllocationCreateInfo allocInfo;
         allocInfo.usage = vma::MemoryUsage::eGpuOnly;
-        std::tie(image.image, image.memory) = base_ref->get().allocator.createImage(imageInfo, allocInfo);
-        auto createInfo = vk_init::populateVkImageViewCreateInfo(image.image, image.format, image.mipLevels);
-        image.imageView = base_ref->get().device.createImageView(createInfo);
-
+        image.createImage(base_ref->get(), imageInfo, allocInfo);
+        image.createImageView(base_ref->get());
         image.transitionLayout(base_ref->get(), vk::ImageLayout::eTransferDstOptimal);
         stagingBuffer.copyToImage(base_ref->get(), image);
         image.generateMipmaps(base_ref->get(), image.mipLevels);

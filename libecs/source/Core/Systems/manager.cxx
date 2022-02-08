@@ -23,18 +23,18 @@ void Manager::execute(const event::Description &eventDescription, const data::Va
 {
     for (const auto &[name, description]: m_systems) {
         if (eventDescription.name == description.eventListener.name) {
-
-            Description::systemArgs componentArrays;
+            std::vector<std::reference_wrapper<component::IComponentArray>> componentArrays;
             for (const auto index: getComponentsId(description.systemComponents))
                 componentArrays.push_back(m_componentManager.GetComponentArray(index).value());
+            Description::systemArgs combination{componentArrays};
+
             if (entities.size() != description.eventComponents.size())
                 throw std::logic_error("This system expect " + std::to_string(description.eventComponents.size()) + " entity.");
-
             event::Entities entitiesComponents;
             for (std::size_t i = 0; i < entities.size(); i++) {
                 std::vector<component::ComponentRef> entityComponents;
                 for (const auto index: getComponentsId(description.eventComponents[i]))
-                    entityComponents.push_back(component::ComponentRef(m_componentManager.GetComponentArray(index).value().get(), entities[i]));
+                    entityComponents.emplace_back(m_componentManager.GetComponentArray(index).value().get(), entities[i]);
                 entitiesComponents.push_back(entityComponents);
             }
 
@@ -43,7 +43,7 @@ void Manager::execute(const event::Description &eventDescription, const data::Va
                 .entities = entitiesComponents,
                 .payload = payload,
             };
-            description.system(description, componentArrays, event);
+            description.system(description, combination, event);
         }
     }
 }

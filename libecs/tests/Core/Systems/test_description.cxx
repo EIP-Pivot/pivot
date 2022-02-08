@@ -9,7 +9,7 @@
 using namespace pivot::ecs;
 
 void test_description(const systems::Description &,
-                      const systems::Description::systemArgs &, const event::Event &)
+                      systems::Description::systemArgs &, const event::Event &)
 {
 }
 

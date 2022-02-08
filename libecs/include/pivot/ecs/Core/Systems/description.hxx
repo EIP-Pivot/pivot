@@ -4,6 +4,7 @@
 #include "pivot/ecs/Core/Component/description.hxx"
 #include "pivot/ecs/Core/Data/value.hxx"
 #include "pivot/ecs/Core/Event/description.hxx"
+#include "pivot/ecs/Core/Component/combination.hxx"
 
 #include <any>
 #include <functional>
@@ -17,7 +18,7 @@ namespace pivot::ecs::systems
 
 struct Description {
 
-    using systemArgs = std::vector<std::reference_wrapper<component::IComponentArray>>;
+    using systemArgs = component::ArrayCombination;
 
     std::string name;
 
@@ -27,7 +28,7 @@ struct Description {
 
     std::vector<std::vector<std::string>> eventComponents;
 
-    std::function<void(const Description &, const systemArgs &, const event::Event &)> system;
+    std::function<void(const Description &, systemArgs &, const event::Event &)> system;
 
     void validate() const;
 

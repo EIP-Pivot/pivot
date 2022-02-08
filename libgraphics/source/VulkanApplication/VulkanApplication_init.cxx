@@ -136,11 +136,22 @@ void VulkanApplication::createPipeline()
         .setRenderPass(renderPass)
         .setMsaaSample(maxMsaaSample)
         .setFaceCulling(vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise)
-        .setVertexShaderPath("shaders/triangle.vert.spv")
-        .setFragmentShaderPath("shaders/triangle.frag.spv");
+        .setVertexShaderPath("shaders/default.vert.spv")
+        .setFragmentShaderPath("shaders/default_lit.frag.spv");
     pipelineStorage.newPipeline("lit", builder);
     pipelineStorage.setDefault("lit");
-    swapchainDeletionQueue.push([&] { pipelineStorage.removePipeline("lit"); });
+
+    builder.setFragmentShaderPath("shaders/default_unlit.frag.spv");
+    pipelineStorage.newPipeline("unlit", builder);
+
+    builder.setFaceCulling(vk::CullModeFlagBits::eFront, vk::FrontFace::eCounterClockwise);
+    pipelineStorage.newPipeline("skybox", builder);
+
+    swapchainDeletionQueue.push([&] {
+        pipelineStorage.removePipeline("lit");
+        pipelineStorage.removePipeline("unlit");
+        pipelineStorage.removePipeline("skybox");
+    });
 }
 
 void VulkanApplication::createCullingPipeline()

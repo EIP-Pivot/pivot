@@ -3,6 +3,7 @@
 #include "pivot/graphics/AssetStorage.hxx"
 #include "pivot/graphics/DeletionQueue.hxx"
 #include "pivot/graphics/DrawCallResolver.hxx"
+#include "pivot/graphics/PipelineStorage.hxx"
 #include "pivot/graphics/QueueFamilyIndices.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/VulkanSwapchain.hxx"
@@ -86,7 +87,6 @@ private:
     void createCommandPool();
     void createCommandBuffers();
 
-    void createPipelineCache();
     void createPipeline();
     void createCullingPipeline();
     void createDepthResources();
@@ -136,12 +136,9 @@ private:
     AllocatedImage depthResources = {};
     AllocatedImage colorImage = {};
 
-    vk::PipelineCache pipelineCache = VK_NULL_HANDLE;
+    PipelineStorage pipelineStorage;
     vk::PipelineLayout pipelineLayout = VK_NULL_HANDLE;
-    vk::Pipeline graphicsPipeline = VK_NULL_HANDLE;
-
     vk::PipelineLayout cullingLayout = VK_NULL_HANDLE;
-    vk::Pipeline cullingPipeline = VK_NULL_HANDLE;
 
     std::vector<vk::Framebuffer> swapChainFramebuffers;
     /// @endcond

@@ -169,6 +169,7 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/abstract/AImmediateCommand.cxx
                                    source/culling.cxx
                                    source/DrawCallResolver.cxx
+                                   source/PipelineStorage.cxx
 )
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE <vulkan/vulkan.hpp> <vk_mem_alloc.hpp>)

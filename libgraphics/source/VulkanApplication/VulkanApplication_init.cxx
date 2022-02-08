@@ -100,14 +100,6 @@ void VulkanApplication::createRenderPass()
     swapchainDeletionQueue.push([&] { device.destroy(renderPass); });
 }
 
-void VulkanApplication::createPipelineCache()
-{
-    DEBUG_FUNCTION
-    vk::PipelineCacheCreateInfo createInfo{};
-    pipelineCache = device.createPipelineCache(createInfo);
-    mainDeletionQueue.push([&] { device.destroy(pipelineCache); });
-}
-
 void VulkanApplication::createPipelineLayout()
 {
     DEBUG_FUNCTION
@@ -146,10 +138,9 @@ void VulkanApplication::createPipeline()
         .setFaceCulling(vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise)
         .setVertexShaderPath("shaders/triangle.vert.spv")
         .setFragmentShaderPath("shaders/triangle.frag.spv");
-    graphicsPipeline = builder.build(device, pipelineCache);
-    pivot::graphics::vk_debug::setObjectName(device, graphicsPipeline, "Main graphics pipeline");
-
-    swapchainDeletionQueue.push([&] { device.destroy(graphicsPipeline); });
+    pipelineStorage.newPipeline("lit", builder);
+    pipelineStorage.setDefault("lit");
+    swapchainDeletionQueue.push([&] { pipelineStorage.removePipeline("lit"); });
 }
 
 void VulkanApplication::createCullingPipeline()
@@ -157,10 +148,7 @@ void VulkanApplication::createCullingPipeline()
     DEBUG_FUNCTION
     pivot::graphics::ComputePipelineBuilder builder;
     builder.setPipelineLayout(cullingLayout).setComputeShaderPath("shaders/culling.comp.spv");
-    cullingPipeline = builder.build(device, pipelineCache);
-    pivot::graphics::vk_debug::setObjectName(device, cullingPipeline, "Culling compute pipeline");
-
-    mainDeletionQueue.push([&] { device.destroyPipeline(cullingPipeline); });
+    pipelineStorage.newPipeline("culling", builder);
 }
 
 void VulkanApplication::createFramebuffers()
@@ -532,7 +520,6 @@ void VulkanApplication::initDearImGui()
     init_info.Device = device;
     init_info.QueueFamily = queueIndices.graphicsFamily.value();
     init_info.Queue = graphicsQueue;
-    init_info.PipelineCache = pipelineCache;
     init_info.DescriptorPool = imguiContext.pool;
     init_info.MinImageCount = swapchain.nbOfImage();
     init_info.ImageCount = swapchain.nbOfImage();

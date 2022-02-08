@@ -15,7 +15,10 @@ namespace pivot::graphics
 {
 
 VulkanApplication::VulkanApplication()
-    : VulkanBase("Pivot Game Engine", true), assetStorage(*this), drawResolver(*this, assetStorage)
+    : VulkanBase("Pivot Game Engine", true),
+      assetStorage(*this),
+      drawResolver(*this, assetStorage),
+      pipelineStorage(*this)
 {
     DEBUG_FUNCTION;
 
@@ -41,6 +44,7 @@ VulkanApplication::~VulkanApplication()
     swapchainDeletionQueue.flush();
     mainDeletionQueue.flush();
     drawResolver.destroy();
+    pipelineStorage.destroy();
     VulkanBase::destroy();
 }
 
@@ -56,7 +60,6 @@ void VulkanApplication::initVulkanRessources()
 {
     DEBUG_FUNCTION
 
-    createPipelineCache();
     createSyncStructure();
     createRessourcesDescriptorSetLayout();
     createPipelineLayout();
@@ -212,7 +215,7 @@ try {
         vk_utils::vk_try(drawCmd.begin(&drawBeginInfo));
         pivot::graphics::vk_debug::beginRegion(imguiCmd, "Draw Commands", {0.f, 1.f, 0.f, 1.f});
         if (drawResolver.getFrameData(currentFrame).packedDraws.size() > 0) {
-            drawCmd.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
+            drawCmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelineStorage.getDefault());
             drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0,
                                        drawResolver.getFrameData(currentFrame).objectDescriptor, nullptr);
             drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, ressourceDescriptorSet,
@@ -261,7 +264,7 @@ try {
         cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, cullingLayout, 1, ressourceDescriptorSet, nullptr);
         cmd.pushConstants<gpu_object::CullingPushConstant>(cullingLayout, vk::ShaderStageFlagBits::eCompute, 0,
                                                            cullingCamera);
-        cmd.bindPipeline(vk::PipelineBindPoint::eCompute, cullingPipeline);
+        cmd.bindPipeline(vk::PipelineBindPoint::eCompute, pipelineStorage.get("culling"));
         cmd.pipelineBarrier(vk::PipelineStageFlagBits::eDrawIndirect, vk::PipelineStageFlagBits::eComputeShader, {}, {},
                             barrier, {});
         cmd.dispatch((drawResolver.getFrameData(currentFrame).packedDraws.size() / 256) + 1, 1, 1);

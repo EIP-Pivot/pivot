@@ -12,17 +12,18 @@ using namespace pivot::ecs;
 using namespace pivot::ecs::data;
 
 void test_manager_registration(const systems::Description &description,
-                               const systems::Description::systemArgs &entities, const event::Event &event)
+                               systems::Description::systemArgs &entities, const event::Event &event)
 {
     std::cout << "I'm a tick system:\n";
-    auto &tagArray = entities[1].get();
-    auto tag = tagArray.getValueForEntity(0).value();
-    std::cout << "\tComponent Tag.name = " << std::get<std::string>(std::get<Record>(tag).at("name")) << std::endl;
-    std::get<std::string>(std::get<Record>(tag).at("name")) = "edit";
-    tagArray.setValueForEntity(0, tag);
+    for (auto combination: entities) {
+        auto tag = combination[1].get();
+        std::cout << "\tEntity name = " << std::get<std::string>(std::get<Record>(tag).at("name")) << std::endl;
+        std::get<std::string>(std::get<Record>(tag).at("name")) = "edit";
+        combination[1].set(tag);
+    }
     std::cout << "\tPayload type = " << event.payload.type() << std::endl;
-    for (const auto &enitity: event.entities)
-        for (const auto &value: enitity){
+    for (const auto &entity: event.entities)
+        for (const auto &value: entity){
             std::cout << "\tEvent entity component = " << ((Value)value).type() << std::endl;
         }
 }

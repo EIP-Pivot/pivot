@@ -17,15 +17,16 @@
 using namespace pivot::ecs;
 using namespace pivot::ecs::data;
 
-void tickSystem(const systems::Description &description, const systems::Description::systemArgs &entities,
+void tickSystem(const systems::Description &description, systems::Description::systemArgs &entities,
                 const event::Event &event)
 {
     std::cout << "I'm a tick system:\n";
-    auto &tagArray = entities[1].get();
-    auto tag = tagArray.getValueForEntity(0).value();
-    std::cout << "\tComponent Tag.name = " << std::get<std::string>(std::get<Record>(tag).at("name")) << std::endl;
-    std::get<std::string>(std::get<Record>(tag).at("name")) = "edit";
-    tagArray.setValueForEntity(0, tag);
+    for (auto combination: entities) {
+        auto tag = combination[1].get();
+        std::cout << "\tEntity name = " << std::get<std::string>(std::get<Record>(tag).at("name")) << std::endl;
+        std::get<std::string>(std::get<Record>(tag).at("name")) = "edit";
+        combination[1].set(tag);
+    }
 }
 
 TEST_CASE("Manager event", "[description][registration][manager]")

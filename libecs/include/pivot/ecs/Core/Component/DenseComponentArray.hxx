@@ -36,6 +36,12 @@ public:
         return helpers::Helpers<T>::createValueFromType(m_components.at(entity));
     }
 
+    /// \copydoc pivot::ecs::component::IComponentArray::entityHasValue()
+    bool entityHasValue(Entity entity) const override
+    {
+        return entity < m_component_exist.size() && m_component_exist[entity];
+    }
+
     /// \copydoc pivot::ecs::component::IComponentArray::setValueForEntity()
     void setValueForEntity(Entity entity, std::optional<data::Value> value) override
     {
@@ -54,6 +60,9 @@ public:
             m_component_exist.at(entity) = true;
         }
     }
+
+    /// \copydoc pivot::ecs::component::IComponentArray::maxEntity()
+    Entity maxEntity() const override { return m_components.size() - 1; }
 
     /// Returns a mutable view into the components values. Some of those values can be nonsensical as the entity can
     /// miss this component.

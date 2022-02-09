@@ -33,11 +33,11 @@ public:
     /// Set the path of the fragment shader to use, can be chained
     GraphicsPipelineBuilder &setFragmentShaderPath(const std::string &);
     /// Set the amount of super sampling, can be chained
-    GraphicsPipelineBuilder &setMsaaSample(vk::SampleCountFlagBits &);
+    GraphicsPipelineBuilder &setMsaaSample(const vk::SampleCountFlagBits &);
     /// Set the rasterizer' polygon mode, can be chained
-    GraphicsPipelineBuilder &setPolygonMode(vk::PolygonMode &);
+    GraphicsPipelineBuilder &setPolygonMode(const vk::PolygonMode &);
     /// Set the rasterizer' face culling config, can be chained
-    GraphicsPipelineBuilder &setFaceCulling(vk::CullModeFlags, vk::FrontFace);
+    GraphicsPipelineBuilder &setFaceCulling(const vk::CullModeFlags &, const vk::FrontFace &);
 
     /// Build the Vulkan pipeline
     ///

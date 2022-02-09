@@ -55,19 +55,20 @@ GraphicsPipelineBuilder &GraphicsPipelineBuilder::setFragmentShaderPath(const st
     return *this;
 }
 
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::setMsaaSample(vk::SampleCountFlagBits &s)
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::setMsaaSample(const vk::SampleCountFlagBits &s)
 {
     multisampling = vk_init::populateVkPipelineMultisampleStateCreateInfo(s);
     return *this;
 }
 
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::setPolygonMode(vk::PolygonMode &mode)
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::setPolygonMode(const vk::PolygonMode &mode)
 {
     rasterizer.setPolygonMode(mode);
     return *this;
 }
 
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::setFaceCulling(vk::CullModeFlags mode, vk::FrontFace face)
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::setFaceCulling(const vk::CullModeFlags &mode,
+                                                                 const vk::FrontFace &face)
 {
     rasterizer.setFrontFace(face);
     rasterizer.setCullMode(mode);

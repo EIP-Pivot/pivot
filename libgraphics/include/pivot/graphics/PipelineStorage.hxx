@@ -30,7 +30,11 @@ public:
     /// @brief Destroy the pipeline
     void removePipeline(const std::string &name);
     /// @brief Recover the pipeline at id
-    inline vk::Pipeline &get(const std::string &id) { return storage.at(id); }
+    inline vk::Pipeline &get(const std::string &id)
+    {
+        if (id.empty()) return getDefault();
+        return storage.at(id);
+    }
 
     /// @brief Get the default pipeline
     inline vk::Pipeline &getDefault() { return get(defaultPipeline); }

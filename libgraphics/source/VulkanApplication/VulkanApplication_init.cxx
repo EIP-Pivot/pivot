@@ -144,12 +144,17 @@ void VulkanApplication::createPipeline()
     builder.setFragmentShaderPath("shaders/default_unlit.frag.spv");
     pipelineStorage.newPipeline("unlit", builder);
 
+    builder.setPolygonMode(vk::PolygonMode::eLine);
+    pipelineStorage.newPipeline("wireframe", builder);
+
+    builder.setPolygonMode(vk::PolygonMode::eFill);
     builder.setFaceCulling(vk::CullModeFlagBits::eFront, vk::FrontFace::eCounterClockwise);
     pipelineStorage.newPipeline("skybox", builder);
 
     swapchainDeletionQueue.push([&] {
         pipelineStorage.removePipeline("lit");
         pipelineStorage.removePipeline("unlit");
+        pipelineStorage.removePipeline("wireframe");
         pipelineStorage.removePipeline("skybox");
     });
 }

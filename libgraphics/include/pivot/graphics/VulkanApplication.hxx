@@ -72,6 +72,11 @@ public:
     float getAspectRatio() const noexcept { return swapchain.getAspectRatio(); }
 
 private:
+    bool dispatchCulling(const CameraData &cameraData, const vk::CommandBufferInheritanceInfo &info,
+                         vk::CommandBuffer &cmd);
+    bool drawImGui(const CameraData &cameraData, const vk::CommandBufferInheritanceInfo &info, vk::CommandBuffer &cmd);
+    bool drawScene(const CameraData &cameraData, const vk::CommandBufferInheritanceInfo &info, vk::CommandBuffer &cmd);
+
     void postInitialization();
     void recreateSwapchain();
     void initVulkanRessources();

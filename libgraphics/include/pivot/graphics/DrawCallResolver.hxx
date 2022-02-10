@@ -60,7 +60,7 @@ public:
 
     /// Build the buffer for the draw
     void prepareForDraw(const std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
-                        const CameraData &camera, const uint32_t frameIndex);
+                        const uint32_t frameIndex);
 
     /// Get the frame data of a given frame
     constexpr const Frame &getFrameData(const uint32_t &frameIndex) const { return frames.at(frameIndex); }

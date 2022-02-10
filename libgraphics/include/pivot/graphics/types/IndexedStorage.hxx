@@ -20,6 +20,12 @@ public:
     auto begin() { return index.begin(); }
     /// return the end iterator
     auto end() { return index.end(); }
+    /// Clear the internal storage
+    void clear()
+    {
+        index.clear();
+        storage.clear();
+    }
     /// Add a new item to the storage
     inline void add(const std::string &i, T value)
     {
@@ -28,6 +34,8 @@ public:
     }
     /// @copydoc add
     inline void add(const std::pair<std::string, T> &value) { add(value.first, std::move(value.second)); }
+    /// Tell if given key already exist in storage
+    inline bool contains(const std::string &i) const { return index.contains(i); }
     /// return the number of item in the storage
     constexpr auto size() const noexcept
     {
@@ -38,10 +46,8 @@ public:
     constexpr const auto &getStorage() const noexcept { return storage; }
     /// @copydoc getStorage
     constexpr auto &getStorage() noexcept { return storage; }
-    /// return the item at a given index
-    constexpr const T &get(const std::int32_t &i) const { return storage.at(i); }
 
-    /// Get the name associated to givent idx
+    /// Get the name associated to given idx
     constexpr const std::string &getName(const std::size_t &idx) const
     {
         auto findResult =
@@ -49,7 +55,6 @@ public:
         if (findResult != index.end()) return findResult->first;
         throw std::out_of_range("Out of range index: " + std::to_string(idx));
     }
-
     /// return the index of an item name
     inline const std::int32_t getIndex(const std::string &i) const noexcept
     {
@@ -57,6 +62,27 @@ public:
             return index.at(i);
         else
             return -1;
+    }
+
+    /// return the item at a given index
+    constexpr T &get(const auto &i) { return storage.at(i); }
+    /// @copydoc get
+    constexpr T &get(const std::string &i) { return get(index.at(i)); }
+    /// @copydoc get
+    constexpr const T &get(const auto &i) const { return storage.at(i); }
+    /// @copydoc get
+    constexpr const T &get(const std::string &i) const { return get(index.at(i)); }
+    /// Get the item, if it doesnt exist, create the index
+    inline const T &operator[](const std::string &i) const
+    {
+        if (!index.contains(i)) add(i, {});
+        return get(i);
+    }
+    /// @copydoc operator[]
+    inline T &operator[](const std::string &i)
+    {
+        if (!index.contains(i)) add(i, {});
+        return get(i);
     }
 
 private:

@@ -65,20 +65,14 @@ public:
     }
 
     /// return the item at a given index
-    constexpr T &get(const auto &i) { return storage.at(i); }
+    constexpr T &get(const Idx &i) { return storage.at(i); }
     /// @copydoc get
     constexpr T &get(const std::string &i) { return get(index.at(i)); }
     /// @copydoc get
-    constexpr const T &get(const auto &i) const { return storage.at(i); }
+    constexpr const T &get(const Idx &i) const { return storage.at(i); }
     /// @copydoc get
     constexpr const T &get(const std::string &i) const { return get(index.at(i)); }
     /// Get the item, if it doesnt exist, create the index
-    inline const T &operator[](const std::string &i) const
-    {
-        if (!index.contains(i)) add(i, {});
-        return get(i);
-    }
-    /// @copydoc operator[]
     inline T &operator[](const std::string &i)
     {
         if (!index.contains(i)) add(i, {});

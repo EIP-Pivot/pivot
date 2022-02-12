@@ -61,7 +61,7 @@ public:
     /// @arg camera The information about the camera
     ///
     /// You must have already loaded your models and texture !
-    void draw(const std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation, const CameraData &camera
+    void draw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation, const CameraData &camera
 #ifdef CULLING_DEBUG
               ,
               const std::optional<std::reference_wrapper<const CameraData>> cullingCamera = std::nullopt

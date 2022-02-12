@@ -116,7 +116,7 @@ void VulkanApplication::recreateSwapchain()
     postInitialization();
 }
 
-void VulkanApplication::draw(const std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
+void VulkanApplication::draw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
                              const CameraData &cameraData
 #ifdef CULLING_DEBUG
                              ,

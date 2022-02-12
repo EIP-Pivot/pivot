@@ -43,7 +43,6 @@ bool VulkanApplication::drawScene(const CameraData &cameraData, const vk::Comman
     vk_utils::vk_try(cmd.begin(&drawBeginInfo));
     vk_debug::beginRegion(cmd, "Draw Commands", {0.f, 1.f, 0.f, 1.f});
     if (drawResolver.getFrameData(currentFrame).packedDraws.size() > 0) {
-        cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelineStorage.getDefault());
         cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0,
                                drawResolver.getFrameData(currentFrame).objectDescriptor, nullptr);
         cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, ressourceDescriptorSet, nullptr);
@@ -54,15 +53,20 @@ bool VulkanApplication::drawScene(const CameraData &cameraData, const vk::Comman
         cmd.bindVertexBuffers(0, assetStorage.getVertexBuffer().buffer, offset);
         cmd.bindIndexBuffer(assetStorage.getIndexBuffer().buffer, 0, vk::IndexType::eUint32);
 
-        if (deviceFeature.multiDrawIndirect == VK_TRUE) {
-            cmd.drawIndexedIndirect(drawResolver.getFrameData(currentFrame).indirectBuffer.buffer, 0,
-                                    drawResolver.getFrameData(currentFrame).packedDraws.size(),
-                                    sizeof(vk::DrawIndexedIndirectCommand));
-        } else {
-            for (const auto &draw: drawResolver.getFrameData(currentFrame).packedDraws) {
+        for (const auto &packedPipeline: drawResolver.getFrameData(currentFrame).pipelineBatch) {
+            cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelineStorage.get(packedPipeline.pipelineID));
+
+            if (deviceFeature.multiDrawIndirect == VK_TRUE) {
                 cmd.drawIndexedIndirect(drawResolver.getFrameData(currentFrame).indirectBuffer.buffer,
-                                        draw.first * sizeof(vk::DrawIndexedIndirectCommand), draw.count,
-                                        sizeof(vk::DrawIndexedIndirectCommand));
+                                        packedPipeline.first * sizeof(vk::DrawIndexedIndirectCommand),
+                                        packedPipeline.size, sizeof(vk::DrawIndexedIndirectCommand));
+            } else {
+                for (auto i = packedPipeline.first; i < packedPipeline.size; i++) {
+                    const auto &draw = drawResolver.getFrameData(currentFrame).packedDraws.at(i);
+                    cmd.drawIndexedIndirect(drawResolver.getFrameData(currentFrame).indirectBuffer.buffer,
+                                            draw.first * sizeof(vk::DrawIndexedIndirectCommand), draw.count,
+                                            sizeof(vk::DrawIndexedIndirectCommand));
+                }
             }
         }
     }

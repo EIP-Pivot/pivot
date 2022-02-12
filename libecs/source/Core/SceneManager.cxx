@@ -2,13 +2,13 @@
 
 LevelId SceneManager::registerLevel(std::string name)
 {
-    _levels.insert({_levels.size(), Scene(name)});
+    _levels.insert({_levels.size(), std::make_unique<Scene>(name)});
     return (LevelId(_levels.size() - 1));
 }
 
 LevelId SceneManager::registerLevel()
 {
-    _levels.insert({_levels.size(), Scene("Scene " + std::to_string(LevelId(_levels.size())))});
+    _levels.insert({_levels.size(), std::make_unique<Scene>("Scene " + std::to_string(LevelId(_levels.size())))});
     return (LevelId(_levels.size() - 1));
 }
 
@@ -35,16 +35,16 @@ Scene &SceneManager::getCurrentLevel()
 {
     if (_currentActiveLevel == -1)
         throw EcsException("There is no current level. Register a level before trying to access its Scene.");
-
-    return _levels[_currentActiveLevel];
+    
+    return *this->_levels[_currentActiveLevel].get();
 }
 
 Scene &SceneManager::getLevelById(LevelId idToGet)
 {
     if (!_levels.contains(idToGet))
         throw EcsException("Level with id _" + std::to_string(idToGet) + "_ is not registered.");
-
-    return _levels[idToGet];
+    
+    return *this->_levels[idToGet].get();
 }
 
 Scene &SceneManager::operator[](LevelId id) { return getLevelById(id); }

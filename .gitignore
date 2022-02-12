@@ -17,4 +17,9 @@ Makefile
 # Ignore the build directory
 build/
 cmake-build-*
-.vscode/*
+
+# jetbrains
+.idea
+
+# vscode
+.vscode

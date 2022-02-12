@@ -6,10 +6,11 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <ktx.h>
 #include <ktxvulkan.h>
+#include <span>
 #include <tiny_gltf.h>
 #include <type_traits>
 
-static std::pair<const float *const, const tinygltf::Accessor &>
+static std::pair<std::span<const float>, tinygltf::Accessor>
 getGltfBuffer(const tinygltf::Model &model, const tinygltf::Primitive &primitive, const std::string &name)
 {
     DEBUG_FUNCTION
@@ -19,11 +20,12 @@ getGltfBuffer(const tinygltf::Model &model, const tinygltf::Primitive &primitive
         const tinygltf::Accessor &accessor = model.accessors.at(iter->second);
         const tinygltf::BufferView &view = model.bufferViews.at(accessor.bufferView);
         assert(view.byteStride == 0);
-        return {reinterpret_cast<const float *>(
-                    &(model.buffers.at(view.buffer).data.at(accessor.byteOffset + view.byteOffset))),
+        return {std::span(reinterpret_cast<const float *>(
+                              &(model.buffers.at(view.buffer).data.at(accessor.byteOffset + view.byteOffset))),
+                          accessor.count),
                 accessor};
     }
-    return {nullptr, {}};
+    return {};
 }
 
 template <typename T>
@@ -31,8 +33,9 @@ requires std::is_unsigned_v<T>
 static inline void fillIndexBuffer(const tinygltf::Buffer &buffer, const tinygltf::Accessor &accessor,
                                    const tinygltf::BufferView &bufferView, std::vector<uint32_t> &indexBuffer)
 {
-    const T *buf = reinterpret_cast<const T *>(&buffer.data.at(accessor.byteOffset + bufferView.byteOffset));
-    for (size_t index = 0; index < accessor.count; index++) { indexBuffer.push_back(buf[index]); }
+    const std::span<const T> buf(
+        reinterpret_cast<const T *>(&buffer.data.at(accessor.byteOffset + bufferView.byteOffset)), accessor.count);
+    indexBuffer.insert(indexBuffer.end(), buf.begin(), buf.end());
 }
 
 namespace pivot::graphics
@@ -79,13 +82,14 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
             const auto &[colorBuffer, colorAccessor] = getGltfBuffer(gltfModel, primitive, "TEXCOORD_0");
             auto numColorComponents = colorAccessor.type == TINYGLTF_PARAMETER_TYPE_FLOAT_VEC3 ? 3 : 4;
 
-            assert(positionBuffer);
-            model.mesh.vertexSize = positionAccessor.count;
-            for (std::size_t v = 0; v < positionAccessor.count; v++) {
+            assert(!positionBuffer.empty());
+            model.mesh.vertexSize = positionBuffer.size();
+            for (std::size_t v = 0; v < positionBuffer.size(); v++) {
                 Vertex vert{};
                 vert.pos = glm::vec4(glm::make_vec3(&positionBuffer[v * 3]), 1.0f) * matrix;
-                vert.normal = normalsBuffer ? (glm::normalize(glm::make_vec3(&normalsBuffer[v * 3]))) : glm::vec3(0.0f);
-                vert.texCoord = texCoordsBuffer ? glm::make_vec2(&texCoordsBuffer[v * 2]) : glm::vec3(0.0f);
+                vert.normal =
+                    normalsBuffer.empty() ? glm::vec3(0.0f) : (glm::normalize(glm::make_vec3(&normalsBuffer[v * 3])));
+                vert.texCoord = texCoordsBuffer.empty() ? glm::vec3(0.0f) : glm::make_vec2(&texCoordsBuffer[v * 2]);
                 if (false) {
                     switch (numColorComponents) {
                         case 3: vert.color = glm::vec4(glm::make_vec3(&colorBuffer[v * 3]), 1.0f); break;

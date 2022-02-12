@@ -1,6 +1,5 @@
 #include "pivot/graphics/vk_utils.hxx"
 
-#include <Logger.hpp>
 #include <fstream>
 #include <stdexcept>
 

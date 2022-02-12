@@ -4,19 +4,13 @@
 #include "pivot/graphics/PipelineBuilders/ComputePipelineBuilder.hxx"
 #include "pivot/graphics/PipelineBuilders/GraphicsPipelineBuilder.hxx"
 #include "pivot/graphics/QueueFamilyIndices.hxx"
-#include "pivot/graphics/types/Material.hxx"
-#include "pivot/graphics/types/UniformBufferObject.hxx"
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
-#include <Logger.hpp>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
-
-#include <map>
 #include <numeric>
-#include <set>
 
 namespace pivot::graphics
 {

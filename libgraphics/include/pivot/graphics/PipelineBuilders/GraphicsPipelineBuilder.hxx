@@ -1,10 +1,6 @@
 #pragma once
 
 #include "pivot/graphics/interface/IPipelineBuilder.hxx"
-#include "pivot/graphics/types/Vertex.hxx"
-#include "pivot/graphics/vk_init.hxx"
-
-#include <vector>
 #include <vulkan/vulkan.hpp>
 
 namespace pivot::graphics

@@ -2,9 +2,9 @@
 
 #include "pivot/graphics/AssetStorage.hxx"
 #include "pivot/graphics/types/RenderObject.hxx"
-#include "pivot/graphics/types/common.hxx"
 
 #include <glm/mat4x4.hpp>
+#include <stdint.h>
 #include <string>
 
 namespace pivot::graphics::gpu_object

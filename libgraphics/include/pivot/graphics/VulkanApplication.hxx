@@ -4,22 +4,13 @@
 #include "pivot/graphics/DeletionQueue.hxx"
 #include "pivot/graphics/DrawCallResolver.hxx"
 #include "pivot/graphics/PipelineStorage.hxx"
-#include "pivot/graphics/QueueFamilyIndices.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/VulkanSwapchain.hxx"
-#include "pivot/graphics/Window.hxx"
 #include "pivot/graphics/types/Frame.hxx"
-#include "pivot/graphics/types/RenderObject.hxx"
-#include "pivot/graphics/types/common.hxx"
 #include "pivot/graphics/types/vk_types.hxx"
-#include "pivot/graphics/vk_utils.hxx"
 
-#include <cstring>
-#include <filesystem>
 #include <optional>
-#include <unordered_map>
 #include <vector>
-#include <vk_mem_alloc.hpp>
 #include <vulkan/vulkan.hpp>
 
 namespace pivot::graphics

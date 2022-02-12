@@ -4,8 +4,6 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <ktx.h>
-#include <ktxvulkan.h>
 #include <span>
 #include <tiny_gltf.h>
 #include <type_traits>

@@ -1,12 +1,9 @@
 #include "pivot/graphics/VulkanApplication.hxx"
 #include "pivot/graphics/DebugMacros.hxx"
-#include "pivot/graphics/culling.hxx"
-#include "pivot/graphics/math.hxx"
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
 #include <Logger.hpp>
-#include <algorithm>
 
 namespace pivot::graphics
 {

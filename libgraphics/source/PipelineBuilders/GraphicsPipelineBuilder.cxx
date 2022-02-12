@@ -1,9 +1,9 @@
 #include "pivot/graphics/PipelineBuilders/GraphicsPipelineBuilder.hxx"
 
 #include "pivot/graphics/DebugMacros.hxx"
+#include "pivot/graphics/types/Vertex.hxx"
+#include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"
-
-#include <Logger.hpp>
 
 namespace pivot::graphics
 {
@@ -77,6 +77,7 @@ GraphicsPipelineBuilder &GraphicsPipelineBuilder::setFaceCulling(const vk::CullM
 
 vk::Pipeline GraphicsPipelineBuilder::build(vk::Device &device, vk::PipelineCache pipelineCache) const
 {
+    DEBUG_FUNCTION
     auto vertShaderCode = vk_utils::readFile(vertexShaderPath);
     auto fragShaderCode = vk_utils::readFile(fragmentShaderPath);
 

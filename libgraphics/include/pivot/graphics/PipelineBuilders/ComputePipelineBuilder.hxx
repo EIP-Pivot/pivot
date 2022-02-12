@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pivot/graphics/interface/IPipelineBuilder.hxx"
+#include <string>
 
 namespace pivot::graphics
 {

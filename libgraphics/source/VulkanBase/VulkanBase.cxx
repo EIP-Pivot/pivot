@@ -1,6 +1,8 @@
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/DebugMacros.hxx"
 
+#include <optional>
+
 namespace pivot::graphics
 {
 VulkanBase::VulkanBase(const std::string &windowName, const bool bForceValidation)

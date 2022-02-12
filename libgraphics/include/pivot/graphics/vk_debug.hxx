@@ -1,6 +1,5 @@
 #pragma once
 
-#include <glm/vec4.hpp>
 #include <vulkan/vulkan.hpp>
 
 /// Debug utils for vulkan

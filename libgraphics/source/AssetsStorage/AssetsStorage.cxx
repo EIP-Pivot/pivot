@@ -2,8 +2,6 @@
 
 #include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/vk_debug.hxx"
-#include "pivot/graphics/vk_init.hxx"
-#include "pivot/graphics/vk_utils.hxx"
 
 #include <Logger.hpp>
 

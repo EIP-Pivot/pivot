@@ -24,7 +24,7 @@ namespace pivot::graphics
 {
 
 template <typename T>
-/// @brief  Is the type is convertible to filesystem path ?
+/// @brief Is the type convertible to filesystem path ?
 concept is_valid_path = requires
 {
     std::is_convertible_v<T, std::filesystem::path>;
@@ -98,7 +98,7 @@ public:
         vk::Extent3D size;
     };
 
-    /// Aslias for AllocatedImage
+    /// Alias for AllocatedImage
     using Texture = AllocatedImage;
 
 public:

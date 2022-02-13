@@ -10,6 +10,39 @@
 #include <tiny_gltf.h>
 #include <type_traits>
 
+template <typename T>
+constexpr std::int16_t gltf_component_type_code = -1;
+
+template <>
+constexpr std::int16_t gltf_component_type_code<std::int8_t> = TINYGLTF_COMPONENT_TYPE_BYTE;
+template <>
+constexpr std::int16_t gltf_component_type_code<std::uint8_t> = TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE;
+template <>
+constexpr std::int16_t gltf_component_type_code<std::int16_t> = TINYGLTF_COMPONENT_TYPE_SHORT;
+template <>
+constexpr std::int16_t gltf_component_type_code<std::uint16_t> = TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT;
+template <>
+constexpr std::int16_t gltf_component_type_code<std::uint32_t> = TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT;
+template <>
+constexpr std::int16_t gltf_component_type_code<float> = TINYGLTF_COMPONENT_TYPE_FLOAT;
+
+template <typename T>
+requires(gltf_component_type_code<T> != -1) static std::span<const T> getGLTFSpan(const tinygltf::Buffer &buffer,
+                                                                                  const tinygltf::BufferView &view,
+                                                                                  const tinygltf::Accessor &accessor)
+{
+    auto &data = buffer.data;
+    auto start = accessor.byteOffset + view.byteOffset;
+    auto &length = accessor.count;
+
+    if (accessor.componentType != gltf_component_type_code<T>) throw std::logic_error("Invalid component type");
+    if (data.size() < start + length) throw std::logic_error("The buffer is too small");
+    if (reinterpret_cast<std::uintptr_t>(data.data()) % alignof(T) != 0)
+        throw std::logic_error("The buffer not sufficiently aligned");
+
+    return std::span(reinterpret_cast<const T *>(data.data() + start), length);
+}
+
 static std::pair<std::span<const float>, tinygltf::Accessor>
 getGltfBuffer(const tinygltf::Model &model, const tinygltf::Primitive &primitive, const std::string &name)
 {
@@ -20,10 +53,7 @@ getGltfBuffer(const tinygltf::Model &model, const tinygltf::Primitive &primitive
         const tinygltf::Accessor &accessor = model.accessors.at(iter->second);
         const tinygltf::BufferView &view = model.bufferViews.at(accessor.bufferView);
         assert(view.byteStride == 0);
-        return {std::span(reinterpret_cast<const float *>(
-                              &(model.buffers.at(view.buffer).data.at(accessor.byteOffset + view.byteOffset))),
-                          accessor.count),
-                accessor};
+        return {getGLTFSpan<float>(model.buffers.at(view.buffer), view, accessor), accessor};
     }
     return {};
 }
@@ -33,8 +63,7 @@ requires std::is_unsigned_v<T>
 static inline void fillIndexBuffer(const tinygltf::Buffer &buffer, const tinygltf::Accessor &accessor,
                                    const tinygltf::BufferView &bufferView, std::vector<uint32_t> &indexBuffer)
 {
-    const std::span<const T> buf(
-        reinterpret_cast<const T *>(&buffer.data.at(accessor.byteOffset + bufferView.byteOffset)), accessor.count);
+    auto buf = getGLTFSpan<T>(buffer, bufferView, accessor);
     indexBuffer.insert(indexBuffer.end(), buf.begin(), buf.end());
 }
 
@@ -79,7 +108,7 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
             const auto &[positionBuffer, positionAccessor] = getGltfBuffer(gltfModel, primitive, "POSITION");
             const auto &[normalsBuffer, normalAccessor] = getGltfBuffer(gltfModel, primitive, "NORMAL");
             const auto &[texCoordsBuffer, texCoordsAccessor] = getGltfBuffer(gltfModel, primitive, "TEXCOORD_0");
-            const auto &[colorBuffer, colorAccessor] = getGltfBuffer(gltfModel, primitive, "TEXCOORD_0");
+            const auto &[colorBuffer, colorAccessor] = getGltfBuffer(gltfModel, primitive, "COLOR_0");
             auto numColorComponents = colorAccessor.type == TINYGLTF_PARAMETER_TYPE_FLOAT_VEC3 ? 3 : 4;
 
             assert(!positionBuffer.empty());
@@ -174,7 +203,7 @@ loadGltfMaterial(const IndexedStorage<AssetStorage::CPUTexture> &texture, const 
 }
 
 bool AssetStorage::loadGltfModel(const std::filesystem::path &path)
-{
+try {
     DEBUG_FUNCTION
 
     tinygltf::Model gltfModel;
@@ -187,28 +216,29 @@ bool AssetStorage::loadGltfModel(const std::filesystem::path &path)
     if (!error.empty()) logger.err("Asset Storage/GLTF") << error;
 
     if (!isLoaded) return false;
-    try {
-        for (const auto &image: gltfModel.images) {
-            const auto filepath = path.parent_path() / image.uri;
-            loadTexture(filepath);
+    for (const auto &image: gltfModel.images) {
+        const auto filepath = path.parent_path() / image.uri;
+        loadTexture(filepath);
+    }
+    for (const auto &material: gltfModel.materials) {
+        auto mat = loadGltfMaterial(cpuStorage.textureStaging, gltfModel, material);
+        cpuStorage.materialStaging.add(std::move(mat));
+    }
+    for (const auto &node: gltfModel.nodes) {
+        for (const auto &i: loadGltfNode(gltfModel, node, cpuStorage.vertexStagingBuffer, cpuStorage.indexStagingBuffer,
+                                         glm::mat4(1.0f))) {
+            prefab.modelIds.push_back(i.first);
+            modelStorage.insert(i);
         }
-        for (const auto &material: gltfModel.materials) {
-            auto mat = loadGltfMaterial(cpuStorage.textureStaging, gltfModel, material);
-            cpuStorage.materialStaging.add(std::move(mat));
-        }
-        for (const auto &node: gltfModel.nodes) {
-            for (const auto &i: loadGltfNode(gltfModel, node, cpuStorage.vertexStagingBuffer,
-                                             cpuStorage.indexStagingBuffer, glm::mat4(1.0f))) {
-                prefab.modelIds.push_back(i.first);
-                modelStorage.insert(i);
-            }
-        }
-    } catch (const AssetStorageException &ase) {
-        logger.err("THROW/Asset Storage/GLTF") << "Error while loaded GLTF file : " << ase.what();
-        return false;
     }
     prefabStorage.insert(std::make_pair(path.stem().string(), prefab));
     return true;
+} catch (const AssetStorageException &ase) {
+    logger.err("THROW/Asset Storage/GLTF") << "Error while loaded GLTF file : " << ase.what();
+    return false;
+} catch (const std::logic_error &le) {
+    logger.err("THROW/Asset Storage/Invalid GLTF file") << "The GLTF file is malformed. Reason :" << le.what();
+    return false;
 }
 
 }    // namespace pivot::graphics

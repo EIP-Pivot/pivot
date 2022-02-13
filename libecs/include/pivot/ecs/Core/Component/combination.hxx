@@ -34,7 +34,7 @@ public:
          *
          * The order is the same as in the ArrayCombination.
          */
-        ComponentRef operator[](std::size_t i) { return {m_intersection.m_arrays[i], m_entity}; }
+        ComponentRef operator[](std::size_t i) { return {m_intersection.m_arrays.at(i), m_entity}; }
 
     private:
         ArrayCombination &m_intersection;

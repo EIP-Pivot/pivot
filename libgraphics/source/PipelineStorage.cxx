@@ -24,6 +24,7 @@ void PipelineStorage::destroy()
 void PipelineStorage::newPipeline(const std::string &name, const interface::IPipelineBuilder &builder)
 {
     auto pipeline = builder.build(base_ref.device, pipelineCache);
+    assert(pipeline);
     storage.insert(std::make_pair(name, pipeline));
 
     vk_debug::setObjectName(base_ref.device, pipeline, name + " " + builder.getDebugPipelineName());

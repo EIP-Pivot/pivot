@@ -11,6 +11,7 @@ compile_commands.json
 CMakeFiles
 CMakeCache.txt
 *.cmake
+!/cmake/*.cmake
 Makefile
 
 # Ignore the build directory

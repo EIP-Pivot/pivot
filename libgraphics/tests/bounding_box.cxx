@@ -3,6 +3,8 @@
 #include <catch2/catch.hpp>
 #include <iostream>
 
+using namespace pivot::graphics::gpu_object;
+
 TEST_CASE("bounding box calculation works", "[bounding_box]")
 {
     MeshBoundingBox box({0, 0, 0});

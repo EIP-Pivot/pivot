@@ -19,6 +19,41 @@ if (NOT glfw_POPULATED)
 endif()
 
 FetchContent_Declare(
+    ktx
+    GIT_REPOSITORY https://github.com/KhronosGroup/KTX-Software.git
+    GIT_TAG v4.0.0
+)
+if (NOT ktx_POPULATED)
+    message(STATUS "Populating ktx")
+    FetchContent_Populate(ktx)
+    set(KTX_FEATURE_STATIC_LIBRARY ON CACHE INTERNAL "" FORCE)
+    set(KTX_FEATURE_TESTS OFF CACHE INTERNAL "" FORCE)
+    set(KTX_FEATURE_TOOLS OFF CACHE INTERNAL "" FORCE)
+    add_subdirectory(${ktx_SOURCE_DIR} ${ktx_SOURCE_DIR})
+endif()
+
+FetchContent_Declare(
+    tinygltf
+    GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
+    GIT_TAG e7f1ff5c59d3ca2489923beb239bdf93d863498f
+)
+if (NOT tinygltf_POPULATED)
+    message(STATUS "Populating tinygltf")
+    FetchContent_Populate(tinygltf)
+    set(TINYGLTF_HEADER_ONLY OFF CACHE INTERNAL "" FORCE)
+    set(TINYGLTF_BUILD_LOADER_EXAMPLE OFF CACHE INTERNAL "" FORCE)
+    set(TINYGLTF_INSTALL OFF CACHE INTERNAL "" FORCE)
+    add_subdirectory(${tinygltf_SOURCE_DIR} ${tinygltf_SOURCE_DIR})
+    target_compile_definitions(tinygltf PUBLIC TINYGLTF_NO_STB_IMAGE
+                                        TINYGLTF_NO_STB_IMAGE_WRITE
+                                        TINYGLTF_NO_INCLUDE_STB_IMAGE 
+                                        TINYGLTF_NO_INCLUDE_STB_IMAGE_WRITE 
+                                        TINYGLTF_NO_EXTERNAL_IMAGE 
+                                        TINYGLTF_NO_INCLUDE_RAPIDJSON
+    )
+endif()
+
+FetchContent_Declare(
     vma
     GIT_REPOSITORY https://github.com/malte-v/VulkanMemoryAllocator-Hpp.git
     GIT_TAG 658904b881a6ca8b7dd56b81aca7d81b410060a5
@@ -64,7 +99,6 @@ if (NOT tinyobjloader_POPULATED)
     message(STATUS "Populating tinyobjloader")
     FetchContent_Populate(tinyobjloader)
     add_subdirectory(${tinyobjloader_SOURCE_DIR} ${tinyobjloader_BINARY_DIR})
-    set(TINYOBJLOADER_USE_DOUBLE ON)
 endif()
 
 FetchContent_Declare(
@@ -111,6 +145,8 @@ endif()
 add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/types/Vertex.cxx
                                    source/types/UniformBufferObject.cxx
+                                   source/types/AllocatedBuffer.cxx
+                                   source/types/AllocatedImage.cxx
                                    source/Window.cxx
                                    source/vk_utils.cxx
                                    source/vk_init.cxx
@@ -120,7 +156,11 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/PipelineBuilders/ComputePipelineBuilder.cxx
                                    source/VulkanLoader.cxx
                                    source/VulkanSwapchain.cxx
-                                   source/AssetsStorage.cxx
+                                   source/AssetsStorage/AssetsStorage.cxx
+                                   source/AssetsStorage/Loaders/AssetsStorage_obj.cxx
+                                   source/AssetsStorage/Loaders/AssetsStorage_png.cxx
+                                   source/AssetsStorage/Loaders/AssetsStorage_gltf.cxx
+                                   source/AssetsStorage/Loaders/AssetsStorage_ktx.cxx
                                    source/VulkanApplication/VulkanApplication.cxx
                                    source/VulkanApplication/VulkanApplication_init.cxx
                                    source/VulkanBase/VulkanBase.cxx
@@ -154,6 +194,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC logger
                                       PUBLIC glfw
                                       PUBLIC glm
                                       PUBLIC tinyobjloader
+                                      PUBLIC ktx
+                                      PUBLIC tinygltf
                                       PUBLIC stb
                                       PUBLIC Vulkan::Vulkan
 )

@@ -2,13 +2,11 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_EXT_nonuniform_qualifier : enable
 
-layout(location = 0) in vec3 fragColor;
-layout(location = 1) in vec3 fragPosition;
-layout(location = 2) in vec3 fragNormal;
+layout(location = 0) in vec3 fragPosition;
+layout(location = 1) in vec3 fragNormal;
+layout(location = 2) in vec3 fragColor;
 layout(location = 3) in vec2 fragTextCoords;
-layout(location = 4) flat in uint textureIndex;
-layout(location = 5) flat in uint materialIndex;
-
+layout(location = 4) in flat uint materialIndex;
 
 layout(location = 0) out vec4 outColor;
 
@@ -17,10 +15,14 @@ layout (push_constant) uniform readonly constants {
 } cameraData;
 
 struct Material {
-    float shininess;
-    vec3 ambientColor;
-    vec3 diffuse;
-    vec3 specular;
+    float metallic;
+    float roughness;
+    vec4 baseColor;
+    int baseColorTexture;
+    int metallicRoughnessTexture;
+    int normalTexture;
+    int occlusionTexture;
+    int emissiveTexture;
 };
 
 layout (std140, set = 1, binding = 1) readonly buffer ObjectMaterials {
@@ -37,19 +39,19 @@ const float diffuseStrength = 5.0;
 
 vec3 calculateLight(in Material mat) {
     // ambient
-    vec3 ambient = ambientStrength * mat.ambientColor;
+    vec3 ambient = ambientStrength * vec3(1.0);
 
     // diffuse
     vec3 lightDir = normalize(lightDirection - fragPosition);
     vec3 norm = normalize(fragNormal);
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diffuseStrength * (diff * mat.diffuse);
+    vec3 diffuse = diffuseStrength * (diff * vec3(1.0));
 
     // specular
     vec3 viewDir = normalize(cameraData.position - fragPosition);
     vec3 halfwayDir = normalize(lightDir + viewDir);
     float spec = pow(max(dot(norm, halfwayDir), 0.0), 64.0);
-    vec3 specular = specularStrength *  (spec * mat.specular);
+    vec3 specular = specularStrength *  (spec * vec3(1.0));
 
     float attenuation = 1.0 / length(lightDirection - fragPosition);
     diffuse *= attenuation;
@@ -59,8 +61,9 @@ vec3 calculateLight(in Material mat) {
 }
 
 void main() {
-    vec3 diffuseColor = texture(texSampler[textureIndex], fragTextCoords).rgb;
-    vec3 light = calculateLight(objectMaterials.materials[materialIndex]);
+    Material material = objectMaterials.materials[materialIndex];
+    vec3 diffuseColor = (material.baseColorTexture >= 0) ? (texture(texSampler[material.baseColorTexture], fragTextCoords).rgb) : (material.baseColor.rgb);
+    vec3 light = calculateLight(material);
     outColor =  vec4(light * diffuseColor, 1.0);
 
     float gamma = 2.2;

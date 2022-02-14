@@ -12,7 +12,7 @@ namespace pivot::graphics
 {
 
 /// @class VulkanBase
-/// Handle the bare minimum of Vulkan ressources to perform GPU manipulation
+/// @brief Handle the bare minimum of Vulkan ressources to perform GPU manipulation
 class VulkanBase : public VulkanLoader, public abstract::AImmediateCommand
 {
 protected:

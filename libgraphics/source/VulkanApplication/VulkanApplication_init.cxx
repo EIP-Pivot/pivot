@@ -112,10 +112,10 @@ void VulkanApplication::createPipelineLayout()
 {
     DEBUG_FUNCTION
     std::vector<vk::PushConstantRange> pipelinePushConstant = {
-        vk_init::populateVkPushConstantRange(vk::ShaderStageFlagBits::eVertex, sizeof(gpuObject::VertexPushConstant)),
+        vk_init::populateVkPushConstantRange(vk::ShaderStageFlagBits::eVertex, sizeof(gpu_object::VertexPushConstant)),
         vk_init::populateVkPushConstantRange(vk::ShaderStageFlagBits::eFragment,
-                                             sizeof(gpuObject::FragmentPushConstant),
-                                             sizeof(gpuObject::VertexPushConstant)),
+                                             sizeof(gpu_object::FragmentPushConstant),
+                                             sizeof(gpu_object::VertexPushConstant)),
     };
 
     std::vector<vk::DescriptorSetLayout> setLayout = {drawResolver.getDescriptorSetLayout(), ressourcesSetLayout};
@@ -128,7 +128,7 @@ void VulkanApplication::createCullingPipelineLayout()
 {
     DEBUG_FUNCTION
     std::vector<vk::PushConstantRange> pipelinePushConstant = {vk_init::populateVkPushConstantRange(
-        vk::ShaderStageFlagBits::eCompute, sizeof(gpuObject::CullingPushConstant))};
+        vk::ShaderStageFlagBits::eCompute, sizeof(gpu_object::CullingPushConstant))};
     std::vector<vk::DescriptorSetLayout> setLayout = {drawResolver.getDescriptorSetLayout(), ressourcesSetLayout};
     auto pipelineLayoutCreateInfo = vk_init::populateVkPipelineLayoutCreateInfo(setLayout, pipelinePushConstant);
     cullingLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
@@ -310,11 +310,11 @@ void VulkanApplication::createDescriptorPool()
     vk::DescriptorPoolSize poolSize[] = {
         {
             .type = vk::DescriptorType::eCombinedImageSampler,
-            .descriptorCount = MAX_TEXTURES,
+            .descriptorCount = static_cast<uint32_t>(assetStorage.getTextures().size()),
         },
         {
             .type = vk::DescriptorType::eStorageBuffer,
-            .descriptorCount = MAX_MATERIALS * MAX_OBJECT,
+            .descriptorCount = assetStorage.getMaterialBuffer().size,
         },
     };
 
@@ -332,11 +332,25 @@ void VulkanApplication::createDescriptorPool()
 void VulkanApplication::createRessourcesDescriptorSets()
 {
     DEBUG_FUNCTION
+
+    uint32_t counts[] = {static_cast<uint32_t>(assetStorage.getTextures().size())};
+    vk::DescriptorSetVariableDescriptorCountAllocateInfo set_counts{
+        .descriptorSetCount = std::size(counts),
+        .pDescriptorCounts = counts,
+    };
+    vk::DescriptorSetAllocateInfo allocInfo{
+        .pNext = &set_counts,
+        .descriptorPool = descriptorPool,
+        .descriptorSetCount = 1,
+        .pSetLayouts = &ressourcesSetLayout,
+    };
+    ressourceDescriptorSet = device.allocateDescriptorSets(allocInfo).front();
+
     std::vector<vk::DescriptorImageInfo> imagesInfos;
-    for (auto &[_, t]: assetStorage.getTextures()) {
+    for (auto &t: assetStorage.getTextures().getStorage()) {
         imagesInfos.push_back({
             .sampler = textureSampler,
-            .imageView = std::get<AllocatedImage>(t.image).imageView,
+            .imageView = t.imageView,
             .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
         });
     }
@@ -352,20 +366,6 @@ void VulkanApplication::createRessourcesDescriptorSets()
         .offset = 0,
         .range = boundingBoxBuffer.size,
     };
-
-    uint32_t counts[] = {static_cast<uint32_t>(imagesInfos.size())};
-    vk::DescriptorSetVariableDescriptorCountAllocateInfo set_counts{
-        .descriptorSetCount = std::size(counts),
-        .pDescriptorCounts = counts,
-    };
-    vk::DescriptorSetAllocateInfo allocInfo{
-        .pNext = &set_counts,
-        .descriptorPool = descriptorPool,
-        .descriptorSetCount = 1,
-        .pSetLayouts = &ressourcesSetLayout,
-    };
-    ressourceDescriptorSet = device.allocateDescriptorSets(allocInfo).front();
-
     std::vector<vk::WriteDescriptorSet> descriptorWrite{
         {
             .dstSet = ressourceDescriptorSet,
@@ -413,7 +413,7 @@ void VulkanApplication::createTextureSampler()
         .compareEnable = VK_FALSE,
         .compareOp = vk::CompareOp::eAlways,
         .minLod = 0.0f,
-        .maxLod = static_cast<float>(mipLevels),
+        .maxLod = 100,
         .borderColor = vk::BorderColor::eIntOpaqueBlack,
         .unnormalizedCoordinates = VK_FALSE,
     };
@@ -428,7 +428,6 @@ void VulkanApplication::createDepthResources()
     vk::Format depthFormat = pivot::graphics::vk_utils::findSupportedFormat(
         physical_device, {vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint},
         vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
-
     vk::ImageCreateInfo imageInfo{
         .imageType = vk::ImageType::e2D,
         .format = depthFormat,
@@ -443,15 +442,13 @@ void VulkanApplication::createDepthResources()
     };
     vma::AllocationCreateInfo allocInfo;
     allocInfo.setUsage(vma::MemoryUsage::eGpuOnly);
-    std::tie(depthResources.image, depthResources.memory) = allocator.createImage(imageInfo, allocInfo);
+    depthResources.createImage(*this, imageInfo, allocInfo);
 
     auto createInfo = vk_init::populateVkImageViewCreateInfo(depthResources.image, depthFormat);
     createInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eDepth;
-    depthResources.imageView = device.createImageView(createInfo);
 
-    pivot::graphics::vk_utils::transitionImageLayout(*this, depthResources.image, depthFormat,
-                                                     vk::ImageLayout::eUndefined,
-                                                     vk::ImageLayout::eDepthStencilAttachmentOptimal);
+    depthResources.createImageView(*this, createInfo);
+    depthResources.transitionLayout(*this, vk::ImageLayout::eDepthStencilAttachmentOptimal);
     pivot::graphics::vk_debug::setObjectName(device, depthResources.image, "Depth Image");
     pivot::graphics::vk_debug::setObjectName(device, depthResources.imageView, "Depth Image view");
     swapchainDeletionQueue.push([&] {
@@ -477,12 +474,8 @@ void VulkanApplication::createColorResources()
     };
     vma::AllocationCreateInfo allocInfo{};
     allocInfo.usage = vma::MemoryUsage::eGpuOnly;
-    std::tie(colorImage.image, colorImage.memory) = allocator.createImage(imageInfo, allocInfo);
-
-    auto createInfo = vk_init::populateVkImageViewCreateInfo(colorImage.image, swapchain.getSwapchainFormat());
-    createInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-    colorImage.imageView = device.createImageView(createInfo);
-
+    colorImage.createImage(*this, imageInfo, allocInfo);
+    colorImage.createImageView(*this);
     pivot::graphics::vk_debug::setObjectName(device, colorImage.image, "Color Image");
     pivot::graphics::vk_debug::setObjectName(device, colorImage.imageView, "Color Image view");
     swapchainDeletionQueue.push([&] {

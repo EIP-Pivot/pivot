@@ -6,17 +6,15 @@ layout(location = 1) in vec3 inNormal;
 layout(location = 2) in vec3 inColor;
 layout(location = 3) in vec2 inTextCoords;
 
-layout(location = 0) out vec3 fragColor;
-layout(location = 1) out vec3 fragPosition;
-layout(location = 2) out vec3 fragNormal;
+layout(location = 0) out vec3 fragPosition;
+layout(location = 1) out vec3 fragNormal;
+layout(location = 2) out vec3 fragColor;
 layout(location = 3) out vec2 fragTextCoords;
-layout(location = 4) out uint textureIndex;
-layout(location = 5) out uint materialIndex;
+layout(location = 4) out uint materialIndex;
 
 
 struct UniformBufferObject {
     mat4 modelMatrix;
-    uint textureIndex;
     uint materialIndex;
     uint boundingBoxIndex;
 };
@@ -37,6 +35,5 @@ void main() {
     fragPosition = inPosition;
     fragNormal = inNormal;
     fragTextCoords = inTextCoords;
-    textureIndex = objectBuffer.objects[gl_BaseInstance].textureIndex;
     materialIndex = objectBuffer.objects[gl_BaseInstance].materialIndex;
 }

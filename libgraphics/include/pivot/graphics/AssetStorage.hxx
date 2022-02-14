@@ -3,6 +3,8 @@
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/abstract/AImmediateCommand.hxx"
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
+#include "pivot/graphics/types/AllocatedImage.hxx"
+#include "pivot/graphics/types/IndexedStorage.hxx"
 #include "pivot/graphics/types/Material.hxx"
 #include "pivot/graphics/types/MeshBoundingBox.hxx"
 #include "pivot/graphics/types/Vertex.hxx"
@@ -13,7 +15,6 @@
 #include <optional>
 #include <span>
 #include <string>
-#include <tiny_obj_loader.h>
 #include <unordered_map>
 #include <utility>
 #include <variant>
@@ -23,30 +24,33 @@ namespace pivot::graphics
 {
 
 template <typename T>
+/// @brief Is the type convertible to filesystem path ?
 concept is_valid_path = requires
 {
     std::is_convertible_v<T, std::filesystem::path>;
 };
 
-/// @class AssetStorage
-/// Store all of the assets used by the game
+/// @brief Store all of the assets used by the game
 class AssetStorage
 {
 public:
     /// @struct AssetStorageException
-    /// Exception type for the AssetStorage
+    /// @brief Exception type for the AssetStorage
     struct AssetStorageException : public std::out_of_range {
         using std::out_of_range::out_of_range;
     };
 
+    /// @brief The function signature of an asset handler
+    using AssetHandler = bool (AssetStorage::*)(const std::filesystem::path &);
+
 public:
     /// List of supported texture extensions
-    static constexpr const std::array<const std::string_view, 1> supportedTexture{".png"};
-    /// List of supported object extensions
-    static constexpr const std::array<const std::string_view, 1> supportedObject{".obj"};
+    static const std::unordered_map<std::string, AssetHandler> supportedTexture;
 
-    /// @struct Mesh
-    /// Represent a mesh in the buffers
+    /// List of supported object extensions
+    static const std::unordered_map<std::string, AssetHandler> supportedObject;
+
+    /// @brief Represent a mesh in the buffers
     struct Mesh {
         /// Starting offset of the mesh in the vertex buffer
         std::uint32_t vertexOffset;
@@ -58,30 +62,44 @@ public:
         std::uint32_t indicesSize;
     };
 
-    /// A mesh with a default texture and a default material
+    /// @brief Represent a CPU-side material
+    struct CPUMaterial {
+        /// @cond
+        float metallic = 1.0f;
+        float roughness = 1.0f;
+        glm::vec4 baseColor = glm::vec4(1.0f);
+        std::string baseColorTexture;
+        std::string metallicRoughnessTexture;
+        std::string normalTexture;
+        std::string occlusionTexture;
+        std::string emissiveTexture;
+        ///@endcond
+    };
+
+    /// @brief A mesh with a default texture and a default material
     struct Model {
         /// Model mesh
         Mesh mesh;
-        /// Default texture id
-        std::optional<std::string> default_texture;
         /// Default material id
         std::optional<std::string> default_material;
     };
 
-    /// An group of model
+    /// @brief A group of model
     struct Prefab {
         /// The ids of the composing models
         std::vector<std::string> modelIds;
     };
 
-    /// @struct Texture
-    /// Represent a Texture
-    struct Texture {
+    /// @brief Represent a CPU-side Texture
+    struct CPUTexture {
         /// The vulkan image containing the texture
-        std::variant<AllocatedImage, std::vector<std::byte>> image;
+        std::vector<std::byte> image;
         /// The size of the texture
         vk::Extent3D size;
     };
+
+    /// Alias for AllocatedImage
+    using Texture = AllocatedImage;
 
 public:
     /// Constructor
@@ -93,20 +111,24 @@ public:
     /// @brief load the 3D models into CPU memory
     ///
     /// @arg the path for all individual file to load
-    /// @return the number of file successfully loaded
-    unsigned loadModels(Path... p)
+    void loadModels(Path... p)
     {
-        return ((loadModel(p)) + ...);
+        auto i = ((loadModel(p)) + ...);
+        if (i < sizeof...(Path)) {
+            throw AssetStorageException("A model file failed to load. See above for further errors");
+        }
     }
 
     template <is_valid_path... Path>
     /// @brief load the textures into CPU memory
     ///
     /// @arg the path for all individual file to load
-    /// @return the number of file successfully loaded
-    unsigned loadTextures(Path... p)
+    void loadTextures(Path... p)
     {
-        return ((loadTexture(p)) + ...);
+        auto i = ((loadTexture(p)) + ...);
+        if (i < sizeof...(Path)) {
+            throw AssetStorageException("A texture file failed to load. See above for further errors");
+        }
     }
 
     /// Push the ressource into GPU memory
@@ -121,7 +143,7 @@ public:
 
     template <typename T>
     /// Get the index of the asset of type T named name
-    inline std::uint32_t getIndex(const std::string &name) const;
+    inline std::int32_t getIndex(const std::string &name) const;
 
     /// @return Get the Index buffer
     constexpr const AllocatedBuffer &getIndexBuffer() const noexcept { return indicesBuffer; }
@@ -139,8 +161,13 @@ public:
 
 private:
     bool loadModel(const std::filesystem::path &path);
+    bool loadObjModel(const std::filesystem::path &path);
+    bool loadGltfModel(const std::filesystem::path &path);
+
     bool loadTexture(const std::filesystem::path &path);
-    bool loadMaterial(const tinyobj::material_t &material);
+    bool loadPngTexture(const std::filesystem::path &path);
+    bool loadKtxImage(const std::filesystem::path &path);
+
     void pushModelsOnGPU();
     void pushBoundingBoxesOnGPU();
     void pushTexturesOnGPU();
@@ -148,14 +175,21 @@ private:
 
 private:
     OptionalRef<VulkanBase> base_ref;
+
     std::unordered_map<std::string, Model> modelStorage;
     std::unordered_map<std::string, Prefab> prefabStorage;
-    std::unordered_map<std::string, MeshBoundingBox> meshBoundingBoxStorage;
-    std::unordered_map<std::string, Texture> textureStorage;
-    std::unordered_map<std::string, gpuObject::Material> materialStorage;
 
-    std::vector<Vertex> vertexStagingBuffer;
-    std::vector<std::uint32_t> indexStagingBuffer;
+    IndexedStorage<gpu_object::MeshBoundingBox> meshBoundingBoxStorage;
+    IndexedStorage<Texture> textureStorage;
+    IndexedStorage<gpu_object::Material> materialStorage;
+
+    struct CPUStorage {
+        std::vector<Vertex> vertexStagingBuffer;
+        std::vector<std::uint32_t> indexStagingBuffer;
+        IndexedStorage<CPUTexture> textureStaging;
+        IndexedStorage<CPUMaterial> materialStaging;
+    };
+    CPUStorage cpuStorage = {};
 
     AllocatedBuffer vertexBuffer;
     AllocatedBuffer indicesBuffer;
@@ -170,7 +204,7 @@ private:
     if (!stor.contains(key)) throw AssetStorage::AssetStorageException("Missing " + key + " in " #stor);
 
 template <>
-/// @cond
+/// @copydoc AssetStorage::get
 inline const AssetStorage::Prefab &AssetStorage::get(const std::string &p) const
 {
     PIVOT_TEST_CONTAINS(prefabStorage, p);
@@ -178,6 +212,7 @@ inline const AssetStorage::Prefab &AssetStorage::get(const std::string &p) const
 }
 
 template <>
+/// @copydoc AssetStorage::get
 inline const AssetStorage::Model &AssetStorage::get(const std::string &p) const
 {
     PIVOT_TEST_CONTAINS(modelStorage, p);
@@ -185,65 +220,35 @@ inline const AssetStorage::Model &AssetStorage::get(const std::string &p) const
 }
 
 template <>
+/// @copydoc AssetStorage::get
 inline const AssetStorage::Mesh &AssetStorage::get(const std::string &p) const
 {
     return get<Model>(p).mesh;
 }
 
-template <>
-inline const MeshBoundingBox &AssetStorage::get(const std::string &p) const
-{
-    PIVOT_TEST_CONTAINS(meshBoundingBoxStorage, p);
-    return meshBoundingBoxStorage.at(p);
-}
-
-template <>
-inline const AssetStorage::Texture &AssetStorage::get(const std::string &p) const
-{
-    PIVOT_TEST_CONTAINS(textureStorage, p);
-    return textureStorage.at(p);
-}
+#undef PIVOT_TEST_CONTAINS
 
 // Get Index of asset in the buffers
-
 template <>
-/// @cond
-inline std::uint32_t AssetStorage::getIndex<AssetStorage::Model>(const std::string &i) const
+/// @copydoc AssetStorage::get
+inline std::int32_t AssetStorage::getIndex<gpu_object::MeshBoundingBox>(const std::string &i) const
 {
-    PIVOT_TEST_CONTAINS(modelStorage, i);
-    return std::distance(modelStorage.begin(), modelStorage.find(i));
+    return meshBoundingBoxStorage.getIndex(i);
 }
 
 template <>
-inline std::uint32_t AssetStorage::getIndex<AssetStorage::Mesh>(const std::string &i) const
+/// @copydoc AssetStorage::get
+inline std::int32_t AssetStorage::getIndex<AssetStorage::Texture>(const std::string &i) const
 {
-    return getIndex<AssetStorage::Model>(i);
+    return textureStorage.getIndex(i);
 }
 
 template <>
-inline std::uint32_t AssetStorage::getIndex<MeshBoundingBox>(const std::string &i) const
+/// @copydoc AssetStorage::get
+inline std::int32_t AssetStorage::getIndex<gpu_object::Material>(const std::string &i) const
 {
-    PIVOT_TEST_CONTAINS(meshBoundingBoxStorage, i);
-    return std::distance(meshBoundingBoxStorage.begin(), meshBoundingBoxStorage.find(i));
+    return materialStorage.getIndex(i);
 }
-
-template <>
-inline std::uint32_t AssetStorage::getIndex<AssetStorage::Texture>(const std::string &i) const
-{
-    PIVOT_TEST_CONTAINS(textureStorage, i);
-    return std::distance(textureStorage.begin(), textureStorage.find(i));
-}
-
-template <>
-inline std::uint32_t AssetStorage::getIndex<gpuObject::Material>(const std::string &i) const
-{
-    PIVOT_TEST_CONTAINS(materialStorage, i);
-    return std::distance(materialStorage.begin(), materialStorage.find(i));
-}
-
-///@endcond
-
-#undef PIVOT_TEST_CONTAINS
 
 #endif
 

@@ -9,5 +9,5 @@
 #ifdef NDEBUG
 #define DEBUG_FUNCTION
 #else
-#define DEBUG_FUNCTION logger LOGGER_ACCESS debug(__PRETTY_FUNCTION__) << "Entered";
+#define DEBUG_FUNCTION logger LOGGER_ACCESS trace(__PRETTY_FUNCTION__) << "Entered";
 #endif

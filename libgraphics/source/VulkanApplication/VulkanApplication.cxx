@@ -47,6 +47,8 @@ VulkanApplication::~VulkanApplication()
 void VulkanApplication::init()
 {
     VulkanBase::init({}, deviceExtensions, validationLayers);
+    drawResolver.init();
+    assetStorage.build();
     initVulkanRessources();
 }
 
@@ -54,7 +56,6 @@ void VulkanApplication::initVulkanRessources()
 {
     DEBUG_FUNCTION
 
-    drawResolver.init();
     createPipelineCache();
     createSyncStructure();
     createRessourcesDescriptorSetLayout();
@@ -73,8 +74,6 @@ void VulkanApplication::initVulkanRessources()
     createDepthResources();
     createColorResources();
     createFramebuffers();
-
-    assetStorage.build();
 
     createTextureSampler();
     createRessourcesDescriptorSets();
@@ -161,10 +160,10 @@ try {
         .pClearValues = clearValues.data(),
     };
 
-    const gpuObject::VertexPushConstant vertexCamere{
+    const gpu_object::VertexPushConstant vertexCamere{
         .viewProjection = cameraData.viewProjection,
     };
-    const gpuObject::FragmentPushConstant fragmentCamera{
+    const gpu_object::FragmentPushConstant fragmentCamera{
         .position = cameraData.position,
     };
 
@@ -176,7 +175,7 @@ try {
 
     drawResolver.prepareForDraw(sceneInformation, cullingCameraDataSelected, currentFrame);
 
-    const gpuObject::CullingPushConstant cullingCamera{
+    const gpu_object::CullingPushConstant cullingCamera{
         .viewProjection = cullingCameraDataSelected.viewProjection,
         .drawCount = static_cast<uint32_t>(drawResolver.getFrameData(currentFrame).packedDraws.size()),
     };
@@ -218,11 +217,11 @@ try {
                                        drawResolver.getFrameData(currentFrame).objectDescriptor, nullptr);
             drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, ressourceDescriptorSet,
                                        nullptr);
-            drawCmd.pushConstants<gpuObject::VertexPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0,
-                                                                 vertexCamere);
-            drawCmd.pushConstants<gpuObject::FragmentPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eFragment,
-                                                                   sizeof(gpuObject::VertexPushConstant),
-                                                                   fragmentCamera);
+            drawCmd.pushConstants<gpu_object::VertexPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0,
+                                                                  vertexCamere);
+            drawCmd.pushConstants<gpu_object::FragmentPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eFragment,
+                                                                    sizeof(gpu_object::VertexPushConstant),
+                                                                    fragmentCamera);
             drawCmd.bindVertexBuffers(0, assetStorage.getVertexBuffer().buffer, offset);
             drawCmd.bindIndexBuffer(assetStorage.getIndexBuffer().buffer, 0, vk::IndexType::eUint32);
 
@@ -260,8 +259,8 @@ try {
         cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, cullingLayout, 0,
                                drawResolver.getFrameData(currentFrame).objectDescriptor, nullptr);
         cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, cullingLayout, 1, ressourceDescriptorSet, nullptr);
-        cmd.pushConstants<gpuObject::CullingPushConstant>(cullingLayout, vk::ShaderStageFlagBits::eCompute, 0,
-                                                          cullingCamera);
+        cmd.pushConstants<gpu_object::CullingPushConstant>(cullingLayout, vk::ShaderStageFlagBits::eCompute, 0,
+                                                           cullingCamera);
         cmd.bindPipeline(vk::PipelineBindPoint::eCompute, cullingPipeline);
         cmd.pipelineBarrier(vk::PipelineStageFlagBits::eDrawIndirect, vk::PipelineStageFlagBits::eComputeShader, {}, {},
                             barrier, {});

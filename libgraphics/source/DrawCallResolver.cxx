@@ -5,6 +5,8 @@
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
+#include <ranges>
+
 namespace pivot::graphics
 {
 
@@ -45,9 +47,9 @@ void DrawCallResolver::prepareForDraw(std::vector<std::reference_wrapper<const R
     std::vector<gpu_object::UniformBufferObject> objectGPUData;
     std::uint32_t drawCount = 0;
 
-    std::sort(sceneInformation.begin(), sceneInformation.end(), [](const auto &first, const auto &second) {
-        return first.get().pipelineID == second.get().pipelineID && first.get().meshID == second.get().meshID;
-    });
+    std::ranges::sort(sceneInformation, {},
+                      [](const auto &info) { return std::make_tuple(info.get().pipelineID, info.get().meshID); });
+
     for (const auto &object: sceneInformation) {
         if (frame.pipelineBatch.empty() || frame.pipelineBatch.back().pipelineID != object.get().pipelineID) {
             frame.pipelineBatch.push_back({

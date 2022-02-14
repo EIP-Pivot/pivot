@@ -68,7 +68,6 @@ public:
     /// Get the number of entity in the scene
     uint32_t getLivingEntityCount();
 
-
     /// Get the component manager
     pivot::ecs::component::Manager &getComponentManager();
 

@@ -5,13 +5,14 @@
 #include <string>
 
 using LevelId = std::uint16_t;
-const LevelId MAX_LEVELS = UINT16_MAX; // 65535
+const LevelId MAX_LEVELS = UINT16_MAX;    // 65535
 
 /// @class SceneManager
 ///
 /// @brief Scene manager is the main part of the ecs, a global is set for using it everywhere: gSceneManager (
 /// gSceneManager will be remove)
-class SceneManager {
+class SceneManager
+{
 public:
     /// Init scene list
     void Init();
@@ -22,12 +23,12 @@ public:
     LevelId registerLevel();
 
     /// Remove scene
-    void    unregisterLevel(LevelId toDelete);
+    void unregisterLevel(LevelId toDelete);
 
     /// Get current scene id
     LevelId getCurrentLevelId();
     /// Set current scene id
-    void    setCurrentLevelId(LevelId newLevel);
+    void setCurrentLevelId(LevelId newLevel);
 
     /// Get current scene object
     Scene &getCurrentLevel();
@@ -38,6 +39,7 @@ public:
 
     /// Get living scene
     std::size_t getLivingScene();
+
 private:
     std::unordered_map<LevelId, Scene> _levels{};
     LevelId _currentActiveLevel;

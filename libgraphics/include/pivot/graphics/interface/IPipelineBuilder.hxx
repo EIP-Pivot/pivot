@@ -16,4 +16,4 @@ public:
     virtual vk::Pipeline build(vk::Device &, vk::PipelineCache = VK_NULL_HANDLE) const = 0;
 };
 
-}    // namespace pivot::graphics
+}    // namespace pivot::graphics::interface

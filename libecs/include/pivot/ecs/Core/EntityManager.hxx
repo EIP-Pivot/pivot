@@ -1,9 +1,9 @@
 #pragma once
 
-#include "pivot/ecs/Core/types.hxx"
 #include "pivot/ecs/Core/EcsException.hxx"
-#include <queue>
+#include "pivot/ecs/Core/types.hxx"
 #include <array>
+#include <queue>
 #include <unordered_map>
 
 /*! \cond

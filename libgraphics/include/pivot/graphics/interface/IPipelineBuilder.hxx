@@ -11,7 +11,7 @@ class IPipelineBuilder
 {
 public:
     /// @brief Get the debug name of the builders
-    virtual constexpr const char *getDebugPipelineName() const noexcept = 0;
+    virtual const char *const getDebugPipelineName() const noexcept = 0;
     /// @brief Set the pipeline layout, can be chained
     virtual IPipelineBuilder &setPipelineLayout(vk::PipelineLayout &) = 0;
     /// @brief Build the pipeline

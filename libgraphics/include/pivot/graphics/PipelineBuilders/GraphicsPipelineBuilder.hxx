@@ -19,7 +19,7 @@ public:
     GraphicsPipelineBuilder(const vk::Extent2D &);
     ~GraphicsPipelineBuilder();
 
-    constexpr const char *getDebugPipelineName() const noexcept { return "Graphics Pipeline"; }
+    const char *const getDebugPipelineName() const noexcept { return "Graphics Pipeline"; }
 
     GraphicsPipelineBuilder &setPipelineLayout(vk::PipelineLayout &) noexcept;
 

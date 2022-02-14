@@ -111,6 +111,9 @@ if (BUILD_DOCUMENTATION)
     endif()
 endif()
 
+
+include(cmake/tests.cmake)
+
 add_subdirectory(libecs/)
 add_subdirectory(libgraphics/)
 target_link_libraries(pivot-ecs PUBLIC pivot-graphics)

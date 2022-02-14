@@ -5,7 +5,6 @@
 #include <pivot/ecs/Core/Component/index.hxx>
 #include <pivot/ecs/Core/Scene.hxx>
 
-
 using namespace pivot::ecs::component;
 using namespace pivot::ecs::data;
 

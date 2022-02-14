@@ -10,9 +10,9 @@ class System
 {
 public:
     /// Update your system, this function will be called every frame
-    virtual void Update(float) {};
+    virtual void Update(float){};
     /// Init you system and pass the needed variable
-    virtual void Init() {};
+    virtual void Init(){};
     /// Get signature for this system, the signature is set with component needed
     virtual Signature getSignature() { return Signature(); };
     /// List of entities that match with signature

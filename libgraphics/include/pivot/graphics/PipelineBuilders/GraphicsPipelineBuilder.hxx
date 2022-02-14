@@ -40,7 +40,7 @@ public:
     /// Build the Vulkan pipeline
     ///
     /// @return A valid Vulkan pipeline, or VK_NULL_REFERENCE if an error has occurred
-    vk::Pipeline build(vk::Device &device, vk::PipelineCache pipelineCache = VK_NULL_HANDLE)const;
+    vk::Pipeline build(vk::Device &device, vk::PipelineCache pipelineCache = VK_NULL_HANDLE) const;
 
 private:
     std::string vertexShaderPath;

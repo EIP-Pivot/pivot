@@ -1,7 +1,7 @@
 #pragma once
 
-#include "pivot/ecs/Core/types.hxx"
 #include "pivot/ecs/Core/Event.hxx"
+#include "pivot/ecs/Core/types.hxx"
 #include <functional>
 #include <list>
 #include <unordered_map>

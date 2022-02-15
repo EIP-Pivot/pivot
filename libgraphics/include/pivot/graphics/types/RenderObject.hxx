@@ -19,9 +19,9 @@ struct RenderObject {
         /// The object transform
         Transform transform;
         /// The name of the texture to apply on the object
-        std::optional<std::string> textureIndex;
+        std::string textureIndex;
         /// The name of the material to use on the object
-        std::optional<std::string> materialIndex;
+        std::string materialIndex;
     }
     /// The informations about the object
     /// @see ObjectInformation

@@ -6,9 +6,9 @@ static inline std::optional<std::uint32_t> getDefault(const pivot::graphics::Ass
                                                       const std::optional<std::string> &value,
                                                       const std::optional<std::string> &defaultValue)
 {
-    if (value)
+    if (value && !value->empty())
         return stor.getIndex<T>(value.value());
-    else if (defaultValue)
+    else if (defaultValue && !defaultValue->empty())
         return stor.getIndex<T>(defaultValue.value());
     else
         return std::nullopt;

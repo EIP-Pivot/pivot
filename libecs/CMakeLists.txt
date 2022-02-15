@@ -92,4 +92,10 @@ build_tests(${PROJECT_NAME}
   tests/Core/Data/test_value_and_type.cxx
   tests/Core/Data/test_serialization.cxx
   tests/Core/test_scene.cxx
+  tests/Core/Systems/test_description.cxx
+  tests/Core/Systems/test_global_registration.cxx
+  tests/Core/Systems/test_manager.cxx
+  tests/Core/Event/test_description.cxx
+  tests/Core/Event/test_global_registration.cxx
+  tests/Core/Event/test_manager.cxx
   )

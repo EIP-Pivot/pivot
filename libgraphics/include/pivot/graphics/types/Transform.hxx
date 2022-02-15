@@ -20,6 +20,8 @@ private:
         glm::vec3 translation;
         glm::vec3 skew;
         glm::vec4 perspective;
+
+        auto operator<=>(const DecomposedMatrix &) const = default;
     };
 
 public:
@@ -59,6 +61,9 @@ public:
     inline glm::vec3 getPosition() const { return m_matrix.translation; }
     /// Set the scale of the model matrix;
     inline glm::vec3 getScale() const { return m_matrix.scale; }
+
+    /// Compare transforms
+    auto operator<=>(const Transform &) const = default;
 
 private:
     inline static DecomposedMatrix decomposeMatrix(const glm::mat4 &modelMatrix)

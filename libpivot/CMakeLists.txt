@@ -6,6 +6,10 @@ add_library(${PROJECT_NAME} STATIC
   sources/systems/ControlSystem.cxx
   )
 
+target_sources(${PROJECT_NAME} INTERFACE
+  sources/components/RenderObject.cxx
+  )
+
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC

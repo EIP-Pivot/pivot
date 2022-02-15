@@ -53,6 +53,13 @@ public:
     /// Add position to the model matrix;
     inline void addPosition(const glm::vec3 &position) { m_matrix.translation += position; }
 
+    /// Set the rotation of the model matrix;
+    inline glm::vec3 getRotation() const { return glm::eulerAngles(m_matrix.orientation); }
+    /// Set the position of the model matrix;
+    inline glm::vec3 getPosition() const { return m_matrix.translation; }
+    /// Set the scale of the model matrix;
+    inline glm::vec3 getScale() const { return m_matrix.scale; }
+
 private:
     inline static DecomposedMatrix decomposeMatrix(const glm::mat4 &modelMatrix)
     {

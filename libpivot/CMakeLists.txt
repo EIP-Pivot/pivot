@@ -19,4 +19,5 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 
 build_tests(${PROJECT_NAME}
   tests/main.cxx
+  tests/components/test_render_object_component.cxx
   )

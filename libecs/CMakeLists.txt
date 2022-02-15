@@ -45,8 +45,7 @@ if (NOT nlohmann_json_POPULATED)
     add_subdirectory(${nlohmann_json_SOURCE_DIR} ${nlohmann_json_BINARY_DIR})
 endif()
 
-add_library(${PROJECT_NAME} source/Systems/ControlSystem.cxx
-                            source/Core/Scene.cxx
+add_library(${PROJECT_NAME} source/Core/Scene.cxx
                             source/Core/EntityManager.cxx
                             source/Core/EventManager.cxx
                             source/Core/SystemManager.cxx
@@ -68,6 +67,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   magic_enum
   boost_fusion
   nlohmann_json::nlohmann_json
+  logger
 )
 
 target_sources(${PROJECT_NAME} INTERFACE source/Components/Tag.cxx

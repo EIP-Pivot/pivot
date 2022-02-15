@@ -116,10 +116,7 @@ include(cmake/tests.cmake)
 
 add_subdirectory(libecs/)
 add_subdirectory(libgraphics/)
-target_link_libraries(pivot-ecs PUBLIC pivot-graphics)
-
-add_library(pivot INTERFACE)
-target_link_libraries(pivot INTERFACE pivot-graphics pivot-ecs)
+add_subdirectory(libpivot/)
 
 
 target_compile_options(pivot-ecs PRIVATE

@@ -1,0 +1,18 @@
+project(pivot)
+
+add_library(${PROJECT_NAME} STATIC
+  sources/game_engine.cxx
+  sources/internal/camera.cxx
+  sources/systems/ControlSystem.cxx
+  )
+
+target_include_directories(${PROJECT_NAME} PUBLIC include/)
+
+target_link_libraries(${PROJECT_NAME} PUBLIC
+  pivot-graphics
+  pivot-ecs
+  )
+
+build_tests(${PROJECT_NAME}
+  tests/main.cxx
+  )

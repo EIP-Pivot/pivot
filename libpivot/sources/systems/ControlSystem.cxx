@@ -1,4 +1,4 @@
-#include "pivot/ecs/Systems/ControlSystem.hxx"
+#include "pivot/systems/ControlSystem.hxx"
 
 #include "pivot/ecs/Components/Transform.hxx"
 #include "pivot/ecs/Core/SceneManager.hxx"

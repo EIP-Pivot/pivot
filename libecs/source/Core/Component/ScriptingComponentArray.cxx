@@ -22,4 +22,4 @@ void ScriptingComponentArray::setValueForEntity(Entity entity, std::optional<dat
 }
 
 
-}
+} // end namespace pivot::ecs::component

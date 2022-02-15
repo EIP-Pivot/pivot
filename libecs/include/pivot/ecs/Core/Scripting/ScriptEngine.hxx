@@ -1,5 +1,6 @@
 #ifndef __SCRIPT__ENGINE__
 #define __SCRIPT__ENGINE__
+#define _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING
 
 #include <iostream>
 #include <vector>
@@ -8,6 +9,10 @@
 #include <any>
 
 #include "pivot/ecs/Core/Scripting/Exceptions.hxx"
+
+// TODO : remove this
+// This silences iterator warnings from CombinationArray
+
 
 struct ComponentPosition {
 	double pos_x;
@@ -33,9 +38,9 @@ public:
 	ScriptEngine();
 	~ScriptEngine();
 	LoadResult loadFile(const std::string &fileName, bool verbose);
-	void executeSystem(const std::string &systemName, std::vector<std::vector<std::pair<ComponentDescription, std::any>>> &entities);
+	void executeSystem(const pivot::ecs::systems::Description &toExec, std::vector<std::vector<std::pair<ComponentDescription, std::any>>> &entities, const pivot::ecs::event::Event &event);
 
-	void executeSystemNew(const pivot::ecs::systems::Description &toExec, const std::vector<std::vector<pivot::ecs::data::Value>> &components, const pivot::ecs::event::Event &event);
+	void executeSystemNew(const pivot::ecs::systems::Description &toExec, pivot::ecs::systems::Description::systemArgs &components, const pivot::ecs::event::Event &event);
 
 	void totalReset(); // This is to reset the entire file (for tests notably)
 	void softReset(); // This is to reset the data needed to read files but not the already registered data
@@ -61,6 +66,8 @@ protected:
 	bool handlePropertyDecl();
 	bool handleInstructionDecl();
 
+	void registerComponent(LoadResult &result, bool verbose = true);
+	void registerSystem(LoadResult &result, bool verbose = true);
 	void cleanInstruction(std::string &instruction);
 	InstructionType getInstructionType(const std::string &instruction);
 	void handleInstruction(const std::string &instruction, InstructionType iType);
@@ -91,6 +98,25 @@ protected:
 
 std::vector<std::string> split(const std::string& str, const std::string& delim);
 std::unique_ptr<pivot::ecs::component::IComponentArray> arrayFunctor(pivot::ecs::component::Description description);
+
+/*
+
+system onColisionWithObject(Player<Holding,Score,Tag>) event Collision(Object<Holding, Follow, Transform>, Other<Hole>, deltaTime)
+
+system s(a<A,B,C>) event E(b<A,B>, c<D>, data)
+
+
+systemDescription
+	name:	s
+	systemComponents:	[ A, B, C ]
+	eventListener:
+		name:	E
+		entities:	[b, c]
+		payload:	data::Type::Number
+	eventComponents: [ [A,B], [D] ]
+	system:		myCallback
+
+*/
 
 
 #endif

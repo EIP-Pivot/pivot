@@ -2,20 +2,22 @@
 
 using namespace pivot::ecs;
 
-// static std::map<std::string, data::BasicType> variableTypes {
-// 	{"Vector3", data::BasicType::Vec3},
-// 	{"Number", data::BasicType::Number},
-// 	{"Boolean", data::BasicType::Boolean},
-// 	{"String", data::BasicType::String}
-// };
-
-
-static const std::vector<std::string> variableTypes {
-	"Vector3",
-	"Number",
-	"Boolean",
-	"String"
+static std::map<std::string, data::BasicType> variableTypes {
+	{"Vector3", data::BasicType::Vec3},
+	{"Number", data::BasicType::Number},
+	{"Boolean", data::BasicType::Boolean},
+	{"Color", data::BasicType::Number},
+	{"String", data::BasicType::String}
 };
+
+
+// static const std::vector<std::string> variableTypes {
+// 	"Vector3",
+// 	"Number",
+// 	"Boolean",
+// 	"String",
+// 	"Color"
+// };
 
 static const std::vector<std::string> blockOperators {
 	"if",
@@ -24,7 +26,7 @@ static const std::vector<std::string> blockOperators {
 
 
 ScriptEngine::ScriptEngine()
-:	_phComponent ( {"", data::BasicType::String, arrayFunctor})
+:	_phComponent ( {"", data::RecordType(), arrayFunctor})
 {
 	_currentLine = 0;
 	_fileIndent = Indent{NOINDENT, 0};
@@ -60,13 +62,10 @@ try {
 		_currentState = lineState;
 		_currentIndent = getLineIndent();
 	}
-	if (_currentState == INSTRUCTION) {
-		result.systems.push_back(_phSystem);
-		_systemsInstructions.push_back(_phInstructions);
-		_phInstructions.clear();
-	}
+	if (_currentState == INSTRUCTION)
+		registerSystem(result);
 	if (_currentState == PROPERTY_DECL)
-		result.components.push_back(_phComponent);
+		registerComponent(result);
 	_systems = result.systems;
 	// _components = result.components;
 }
@@ -89,14 +88,16 @@ catch (UnexpectedStateException e) {
 	if (verbose)
 		std::cout << result.output << std::flush;
 }
+	if (result.output.empty())
+		result.output = fileName + " succesfully parsed.\n";
 	return result;
 }
 
-void ScriptEngine::executeSystem(const std::string &systemName, std::vector<std::vector<std::pair<ComponentDescription, std::any>>> &entities) {
+void ScriptEngine::executeSystem(const pivot::ecs::systems::Description &toExec, std::vector<std::vector<std::pair<ComponentDescription, std::any>>> &entities, const pivot::ecs::event::Event &event) {
 try {
 	size_t entityId = 0;
 	for (SystemDescription &d : _systems) {
-		if (systemName == d.name) {
+		if (toExec.name == d.name) {
 			std::cout << "System to execute:\t" << d.name << "\n\n";
 			std::cout << "Entities to execute on:\n";
 			for (std::vector<std::pair<ComponentDescription, std::any>> &entity : entities) {
@@ -112,7 +113,7 @@ try {
 					}
 					std::cout << std::endl;
 				}
-				executeSystem(systemName, entity, entityId);
+				executeSystem(toExec.name, entity, entityId);
 				entityId += 1;
 			}
 			break;
@@ -122,6 +123,10 @@ try {
 catch (UnhandledException e) {
 	std::cout << e.what() << std::endl;
 }
+}
+
+void executeSystemNew(const pivot::ecs::systems::Description &toExec, pivot::ecs::systems::Description::systemArgs &components, const pivot::ecs::event::Event &event) {
+
 }
 
 void ScriptEngine::executeSystem(const std::string &systemName, std::vector<std::pair<ComponentDescription, std::any>> &entity, size_t entityId) {
@@ -370,18 +375,10 @@ bool ScriptEngine::handleStart() {
 }
 bool ScriptEngine::handleComponentDecl(LoadResult &result) {
 	int data = 0;
-	if (_currentState == PROPERTY_DECL) {
-		result.components.push_back(_phComponent);
-		try {
-			std::get<data::RecordType>(_phComponent.type).clear();
-		} catch (std::bad_variant_access e) {}
-	}
-	if (_currentState == INSTRUCTION) {
-		result.systems.push_back(_phSystem);
-		_phSystem.inputComponents.clear();
-		_systemsInstructions.push_back(_phInstructions);
-		_phInstructions.clear();
-	}
+	if (_currentState == PROPERTY_DECL)
+		registerComponent(result);
+	if (_currentState == INSTRUCTION)
+		registerSystem(result);
 	std::vector<std::string> keyWords = split(_line, " \t");
 	if (keyWords.size() != 2) // TODO: handle one line declaration of components
 		throw InvalidSyntaxException("ERROR", _line.data(), _currentLine, "Invalid component declaration. Try declaring it like this : 'component Name'.");
@@ -391,28 +388,28 @@ bool ScriptEngine::handleComponentDecl(LoadResult &result) {
 	return true;
 }
 bool ScriptEngine::handleSystemDecl(LoadResult &result) {
-	if (_currentState == PROPERTY_DECL) {
-		result.components.push_back(_phComponent);
-		try {
-			std::get<data::RecordType>(_phComponent.type).clear();
-		} catch (std::bad_variant_access e) {}
-	}
-	if (_currentState == INSTRUCTION) {
-		result.systems.push_back(_phSystem);
-		_phSystem.inputComponents.clear();
-		_systemsInstructions.push_back(_phInstructions);
-		_phInstructions.clear();
-	}
+	if (_currentState == PROPERTY_DECL)
+		registerComponent(result);
+	if (_currentState == INSTRUCTION)
+		registerSystem(result);
 	std::vector<std::string> keyWords = split(_line, " \t");
-	size_t firstInd = _line.find_first_of('{');
-	std::string componentsString = _line.substr(firstInd + 1, _line.find_last_of('}') - firstInd - 1);
-	if (componentsString.empty())
-		throw InvalidSyntaxException("ERROR", _line.data(), _currentLine, "System requires input components declared in brackets.\nSuch as\tsystem Name {component1 component2}");
-	std::vector<std::string> inputComponents = split(componentsString, ", \t");
+	// size_t firstInd = _line.find_first_of('{');
+	// std::string componentsString = _line.substr(firstInd + 1, _line.find_last_of('}') - firstInd - 1);
+	// if (componentsString.empty())
+	// 	throw InvalidSyntaxException("ERROR", _line.data(), _currentLine, "System requires input components declared in brackets.\nSuch as\tsystem Name {component1 component2}");
 	if (keyWords[0] != "system")
 		throw InvalidSyntaxException("ERROR", _line.data(), _currentLine, "Weird error.");
 	_phSystem.name = keyWords[1];
-	_phSystem.inputComponents = inputComponents;
+	_phSystem.systemComponents = {""};
+	event::Description eventDescription{
+        .name = "Tick",
+        .entities = {
+            {}
+        },
+        .payload = data::BasicType::Number,
+    };
+	_phSystem.eventListener = eventDescription;
+	_phSystem.eventComponents = { {"A", "B"}, {"C"}};
 	return true;
 }
 bool ScriptEngine::handlePropertyDecl() {
@@ -420,9 +417,10 @@ bool ScriptEngine::handlePropertyDecl() {
 	if (keyWords.size() != 2) // TODO: handle one line declaration of components
 		throw InvalidSyntaxException("ERROR", _line.data(), _currentLine, "Invalid property declaration. Try declaring it like this : 'propertyType propertyName' ex. 'Vector3 position'.");
 	try {
-		// std::get<data::RecordType>(_phComponent.type)[keyWords[1]] = variableTypes[keyWords[0]];
+		std::get<data::RecordType>(_phComponent.type)[keyWords[1]] = variableTypes[keyWords[0]];
 	} catch (std::bad_variant_access e) {
-	} catch (...) {}
+		std::cerr << "Type of component is not RecordType. Should maybe use std::visit...\tScriptEngine::handlePropertyDecl()" << std::endl;
+	}
 	// _phProperty.type = keyWords[0];
 	// _phProperty.name = keyWords[1];
 	// _phComponent.properties.push_back(_phProperty);
@@ -432,6 +430,40 @@ bool ScriptEngine::handleInstructionDecl() {
 	_phInstructions.push_back(_line);
 	return true;
 }
+
+void ScriptEngine::registerComponent(LoadResult &result, bool verbose){
+	if (verbose) {
+		std::cout << "Registering component : '" << _phComponent.name << "'\n";
+		try {
+			for (auto [name, type] : std::get<data::RecordType>(_phComponent.type))
+				std::cout << "\t" << type << " Name { \"" << name <<  "\" }" << std::endl;
+		} catch (std::bad_variant_access e) {
+			std::cerr << "Type of component is not RecordType. Should maybe use std::visit...\tScriptEngine::handlePropertyDecl()" << std::endl;
+		}
+	}
+	component::GlobalIndex::getSingleton().registerComponent(_phComponent);
+	result.components.push_back(_phComponent);
+	try {
+		std::get<data::RecordType>(_phComponent.type).clear();
+	} catch (std::bad_variant_access e) {
+		std::cerr << "Type of component is not RecordType. Should maybe use std::visit...\tScriptEngine::handlePropertyDecl()" << std::endl;
+	}
+}
+
+void ScriptEngine::registerSystem(LoadResult &result, bool verbose){
+	if (verbose) {
+		std::cout << "Registering system : '" << _phSystem.name << "'\t on event " << _phSystem.eventListener.name << std::endl;
+		for (std::string component : _phSystem.systemComponents)
+			std::cout << "\t" << component << std::endl;
+	}
+	systems::GlobalIndex::getSingleton().registerSystem(_phSystem);
+	result.systems.push_back(_phSystem);
+	_phSystem.systemComponents.clear();
+	_phSystem.eventComponents.clear();
+	_systemsInstructions.push_back(_phInstructions);
+	_phInstructions.clear();
+}
+
 
 bool ScriptEngine::badIndent(const std::string &line, State lineState) {
 	Indent t = getIndent(line);
@@ -459,7 +491,7 @@ bool ScriptEngine::validIndentSize(size_t indentSize, State lineState) {
 			return (indentSize == (_currentIndent + 1) * _fileIndent.size);
 		return (indentSize == _currentIndent * _fileIndent.size || indentSize == (_currentIndent+1) * _fileIndent.size || indentSize == (_currentIndent-1) * _fileIndent.size);
 	}
-	std::cerr << "validIndentSize error" << std::endl;
+	std::cerr << "Error at: ScriptEngine::validIndentSize in ScriptEngine.cxx" << std::endl;
 	return false;
 }
 
@@ -481,7 +513,9 @@ State ScriptEngine::getLineState() {
 		return COMPONENT_DECL;
 	if (keyWords[0] == "system")
 		return SYSTEM_DECL;
-	if (std::find(variableTypes.begin(), variableTypes.end(), keyWords[0]) != variableTypes.end())
+	// if (std::find(variableTypes.begin(), variableTypes.end(), keyWords[0]) != variableTypes.end())
+	// 	return PROPERTY_DECL;
+	if (variableTypes.contains(keyWords[0]))
 		return PROPERTY_DECL;
 	if (_line.find('=') != std::string::npos || _line.find('(') != std::string::npos)
 		return INSTRUCTION;
@@ -526,7 +560,7 @@ std::vector<std::string> split(const std::string& str, const std::string& delim)
         if (pos == std::string::npos) pos = str.length();
         std::string token = str.substr(prev, pos-prev);
         if (!token.empty()) tokens.push_back(token);
-        prev = pos + delim.length()- 1;
+        prev = pos + 1;
     }
     while (pos < str.length() && prev < str.length());
     return tokens;
@@ -568,18 +602,23 @@ bool ScriptEngine::populateLinesFromFile(const std::string &fileName) {
 void ScriptEngine::cleanLine(const std::string &line) {
 	auto result = line.find('#');
 
-	if (result != std::string::npos) {
+	if (result != std::string::npos)
 		_line = line.substr(0, result);
-	} else {
+	else
 		_line = line;
-	}
+	auto cursor = _line.find_first_not_of(" \t") + 1;
+	std::replace(_line.begin() + cursor, _line.end(), '\t', ' ');
+	// std::cout << "_line : " << _line << std::endl;
 }
 
 bool ScriptEngine::lineIsEmpty(const std::string &line) {
-	for (char c : line)
-		if (c != '\t' && c != ' ' && c != '\r')
-			return false;
+	if (line.find_first_not_of(" \t\r") != std::string::npos)
+		return false;
 	return true;
+	// for (char c : line)
+	// 	if (c != '\t' && c != ' ' && c != '\r')
+	// 		return false;
+	// return true;
 }
 
 Indent ScriptEngine::getIndent(const std::string &line) {

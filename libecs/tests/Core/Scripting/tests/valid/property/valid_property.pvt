@@ -1,2 +1,2 @@
-component Test
+component TEST_Position
     Vector3 pos

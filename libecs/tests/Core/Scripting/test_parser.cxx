@@ -4,8 +4,9 @@
 #include <string>
 
 TEST_CASE("Scripting-parser") {
-	std::cout << "--------- Start Parser tests --------" << std::endl;
 	std::vector<std::pair<std::string, std::string>> testFilesOutput = {
+		// Commented test files are not supported yet
+		// { "../libecs/tests/Core/Scripting/tests/physics.pvt",	"" },
 		{ "../libecs/tests/Core/Scripting/tests/invalid/component/invalid_component1.pvt",
 			"\nERROR:\t../libecs/tests/Core/Scripting/tests/invalid/component/invalid_component1.pvt\n\tline 1:\tTransform \nLogicError: Unknown expression.\n" },
 		{ "../libecs/tests/Core/Scripting/tests/invalid/component/invalid_component2.pvt",
@@ -16,28 +17,36 @@ TEST_CASE("Scripting-parser") {
 		// 	"\nERROR:\t../libecs/tests/Core/Scripting/tests/invalid/property/invalid_property2.pvt\n\tline 2:\tpos Vector3\nLogicError: Unknown expression.\n" },
 		// { "../libecs/tests/Core/Scripting/tests/invalid/variable/invalid_variable1.pvt",
 		// 	"\nERROR:\t../libecs/tests/Core/Scripting/tests/invalid/variable/invalid_variable1.pvt\n\tline 2:\tpos Vector3\nLogicError: Unknown expression.\n" },
-		{ "../libecs/tests/Core/Scripting/tests/valid/component/valid_component.pvt", "" },
-		{ "../libecs/tests/Core/Scripting/tests/valid/property/valid_property.pvt",	"" },
+		{ "../libecs/tests/Core/Scripting/tests/valid/component/valid_component.pvt", "../libecs/tests/Core/Scripting/tests/valid/component/valid_component.pvt succesfully parsed.\n" },
+		{ "../libecs/tests/Core/Scripting/tests/valid/property/valid_property.pvt",	"../libecs/tests/Core/Scripting/tests/valid/property/valid_property.pvt succesfully parsed.\n" },
 		// { "../libecs/tests/Core/Scripting/tests/valid/variable/valid_variable.pvt",	"" },
+		// { "../libecs/tests/Core/Scripting/tests/jeu.pvt",	"" },
 	};
 	ScriptEngine engine;
 	for (auto [file, output] : testFilesOutput) {
 		LoadResult r = engine.loadFile(file, false);
-		for (auto c : r.components)
-			std::cout << "name:'" << c.name << "'" << std::endl;
-		if (output != r.output) {
-			std::cout << "--------------------------------" << std::endl;
-			std::cout << output << std::endl;
-			std::cout << "--------------------------------" << std::endl;
-			std::cout << r.output << std::endl;
-			std::cout << "--------------------------------" << std::endl;
-			std::cout << "Test " << file.substr(file.find_last_of('/') + 1, file.size() - file.find_last_of('/') - 1) <<  " failed" << std::endl;
-		}
+		REQUIRE(output == r.output);
 		engine.totalReset();
 	}
-	std::cout << "--------- End Parser tests --------" << std::endl;
 }
 
+TEST_CASE("Scripting-parser-main") {
+	std::cout << "--------- Start Parser main --------" << std::endl;
+	std::vector<std::pair<std::string, std::string>> testFilesOutput = {
+		// { "../libecs/tests/Core/Scripting/tests/physics.pvt",	"" },
+		// { "../libecs/tests/Core/Scripting/tests/valid/variable/valid_variable.pvt",	"" },
+		// { "../libecs/tests/Core/Scripting/tests/jeu.pvt",	"" },
+	};
+	ScriptEngine engine;
+	for (auto [file, output] : testFilesOutput) {
+		LoadResult r = engine.loadFile(file, false);
+		std::cout << "[OUTPUT START]\tfor " << file << std::endl;
+		std::cout << r.output << std::endl;
+		std::cout << "[OUTPUT END]" << std::endl;
+		engine.totalReset();
+	}
+	std::cout << "--------- End Parser main --------" << std::endl;
+}
 
 
 /*

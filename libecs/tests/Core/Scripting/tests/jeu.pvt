@@ -1,0 +1,65 @@
+# Event Collision
+# Singleton Input
+# builtin print
+
+# entity Hole
+#     component CollisionBox
+#     component Transform
+#     component Type
+
+# entity Player
+#     component CollisionBox
+#     component Transform
+#     component Acceleration
+#     component Holding
+#     component Score
+
+# entity Object
+#     component CollisionBox
+#     component Transform
+#     component Type
+
+component CollisionBox
+	Vector3 size
+
+component Acceleration = Vector3
+component Type = String
+component Holding = String
+component Score = Number
+
+system onColisionWithHole(Player<Score, Holding>) event Collision(hole<Type>)
+	if Player.Holding == hole.Type # does the player hold same item as the type of the hole
+		Player.Holding = "empty" # destroy item
+		Player.Score += 1 # add score
+		print("Current score is " + Player.Score)
+	if Player.Holding != "empty"
+		Scene.switch("loss.scene")
+		print("You lost with a score of " + Player.Score)
+
+system onColisionWithObject(Player<Holding>) event Collision(Object<Holding, Follow, Transform>)
+	if Player.Holding == "empty"
+		Object.transform.position.y = 0
+		Object.transform.position.z = 0
+		Object.transform.position.x = 15        # on le place un peu derrière
+		Object.transform.root = Player.transform
+		Player.holding = Object
+
+system inputHandler(Player<Acceleration>)
+	if Input.isPressed(Input::W)
+		Player.Acceleration.x = 10
+	if Input.isPressed(Input::S)
+		Player.Acceleration.x = -10
+	if Input.isPressed(Input::Q)
+		Player.Acceleration.z = 10
+	if Input.isPressed(Input::D)
+		Player.Acceleration.z = -10
+
+system inputReleaseForm(Player<Holding>)
+	if Input.isReleased(Input::G) and Player.Holding != "empty"
+		#TODO: remove object follow
+
+system Victory(Player<Score>)
+	if (Player.Score == 3)
+		Scene.switch("win.scene")
+
+#TODO: créer les scènes (win.scene/loss.scene/jeu) et modèles (Ground/Player/Holes(3)/Objects(3)) (aled Maxence)

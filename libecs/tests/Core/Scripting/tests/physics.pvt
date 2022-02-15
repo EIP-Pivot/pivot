@@ -1,14 +1,21 @@
 component Position
-	Number pos_x
-	Number pos_y
+	String pos_x
+	Vector3 pos_y
 	Number pos_z
 
+# component Size : Number
+
+# struct Size
+# 	Number x
+# 	Number y
+
 component Velocity
+	# Size size
 	Number vel_x
 	Number vel_y
 	Number vel_z
 
-system Physics {Position, Velocity}
-	Position.pos_x=Position.pos_x+Velocity.vel_x
-	Position.pos_y = Position.pos_y + 	Velocity.vel_y
-	Position.pos_z =	 Position.pos_z + 		  Velocity.vel_z
+# system	  onTickPhysics(	 anyEntity<	Position,	 Velocity 	 >	 )	  event 	 Tick(	 deltaTime	 )	 	 
+# 	Position.pos_x=Position.pos_x+Velocity.vel_x
+# 	Position.pos_y = Position.pos_y + 	Velocity.vel_y
+# 	Position.pos_z =	 Position.pos_z + 		  Velocity.vel_z

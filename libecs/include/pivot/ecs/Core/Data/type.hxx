@@ -2,6 +2,7 @@
 
 #include <glm/vec3.hpp>
 #include <map>
+#include <memory>
 #include <optional>
 #include <ostream>
 #include <string>
@@ -33,6 +34,11 @@ struct Type;
 /// The record type specifies the property names and types of a record
 using RecordType = std::map<std::string, Type>;
 
+/// The optional type describes a value that can be present or not
+struct OptionalType {
+    std::unique_ptr<Type> type;
+};
+
 /// A type in the pivot data model
 struct Type : public std::variant<BasicType, RecordType> {
     using variant::variant;
@@ -43,6 +49,7 @@ struct Type : public std::variant<BasicType, RecordType> {
 
 std::ostream &operator<<(std::ostream &stream, const BasicType &type);
 std::ostream &operator<<(std::ostream &stream, const RecordType &type);
+std::ostream &operator<<(std::ostream &stream, const OptionalType &type);
 std::ostream &operator<<(std::ostream &stream, const Type &type);
 
 template <typename T>

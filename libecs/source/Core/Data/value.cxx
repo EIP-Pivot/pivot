@@ -12,6 +12,12 @@ RecordType Record::type() const
     return type;
 }
 
+OptionalType Optional::type() const
+{
+    if (this->has_value()) return OptionalType{this->value()};
+    return OptionalType{};
+}
+
 Type Value::type() const
 {
     return std::visit(

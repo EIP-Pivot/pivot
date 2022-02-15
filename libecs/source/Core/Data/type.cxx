@@ -23,6 +23,11 @@ std::ostream &operator<<(std::ostream &stream, const RecordType &type)
     return stream << "}";
 }
 
+std::ostream &operator<<(std::ostream &stream, const OptionalType &type)
+{
+    return stream << "Optional {" << type.type << "}";
+}
+
 std::ostream &operator<<(std::ostream &stream, const Type &type)
 {
     stream << "Type { ";

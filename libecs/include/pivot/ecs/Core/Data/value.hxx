@@ -23,6 +23,14 @@ struct Record : public std::map<std::string, Value> {
     RecordType type() const;
 };
 
+/** \brief A value containg another value or nothing.
+ *
+ * This is represented as a null in JSON.
+ */
+struct Optional : public std::optional<Value> {
+    OptionalType type() const;
+};
+
 /** \brief A value dynamically typed, which forms the basis of the pivot data model
  *
  * A value can be one of those type :

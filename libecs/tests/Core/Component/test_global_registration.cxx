@@ -2,8 +2,8 @@
 #include <pivot/ecs/Components/Gravity.hxx>
 #include <pivot/ecs/Components/RigidBody.hxx>
 #include <pivot/ecs/Components/Tag.hxx>
-#include <pivot/ecs/Components/Transform.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
+#include <pivot/graphics/types/Transform.hxx>
 
 using namespace pivot::ecs::component;
 

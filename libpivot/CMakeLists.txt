@@ -8,6 +8,7 @@ add_library(${PROJECT_NAME} STATIC
 
 target_sources(${PROJECT_NAME} INTERFACE
   sources/components/RenderObject.cxx
+  sources/components/Transform.cxx
   )
 
 target_include_directories(${PROJECT_NAME} PUBLIC include/)

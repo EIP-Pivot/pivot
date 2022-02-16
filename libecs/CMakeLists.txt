@@ -72,8 +72,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 
 target_sources(${PROJECT_NAME} INTERFACE source/Components/Tag.cxx
                                          source/Components/RigidBody.cxx
-                                         source/Components/Gravity.cxx
-                                         source/Components/Transform.cxx)
+                                         source/Components/Gravity.cxx)
 
 build_tests(${PROJECT_NAME}
   tests/main.cxx

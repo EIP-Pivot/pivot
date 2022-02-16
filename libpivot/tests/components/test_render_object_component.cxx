@@ -18,9 +18,9 @@ TEST_CASE("transform adapter work", "[graphics]")
     helpers::Helpers<Transform>::updateTypeWithValue(transform, transform_value);
 
     Transform expected;
-    expected.setPosition({5, 5, 5});
-    expected.setRotation({0, 2.7, 0.4});
-    expected.setScale({1, 2, 3});
+    expected.position = {5, 5, 5};
+    expected.rotation = {0, 2.7, 0.4};
+    expected.scale = {1, 2, 3};
     Value expected_value = helpers::Helpers<Transform>::createValueFromType(expected);
 
     REQUIRE(transform_value.type() == expected_value.type());

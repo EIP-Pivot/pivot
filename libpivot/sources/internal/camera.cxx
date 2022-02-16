@@ -1,7 +1,8 @@
-#include <pivot/internal/camera.hxx>
+#include "pivot/internal/camera.hxx"
 
 namespace pivot::internal
 {
+
 graphics::CameraData getGPUCameraData(Camera camera, float fFOV, float fAspectRatio,
                                       float fCloseClippingPlane = PIVOT_MIN_PROJECTION_LIMIT,
                                       float fFarClippingPlane = PIVOT_MAX_PROJECTION_LIMIT)
@@ -16,4 +17,5 @@ graphics::CameraData getGPUCameraData(Camera camera, float fFOV, float fAspectRa
         .viewProjection = projection * view,
     };
 }
+
 }    // namespace pivot::internal

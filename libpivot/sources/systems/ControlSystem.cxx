@@ -1,7 +1,7 @@
 #include "pivot/systems/ControlSystem.hxx"
 
-#include "pivot/ecs/Components/Transform.hxx"
 #include "pivot/ecs/Core/SceneManager.hxx"
+#include "pivot/graphics/types/Transform.hxx"
 
 extern SceneManager gSceneManager;
 

@@ -163,6 +163,9 @@ public:
     /// @return Get all the loaded Textures
     constexpr const auto &getTextures() const noexcept { return textureStorage; }
 
+    /// @private
+    constexpr const auto &getCPUStorage() const noexcept { return cpuStorage; }
+
 private:
     bool loadModel(const std::filesystem::path &path);
     bool loadObjModel(const std::filesystem::path &path);

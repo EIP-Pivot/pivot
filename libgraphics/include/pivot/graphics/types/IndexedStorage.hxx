@@ -42,6 +42,8 @@ public:
         assert(storage.size() == index.size());
         return storage.size();
     }
+    /// return whether or not the size is equal to 0
+    constexpr bool empty() const noexcept { return size() == 0; }
     /// return the internal vector
     constexpr const auto &getStorage() const noexcept { return storage; }
     /// @copydoc getStorage

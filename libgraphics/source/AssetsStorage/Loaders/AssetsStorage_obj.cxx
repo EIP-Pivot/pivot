@@ -60,6 +60,8 @@ bool AssetStorage::loadObjModel(const std::filesystem::path &path)
         };
         if (!shape.mesh.material_ids.empty() && shape.mesh.material_ids.at(0) >= 0) {
             model.default_material = materials.at(shape.mesh.material_ids.at(0)).name;
+        } else {
+            model.default_material = "white";
         }
         for (const auto &index: shape.mesh.indices) {
             assert(index.vertex_index >= 0);

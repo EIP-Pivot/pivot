@@ -16,7 +16,7 @@ void Description::validate() const
 
     for (const auto &arg: this->systemComponents) {
         if (!ecs::component::GlobalIndex::getSingleton().getDescription(arg).has_value())
-            throw ValidationError("Component " + arg + " his not registered.");
+            throw ValidationError("Component " + arg + " is not registered.");
     }
 
     this->eventListener.validate();

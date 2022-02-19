@@ -52,5 +52,5 @@ TEST_CASE("Invalid args system description", "[description]")
         .name = "Invalid",
         .systemComponents = {"NOT REGISTERED"},
     };
-    REQUIRE_THROWS_WITH(description.validate(), Catch::Matchers::Contains("Component ") && Catch::Matchers::Contains(" his not registered."));
+    REQUIRE_THROWS_WITH(description.validate(), Catch::Matchers::Contains("Component ") && Catch::Matchers::Contains(" is not registered."));
 }

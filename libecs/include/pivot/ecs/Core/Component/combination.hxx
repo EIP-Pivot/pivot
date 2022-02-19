@@ -42,7 +42,7 @@ public:
     };
 
     /// Iterator over all entity having components in each array
-    class iterator : std::iterator<std::input_iterator_tag, ComponentCombination>
+    class iterator
     {
     public:
         /// Begin constructor
@@ -76,8 +76,8 @@ public:
             return m_entity == other.m_entity && &m_intersection == &other.m_intersection;
         }
         bool operator!=(iterator other) const { return !(*this == other); }
-        value_type operator*() const { return ComponentCombination(m_intersection, m_entity); }
-        value_type operator->() const { return **this; }
+        ComponentCombination operator*() const { return{m_intersection, m_entity}; }
+        ComponentCombination operator->() const { return **this; }
         /// @endcond
 
     private:

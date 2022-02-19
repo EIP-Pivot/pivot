@@ -30,6 +30,7 @@ private:
     component::Manager &m_componentManager;
     EntityManager &m_entityManager;
     std::unordered_map<std::string, Description> m_systems;
+    std::unordered_map<std::string, Description::systemArgs> m_combinations;
 };
 
 }    // namespace pivot::ecs::systems

@@ -16,6 +16,15 @@ bool Manager::useSystem(const Description &description)
 {
     if (m_systems.contains(description.name)) throw EcsException("System already use.");
     m_systems.insert({description.name, description});
+
+    std::vector<std::reference_wrapper<component::IComponentArray>> componentArrays;
+    for (const auto index: getComponentsId(description.systemComponents)) {
+        if (!m_componentManager.GetComponentArray(index).has_value())
+            return false;
+        componentArrays.push_back(m_componentManager.GetComponentArray(index).value());
+    }
+    m_combinations.insert({description.name, {componentArrays} });
+
     return true;
 }
 
@@ -23,13 +32,10 @@ void Manager::execute(const event::Description &eventDescription, const data::Va
 {
     for (const auto &[name, description]: m_systems) {
         if (eventDescription.name == description.eventListener.name) {
-            std::vector<std::reference_wrapper<component::IComponentArray>> componentArrays;
-            for (const auto index: getComponentsId(description.systemComponents))
-                componentArrays.push_back(m_componentManager.GetComponentArray(index).value());
-            Description::systemArgs combination{componentArrays};
 
             if (entities.size() != description.eventComponents.size())
                 throw std::logic_error("This system expect " + std::to_string(description.eventComponents.size()) + " entity.");
+
             event::Entities entitiesComponents;
             for (std::size_t i = 0; i < entities.size(); i++) {
                 std::vector<component::ComponentRef> entityComponents;
@@ -43,7 +49,7 @@ void Manager::execute(const event::Description &eventDescription, const data::Va
                 .entities = entitiesComponents,
                 .payload = payload,
             };
-            description.system(description, combination, event);
+            description.system(description, m_combinations.at(name), event);
         }
     }
 }

@@ -1,6 +1,6 @@
 component Position
 	String pos_x
-	Vector3 pos_y
+	Number pos_y
 	Number pos_z
 
 # component Size : Number
@@ -15,7 +15,7 @@ component Velocity
 	Number vel_y
 	Number vel_z
 
-# system	  onTickPhysics(	 anyEntity<	Position,	 Velocity 	 >	 )	  event 	 Tick(	 deltaTime	 )	 	 
-# 	Position.pos_x=Position.pos_x+Velocity.vel_x
-# 	Position.pos_y = Position.pos_y + 	Velocity.vel_y
-# 	Position.pos_z =	 Position.pos_z + 		  Velocity.vel_z
+system	  onTickPhysics(	 anyEntity<	Position,	 Velocity 	 >	 	)	  event 	 Tick( Number deltaTime	 )	 	 
+	anyEntity.Position.pos_x=anyEntity.Position.pos_x+Velocity.vel_x * deltaTime
+	anyEntity.Position.pos_y = anyEntity.Position.pos_y + 	Velocity.vel_y * deltaTime
+	anyEntity.Position.pos_z =	 anyEntity.Position.pos_z + 		  Velocity.vel_z * deltaTime

@@ -38,6 +38,23 @@ class InvalidSyntaxException : public std::exception {
         const char* get_info() const { return info; }
 };
 
+class UnknownExpressionException : public std::exception {
+    size_t linenb;
+    const char* line;
+    const char* info;
+    
+    public:
+    	UnknownExpressionException(const char* msg, const char* line_,  size_t linenb_, const char* info_ = "") : std::exception(msg),
+        	line (line_),
+        	linenb (linenb_),
+        	info (info_)
+        {
+        }
+        size_t get_line_nb() const { return linenb; }
+        const char* get_line() const { return line; }
+        const char* get_info() const { return info; }
+};
+
 class UnexpectedStateException : public std::exception {
     size_t linenb;
     const char* line;

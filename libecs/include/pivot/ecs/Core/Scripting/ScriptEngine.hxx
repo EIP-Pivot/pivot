@@ -12,7 +12,7 @@
 
 // TODO : remove this
 // This silences iterator warnings from CombinationArray
-
+#define _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING
 
 struct ComponentPosition {
 	double pos_x;
@@ -38,19 +38,21 @@ public:
 	ScriptEngine();
 	~ScriptEngine();
 	LoadResult loadFile(const std::string &fileName, bool verbose);
-	void executeSystem(const pivot::ecs::systems::Description &toExec, std::vector<std::vector<std::pair<ComponentDescription, std::any>>> &entities, const pivot::ecs::event::Event &event);
+	// void executeSystem(const pivot::ecs::systems::Description &toExec, std::vector<std::vector<std::pair<ComponentDescription, std::any>>> &entities, const pivot::ecs::event::Event &event);
 
-	void executeSystemNew(const pivot::ecs::systems::Description &toExec, pivot::ecs::systems::Description::systemArgs &components, const pivot::ecs::event::Event &event);
+	void executeSystemNew(const pivot::ecs::systems::Description &toExec, pivot::ecs::systems::Description::systemArgs &entities, const pivot::ecs::event::Event &event);
 
 	void totalReset(); // This is to reset the entire file (for tests notably)
 	void softReset(); // This is to reset the data needed to read files but not the already registered data
 
 protected:
 
-	void executeSystem(const std::string &systemName, std::vector<std::pair<ComponentDescription, std::any>> &entity, size_t entityId);
+	// void executeSystem(const std::string &systemName, std::vector<std::pair<ComponentDescription, std::any>> &entity, size_t entityId);
+	void executeSystemOnEntity(const pivot::ecs::systems::Description &toExec, pivot::ecs::component::ArrayCombination::ComponentCombination &entity, const pivot::ecs::event::Event &event);
 	size_t indexOf(const std::string &systemName);
 	bool populateLinesFromFile(const std::string &fileName);
 	void cleanLine(const std::string &line);
+	void cleanWhitespace();
 	bool lineIsEmpty(const std::string &line);
 	Indent getIndent(const std::string &line);
 	bool badIndent(const std::string &line, State lineState);
@@ -58,6 +60,8 @@ protected:
 	State getLineState();
 	bool expectsState(State previous, State next);
 	size_t getLineIndent();
+	std::vector<SystemParameter> getEntitiesFromSystem(const std::string &str);
+	std::vector<EventParameter> getEntitiesFromEvent(const std::string &str);
 
 	bool handleState(State lineState, LoadResult &result);
 	bool handleStart();
@@ -96,6 +100,7 @@ protected:
 	std::vector<Variable> _variables;
 };
 
+bool doubleSpacePredicate(char left, char right);
 std::vector<std::string> split(const std::string& str, const std::string& delim);
 std::unique_ptr<pivot::ecs::component::IComponentArray> arrayFunctor(pivot::ecs::component::Description description);
 
@@ -104,7 +109,6 @@ std::unique_ptr<pivot::ecs::component::IComponentArray> arrayFunctor(pivot::ecs:
 system onColisionWithObject(Player<Holding,Score,Tag>) event Collision(Object<Holding, Follow, Transform>, Other<Hole>, deltaTime)
 
 system s(a<A,B,C>) event E(b<A,B>, c<D>, data)
-
 
 systemDescription
 	name:	s

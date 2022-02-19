@@ -22,6 +22,7 @@ static std::map<std::string, data::BasicType> variableTypes {
 static const std::vector<std::string> blockOperators {
 	"if",
 	"while",
+	"for"
 };
 
 
@@ -53,14 +54,16 @@ try {
 		if (lineIsEmpty(_line))
 			continue ;
 		State lineState = getLineState();
+		size_t lineIndent = getLineIndent();
 		if (!expectsState(_currentState, lineState))
 			throw UnexpectedStateException("ERROR", _line.data(), _currentLine, _currentState, lineState);
 		if (badIndent(_line, lineState))
 			throw BadIndentException("ERROR", _line.data(), _currentLine, "Bad indent");
+		cleanWhitespace();
 		if (!handleState(lineState, result))
 			throw UnexpectedStateException("ERROR", _line.data(), _currentLine, _currentState, lineState);
 		_currentState = lineState;
-		_currentIndent = getLineIndent();
+		_currentIndent = lineIndent;
 	}
 	if (_currentState == INSTRUCTION)
 		registerSystem(result);
@@ -79,6 +82,11 @@ catch (InvalidSyntaxException e) {
 	if (verbose)
 		std::cout << result.output << std::flush;
 }
+catch (UnknownExpressionException e) {
+	result.output = std::string("\n") + e.what() + ":\t" + fileName + "\n\tline " + std::to_string(e.get_line_nb()) + ":\t" + e.get_line() + "\nSyntaxError: " + e.get_info() + "\n";
+	if (verbose)
+		std::cout << result.output << std::flush;
+}
 catch (UnexpectedStateException e) {
 	result.output = std::string("\n") + e.what() + ":\t" + fileName + "\n\tline " + std::to_string(e.get_line_nb()) + ":\t" + e.get_line() + "\nLogicError: ";
 	if (e.get_new_state() == INVALID)
@@ -88,97 +96,112 @@ catch (UnexpectedStateException e) {
 	if (verbose)
 		std::cout << result.output << std::flush;
 }
+catch (std::exception e) {
+	result.output = std::string("\n!Unhandled Exception: ") + e.what() + "\n";
+	if (verbose)
+		std::cout << result.output << std::flush;
+}
 	if (result.output.empty())
 		result.output = fileName + " succesfully parsed.\n";
 	return result;
 }
 
-void ScriptEngine::executeSystem(const pivot::ecs::systems::Description &toExec, std::vector<std::vector<std::pair<ComponentDescription, std::any>>> &entities, const pivot::ecs::event::Event &event) {
-try {
-	size_t entityId = 0;
-	for (SystemDescription &d : _systems) {
-		if (toExec.name == d.name) {
-			std::cout << "System to execute:\t" << d.name << "\n\n";
-			std::cout << "Entities to execute on:\n";
-			for (std::vector<std::pair<ComponentDescription, std::any>> &entity : entities) {
-				std::cout << "\tEntity " << entityId << "\n";
-				for (size_t i = 0; i < entity.size(); i++) {
-					std::cout << "\t\tComponent " << entity[i].first.name << "\t";
-					if (entity[i].first.name == "Position") {
-						ComponentPosition p = std::any_cast<ComponentPosition>(entity[i].second);
-						std::cout << p.pos_x << " " << p.pos_y << " " << p.pos_z;
-					} else if (entity[i].first.name == "Velocity") {
-						ComponentVelocity v = std::any_cast<ComponentVelocity>(entity[i].second);
-						std::cout << v.vel_x << " " << v.vel_y << " " << v.vel_z;
-					}
-					std::cout << std::endl;
-				}
-				executeSystem(toExec.name, entity, entityId);
-				entityId += 1;
-			}
-			break;
-		}
+// void ScriptEngine::executeSystem(const pivot::ecs::systems::Description &toExec, std::vector<std::vector<std::pair<ComponentDescription, std::any>>> &entities, const pivot::ecs::event::Event &event) {
+// try {
+// 	size_t entityId = 0;
+// 	for (SystemDescription &d : _systems) {
+// 		if (toExec.name == d.name) {
+// 			std::cout << "System to execute:\t" << d.name << "\n\n";
+// 			std::cout << "Entities to execute on:\n";
+// 			for (std::vector<std::pair<ComponentDescription, std::any>> &entity : entities) {
+// 				std::cout << "\tEntity " << entityId << "\n";
+// 				for (size_t i = 0; i < entity.size(); i++) {
+// 					std::cout << "\t\tComponent " << entity[i].first.name << "\t";
+// 					if (entity[i].first.name == "Position") {
+// 						ComponentPosition p = std::any_cast<ComponentPosition>(entity[i].second);
+// 						std::cout << p.pos_x << " " << p.pos_y << " " << p.pos_z;
+// 					} else if (entity[i].first.name == "Velocity") {
+// 						ComponentVelocity v = std::any_cast<ComponentVelocity>(entity[i].second);
+// 						std::cout << v.vel_x << " " << v.vel_y << " " << v.vel_z;
+// 					}
+// 					std::cout << std::endl;
+// 				}
+// 				executeSystem(toExec.name, entity, entityId);
+// 				entityId += 1;
+// 			}
+// 			break;
+// 		}
+// 	}
+// }
+// catch (UnhandledException e) {
+// 	std::cout << e.what() << std::endl;
+// }
+// }
+
+// void ScriptEngine::executeSystem(const std::string &systemName, std::vector<std::pair<ComponentDescription, std::any>> &entity, size_t entityId) {
+// 	std::cout << "Executing " << systemName << " on Entity " << entityId << std::endl;
+// 	size_t toExec = indexOf(systemName);
+// 	if (toExec == SIZE_MAX)
+// 		throw UnhandledException("UNKNOWN ERROR: Couldn't find system in\tScriptEngine::executeSystem\tScriptEngin.cpp");
+// 	for (auto &[description, component] : entity) {
+// 		if (description.name == "Position") {
+// 			ComponentPosition data = std::any_cast<ComponentPosition>(component);
+// 			Variable v {
+// 				.name = "Position",
+// 				.type = "Struct",
+// 				.value = nullptr
+// 			};
+// 			// for (Property p : description.properties) {
+// 			// 	Variable vv {
+// 			// 		.name = p.name,
+// 			// 		.type = p.type,
+// 			// 		.value = getField(component, description.name, p.name)
+// 			// 	};
+// 			// 	v.fields.push_back(vv);
+// 			// }
+// 			_variables.push_back(v);
+// 		}
+// 		else if (description.name == "Velocity") {
+// 			ComponentVelocity data = std::any_cast<ComponentVelocity>(component);
+// 			Variable v {
+// 				.name = "Velocity",
+// 				.type = "Struct",
+// 				.value = nullptr
+// 			};
+// 			// for (Property p : description.properties) {
+// 			// 	Variable vv {
+// 			// 		.name = p.name,
+// 			// 		.type = p.type,
+// 			// 		.value = getField(component, description.name, p.name)
+// 			// 	};
+// 			// 	v.fields.push_back(vv);
+// 			// }
+// 			_variables.push_back(v);
+// 		}
+// 		else
+// 			throw UnhandledException("UNKNOWN ERROR: Invalid description.name in\tScriptEngine::executeSystem\tScriptEngin.cpp");
+// 	}
+// 	printStack();
+// 	for (std::string instruction : _systemsInstructions[toExec]) {
+// 		std::cout << "Instruction:\t'" << instruction << "' to execute." << std::endl;
+// 		cleanInstruction(instruction);
+// 		InstructionType iType = getInstructionType(instruction);
+// 		handleInstruction(instruction, iType);
+// 	}
+// }
+
+void ScriptEngine::executeSystemNew(const pivot::ecs::systems::Description &toExec, pivot::ecs::systems::Description::systemArgs &entities, const pivot::ecs::event::Event &event) {
+	std::cout << "Executing system\t" << toExec.name << std::endl;
+	for (auto entity: entities) {
+		executeSystemOnEntity(toExec, entity, event);
+		// std::cout << std::get<std::string>(std::get<data::Record>(entity[0].get()).at("pos_x")) << std::endl;
+		// std::cout << std::get<double>(std::get<data::Record>(entity[1].get()).at("vel_x")) << std::endl;
 	}
 }
-catch (UnhandledException e) {
-	std::cout << e.what() << std::endl;
-}
-}
 
-void executeSystemNew(const pivot::ecs::systems::Description &toExec, pivot::ecs::systems::Description::systemArgs &components, const pivot::ecs::event::Event &event) {
-
-}
-
-void ScriptEngine::executeSystem(const std::string &systemName, std::vector<std::pair<ComponentDescription, std::any>> &entity, size_t entityId) {
-	std::cout << "Executing " << systemName << " on Entity " << entityId << std::endl;
-	size_t toExec = indexOf(systemName);
-	if (toExec == SIZE_MAX)
-		throw UnhandledException("UNKNOWN ERROR: Couldn't find system in\tScriptEngine::executeSystem\tScriptEngin.cpp");
-	for (auto &[description, component] : entity) {
-		if (description.name == "Position") {
-			ComponentPosition data = std::any_cast<ComponentPosition>(component);
-			Variable v {
-				.name = "Position",
-				.type = "Struct",
-				.value = nullptr
-			};
-			// for (Property p : description.properties) {
-			// 	Variable vv {
-			// 		.name = p.name,
-			// 		.type = p.type,
-			// 		.value = getField(component, description.name, p.name)
-			// 	};
-			// 	v.fields.push_back(vv);
-			// }
-			_variables.push_back(v);
-		}
-		else if (description.name == "Velocity") {
-			ComponentVelocity data = std::any_cast<ComponentVelocity>(component);
-			Variable v {
-				.name = "Velocity",
-				.type = "Struct",
-				.value = nullptr
-			};
-			// for (Property p : description.properties) {
-			// 	Variable vv {
-			// 		.name = p.name,
-			// 		.type = p.type,
-			// 		.value = getField(component, description.name, p.name)
-			// 	};
-			// 	v.fields.push_back(vv);
-			// }
-			_variables.push_back(v);
-		}
-		else
-			throw UnhandledException("UNKNOWN ERROR: Invalid description.name in\tScriptEngine::executeSystem\tScriptEngin.cpp");
-	}
-	printStack();
-	for (std::string instruction : _systemsInstructions[toExec]) {
-		std::cout << "Instruction:\t'" << instruction << "' to execute." << std::endl;
-		cleanInstruction(instruction);
-		InstructionType iType = getInstructionType(instruction);
-		handleInstruction(instruction, iType);
-	}
+void ScriptEngine::executeSystemOnEntity(const pivot::ecs::systems::Description &toExec, pivot::ecs::component::ArrayCombination::ComponentCombination &entity, const pivot::ecs::event::Event &event) {
+	std::cout << std::get<std::string>(std::get<data::Record>(entity[0].get()).at("pos_x")) << std::endl;
+	std::cout << std::get<double>(std::get<data::Record>(entity[1].get()).at("vel_x")) << std::endl;
 }
 
 void ScriptEngine::handleInstruction(const std::string &instruction, InstructionType iType) {
@@ -392,24 +415,52 @@ bool ScriptEngine::handleSystemDecl(LoadResult &result) {
 		registerComponent(result);
 	if (_currentState == INSTRUCTION)
 		registerSystem(result);
-	std::vector<std::string> keyWords = split(_line, " \t");
-	// size_t firstInd = _line.find_first_of('{');
-	// std::string componentsString = _line.substr(firstInd + 1, _line.find_last_of('}') - firstInd - 1);
-	// if (componentsString.empty())
-	// 	throw InvalidSyntaxException("ERROR", _line.data(), _currentLine, "System requires input components declared in brackets.\nSuch as\tsystem Name {component1 component2}");
-	if (keyWords[0] != "system")
+	std::vector<std::string> keyWords = split(_line, " ");
+	if (keyWords.size() < 2 || keyWords[0] != "system")
 		throw InvalidSyntaxException("ERROR", _line.data(), _currentLine, "Weird error.");
-	_phSystem.name = keyWords[1];
-	_phSystem.systemComponents = {""};
-	event::Description eventDescription{
-        .name = "Tick",
-        .entities = {
-            {}
-        },
-        .payload = data::BasicType::Number,
+	auto systemComponentsA = _line.find('(');
+	auto systemComponentsB = _line.find(')');
+	auto eventComponentsA = _line.find('(', systemComponentsB + 1);
+	auto eventComponentsB = _line.find(')', systemComponentsB + 1);
+	if (systemComponentsA == std::string::npos || systemComponentsB == std::string::npos)
+		throw InvalidSyntaxException("ERROR", _line.data(), _currentLine, "System declaration does not have any entity parameter. Provide at least one in the following form: 'system SystemName(entityName<Component1, Component2, ...>)' .");
+	std::string expectedSystemComponents = _line.substr(systemComponentsA + 1, systemComponentsB - systemComponentsA - 1);
+	std::string expectedEventComponents = _line.substr(eventComponentsA + 1, eventComponentsB - eventComponentsA - 1);
+	std::vector<SystemParameter> systemParameters = getEntitiesFromSystem(expectedSystemComponents);
+	event::Description eventDescription = {
+		.name = "Tick",
+        .payload = data::BasicType::Number
     };
+
+	if (std::find(keyWords.begin(), keyWords.end(), "event") != keyWords.end() && std::find(keyWords.begin(), keyWords.end(), "event") + 1 != keyWords.end() && eventComponentsA != std::string::npos && eventComponentsB != std::string::npos && !expectedEventComponents.empty()) {
+		std::vector<EventParameter> eventParameters = getEntitiesFromEvent(expectedEventComponents);
+		std::string eventName = (std::find(keyWords.begin(), keyWords.end(), "event") + 1)[0];
+		auto paren = eventName.find('(');
+		if (paren != std::string::npos)
+			eventName = eventName.substr(0, eventName.find('('));
+		eventDescription.name = eventName;
+		for (EventParameter &param : eventParameters) {
+			if (param.type == "") {
+				eventDescription.entities.push_back(param.name);
+				_phSystem.eventComponents.push_back(param.components);
+			} else {
+				if (!variableTypes.contains(param.type))
+					throw UnknownExpressionException("ERROR", _line.data(), _currentLine, "Unknown expression.");
+				eventDescription.payload = variableTypes[param.type];
+			}
+		}
+	}
+	auto endOfName = keyWords[1].find('(');
+	if (endOfName != std::string::npos)
+		_phSystem.name = keyWords[1].substr(0, endOfName);
+	else
+		_phSystem.name = keyWords[1];
+	_phSystem.systemComponents = systemParameters[0].components;
 	_phSystem.eventListener = eventDescription;
-	_phSystem.eventComponents = { {"A", "B"}, {"C"}};
+	// _phSystem.system = [this](const pivot::ecs::systems::Description &d, pivot::ecs::systems::Description::systemArgs &a, const pivot::ecs::event::Event &e) {
+	// 	this->executeSystemNew(d, a, e);
+	// };
+	_phSystem.system = std::bind(&ScriptEngine::executeSystemNew, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 	return true;
 }
 bool ScriptEngine::handlePropertyDecl() {
@@ -417,6 +468,8 @@ bool ScriptEngine::handlePropertyDecl() {
 	if (keyWords.size() != 2) // TODO: handle one line declaration of components
 		throw InvalidSyntaxException("ERROR", _line.data(), _currentLine, "Invalid property declaration. Try declaring it like this : 'propertyType propertyName' ex. 'Vector3 position'.");
 	try {
+		if (!variableTypes.contains(keyWords[0]))
+			throw UnknownExpressionException("ERROR", _line.data(), _currentLine, "Unknown expression.");
 		std::get<data::RecordType>(_phComponent.type)[keyWords[1]] = variableTypes[keyWords[0]];
 	} catch (std::bad_variant_access e) {
 		std::cerr << "Type of component is not RecordType. Should maybe use std::visit...\tScriptEngine::handlePropertyDecl()" << std::endl;
@@ -452,7 +505,7 @@ void ScriptEngine::registerComponent(LoadResult &result, bool verbose){
 
 void ScriptEngine::registerSystem(LoadResult &result, bool verbose){
 	if (verbose) {
-		std::cout << "Registering system : '" << _phSystem.name << "'\t on event " << _phSystem.eventListener.name << std::endl;
+		std::cout << "Registering system : '" << _phSystem.name << "'\t on event '" << _phSystem.eventListener.name << "'" << std::endl;
 		for (std::string component : _phSystem.systemComponents)
 			std::cout << "\t" << component << std::endl;
 	}
@@ -520,6 +573,65 @@ State ScriptEngine::getLineState() {
 	if (_line.find('=') != std::string::npos || _line.find('(') != std::string::npos)
 		return INSTRUCTION;
 	return INVALID;
+}
+
+std::vector<SystemParameter> ScriptEngine::getEntitiesFromSystem(const std::string &line) {
+	std::vector<SystemParameter> r;
+	std::string str = line;
+	str.erase(remove_if(str.begin(), str.end(), isspace), str.end());
+	while (!str.empty()) {
+		SystemParameter p;
+		auto componentStart = str.find('<');
+		auto componentEnd = str.find('>');
+		if (componentStart != std::string::npos && componentEnd != std::string::npos) {
+			p.name = str.substr(0, componentStart);
+			p.components = split(str.substr(componentStart + 1, componentEnd - (componentStart + 1)), ",");
+		} else
+			throw InvalidSyntaxException("ERROR", _line.data(), _currentLine, "Invalid system entity parameter component declaration. Try declaring it like this : 'entityName<Component1, Component2, ...>' .");
+		r.push_back(p);
+		str = str.substr(componentEnd + 1, str.length() - (componentEnd + 1));
+	}
+	return r;
+}
+
+std::vector<EventParameter> ScriptEngine::getEntitiesFromEvent(const std::string &line) {
+	std::vector<EventParameter> r;
+	std::string str = line;
+	// str.erase(remove_if(str.begin(), str.end(), isspace), str.end());
+	while (!str.empty()) {
+		EventParameter p;
+		size_t nextParameter;
+		std::string paramStr;
+		auto componentStart = str.find('<');
+		auto componentEnd = str.find('>');
+		if (componentStart != std::string::npos && componentEnd != std::string::npos) {
+			nextParameter = str.find(',', componentEnd + 1);
+			if (nextParameter == std::string::npos)
+				nextParameter = str.length() - 1;
+			paramStr = str.substr(0, nextParameter + 1);
+			paramStr.erase(remove_if(paramStr.begin(), paramStr.end(), isspace), paramStr.end());
+			componentStart = paramStr.find('<');
+			componentEnd = paramStr.find('>');
+			p.name = paramStr.substr(0, componentStart);
+			p.components = split(paramStr.substr(componentStart + 1, componentEnd - 2), ",");
+			p.type = "";
+		} else if (componentStart == std::string::npos && componentEnd == std::string::npos) {
+			nextParameter = str.find(',');
+			if (nextParameter == std::string::npos)
+				nextParameter = str.length() - 1;
+			paramStr = str.substr(0, nextParameter + 1);
+			auto spl = split(paramStr, " ");
+			if (spl.size() != 2)
+				throw InvalidSyntaxException("ERROR", _line.data(), _currentLine, "Invalid event payload declaration. Try declaring it like this : 'payloadType payloadName' ex: 'Number deltatime'.");
+			p.name = spl[1];
+			p.components = {};
+			p.type = spl[0];
+		} else
+			throw InvalidSyntaxException("ERROR", _line.data(), _currentLine, "Invalid event entity parameter component declaration. Try declaring it like this : 'entityName<Component1, Component2, ...>' or 'paramType param' .");
+		str = str.substr(nextParameter + 1, str.length() - nextParameter - 1);
+		r.push_back(p);
+	}
+	return r;
 }
 
 bool ScriptEngine::expectsState(State previous, State next) {
@@ -606,8 +718,15 @@ void ScriptEngine::cleanLine(const std::string &line) {
 		_line = line.substr(0, result);
 	else
 		_line = line;
-	auto cursor = _line.find_first_not_of(" \t") + 1;
-	std::replace(_line.begin() + cursor, _line.end(), '\t', ' ');
+}
+
+void ScriptEngine::cleanWhitespace() {
+	std::replace(_line.begin(), _line.end(), '\t', ' ');
+	auto cursor = _line.find("  ");
+	while (cursor != std::string::npos) { // TODO : fix this disgusting loop
+		_line = _line.substr(0, cursor) + _line.substr(cursor + 1, _line.length() - (cursor + 1));
+		cursor = _line.find("  ");
+	}
 	// std::cout << "_line : " << _line << std::endl;
 }
 
@@ -641,6 +760,10 @@ Indent ScriptEngine::getIndent(const std::string &line) {
 			break ;
 	}
 	return r;
+}
+
+bool doubleSpacePredicate(char left, char right) {
+	return ((left == right) && (left == ' '));
 }
 
 std::unique_ptr<pivot::ecs::component::IComponentArray> arrayFunctor(pivot::ecs::component::Description description) {

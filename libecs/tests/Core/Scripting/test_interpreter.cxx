@@ -3,6 +3,8 @@
 #include <vector>
 #include <string>
 
+using namespace pivot::ecs;
+
 TEST_CASE("Scripting-interpreter") {
 	std::vector<std::pair<std::string, std::string>> testFilesOutput = {
 		// Commented test files are not supported yet
@@ -32,9 +34,33 @@ TEST_CASE("Scripting-interpreter-main") {
 	ScriptEngine engine;
 	for (auto [file, output] : testFilesOutput)
 		LoadResult r = engine.loadFile(file, false);
-    // auto description = pivot::ecs::component::GlobalIndex::getSingleton().getDescription("Velocity").value();
-	// std::cout << "Position component in global index: " << description.name << std::endl;
+	auto velCdescription = component::GlobalIndex::getSingleton().getDescription("Velocity").value();
+	auto posCdescription = component::GlobalIndex::getSingleton().getDescription("Position").value();
+	auto sysdescription = systems::GlobalIndex::getSingleton().getDescription("onTickPhysics").value();
+	auto array1 = posCdescription.createContainer(posCdescription);
+	auto array2 = velCdescription.createContainer(velCdescription);
 	std::cout << "--------- End Interpreter main --------" << std::endl;
+	data::Value pos1{data::Record{ {"pos_x", "mdr"},{"pos_y", 0.5},{"pos_z", 34.0}}};
+	data::Value pos2{data::Record{ {"pos_x", "soleil"},{"pos_y", 43.5},{"pos_z", 345.0}}};
+	data::Value vel1{data::Record{ {"vel_x", 123.0},{"vel_y", 456.0},{"vel_z", 789.0}}};
+	data::Value vel2{data::Record{ {"vel_x", 789.0},{"vel_y", 456.0},{"vel_z", 123.0}}};
+
+	array1->setValueForEntity(0, pos1);
+	array1->setValueForEntity(1, pos2);
+	array2->setValueForEntity(0, vel1);
+	array2->setValueForEntity(1, vel2);
+	component::ArrayCombination combinations{{std::ref(*array1), std::ref(*array2)}};
+
+	// for (auto combination: combinations) {
+	// 	std::cout << std::get<std::string>(std::get<data::Record>(combination[0].get())["name"]) << std::endl;
+	// 	std::cout << std::get<std::string>(std::get<data::Record>(combination[1].get())["name"]) << std::endl;
+	// }
+	event::Event e =  {
+		.description = sysdescription.eventListener,
+		.entities = {},
+		.payload = 0.12
+	};
+	sysdescription.system(sysdescription, combinations, e);
 }
 
 

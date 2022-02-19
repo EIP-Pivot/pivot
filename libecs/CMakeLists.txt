@@ -85,19 +85,21 @@ target_sources(${PROJECT_NAME} INTERFACE source/Components/Tag.cxx
 
 build_tests(${PROJECT_NAME}
   tests/main.cxx
-  tests/Core/Component/test_index.cxx
-  tests/Core/Component/test_tag.cxx
-  tests/Core/Component/test_global_registration.cxx
-  tests/Core/Component/test_dense_component_array.cxx
-  tests/Core/Component/test_ref.cxx
-  tests/Core/Component/test_combination.cxx
-  tests/Core/Data/test_value_and_type.cxx
-  tests/Core/Data/test_serialization.cxx
-  tests/Core/test_scene.cxx
-  tests/Core/Systems/test_description.cxx
-  tests/Core/Systems/test_global_registration.cxx
-  tests/Core/Systems/test_manager.cxx
-  tests/Core/Event/test_description.cxx
-  tests/Core/Event/test_global_registration.cxx
-  tests/Core/Event/test_manager.cxx
+#   tests/Core/Component/test_index.cxx
+#   tests/Core/Component/test_tag.cxx
+#   tests/Core/Component/test_global_registration.cxx
+#   tests/Core/Component/test_dense_component_array.cxx
+#   tests/Core/Component/test_ref.cxx
+#   tests/Core/Component/test_combination.cxx
+#   tests/Core/Data/test_value_and_type.cxx
+#   tests/Core/Data/test_serialization.cxx
+#   tests/Core/test_scene.cxx
+#   tests/Core/Systems/test_description.cxx
+#   tests/Core/Systems/test_global_registration.cxx
+#   tests/Core/Systems/test_manager.cxx
+#   tests/Core/Event/test_description.cxx
+#   tests/Core/Event/test_global_registration.cxx
+#   tests/Core/Event/test_manager.cxx
+#   tests/Core/Scripting/test_parser.cxx
+  tests/Core/Scripting/test_interpreter.cxx
   )

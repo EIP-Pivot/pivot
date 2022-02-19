@@ -34,6 +34,17 @@ struct LoadResult {
 	std::string output;
 };
 
+struct SystemParameter {
+	std::string name;
+	std::vector<std::string> components;
+};
+
+struct EventParameter {
+	std::string name;
+	std::vector<std::string> components;
+	std::string type;
+};
+
 enum IndentType {
 	TAB,
 	SPACE,

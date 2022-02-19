@@ -81,27 +81,47 @@ public:
     /// Mouse movement event callback signature
     using MouseEvent = std::function<void(Window &window, const glm::dvec2 pos)>;
 
+    class WindowError : public std::runtime_error
+    {
+        using std::runtime_error::runtime_error;
+    };
+
 public:
     /// Create a new Window
     ///
     /// @param windowName
     /// @param width
     /// @param height
-    explicit Window(std::string windowName, unsigned width, unsigned height);
+    explicit Window();
     Window(Window &) = delete;
     Window(const Window &) = delete;
     /// Destructor
     ~Window();
 
+    /// Create the window
+    void initWindow(const unsigned &width, const unsigned &height, const std::string &windowName = "WindowTitle");
+
     /// Return wether or not the window should be closed
-    inline bool shouldClose() const noexcept { return glfwWindowShouldClose(window); }
+    inline bool shouldClose() const noexcept
+    {
+        assert(window);
+        return glfwWindowShouldClose(window);
+    }
     /// Mark the window as ready to be closed
-    inline void shouldClose(bool bClose) const noexcept { glfwSetWindowShouldClose(window, bClose); }
+    inline void shouldClose(bool bClose) const noexcept
+    {
+        assert(window);
+        glfwSetWindowShouldClose(window, bClose);
+    }
 
     /// Poll new events
     ///
     /// - Should be called once per tick
-    inline void pollEvent() noexcept { glfwPollEvents(); }
+    inline void pollEvent() noexcept
+    {
+        assert(window);
+        glfwPollEvents();
+    }
 
     /// Create a Vulkan surface
     ///
@@ -116,14 +136,16 @@ public:
     /// @return true if the key is pressed, otherwise false
     inline bool isKeyPressed(Key key) const noexcept
     {
-        return glfwGetKey(this->window, static_cast<unsigned>(key)) == GLFW_PRESS;
+        assert(window);
+        return glfwGetKey(window, static_cast<unsigned>(key)) == GLFW_PRESS;
     }
     /// Tell wether or not a key is not pressed
     ///
     /// @return true if the key is not pressed, otherwise false
     inline bool isKeyReleased(Key key) const noexcept
     {
-        return glfwGetKey(this->window, static_cast<unsigned>(key)) == GLFW_RELEASE;
+        assert(window);
+        return glfwGetKey(window, static_cast<unsigned>(key)) == GLFW_RELEASE;
     }
 
     /// Setup a callback function for provided key when it is pressed
@@ -157,9 +179,17 @@ public:
     constexpr const std::string &getTitle() const noexcept { return windowName; }
 
     /// get the width of the window
-    inline int getWidth() const noexcept { return this->updateSize().x; }
+    inline int getWidth() const noexcept
+    {
+        assert(window);
+        return this->updateSize().x;
+    }
     /// get the height of the window
-    inline int getHeight() const noexcept { return this->updateSize().y; }
+    inline int getHeight() const noexcept
+    {
+        assert(window);
+        return this->updateSize().y;
+    }
 
     /// get the size of the window
     vk::Extent2D getSize() const noexcept;
@@ -186,7 +216,6 @@ private:
     void setErrorCallback(GLFWerrorfun &&f) noexcept;
 
     void setUserPointer(void *ptr) noexcept;
-    void initWindow(const unsigned width, const unsigned height) noexcept;
     glm::ivec2 updateSize() const noexcept;
 
     static void error_callback(int code, const char *msg) noexcept;
@@ -201,6 +230,3 @@ private:
     std::string windowName;
     GLFWwindow *window = nullptr;
 };
-
-void cursor_callback(GLFWwindow *win, double xpos, double ypos);
-void keyboard_callback(GLFWwindow *win, int key, int, int action, int);

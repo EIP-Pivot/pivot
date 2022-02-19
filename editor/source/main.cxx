@@ -75,7 +75,6 @@ public:
 
         loadScene();
 
-        window.captureCursor(true);
         window.setKeyReleaseCallback(Window::Key::LEFT_ALT, [&](Window &window, const Window::Key key) {
             window.captureCursor(!window.captureCursor());
             bFirstMouse = window.captureCursor();
@@ -184,6 +183,7 @@ public:
         Entity currentEdit = 0;
         gridSize = 100.f;
         this->VulkanApplication::init();
+        window.captureCursor(true);
         FrameLimiter<60> fpsLimiter;
         while (!window.shouldClose()) {
             auto startTime = std::chrono::high_resolution_clock::now();

@@ -6,8 +6,8 @@
 namespace pivot::graphics
 {
 VulkanBase::VulkanBase(const std::string &windowName, const bool bForceValidation)
-    : VulkanLoader(), abstract::AImmediateCommand(), window(windowName, 800, 600)
 {
+    window.setTitle(windowName);
     bEnableValidationLayers |= bForceValidation;
 }
 
@@ -20,6 +20,7 @@ void VulkanBase::init(const std::vector<const char *> &instanceExtensions,
     DEBUG_FUNCTION
     createInstance(instanceExtensions, validationLayers);
     createDebugMessenger();
+    window.initWindow(800, 600);
     createSurface();
     selectPhysicalDevice(deviceExtensions);
     createLogicalDevice(deviceExtensions);

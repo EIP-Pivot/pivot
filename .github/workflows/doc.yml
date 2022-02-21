@@ -45,4 +45,4 @@ jobs:
           path: |
             ${{github.workspace}}/build/html
             ${{github.workspace}}/build/doxygen-warnings.log
-          retention-days: 1
+          retention-days: 15

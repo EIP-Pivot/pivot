@@ -72,8 +72,7 @@ void AssetStorage::destroy()
 
 bool AssetStorage::loadModel(const std::filesystem::path &path)
 {
-    const auto extension = path.extension();
-    auto iter = supportedObject.find(extension.string());
+    auto iter = supportedObject.find(path.extension().string());
     if (iter == supportedObject.end()) {
         logger.err("LOAD MODEL") << "Not supported model extension: " << path.extension();
         return false;
@@ -85,8 +84,7 @@ bool AssetStorage::loadModel(const std::filesystem::path &path)
 bool AssetStorage::loadTexture(const std::filesystem::path &path)
 {
     DEBUG_FUNCTION
-    const auto extension = path.extension();
-    const auto iter = supportedTexture.find(extension.string().c_str());
+    const auto iter = supportedTexture.find(path.extension().string().c_str());
     if (iter == supportedTexture.end()) {
         logger.err("Load Texture") << "Not supported texture extension: " << path.extension();
         return false;

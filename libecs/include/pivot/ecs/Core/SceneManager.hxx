@@ -5,7 +5,7 @@
 #include <string>
 
 using LevelId = std::int16_t;
-const LevelId MAX_LEVELS = INT16_MAX; // 65535
+const LevelId MAX_LEVELS = INT16_MAX;    // 65535
 
 /// @class SceneManager
 ///
@@ -14,7 +14,7 @@ const LevelId MAX_LEVELS = INT16_MAX; // 65535
 class SceneManager
 {
 public:
-    SceneManager(): _currentActiveLevel(-1) {};
+    SceneManager(): _currentActiveLevel(-1){};
 
     /// Create new scene with scene name
     LevelId registerLevel(std::string name);

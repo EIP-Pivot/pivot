@@ -1,5 +1,5 @@
-#include <pivot/ecs/Core/Event/index.hxx>
 #include <catch2/catch.hpp>
+#include <pivot/ecs/Core/Event/index.hxx>
 
 using namespace pivot::ecs::event;
 
@@ -45,5 +45,7 @@ TEST_CASE("Get not registered event in Global Index", "[description][registratio
 
 TEST_CASE("Iterator of event Global Index", "[description][registration]")
 {
-    for (auto &[name, description]: eventIndexForRegistrationTest) { REQUIRE((name == "Valid" || name == "Duplicate")); }
+    for (auto &[name, description]: eventIndexForRegistrationTest) {
+        REQUIRE((name == "Valid" || name == "Duplicate"));
+    }
 }

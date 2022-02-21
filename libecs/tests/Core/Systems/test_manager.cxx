@@ -11,8 +11,8 @@
 using namespace pivot::ecs;
 using namespace pivot::ecs::data;
 
-void test_manager_registration(const systems::Description &description,
-                               systems::Description::systemArgs &entities, const event::Event &event)
+void test_manager_registration(const systems::Description &description, systems::Description::systemArgs &entities,
+                               const event::Event &event)
 {
     std::cout << "I'm a tick system:\n";
     for (auto combination: entities) {
@@ -23,7 +23,7 @@ void test_manager_registration(const systems::Description &description,
     }
     std::cout << "\tPayload type = " << event.payload.type() << std::endl;
     for (const auto &entity: event.entities)
-        for (const auto &value: entity){
+        for (const auto &value: entity) {
             std::cout << "\tEvent entity component = " << ((Value)value).type() << std::endl;
         }
 }
@@ -46,27 +46,25 @@ TEST_CASE("Manager register system", "[description][registration][manager]")
     Entity entity = eManager.CreateEntity();
     cManager.AddComponent(entity, Value{Record{{"name", "entity 0"}}}, tagId);
     cManager.AddComponent(entity, Value{Record{{"velocity", glm::vec3(0.0f)}, {"acceleration", glm::vec3(0.0f)}}},
-                           rigidId);
+                          rigidId);
     cManager.AddComponent(entity, Value{Record{{"force", glm::vec3(0.0f)}}}, gravId);
 
     // entity that match with system
     entity = eManager.CreateEntity();
     cManager.AddComponent(entity, Value{Record{{"name", "entity 1"}}}, tagId);
     cManager.AddComponent(entity, Value{Record{{"velocity", glm::vec3(0.0f)}, {"acceleration", glm::vec3(0.0f)}}},
-                           rigidId);
+                          rigidId);
     cManager.AddComponent(entity, Value{Record{{"force", glm::vec3(0.0f)}}}, gravId);
 
     // entity not matching with system
     entity = eManager.CreateEntity();
     cManager.AddComponent(entity, Value{Record{{"velocity", glm::vec3(0.0f)}, {"acceleration", glm::vec3(0.0f)}}},
-                           rigidId);
+                          rigidId);
     cManager.AddComponent(entity, Value{Record{{"force", glm::vec3(0.0f)}}}, gravId);
 
     event::Description eventDescription{
         .name = "Tick",
-        .entities = {
-            {"Oui"}
-        },
+        .entities = {{"Oui"}},
         .payload = BasicType::Number,
     };
     systems::Description description{
@@ -77,9 +75,7 @@ TEST_CASE("Manager register system", "[description][registration][manager]")
                 "Tag",
             },
         .eventListener = eventDescription,
-        .eventComponents = {
-            {"Tag"}
-        },
+        .eventComponents = {{"Tag"}},
         .system = &test_manager_registration,
     };
     systems::GlobalIndex::getSingleton().registerSystem(description);

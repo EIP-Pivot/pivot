@@ -3,16 +3,12 @@
 namespace pivot::ecs::component
 {
 
-const Description &ScriptingComponentArray::getDescription() const
-{ 
-    return m_description;
-}
+const Description &ScriptingComponentArray::getDescription() const { return m_description; }
 
 std::optional<data::Value> ScriptingComponentArray::getValueForEntity(Entity entity) const
 {
     auto value = m_components.find(entity);
-    if (value == m_components.end())
-        return std::nullopt;
+    if (value == m_components.end()) return std::nullopt;
     return value->second;
 }
 
@@ -21,5 +17,4 @@ void ScriptingComponentArray::setValueForEntity(Entity entity, std::optional<dat
     m_components[entity] = value.value();
 }
 
-
-}
+}    // namespace pivot::ecs::component

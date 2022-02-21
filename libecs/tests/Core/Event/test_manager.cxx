@@ -4,10 +4,8 @@
 #include "pivot/ecs/Core/Event/index.hxx"
 #include "pivot/ecs/Core/Event/manager.hxx"
 
-
 #include "pivot/ecs/Core/Systems/description.hxx"
 #include "pivot/ecs/Core/Systems/manager.hxx"
-
 
 #include "pivot/ecs/Core/Data/value.hxx"
 #include "pivot/ecs/Core/Scene.hxx"
@@ -47,10 +45,10 @@ TEST_CASE("Manager event", "[description][registration][manager]")
     Entity entity = eManager.CreateEntity();
     cManager.AddComponent(entity, Value{Record{{"name", "oui"}}}, tagId);
     cManager.AddComponent(entity, Value{Record{{"velocity", glm::vec3(0.0f)}, {"acceleration", glm::vec3(0.0f)}}},
-                           rigidId);
+                          rigidId);
     cManager.AddComponent(entity, Value{Record{{"force", glm::vec3(0.0f)}}}, gravId);
 
-    event::Description eventDescription {
+    event::Description eventDescription{
         .name = "Tick",
         .entities = {},
         .payload = pivot::ecs::data::BasicType::Number,

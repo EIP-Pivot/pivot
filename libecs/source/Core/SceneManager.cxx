@@ -35,7 +35,7 @@ Scene &SceneManager::getCurrentLevel()
 {
     if (_currentActiveLevel == -1)
         throw EcsException("There is no current level. Register a level before trying to access its Scene.");
-    
+
     return *this->_levels[_currentActiveLevel].get();
 }
 
@@ -43,7 +43,7 @@ Scene &SceneManager::getLevelById(LevelId idToGet)
 {
     if (!_levels.contains(idToGet))
         throw EcsException("Level with id _" + std::to_string(idToGet) + "_ is not registered.");
-    
+
     return *this->_levels[idToGet].get();
 }
 

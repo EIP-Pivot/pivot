@@ -10,7 +10,6 @@
 #include <optional>
 #include <typeindex>
 
-
 namespace pivot::ecs::systems
 {
 class Index
@@ -42,7 +41,7 @@ public:
     void registerSystem(const Description &description);
 
     std::optional<Description> getDescription(const std::string &componentName);
-    
+
     Index::const_iterator begin();
     Index::const_iterator end();
     std::vector<std::string> getAllSystemsNames();

@@ -2,9 +2,9 @@
 
 #include "pivot/ecs/Core/Event/description.hxx"
 
-#include <vector>
-#include <mutex>
 #include <atomic>
+#include <mutex>
+#include <vector>
 
 namespace pivot::ecs::event
 {

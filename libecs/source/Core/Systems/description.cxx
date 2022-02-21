@@ -4,7 +4,6 @@
 #include <iostream>
 #include <stdexcept>
 
-
 namespace pivot::ecs::systems
 {
 

@@ -19,28 +19,30 @@ bool Manager::useSystem(const Description &description)
 
     std::vector<std::reference_wrapper<component::IComponentArray>> componentArrays;
     for (const auto index: getComponentsId(description.systemComponents)) {
-        if (!m_componentManager.GetComponentArray(index).has_value())
-            return false;
+        if (!m_componentManager.GetComponentArray(index).has_value()) return false;
         componentArrays.push_back(m_componentManager.GetComponentArray(index).value());
     }
-    m_combinations.insert({description.name, {componentArrays} });
+    m_combinations.insert({description.name, {componentArrays}});
 
     return true;
 }
 
-void Manager::execute(const event::Description &eventDescription, const data::Value &payload, const std::vector<Entity> &entities)
+void Manager::execute(const event::Description &eventDescription, const data::Value &payload,
+                      const std::vector<Entity> &entities)
 {
     for (const auto &[name, description]: m_systems) {
         if (eventDescription.name == description.eventListener.name) {
 
             if (entities.size() != description.eventComponents.size())
-                throw std::logic_error("This system expect " + std::to_string(description.eventComponents.size()) + " entity.");
+                throw std::logic_error("This system expect " + std::to_string(description.eventComponents.size()) +
+                                       " entity.");
 
             event::Entities entitiesComponents;
             for (std::size_t i = 0; i < entities.size(); i++) {
                 std::vector<component::ComponentRef> entityComponents;
                 for (const auto index: getComponentsId(description.eventComponents[i]))
-                    entityComponents.emplace_back(m_componentManager.GetComponentArray(index).value().get(), entities[i]);
+                    entityComponents.emplace_back(m_componentManager.GetComponentArray(index).value().get(),
+                                                  entities[i]);
                 entitiesComponents.push_back(entityComponents);
             }
 

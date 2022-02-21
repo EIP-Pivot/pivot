@@ -89,4 +89,4 @@ Index::const_iterator GlobalIndex::end()
     return this->Index::end();
 }
 
-}
+}    // namespace pivot::ecs::event

@@ -1,10 +1,10 @@
 #pragma once
 
 #include "pivot/ecs/Core/Component/array.hxx"
+#include "pivot/ecs/Core/Component/combination.hxx"
 #include "pivot/ecs/Core/Component/description.hxx"
 #include "pivot/ecs/Core/Data/value.hxx"
 #include "pivot/ecs/Core/Event/description.hxx"
-#include "pivot/ecs/Core/Component/combination.hxx"
 
 #include <any>
 #include <functional>

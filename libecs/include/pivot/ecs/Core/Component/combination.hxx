@@ -76,7 +76,7 @@ public:
             return m_entity == other.m_entity && &m_intersection == &other.m_intersection;
         }
         bool operator!=(iterator other) const { return !(*this == other); }
-        ComponentCombination operator*() const { return{m_intersection, m_entity}; }
+        ComponentCombination operator*() const { return {m_intersection, m_entity}; }
         ComponentCombination operator->() const { return **this; }
         /// @endcond
 

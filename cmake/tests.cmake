@@ -5,9 +5,8 @@ function(build_tests TARGET)
     set(TEST_NAME ${TARGET}_test)
     add_executable(${TEST_NAME} ${ARGN})
     target_include_directories(${TEST_NAME} PRIVATE tests/)
-    target_link_libraries(${TEST_NAME} Catch2 ${TARGET})
+    target_link_libraries(${TEST_NAME} PRIVATE Catch2::Catch2WithMain ${TARGET})
 
-    add_test(NAME "${TARGET} tests"
-      COMMAND ${TEST_NAME})
+      catch_discover_tests(${TEST_NAME})
   endif()
 endfunction()

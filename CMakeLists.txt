@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.20)
 project(pivot)
 
 include(FetchContent)
-include(CTest)
 include(CheckIPOSupported)
 
 check_ipo_supported(RESULT supported)
@@ -70,16 +69,6 @@ if (NOT glm_POPULATED)
     )
 endif()
 
-FetchContent_Declare(
-    catch2
-    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-    GIT_TAG c4e3767e265808590986d5db6ca1b5532a7f3d13
-)
-if (NOT catch2_POPULATED)
-    message(STATUS "Populating Catch2")
-    FetchContent_Populate(catch2)
-    add_subdirectory(${catch2_SOURCE_DIR} ${catch2_BINARY_DIR})
-endif()
 
 FetchContent_Declare(
     magic_enum
@@ -91,6 +80,25 @@ if (NOT magic_enum_POPULATED)
     FetchContent_Populate(magic_enum)
     add_subdirectory(${magic_enum_SOURCE_DIR} ${magic_enum_BINARY_DIR})
 endif()
+
+option(BUILD_TESTING "Build the unit tests" ON)
+if (BUILD_TESTING)
+message(STATUS "Unit tests enabled")
+    FetchContent_Declare(
+        catch2
+        GIT_REPOSITORY https://github.com/EIP-Pivot/Catch2
+        GIT_TAG v3.0.0-preview4
+    )
+    if (NOT catch2_POPULATED)
+        message(STATUS "Populating Catch2")
+        FetchContent_Populate(catch2)
+        add_subdirectory(${catch2_SOURCE_DIR} ${catch2_BINARY_DIR})
+    endif()
+    list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+    include(CTest)
+    include(Catch)
+endif()
+include(cmake/tests.cmake)
 
 option(BUILD_DOCUMENTATION "Build the HTML documentation" OFF)
 if (BUILD_DOCUMENTATION)
@@ -108,9 +116,6 @@ if (BUILD_DOCUMENTATION)
         message(SEND_ERROR "Doxygen needs to be installed to build the documentation")
     endif()
 endif()
-
-
-include(cmake/tests.cmake)
 
 add_subdirectory(libecs/)
 add_subdirectory(libgraphics/)

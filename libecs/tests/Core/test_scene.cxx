@@ -1,9 +1,10 @@
 #include <boost/fusion/include/adapt_struct.hpp>
-#include <catch2/catch.hpp>
 #include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
 #include <pivot/ecs/Core/Component/description_helpers_impl.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
 #include <pivot/ecs/Core/Scene.hxx>
+
+#include <catch2/catch_test_macros.hpp>
 
 using namespace pivot::ecs::component;
 using namespace pivot::ecs::data;

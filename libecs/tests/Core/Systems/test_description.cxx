@@ -1,8 +1,10 @@
 #include "pivot/ecs/Components/Gravity.hxx"
 #include "pivot/ecs/Components/RigidBody.hxx"
 #include "pivot/ecs/Components/Tag.hxx"
-#include <catch2/catch.hpp>
 #include <pivot/ecs/Core/Systems/description.hxx>
+
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_all.hpp>
 
 #include <iostream>
 

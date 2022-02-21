@@ -1,4 +1,4 @@
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <pivot/graphics/culling.hxx>
 #include <pivot/graphics/types/vk_types.hxx>
 

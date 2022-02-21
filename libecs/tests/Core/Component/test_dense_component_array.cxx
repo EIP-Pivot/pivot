@@ -1,4 +1,4 @@
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 #include <pivot/ecs/Components/Tag.hxx>
 #include <pivot/ecs/Core/Component/DenseComponentArray.hxx>

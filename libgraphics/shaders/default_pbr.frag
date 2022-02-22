@@ -15,9 +15,9 @@ layout (push_constant) uniform readonly constants {
 } cameraData;
 
 struct Material {
+    vec4 baseColor;
     float metallic;
     float roughness;
-    vec4 baseColor;
     int baseColorTexture;
     int metallicRoughnessTexture;
     int normalTexture;

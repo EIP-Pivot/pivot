@@ -84,7 +84,7 @@ bool AssetStorage::loadModel(const std::filesystem::path &path)
 bool AssetStorage::loadTexture(const std::filesystem::path &path)
 {
     DEBUG_FUNCTION
-    const auto iter = supportedTexture.find(path.extension().string().c_str());
+    const auto iter = supportedTexture.find(path.extension().string());
     if (iter == supportedTexture.end()) {
         logger.err("Load Texture") << "Not supported texture extension: " << path.extension();
         return false;

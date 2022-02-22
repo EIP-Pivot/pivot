@@ -113,7 +113,7 @@ public:
     /// @arg the path for all individual file to load
     void loadModels(Path... p)
     {
-        auto i = ((loadModel(p)) + ...);
+        unsigned i = ((loadModel(p)) + ...);
         if (i < sizeof...(Path)) {
             throw AssetStorageException("A model file failed to load. See above for further errors");
         }
@@ -125,7 +125,7 @@ public:
     /// @arg the path for all individual file to load
     void loadTextures(Path... p)
     {
-        auto i = ((loadTexture(p)) + ...);
+        unsigned i = ((loadTexture(p)) + ...);
         if (i < sizeof...(Path)) {
             throw AssetStorageException("A texture file failed to load. See above for further errors");
         }

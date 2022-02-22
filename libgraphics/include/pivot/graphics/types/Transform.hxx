@@ -27,7 +27,14 @@ public:
     inline glm::mat4 getModelMatrix() const noexcept { return recomposeMatrix(*this); }
 
     /// Compare transforms
-    auto operator<=>(const Transform &) const = default;
+    std::partial_ordering operator<=>(const Transform &rhs) const
+    {
+        if (position == rhs.position && rotation == rhs.rotation && scale == rhs.scale) {
+            return std::partial_ordering::equivalent;
+        }
+        return std::partial_ordering::unordered;
+    }
+    bool operator==(const Transform &) const = default;
 
 private:
     inline static glm::mat4 recomposeMatrix(const Transform &tran)

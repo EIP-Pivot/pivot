@@ -15,4 +15,6 @@ struct RenderObject {
     std::string materialIndex;
     /// The object transform
     Transform transform;
+
+    auto operator<=>(const RenderObject &) const = default;
 };

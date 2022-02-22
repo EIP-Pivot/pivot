@@ -26,7 +26,11 @@ public:
     /// Get the model matrix
     inline glm::mat4 getModelMatrix() const noexcept { return recomposeMatrix(*this); }
 
-    /// Compare transforms
+    /** \brief Transform comparison operator
+     *
+     * WARNING: The Transform cannot be ordered for now. They can only be
+     * compared equal or not.
+     */
     std::partial_ordering operator<=>(const Transform &rhs) const
     {
         if (position == rhs.position && rotation == rhs.rotation && scale == rhs.scale) {
@@ -34,6 +38,8 @@ public:
         }
         return std::partial_ordering::unordered;
     }
+
+    /// Default equality operator
     bool operator==(const Transform &) const = default;
 
 private:
@@ -44,7 +50,12 @@ private:
     }
 
 public:
+    /// Translation or position component
     glm::vec3 position;
+
+    /// Rotation component
     glm::vec3 rotation;
+
+    /// Scale component
     glm::vec3 scale;
 };

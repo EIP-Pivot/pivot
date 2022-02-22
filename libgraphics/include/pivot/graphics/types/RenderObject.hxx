@@ -16,5 +16,6 @@ struct RenderObject {
     /// The object transform
     Transform transform;
 
+    /// Default comparison operator
     auto operator<=>(const RenderObject &) const = default;
 };

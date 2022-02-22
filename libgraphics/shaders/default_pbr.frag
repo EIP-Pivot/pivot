@@ -96,9 +96,9 @@ void main()
 {		
     Material material = objectMaterials.materials[materialIndex];
     vec3 diffuseColor = (material.baseColorTexture >= 0) ? (texture(texSampler[material.baseColorTexture], fragTextCoords).rgb) : (material.baseColor.rgb);
-    vec3 metallicRoughness = (material.metallicRoughnessTexture >= 0) ? (texture(texSampler[material.metallicRoughnessTexture], fragTextCoords).rgb) : (vec3(0.0));
-    float metallic  = metallicRoughness.b;
-    float roughness = metallicRoughness.g;
+    vec3 metallicRoughness = (material.metallicRoughnessTexture >= 0) ? (texture(texSampler[material.metallicRoughnessTexture], fragTextCoords).rgb) : (vec3(1.0));
+    float metallic  = metallicRoughness.b * material.metallic;
+    float roughness = metallicRoughness.g * material.roughness;
     float occlusion = (material.occlusionTexture >= 0) ? (texture(texSampler[material.occlusionTexture], fragTextCoords).r) : (1.0);
 
     vec3 N = getNormalFromMap(material);

@@ -181,8 +181,11 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
 )
 
 add_shader(${PROJECT_NAME} default.vert)
+add_shader(${PROJECT_NAME} default_pbr.vert)
 add_shader(${PROJECT_NAME} default_lit.frag)
 add_shader(${PROJECT_NAME} default_unlit.frag)
+add_shader(${PROJECT_NAME} default_pbr.frag)
+
 add_shader(${PROJECT_NAME} culling.comp)
 
 target_include_directories(${PROJECT_NAME} PUBLIC include/)

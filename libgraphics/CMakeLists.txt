@@ -206,4 +206,5 @@ build_tests(${PROJECT_NAME}
   tests/culling.cxx
   tests/bounding_box.cxx
   tests/asset_manager.cxx
+  tests/indexed_storage.cxx
   )

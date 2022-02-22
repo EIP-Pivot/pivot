@@ -10,6 +10,7 @@ namespace pivot::graphics
 
 const std::unordered_map<std::string, AssetStorage::AssetHandler> AssetStorage::supportedTexture = {
     {".png", &AssetStorage::loadPngTexture},
+    {".jpg", &AssetStorage::loadJpgTexture},
     {".ktx", &AssetStorage::loadKtxImage},
 };
 

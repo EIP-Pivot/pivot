@@ -83,7 +83,11 @@ endif()
 
 option(BUILD_TESTING "Build the unit tests" ON)
 if (BUILD_TESTING)
-message(STATUS "Unit tests enabled")
+    if (DEFINED ENV{CI})
+        message(STATUS "CI Unit tests enabled")
+    else()
+        message(STATUS "Unit tests enabled")
+    endif()
     FetchContent_Declare(
         catch2
         GIT_REPOSITORY https://github.com/EIP-Pivot/Catch2

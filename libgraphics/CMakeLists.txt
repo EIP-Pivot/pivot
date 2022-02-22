@@ -209,4 +209,5 @@ target_link_libraries(${PROJECT_NAME} PUBLIC logger
 build_tests(${PROJECT_NAME}
   tests/culling.cxx
   tests/bounding_box.cxx
-  )
+  tests/indexed_storage.cxx
+)

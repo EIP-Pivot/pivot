@@ -20,15 +20,28 @@ public:
     auto begin() { return index.begin(); }
     /// return the end iterator
     auto end() { return index.end(); }
+    /// return an iterator over the indexes
+    auto begin() const { return index.begin(); }
+    /// return the end iterator
+    auto end() const { return index.end(); }
+
     /// Clear the internal storage
     void clear()
     {
         index.clear();
         storage.clear();
     }
+
+    /// Append to the current storage
+    void append(const IndexedStorage &stor)
+    {
+        for (const auto &[name, idx]: stor) { add(name, stor.getStorage().at(idx)); }
+    }
+
     /// Add a new item to the storage
     inline void add(const std::string &i, T value)
     {
+        if (contains(i)) throw std::runtime_error("Index already in use !");
         storage.push_back(std::move(value));
         index.insert(std::make_pair(i, storage.size() - 1));
     }
@@ -42,6 +55,9 @@ public:
         assert(storage.size() == index.size());
         return storage.size();
     }
+    /// return whether or not the size is equal to 0
+    constexpr bool empty() const noexcept { return size() == 0; }
+
     /// return the internal vector
     constexpr const auto &getStorage() const noexcept { return storage; }
     /// @copydoc getStorage

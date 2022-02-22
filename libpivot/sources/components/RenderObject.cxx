@@ -6,5 +6,5 @@
 #include <boost/fusion/include/adapt_struct.hpp>
 
 BOOST_FUSION_ADAPT_STRUCT(Transform, position, rotation, scale);
-BOOST_FUSION_ADAPT_STRUCT(RenderObject, meshID, transform);
+BOOST_FUSION_ADAPT_STRUCT(RenderObject, meshID, materialIndex, transform);
 PIVOT_REGISTER_COMPONENT(RenderObject, DenseTypedComponentArray<RenderObject>);

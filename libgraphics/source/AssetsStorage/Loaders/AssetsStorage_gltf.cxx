@@ -213,16 +213,17 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
 
 static std::pair<std::string, AssetStorage::CPUMaterial>
 loadGltfMaterial(const IndexedStorage<AssetStorage::CPUTexture> &texture, const tinygltf::Model &gltfModel,
-                 const tinygltf::Material &mat)
+                 const tinygltf::Material &mat, const unsigned offset)
 {
     DEBUG_FUNCTION
     AssetStorage::CPUMaterial material;
     if (mat.values.find("baseColorTexture") != mat.values.end()) {
-        material.baseColorTexture = texture.getName(mat.values.at("baseColorTexture").TextureIndex());
+        material.baseColorTexture = texture.getName(mat.values.at("baseColorTexture").TextureIndex() + offset);
     }
     // Metallic roughness workflow
     if (mat.values.find("metallicRoughnessTexture") != mat.values.end()) {
-        material.metallicRoughnessTexture = texture.getName(mat.values.at("metallicRoughnessTexture").TextureIndex());
+        material.metallicRoughnessTexture =
+            texture.getName(mat.values.at("metallicRoughnessTexture").TextureIndex() + offset);
     }
     if (mat.values.find("roughnessFactor") != mat.values.end()) {
         material.roughness = mat.values.at("roughnessFactor").Factor();
@@ -234,13 +235,14 @@ loadGltfMaterial(const IndexedStorage<AssetStorage::CPUTexture> &texture, const 
         material.baseColor = glm::make_vec4(mat.values.at("baseColorFactor").ColorFactor().data());
     }
     if (mat.additionalValues.find("normalTexture") != mat.additionalValues.end()) {
-        material.normalTexture = texture.getName(mat.additionalValues.at("normalTexture").TextureIndex());
+        material.normalTexture = texture.getName(mat.additionalValues.at("normalTexture").TextureIndex() + offset);
     }
     if (mat.additionalValues.find("emissiveTexture") != mat.additionalValues.end()) {
-        material.emissiveTexture = texture.getName(mat.additionalValues.at("emissiveTexture").TextureIndex());
+        material.emissiveTexture = texture.getName(mat.additionalValues.at("emissiveTexture").TextureIndex() + offset);
     }
     if (mat.additionalValues.find("occlusionTexture") != mat.additionalValues.end()) {
-        material.occlusionTexture = texture.getName(mat.additionalValues.at("occlusionTexture").TextureIndex());
+        material.occlusionTexture =
+            texture.getName(mat.additionalValues.at("occlusionTexture").TextureIndex() + offset);
     }
     return std::make_pair(mat.name, material);
 }
@@ -257,14 +259,15 @@ try {
     bool isLoaded = gltfContext.LoadASCIIFromFile(&gltfModel, &error, &warning, path.string());
     if (!warning.empty()) logger.warn("Asset Storage/GLTF") << warning;
     if (!error.empty()) logger.err("Asset Storage/GLTF") << error;
-
     if (!isLoaded) return false;
+
+    const auto offset = cpuStorage.textureStaging.size();
     for (const auto &image: gltfModel.images) {
         const auto filepath = path.parent_path() / image.uri;
-        loadTexture(filepath);
+        loadTextures(filepath);
     }
     for (const auto &material: gltfModel.materials) {
-        auto mat = loadGltfMaterial(cpuStorage.textureStaging, gltfModel, material);
+        const auto mat = loadGltfMaterial(cpuStorage.textureStaging, gltfModel, material, offset);
         cpuStorage.materialStaging.add(std::move(mat));
     }
     for (const auto &node: gltfModel.nodes) {

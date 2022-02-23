@@ -119,12 +119,6 @@ void AssetStorage::pushModelsOnGPU()
         base_ref->get(), vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
         vma::MemoryUsage::eGpuOnly);
     AllocatedBuffer::destroy(base_ref->get(), stagingIndex);
-
-    // clear CPU storage, as it is not needed anymore
-    cpuStorage.vertexStagingBuffer.clear();
-    cpuStorage.vertexStagingBuffer.shrink_to_fit();
-    cpuStorage.indexStagingBuffer.clear();
-    cpuStorage.indexStagingBuffer.shrink_to_fit();
 }
 
 void AssetStorage::pushTexturesOnGPU()

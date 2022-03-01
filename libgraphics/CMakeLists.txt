@@ -55,8 +55,8 @@ endif()
 
 FetchContent_Declare(
     vma
-    GIT_REPOSITORY https://github.com/malte-v/VulkanMemoryAllocator-Hpp.git
-    GIT_TAG 658904b881a6ca8b7dd56b81aca7d81b410060a5
+    GIT_REPOSITORY https://github.com/EIP-Pivot/VulkanMemoryAllocator-Hpp.git
+    GIT_TAG afce2cb1a2e75b35b1c8bef230029cb032b8a2c4
 )
 if (NOT vma_POPULATED)
     message(STATUS "Populating vma")

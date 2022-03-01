@@ -2,15 +2,11 @@
 
 #include <Logger.hpp>
 #include <cstddef>
-#include <cstdint>
-#include <stdexcept>
 #include <string>
 #include <vector>
 #include <vulkan/vulkan.hpp>
 
-#include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/VulkanException.hxx"
-#include "pivot/graphics/abstract/AImmediateCommand.hxx"
 
 namespace pivot::graphics::vk_utils
 {

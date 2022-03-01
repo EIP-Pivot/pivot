@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pivot/graphics/interface/IPipelineBuilder.hxx"
+#include <string>
 
 namespace pivot::graphics
 {
@@ -12,6 +13,8 @@ class ComputePipelineBuilder final : public interface::IPipelineBuilder
 public:
     ComputePipelineBuilder() = default;
     ~ComputePipelineBuilder() = default;
+
+    const char *const getDebugPipelineName() const noexcept { return "Compute Pipeline"; }
 
     ComputePipelineBuilder &setPipelineLayout(vk::PipelineLayout &layout);
 

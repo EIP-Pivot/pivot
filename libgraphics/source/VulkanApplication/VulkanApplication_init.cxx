@@ -4,19 +4,13 @@
 #include "pivot/graphics/PipelineBuilders/ComputePipelineBuilder.hxx"
 #include "pivot/graphics/PipelineBuilders/GraphicsPipelineBuilder.hxx"
 #include "pivot/graphics/QueueFamilyIndices.hxx"
-#include "pivot/graphics/types/Material.hxx"
-#include "pivot/graphics/types/UniformBufferObject.hxx"
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
-#include <Logger.hpp>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
-
-#include <map>
 #include <numeric>
-#include <set>
 
 namespace pivot::graphics
 {
@@ -100,14 +94,6 @@ void VulkanApplication::createRenderPass()
     swapchainDeletionQueue.push([&] { device.destroy(renderPass); });
 }
 
-void VulkanApplication::createPipelineCache()
-{
-    DEBUG_FUNCTION
-    vk::PipelineCacheCreateInfo createInfo{};
-    pipelineCache = device.createPipelineCache(createInfo);
-    mainDeletionQueue.push([&] { device.destroy(pipelineCache); });
-}
-
 void VulkanApplication::createPipelineLayout()
 {
     DEBUG_FUNCTION
@@ -144,12 +130,27 @@ void VulkanApplication::createPipeline()
         .setRenderPass(renderPass)
         .setMsaaSample(maxMsaaSample)
         .setFaceCulling(vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise)
-        .setVertexShaderPath("shaders/triangle.vert.spv")
-        .setFragmentShaderPath("shaders/triangle.frag.spv");
-    graphicsPipeline = builder.build(device, pipelineCache);
-    pivot::graphics::vk_debug::setObjectName(device, graphicsPipeline, "Main graphics pipeline");
+        .setVertexShaderPath("shaders/default.vert.spv")
+        .setFragmentShaderPath("shaders/default_lit.frag.spv");
+    pipelineStorage.newPipeline("lit", builder);
+    pipelineStorage.setDefault("lit");
 
-    swapchainDeletionQueue.push([&] { device.destroy(graphicsPipeline); });
+    builder.setFragmentShaderPath("shaders/default_unlit.frag.spv");
+    pipelineStorage.newPipeline("unlit", builder);
+
+    builder.setPolygonMode(vk::PolygonMode::eLine);
+    pipelineStorage.newPipeline("wireframe", builder);
+
+    builder.setPolygonMode(vk::PolygonMode::eFill);
+    builder.setFaceCulling(vk::CullModeFlagBits::eFront, vk::FrontFace::eCounterClockwise);
+    pipelineStorage.newPipeline("skybox", builder);
+
+    swapchainDeletionQueue.push([&] {
+        pipelineStorage.removePipeline("lit");
+        pipelineStorage.removePipeline("unlit");
+        pipelineStorage.removePipeline("wireframe");
+        pipelineStorage.removePipeline("skybox");
+    });
 }
 
 void VulkanApplication::createCullingPipeline()
@@ -157,10 +158,7 @@ void VulkanApplication::createCullingPipeline()
     DEBUG_FUNCTION
     pivot::graphics::ComputePipelineBuilder builder;
     builder.setPipelineLayout(cullingLayout).setComputeShaderPath("shaders/culling.comp.spv");
-    cullingPipeline = builder.build(device, pipelineCache);
-    pivot::graphics::vk_debug::setObjectName(device, cullingPipeline, "Culling compute pipeline");
-
-    mainDeletionQueue.push([&] { device.destroyPipeline(cullingPipeline); });
+    pipelineStorage.newPipeline("culling", builder);
 }
 
 void VulkanApplication::createFramebuffers()
@@ -180,8 +178,7 @@ void VulkanApplication::createFramebuffers()
         framebufferInfo.setAttachments(attachments);
 
         swapChainFramebuffers.at(i) = device.createFramebuffer(framebufferInfo);
-        pivot::graphics::vk_debug::setObjectName(device, swapChainFramebuffers.at(i),
-                                                 "FrameBuffer " + std::to_string(i));
+        vk_debug::setObjectName(device, swapChainFramebuffers.at(i), "FrameBuffer " + std::to_string(i));
     }
     swapchainDeletionQueue.push([&] {
         for (auto &framebuffer: swapChainFramebuffers) { device.destroy(framebuffer); }
@@ -196,9 +193,9 @@ void VulkanApplication::createCommandPool()
         .queueFamilyIndex = queueIndices.graphicsFamily.value(),
     };
     commandPool = device.createCommandPool(poolInfo);
-    pivot::graphics::vk_debug::setObjectName(device, commandPool, "Main Command Pool");
+    vk_debug::setObjectName(device, commandPool, "Main Command Pool");
     imguiContext.cmdPool = device.createCommandPool(poolInfo);
-    pivot::graphics::vk_debug::setObjectName(device, imguiContext.cmdPool, "ImGui Command Pool");
+    vk_debug::setObjectName(device, imguiContext.cmdPool, "ImGui Command Pool");
     mainDeletionQueue.push([&] {
         device.destroy(imguiContext.cmdPool);
         device.destroy(commandPool);
@@ -300,7 +297,7 @@ void VulkanApplication::createRessourcesDescriptorSetLayout()
         .pBindings = bindings.data(),
     };
     ressourcesSetLayout = device.createDescriptorSetLayout(ressourcesSetLayoutInfo);
-    pivot::graphics::vk_debug::setObjectName(device, ressourcesSetLayout, "Ressources Set Layout");
+    vk_debug::setObjectName(device, ressourcesSetLayout, "Ressources Set Layout");
     mainDeletionQueue.push([&] { device.destroy(ressourcesSetLayout); });
 }
 
@@ -325,7 +322,7 @@ void VulkanApplication::createDescriptorPool()
         .pPoolSizes = poolSize,
     };
     descriptorPool = device.createDescriptorPool(poolInfo);
-    pivot::graphics::vk_debug::setObjectName(device, descriptorPool, "Main Descriptor Pool");
+    vk_debug::setObjectName(device, descriptorPool, "Main Descriptor Pool");
     mainDeletionQueue.push([&] { device.destroyDescriptorPool(descriptorPool); });
 }
 
@@ -418,7 +415,7 @@ void VulkanApplication::createTextureSampler()
         .unnormalizedCoordinates = VK_FALSE,
     };
     textureSampler = device.createSampler(samplerInfo);
-    pivot::graphics::vk_debug::setObjectName(device, textureSampler, "Texture Sampler");
+    vk_debug::setObjectName(device, textureSampler, "Texture Sampler");
     mainDeletionQueue.push([&] { device.destroySampler(textureSampler); });
 }
 
@@ -449,8 +446,8 @@ void VulkanApplication::createDepthResources()
 
     depthResources.createImageView(*this, createInfo);
     depthResources.transitionLayout(*this, vk::ImageLayout::eDepthStencilAttachmentOptimal);
-    pivot::graphics::vk_debug::setObjectName(device, depthResources.image, "Depth Image");
-    pivot::graphics::vk_debug::setObjectName(device, depthResources.imageView, "Depth Image view");
+    vk_debug::setObjectName(device, depthResources.image, "Depth Image");
+    vk_debug::setObjectName(device, depthResources.imageView, "Depth Image view");
     swapchainDeletionQueue.push([&] {
         device.destroyImageView(depthResources.imageView);
         allocator.destroyImage(depthResources.image, depthResources.memory);
@@ -476,8 +473,8 @@ void VulkanApplication::createColorResources()
     allocInfo.usage = vma::MemoryUsage::eGpuOnly;
     colorImage.createImage(*this, imageInfo, allocInfo);
     colorImage.createImageView(*this);
-    pivot::graphics::vk_debug::setObjectName(device, colorImage.image, "Color Image");
-    pivot::graphics::vk_debug::setObjectName(device, colorImage.imageView, "Color Image view");
+    vk_debug::setObjectName(device, colorImage.image, "Color Image");
+    vk_debug::setObjectName(device, colorImage.imageView, "Color Image view");
     swapchainDeletionQueue.push([&] {
         device.destroyImageView(colorImage.imageView);
         allocator.destroyImage(colorImage.image, colorImage.memory);
@@ -507,7 +504,7 @@ void VulkanApplication::createImGuiDescriptorPool()
     };
 
     imguiContext.pool = device.createDescriptorPool(pool_info);
-    pivot::graphics::vk_debug::setObjectName(device, imguiContext.pool, "ImGui Descriptor Pool");
+    vk_debug::setObjectName(device, imguiContext.pool, "ImGui Descriptor Pool");
     mainDeletionQueue.push([&] { device.destroyDescriptorPool(imguiContext.pool); });
 }
 
@@ -532,7 +529,6 @@ void VulkanApplication::initDearImGui()
     init_info.Device = device;
     init_info.QueueFamily = queueIndices.graphicsFamily.value();
     init_info.Queue = graphicsQueue;
-    init_info.PipelineCache = pipelineCache;
     init_info.DescriptorPool = imguiContext.pool;
     init_info.MinImageCount = swapchain.nbOfImage();
     init_info.ImageCount = swapchain.nbOfImage();

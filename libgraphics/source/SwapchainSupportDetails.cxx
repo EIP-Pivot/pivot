@@ -1,5 +1,7 @@
 #include "pivot/graphics/VulkanSwapchain.hxx"
-#include "pivot/graphics/Window.hxx"
+
+namespace pivot::graphics
+{
 
 vk::SurfaceFormatKHR VulkanSwapchain::SupportDetails::chooseSwapSurfaceFormat() noexcept
 {
@@ -43,3 +45,5 @@ VulkanSwapchain::SupportDetails VulkanSwapchain::SupportDetails::querySwapChainS
         .presentModes = device.getSurfacePresentModesKHR(surface),
     };
 }
+
+}    // namespace pivot::graphics

@@ -25,7 +25,7 @@ jobs:
 
       - uses: actions/cache@v2
         with:
-            path: ${{ github.workspace }}/build
+            path: ${{ github.workspace }}/build/_deps
             key: ${{ runner.os }}-build-${{ matrix.build_type }}-${{ github.ref_name }}
 
       - name: Configure CMake
@@ -63,7 +63,7 @@ jobs:
 
       - uses: actions/cache@v2
         with:
-            path: ${{ github.workspace }}/build
+            path: ${{ github.workspace }}/build/_deps
             key: ${{ runner.os }}-build-${{ matrix.build_type }}-${{ github.ref_name }}
 
       - name: Configure CMake

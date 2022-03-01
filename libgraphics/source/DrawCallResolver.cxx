@@ -5,6 +5,8 @@
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
+#include <ranges>
+
 namespace pivot::graphics
 {
 
@@ -36,18 +38,29 @@ void DrawCallResolver::destroy()
     if (descriptorSetLayout) base_ref->get().device.destroyDescriptorSetLayout(descriptorSetLayout);
 }
 
-void DrawCallResolver::prepareForDraw(const std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
-                                      const CameraData &camera, const uint32_t frameIndex)
+void DrawCallResolver::prepareForDraw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
+                                      const uint32_t frameIndex)
 {
     auto &frame = frames.at(frameIndex);
-    std::vector<DrawBatch> packedDraws;
+    frame.packedDraws.clear();
+    frame.pipelineBatch.clear();
     std::vector<gpu_object::UniformBufferObject> objectGPUData;
-    uint32_t drawCount = 0;
+    std::uint32_t drawCount = 0;
+
+    std::ranges::sort(sceneInformation, {},
+                      [](const auto &info) { return std::make_tuple(info.get().pipelineID, info.get().meshID); });
 
     for (const auto &object: sceneInformation) {
+        if (frame.pipelineBatch.empty() || frame.pipelineBatch.back().pipelineID != object.get().pipelineID) {
+            frame.pipelineBatch.push_back({
+                .pipelineID = object.get().pipelineID,
+                .first = drawCount,
+                .size = 0,
+            });
+        }
         for (const auto &model: storage_ref->get().get<AssetStorage::Prefab>(object.get().meshID).modelIds) {
-
-            packedDraws.push_back({
+            frame.pipelineBatch.back().size += 1;
+            frame.packedDraws.push_back({
                 .meshId = model,
                 .first = drawCount++,
                 .count = 1,
@@ -60,7 +73,7 @@ void DrawCallResolver::prepareForDraw(const std::vector<std::reference_wrapper<c
                 *storage_ref));
         }
     }
-    assert(packedDraws.size() == objectGPUData.size());
+    assert(frame.packedDraws.size() == objectGPUData.size());
 
     auto bufferCmp = objectGPUData.size() <=> frame.currentBufferSize;
     auto descriptorCmp = objectGPUData.size() <=> frame.currentDescriptorSetSize;
@@ -77,8 +90,8 @@ void DrawCallResolver::prepareForDraw(const std::vector<std::reference_wrapper<c
 
         auto *sceneData =
             (vk::DrawIndexedIndirectCommand *)base_ref->get().allocator.mapMemory(frame.indirectBuffer.memory);
-        for (uint32_t i = 0; i < packedDraws.size(); i++) {
-            const auto &mesh = storage_ref->get().get<pivot::graphics::AssetStorage::Mesh>(packedDraws.at(i).meshId);
+        for (uint32_t i = 0; i < frame.packedDraws.size(); i++) {
+            const auto &mesh = storage_ref->get().get<AssetStorage::Mesh>(frame.packedDraws.at(i).meshId);
 
             sceneData[i].firstIndex = mesh.indicesOffset;
             sceneData[i].indexCount = mesh.indicesSize;
@@ -88,7 +101,6 @@ void DrawCallResolver::prepareForDraw(const std::vector<std::reference_wrapper<c
         }
         base_ref->get().allocator.unmapMemory(frame.indirectBuffer.memory);
     }
-    frame.packedDraws.swap(packedDraws);
 }
 
 void DrawCallResolver::createDescriptorPool()

@@ -1,14 +1,16 @@
 #include "pivot/graphics/VulkanSwapchain.hxx"
 
+#include <assert.h>
 #include <optional>
 #include <stddef.h>
-#include <stdexcept>
 
 #include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/QueueFamilyIndices.hxx"
-#include "pivot/graphics/Window.hxx"
 #include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"
+
+namespace pivot::graphics
+{
 
 VulkanSwapchain::VulkanSwapchain() {}
 
@@ -49,7 +51,7 @@ std::uint32_t VulkanSwapchain::getNextImageIndex(const uint64_t maxDelay, vk::Se
     vk::Result result;
 
     std::tie(result, imageIndex) = device->acquireNextImageKHR(swapChain, maxDelay, semaphore);
-    pivot::graphics::vk_utils::vk_try(result);
+    vk_utils::vk_try(result);
     return imageIndex;
 }
 
@@ -122,3 +124,5 @@ void VulkanSwapchain::createImageViews()
         for (auto &imageView: swapChainImageViews) { device->destroyImageView(imageView); }
     });
 }
+
+}    // namespace pivot::graphics

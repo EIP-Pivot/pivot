@@ -1,9 +1,9 @@
 #include "pivot/graphics/PipelineBuilders/GraphicsPipelineBuilder.hxx"
 
 #include "pivot/graphics/DebugMacros.hxx"
+#include "pivot/graphics/types/Vertex.hxx"
+#include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"
-
-#include <Logger.hpp>
 
 namespace pivot::graphics
 {
@@ -25,70 +25,109 @@ GraphicsPipelineBuilder::GraphicsPipelineBuilder(const vk::Extent2D &extent)
       scissor(vk::Rect2D{
           .offset = vk::Offset2D{0, 0},
           .extent = extent,
-      })
+      }),
+      vertexDescription({Vertex::getBindingDescription()}),
+      vertexAttributes(Vertex::getAttributeDescriptons())
 {
 }
 
 GraphicsPipelineBuilder::~GraphicsPipelineBuilder() {}
 
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::setPipelineLayout(vk::PipelineLayout &layout)
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::setPipelineLayout(vk::PipelineLayout &layout) noexcept
 {
     pipelineLayout = layout;
     return *this;
 }
 
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::setRenderPass(vk::RenderPass &pass)
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::setRenderPass(vk::RenderPass &pass) noexcept
 {
     renderPass = pass;
     return *this;
 }
 
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::setVertexShaderPath(const std::string &p)
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::setVertexShaderPath(const std::string &p) noexcept
 {
     vertexShaderPath = p;
     return *this;
 }
 
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::setFragmentShaderPath(const std::string &p)
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::setFragmentShaderPath(const std::string &p) noexcept
 {
     fragmentShaderPath = p;
     return *this;
 }
 
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::setMsaaSample(vk::SampleCountFlagBits &s)
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::setGeometryShaderPath(const std::string &p) noexcept
+{
+    geometryShaderPath = p;
+    return *this;
+}
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::setTessellationEvaluationShaderPath(const std::string &p) noexcept
+{
+    tessellationEvaluationShaderPath = p;
+    return *this;
+}
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::setTessellationControlShaderPath(const std::string &p) noexcept
+{
+    tessellationControlShaderPath = p;
+    return *this;
+}
+
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::setMsaaSample(const vk::SampleCountFlagBits &s) noexcept
 {
     multisampling = vk_init::populateVkPipelineMultisampleStateCreateInfo(s);
     return *this;
 }
 
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::setPolygonMode(vk::PolygonMode &mode)
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::setPolygonMode(const vk::PolygonMode &mode) noexcept
 {
     rasterizer.setPolygonMode(mode);
     return *this;
 }
 
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::setFaceCulling(vk::CullModeFlags mode, vk::FrontFace face)
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::setFaceCulling(const vk::CullModeFlags &mode,
+                                                                 const vk::FrontFace &face) noexcept
 {
     rasterizer.setFrontFace(face);
     rasterizer.setCullMode(mode);
     return *this;
 }
 
+std::vector<vk::VertexInputBindingDescription> &GraphicsPipelineBuilder::getVertexDescription() noexcept
+{
+    return vertexDescription;
+}
+std::vector<vk::VertexInputAttributeDescription> &GraphicsPipelineBuilder::getVertexAttributes() noexcept
+{
+    return vertexAttributes;
+}
+
+static void loadShader(const std::string &path, const vk::ShaderStageFlagBits &stage, vk::Device &device,
+                       std::vector<vk::PipelineShaderStageCreateInfo> &shaderStages) noexcept
+{
+    auto shaderCode = vk_utils::readFile(path);
+    auto shaderModule = vk_utils::createShaderModule(device, shaderCode);
+    shaderStages.push_back(vk_init::populateVkPipelineShaderStageCreateInfo(stage, shaderModule));
+}
+
 vk::Pipeline GraphicsPipelineBuilder::build(vk::Device &device, vk::PipelineCache pipelineCache) const
 {
-    auto vertShaderCode = vk_utils::readFile(vertexShaderPath);
-    auto fragShaderCode = vk_utils::readFile(fragmentShaderPath);
+    DEBUG_FUNCTION
+    std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
 
-    auto vertShaderModule = vk_utils::createShaderModule(device, vertShaderCode);
-    auto fragShaderModule = vk_utils::createShaderModule(device, fragShaderCode);
-    std::vector<vk::PipelineShaderStageCreateInfo> shaderStages{
-        vk_init::populateVkPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eVertex, vertShaderModule),
-        vk_init::populateVkPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment, fragShaderModule),
-    };
+    loadShader(vertexShaderPath, vk::ShaderStageFlagBits::eVertex, device, shaderStages);
+    if (fragmentShaderPath)
+        loadShader(fragmentShaderPath.value(), vk::ShaderStageFlagBits::eFragment, device, shaderStages);
+    if (tessellationControlShaderPath)
+        loadShader(tessellationControlShaderPath.value(), vk::ShaderStageFlagBits::eTessellationControl, device,
+                   shaderStages);
+    if (tessellationEvaluationShaderPath)
+        loadShader(tessellationEvaluationShaderPath.value(), vk::ShaderStageFlagBits::eTessellationEvaluation, device,
+                   shaderStages);
+    if (geometryShaderPath)
+        loadShader(geometryShaderPath.value(), vk::ShaderStageFlagBits::eGeometry, device, shaderStages);
 
-    std::vector<vk::VertexInputBindingDescription> vertexBindings = {Vertex::getBindingDescription()};
-    std::vector<vk::VertexInputAttributeDescription> vertexAttributes = Vertex::getAttributeDescriptons();
-    auto vertexInputInfo = vk_init::populateVkPipelineVertexInputStateCreateInfo(vertexBindings, vertexAttributes);
+    auto vertexInputInfo = vk_init::populateVkPipelineVertexInputStateCreateInfo(vertexDescription, vertexAttributes);
 
     vk::PipelineViewportStateCreateInfo viewportState{
         .viewportCount = 1,
@@ -123,8 +162,7 @@ vk::Pipeline GraphicsPipelineBuilder::build(vk::Device &device, vk::PipelineCach
     vk::Pipeline newPipeline{};
     vk::Result result;
     std::tie(result, newPipeline) = device.createGraphicsPipeline(pipelineCache, pipelineInfo);
-    device.destroy(fragShaderModule);
-    device.destroy(vertShaderModule);
+    std::for_each(shaderStages.begin(), shaderStages.end(), [&](auto &i) { device.destroyShaderModule(i.module); });
     vk_utils::vk_try(result);
     return newPipeline;
 }

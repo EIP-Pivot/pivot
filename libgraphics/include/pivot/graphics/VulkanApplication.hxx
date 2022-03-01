@@ -3,22 +3,14 @@
 #include "pivot/graphics/AssetStorage.hxx"
 #include "pivot/graphics/DeletionQueue.hxx"
 #include "pivot/graphics/DrawCallResolver.hxx"
-#include "pivot/graphics/QueueFamilyIndices.hxx"
+#include "pivot/graphics/PipelineStorage.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/VulkanSwapchain.hxx"
-#include "pivot/graphics/Window.hxx"
 #include "pivot/graphics/types/Frame.hxx"
-#include "pivot/graphics/types/RenderObject.hxx"
-#include "pivot/graphics/types/common.hxx"
 #include "pivot/graphics/types/vk_types.hxx"
-#include "pivot/graphics/vk_utils.hxx"
 
-#include <cstring>
-#include <filesystem>
 #include <optional>
-#include <unordered_map>
 #include <vector>
-#include <vk_mem_alloc.hpp>
 #include <vulkan/vulkan.hpp>
 
 namespace pivot::graphics
@@ -60,7 +52,7 @@ public:
     /// @arg camera The information about the camera
     ///
     /// You must have already loaded your models and texture !
-    void draw(const std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation, const CameraData &camera
+    void draw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation, const CameraData &camera
 #ifdef CULLING_DEBUG
               ,
               const std::optional<std::reference_wrapper<const CameraData>> cullingCamera = std::nullopt
@@ -71,6 +63,11 @@ public:
     float getAspectRatio() const noexcept { return swapchain.getAspectRatio(); }
 
 private:
+    bool dispatchCulling(const CameraData &cameraData, const vk::CommandBufferInheritanceInfo &info,
+                         vk::CommandBuffer &cmd);
+    bool drawImGui(const CameraData &cameraData, const vk::CommandBufferInheritanceInfo &info, vk::CommandBuffer &cmd);
+    bool drawScene(const CameraData &cameraData, const vk::CommandBufferInheritanceInfo &info, vk::CommandBuffer &cmd);
+
     void postInitialization();
     void recreateSwapchain();
     void initVulkanRessources();
@@ -86,7 +83,6 @@ private:
     void createCommandPool();
     void createCommandBuffers();
 
-    void createPipelineCache();
     void createPipeline();
     void createCullingPipeline();
     void createDepthResources();
@@ -136,12 +132,9 @@ private:
     AllocatedImage depthResources = {};
     AllocatedImage colorImage = {};
 
-    vk::PipelineCache pipelineCache = VK_NULL_HANDLE;
+    PipelineStorage pipelineStorage;
     vk::PipelineLayout pipelineLayout = VK_NULL_HANDLE;
-    vk::Pipeline graphicsPipeline = VK_NULL_HANDLE;
-
     vk::PipelineLayout cullingLayout = VK_NULL_HANDLE;
-    vk::Pipeline cullingPipeline = VK_NULL_HANDLE;
 
     std::vector<vk::Framebuffer> swapChainFramebuffers;
     /// @endcond

@@ -1,7 +1,5 @@
 #include "pivot/graphics/vk_debug.hxx"
 
-#include "pivot/graphics/vk_utils.hxx"
-
 namespace pivot::graphics::vk_debug
 {
 

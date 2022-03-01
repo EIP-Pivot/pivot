@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include <pivot/graphics/culling.hxx>
 
 namespace pivot::graphics::culling

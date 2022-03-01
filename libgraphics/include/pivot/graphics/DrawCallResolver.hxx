@@ -26,9 +26,19 @@ public:
         /// The id of the mesh
         std::string meshId;
         /// The first index of the batch
-        uint32_t first;
+        std::uint32_t first;
         /// The size of the batch
-        uint32_t count;
+        std::uint32_t count;
+    };
+
+    /// Represent the index of the draw batch, ordered by pipeline
+    struct PipelineBatch {
+        /// The id of the pipeline
+        std::string pipelineID;
+        /// The first index of the batch
+        std::uint32_t first;
+        /// The size of the batch
+        std::uint32_t size;
     };
 
     /// Represent a frame ressources
@@ -41,6 +51,8 @@ public:
         vk::DescriptorSet objectDescriptor = VK_NULL_HANDLE;
         /// The draw batches
         std::vector<DrawBatch> packedDraws;
+        /// The pipeline batch
+        std::vector<PipelineBatch> pipelineBatch;
         /// The current size of the buffer
         uint32_t currentBufferSize = defaultBufferSize;
         /// The current size of the buffer that is exposed through the descriptor set.
@@ -59,8 +71,8 @@ public:
     void destroy();
 
     /// Build the buffer for the draw
-    void prepareForDraw(const std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
-                        const CameraData &camera, const uint32_t frameIndex);
+    void prepareForDraw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
+                        const uint32_t frameIndex);
 
     /// Get the frame data of a given frame
     constexpr const Frame &getFrameData(const uint32_t &frameIndex) const { return frames.at(frameIndex); }

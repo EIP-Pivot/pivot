@@ -7,7 +7,8 @@
 
 #include "pivot/graphics/DeletionQueue.hxx"
 
-class Window;
+namespace pivot::graphics
+{
 
 /// @class VulkanSwapchain
 ///
@@ -110,3 +111,5 @@ private:
     std::vector<vk::Image> swapChainImages;
     std::vector<vk::ImageView> swapChainImageViews;
 };
+
+}    // namespace pivot::graphics

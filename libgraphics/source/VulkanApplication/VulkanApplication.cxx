@@ -1,21 +1,18 @@
 #include "pivot/graphics/VulkanApplication.hxx"
 #include "pivot/graphics/DebugMacros.hxx"
-#include "pivot/graphics/culling.hxx"
-#include "pivot/graphics/math.hxx"
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
 #include <Logger.hpp>
-#include <backends/imgui_impl_glfw.h>
-#include <backends/imgui_impl_vulkan.h>
-
-#include <algorithm>
 
 namespace pivot::graphics
 {
 
 VulkanApplication::VulkanApplication()
-    : VulkanBase("Pivot Game Engine", true), assetStorage(*this), drawResolver(*this, assetStorage)
+    : VulkanBase("Pivot Game Engine", true),
+      assetStorage(*this),
+      drawResolver(*this, assetStorage),
+      pipelineStorage(*this)
 {
     DEBUG_FUNCTION;
 
@@ -41,6 +38,7 @@ VulkanApplication::~VulkanApplication()
     swapchainDeletionQueue.flush();
     mainDeletionQueue.flush();
     drawResolver.destroy();
+    pipelineStorage.destroy();
     VulkanBase::destroy();
 }
 
@@ -56,7 +54,6 @@ void VulkanApplication::initVulkanRessources()
 {
     DEBUG_FUNCTION
 
-    createPipelineCache();
     createSyncStructure();
     createRessourcesDescriptorSetLayout();
     createPipelineLayout();
@@ -116,7 +113,7 @@ void VulkanApplication::recreateSwapchain()
     postInitialization();
 }
 
-void VulkanApplication::draw(const std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
+void VulkanApplication::draw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
                              const CameraData &cameraData
 #ifdef CULLING_DEBUG
                              ,
@@ -160,12 +157,15 @@ try {
         .pClearValues = clearValues.data(),
     };
 
-    const gpu_object::VertexPushConstant vertexCamere{
-        .viewProjection = cameraData.viewProjection,
+    drawResolver.prepareForDraw(sceneInformation, currentFrame);
+
+    vk::CommandBufferInheritanceInfo inheritanceInfo{
+        .renderPass = renderPass,
+        .subpass = 0,
+        .framebuffer = swapChainFramebuffers.at(imageIndex),
     };
-    const gpu_object::FragmentPushConstant fragmentCamera{
-        .position = cameraData.position,
-    };
+    drawImGui(cameraData, inheritanceInfo, imguiCmd);
+    drawScene(cameraData, inheritanceInfo, drawCmd);
 
 #ifdef CULLING_DEBUG
     auto cullingCameraDataSelected = cullingCameraData.value_or(std::ref(cameraData)).get();
@@ -173,110 +173,15 @@ try {
     auto cullingCameraDataSelected = cameraData;
 #endif
 
-    drawResolver.prepareForDraw(sceneInformation, cullingCameraDataSelected, currentFrame);
-
-    const gpu_object::CullingPushConstant cullingCamera{
-        .viewProjection = cullingCameraDataSelected.viewProjection,
-        .drawCount = static_cast<uint32_t>(drawResolver.getFrameData(currentFrame).packedDraws.size()),
-    };
-
-    vk::CommandBufferInheritanceInfo inheritanceInfo{
-        .renderPass = renderPass,
-        .subpass = 0,
-        .framebuffer = swapChainFramebuffers.at(imageIndex),
-    };
-
-    // ImGui draw
-    {
-        vk::CommandBufferBeginInfo imguiBeginInfo{
-            .flags = vk::CommandBufferUsageFlagBits::eRenderPassContinue,
-            .pInheritanceInfo = &inheritanceInfo,
-        };
-        vk_utils::vk_try(imguiCmd.begin(&imguiBeginInfo));
-        pivot::graphics::vk_debug::beginRegion(imguiCmd, "Imgui Commands", {1.f, 0.f, 0.f, 1.f});
-        if (auto imguiData = ImGui::GetDrawData(); imguiData != nullptr) {
-            ImGui_ImplVulkan_RenderDrawData(imguiData, imguiCmd);
-        }
-        pivot::graphics::vk_debug::endRegion(imguiCmd);
-        imguiCmd.end();
-    }
-
-    // Normal draw
-    {
-
-        vk::DeviceSize offset = 0;
-        vk::CommandBufferBeginInfo drawBeginInfo{
-            .flags = vk::CommandBufferUsageFlagBits::eRenderPassContinue,
-            .pInheritanceInfo = &inheritanceInfo,
-        };
-        vk_utils::vk_try(drawCmd.begin(&drawBeginInfo));
-        pivot::graphics::vk_debug::beginRegion(imguiCmd, "Draw Commands", {0.f, 1.f, 0.f, 1.f});
-        if (drawResolver.getFrameData(currentFrame).packedDraws.size() > 0) {
-            drawCmd.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
-            drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0,
-                                       drawResolver.getFrameData(currentFrame).objectDescriptor, nullptr);
-            drawCmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, ressourceDescriptorSet,
-                                       nullptr);
-            drawCmd.pushConstants<gpu_object::VertexPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0,
-                                                                  vertexCamere);
-            drawCmd.pushConstants<gpu_object::FragmentPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eFragment,
-                                                                    sizeof(gpu_object::VertexPushConstant),
-                                                                    fragmentCamera);
-            drawCmd.bindVertexBuffers(0, assetStorage.getVertexBuffer().buffer, offset);
-            drawCmd.bindIndexBuffer(assetStorage.getIndexBuffer().buffer, 0, vk::IndexType::eUint32);
-
-            if (deviceFeature.multiDrawIndirect == VK_TRUE) {
-                drawCmd.drawIndexedIndirect(drawResolver.getFrameData(currentFrame).indirectBuffer.buffer, 0,
-                                            drawResolver.getFrameData(currentFrame).packedDraws.size(),
-                                            sizeof(vk::DrawIndexedIndirectCommand));
-            } else {
-                for (const auto &draw: drawResolver.getFrameData(currentFrame).packedDraws) {
-                    drawCmd.drawIndexedIndirect(drawResolver.getFrameData(currentFrame).indirectBuffer.buffer,
-                                                draw.first * sizeof(vk::DrawIndexedIndirectCommand), draw.count,
-                                                sizeof(vk::DrawIndexedIndirectCommand));
-                }
-            }
-        }
-        pivot::graphics::vk_debug::endRegion(drawCmd);
-        drawCmd.end();
-    }
-
     std::array<vk::CommandBuffer, 2> secondaryBuffer{drawCmd, imguiCmd};
     vk::CommandBufferBeginInfo beginInfo;
     vk_utils::vk_try(cmd.begin(&beginInfo));
-    pivot::graphics::vk_debug::beginRegion(imguiCmd, "main command", {1.f, 1.f, 1.f, 1.f});
-
-    {
-        pivot::graphics::vk_debug::beginRegion(cmd, "culling pass", {1.f, 0.f, 1.f, 1.f});
-        vk::BufferMemoryBarrier barrier{
-            .srcAccessMask = vk::AccessFlagBits::eIndirectCommandRead,
-            .dstAccessMask = vk::AccessFlagBits::eShaderWrite,
-            .srcQueueFamilyIndex = queueIndices.graphicsFamily.value(),
-            .dstQueueFamilyIndex = queueIndices.graphicsFamily.value(),
-            .buffer = drawResolver.getFrameData(currentFrame).indirectBuffer.buffer,
-            .size = drawResolver.getFrameData(currentFrame).indirectBuffer.size,
-        };
-        cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, cullingLayout, 0,
-                               drawResolver.getFrameData(currentFrame).objectDescriptor, nullptr);
-        cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, cullingLayout, 1, ressourceDescriptorSet, nullptr);
-        cmd.pushConstants<gpu_object::CullingPushConstant>(cullingLayout, vk::ShaderStageFlagBits::eCompute, 0,
-                                                           cullingCamera);
-        cmd.bindPipeline(vk::PipelineBindPoint::eCompute, cullingPipeline);
-        cmd.pipelineBarrier(vk::PipelineStageFlagBits::eDrawIndirect, vk::PipelineStageFlagBits::eComputeShader, {}, {},
-                            barrier, {});
-        cmd.dispatch((drawResolver.getFrameData(currentFrame).packedDraws.size() / 256) + 1, 1, 1);
-
-        barrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
-        barrier.dstAccessMask = vk::AccessFlagBits::eIndirectCommandRead;
-        cmd.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eDrawIndirect, {}, {},
-                            barrier, {});
-        pivot::graphics::vk_debug::endRegion(cmd);
-    }
-
+    vk_debug::beginRegion(cmd, "main command", {1.f, 1.f, 1.f, 1.f});
+    dispatchCulling(cullingCameraDataSelected, {}, cmd);
     cmd.beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
     cmd.executeCommands(secondaryBuffer);
     cmd.endRenderPass();
-    pivot::graphics::vk_debug::endRegion(cmd);
+    vk_debug::endRegion(cmd);
     cmd.end();
 
     const std::array<vk::CommandBuffer, 1> submitCmd{cmd};
@@ -297,7 +202,7 @@ try {
         .pSwapchains = &(swapchain.getSwapchain()),
         .pImageIndices = &imageIndex,
     };
-    pivot::graphics::vk_utils::vk_try(presentQueue.presentKHR(presentInfo));
+    vk_utils::vk_try(presentQueue.presentKHR(presentInfo));
     currentFrame = (currentFrame + 1) % MaxFrameInFlight;
 } catch (const vk::OutOfDateKHRError &) {
     return recreateSwapchain();

@@ -18,10 +18,8 @@ using namespace pivot::ecs::data;
 void tickSystem(const systems::Description &description, systems::Description::systemArgs &entities,
                 const event::Event &event)
 {
-    std::cout << "I'm a tick system:\n";
     for (auto combination: entities) {
         auto tag = combination[1].get();
-        std::cout << "\tEntity name = " << std::get<std::string>(std::get<Record>(tag).at("name")) << std::endl;
         std::get<std::string>(std::get<Record>(tag).at("name")) = "edit";
         combination[1].set(tag);
     }
@@ -69,6 +67,11 @@ TEST_CASE("Manager event", "[description][registration][manager]")
     systems::GlobalIndex::getSingleton().registerSystem(description);
     sManager.useSystem(description);
 
+    auto tagValue = cManager.GetComponent(entity, tagId).value();
+    auto name = std::get<std::string>(std::get<Record>(tagValue).at("name"));
+    REQUIRE(name == "oui");
     eventManager.sendEvent("Tick", Value{0.0f});
-    eventManager.sendEvent("Tick", Value{0.0f});
+    tagValue = cManager.GetComponent(entity, tagId).value();
+    name = std::get<std::string>(std::get<Record>(tagValue).at("name"));
+    REQUIRE(name == "edit");
 }

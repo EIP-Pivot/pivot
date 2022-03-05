@@ -4,7 +4,7 @@
 *.spv
 .clangd/
 .ccls-cache/
-# compile_commands.json
+compile_commands.json
 
 
 # Ignore the CMake build file

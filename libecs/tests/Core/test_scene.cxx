@@ -55,7 +55,11 @@ TEST_CASE("A scene can register components and add entities", "[component][scene
     REQUIRE(test_component_value.has_value());
     REQUIRE(test_component_value.value() == Value{Record{{"data", 42}}});
 
-    for (auto [description, value]: cm.GetAllComponents(entity)) {
+    const auto newEntityName = "Test entity modified";
+    for (auto component: cm.GetAllComponents(entity)) {
+        const Description &description = component.description();
         REQUIRE((description.name == "TestComponent" || description.name == "Tag"));
+        if (description.name == "Tag") { component.set(Value{Record{{"name", newEntityName}}}); }
     }
+    REQUIRE(scene.getEntityName(entity) == newEntityName);
 }

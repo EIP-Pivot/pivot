@@ -143,7 +143,7 @@ void VulkanBase::createAllocator()
     allocatorInfo.vulkanApiVersion = 0;
     allocatorInfo.frameInUseCount = MaxFrameInFlight;
 
-    allocator = vma::createAllocator(allocatorInfo);
+    allocator.init(allocatorInfo);
     baseDeletionQueue.push([&] { allocator.destroy(); });
 }
 

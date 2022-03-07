@@ -2,21 +2,10 @@
 #include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
+#include "pivot/graphics/VulkanBase.hxx"
+
 namespace pivot::graphics
 {
-
-AllocatedImage::AllocatedImage() {}
-
-AllocatedImage::~AllocatedImage() {}
-
-void AllocatedImage::createImage(VulkanBase &base, const vk::ImageCreateInfo &info,
-                                 const vma::AllocationCreateInfo &allocInfo)
-{
-    format = info.format;
-    size = info.extent;
-    mipLevels = info.mipLevels;
-    std::tie(image, memory) = base.allocator.createImage(info, allocInfo);
-}
 
 void AllocatedImage::createImageView(VulkanBase &base)
 {
@@ -170,12 +159,6 @@ void AllocatedImage::transitionLayout(abstract::AImmediateCommand &i, vk::ImageL
         cmd.pipelineBarrier(sourceStage, destinationStage, {}, nullptr, nullptr, barrier);
     });
     imageLayout = layout;
-}
-
-void AllocatedImage::destroy(VulkanBase &base, AllocatedImage &image)
-{
-    if (image.imageView) base.device.destroyImageView(image.imageView);
-    if (image.image && image.memory) base.allocator.destroyImage(image.image, image.memory);
 }
 
 }    // namespace pivot::graphics

@@ -5,15 +5,15 @@ bool Vertex::operator==(const Vertex &other) const noexcept
     return pos == other.pos && color == other.color && normal == other.normal && texCoord == other.texCoord;
 }
 
+bool Vertex::operator!=(const Vertex &other) const noexcept { return !(*this == other); }
+
 vk::VertexInputBindingDescription Vertex::getBindingDescription() noexcept
 {
-    vk::VertexInputBindingDescription bindingDescription{
+    return {
         .binding = 0,
         .stride = sizeof(Vertex),
         .inputRate = vk::VertexInputRate::eVertex,
     };
-
-    return bindingDescription;
 }
 
 std::vector<vk::VertexInputAttributeDescription> Vertex::getAttributeDescriptons() noexcept

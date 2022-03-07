@@ -22,6 +22,10 @@ struct Vertex {
     /// @param other The other object to compare
     /// @return true if both object are equal
     bool operator==(const Vertex &other) const noexcept;
+    /// Inequality operator overload
+    /// @param other The other object to compare
+    /// @return true if both object are different
+    bool operator!=(const Vertex &other) const noexcept;
 
     /// Get the description for Vulkan pipeline input binding
     static vk::VertexInputBindingDescription getBindingDescription() noexcept;

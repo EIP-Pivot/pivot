@@ -3,6 +3,7 @@
 #include <fstream>
 #include <stdexcept>
 
+#include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/vk_init.hxx"
 
 namespace pivot::graphics::vk_utils
@@ -35,12 +36,12 @@ vk::SampleCountFlagBits getMaxUsableSampleCount(vk::PhysicalDevice &physical_dev
 
     vk::SampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts &
                                   physicalDeviceProperties.limits.framebufferDepthSampleCounts;
-    if (counts & vk::SampleCountFlagBits::e64) { return vk::SampleCountFlagBits::e64; }
-    if (counts & vk::SampleCountFlagBits::e32) { return vk::SampleCountFlagBits::e32; }
-    if (counts & vk::SampleCountFlagBits::e16) { return vk::SampleCountFlagBits::e16; }
-    if (counts & vk::SampleCountFlagBits::e8) { return vk::SampleCountFlagBits::e8; }
-    if (counts & vk::SampleCountFlagBits::e4) { return vk::SampleCountFlagBits::e4; }
-    if (counts & vk::SampleCountFlagBits::e2) { return vk::SampleCountFlagBits::e2; }
+    if (counts & vk::SampleCountFlagBits::e64) return vk::SampleCountFlagBits::e64;
+    if (counts & vk::SampleCountFlagBits::e32) return vk::SampleCountFlagBits::e32;
+    if (counts & vk::SampleCountFlagBits::e16) return vk::SampleCountFlagBits::e16;
+    if (counts & vk::SampleCountFlagBits::e8) return vk::SampleCountFlagBits::e8;
+    if (counts & vk::SampleCountFlagBits::e4) return vk::SampleCountFlagBits::e4;
+    if (counts & vk::SampleCountFlagBits::e2) return vk::SampleCountFlagBits::e2;
 
     return vk::SampleCountFlagBits::e1;
 }
@@ -64,8 +65,43 @@ bool hasStencilComponent(vk::Format format) noexcept
     return format == vk::Format::eD32SfloatS8Uint || format == vk::Format::eD24UnormS8Uint;
 }
 
+AllocatedBuffer cloneBuffer(VulkanBase &i, const AllocatedBuffer &buffer, const vk::BufferUsageFlags usage,
+                            const vma::MemoryUsage memoryUsage)
+{
+    auto dstBuffer = i.allocator.createBuffer(buffer.size, usage, memoryUsage);
+    i.immediateCommand([&](vk::CommandBuffer &cmd) {
+        vk::BufferCopy copyRegion{
+            .srcOffset = 0,
+            .dstOffset = 0,
+            .size = buffer.size,
+        };
+        cmd.copyBuffer(buffer.buffer, dstBuffer.buffer, copyRegion);
+    });
+    return dstBuffer;
+}
+
 namespace tools
 {
+    std::string bytesToString(uint64_t bytes)
+    {
+        constexpr uint64_t GB = 1024 * 1024 * 1024;
+        constexpr uint64_t MB = 1024 * 1024;
+        constexpr uint64_t KB = 1024;
+
+        std::stringstream buffer;
+        buffer.precision(2);
+
+        if (bytes > GB)
+            buffer << uint64_t(float(bytes) / float(GB)) << " GB";
+        else if (bytes > MB)
+            buffer << uint64_t(float(bytes) / float(MB)) << " MB";
+        else if (bytes > KB)
+            buffer << uint64_t(float(bytes) / float(KB)) << " KB";
+        else
+            buffer << uint64_t(float(bytes) / float(MB)) << " bytes";
+        return buffer.str();
+    }
+
     const std::string to_string(vk::SampleCountFlagBits count) noexcept
     {
         switch (count) {

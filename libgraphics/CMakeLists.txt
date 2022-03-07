@@ -154,6 +154,7 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/SwapchainSupportDetails.cxx
                                    source/PipelineBuilders/GraphicsPipelineBuilder.cxx
                                    source/PipelineBuilders/ComputePipelineBuilder.cxx
+                                   source/VulkanAllocator.cxx
                                    source/VulkanLoader.cxx
                                    source/VulkanSwapchain.cxx
                                    source/AssetsStorage/AssetsStorage.cxx

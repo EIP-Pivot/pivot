@@ -29,10 +29,8 @@ void DrawCallResolver::destroy()
 {
     DEBUG_FUNCTION
     for (auto &frame: frames) {
-        if (frame.indirectBuffer)
-            base_ref->get().allocator.destroyBuffer(frame.indirectBuffer.buffer, frame.indirectBuffer.memory);
-        if (frame.objectBuffer)
-            base_ref->get().allocator.destroyBuffer(frame.objectBuffer.buffer, frame.objectBuffer.memory);
+        if (frame.indirectBuffer) base_ref->get().allocator.destroyBuffer(frame.indirectBuffer);
+        if (frame.objectBuffer) base_ref->get().allocator.destroyBuffer(frame.objectBuffer);
     }
     if (descriptorPool) base_ref->get().device.destroyDescriptorPool(descriptorPool);
     if (descriptorSetLayout) base_ref->get().device.destroyDescriptorSetLayout(descriptorSetLayout);
@@ -83,10 +81,9 @@ void DrawCallResolver::prepareForDraw(std::vector<std::reference_wrapper<const R
     }
 
     if (frame.currentBufferSize > 0) {
-        frame.objectBuffer.copyBuffer(base_ref->get().allocator, objectGPUData);
+        base_ref->get().allocator.copyBuffer(frame.objectBuffer, objectGPUData);
 
-        auto *sceneData =
-            (vk::DrawIndexedIndirectCommand *)base_ref->get().allocator.mapMemory(frame.indirectBuffer.memory);
+        auto *sceneData = base_ref->get().allocator.mapMemory<vk::DrawIndexedIndirectCommand>(frame.indirectBuffer);
         for (uint32_t i = 0; i < frame.packedDraws.size(); i++) {
             const auto &mesh = storage_ref->get().get<AssetStorage::Mesh>(frame.packedDraws.at(i).meshId);
 
@@ -96,7 +93,7 @@ void DrawCallResolver::prepareForDraw(std::vector<std::reference_wrapper<const R
             sceneData[i].instanceCount = 0;
             sceneData[i].firstInstance = i;
         }
-        base_ref->get().allocator.unmapMemory(frame.indirectBuffer.memory);
+        base_ref->get().allocator.unmapMemory(frame.indirectBuffer);
     }
 }
 
@@ -121,20 +118,19 @@ void DrawCallResolver::createDescriptorPool()
 
 void DrawCallResolver::createBuffers(Frame &frame, const auto bufferSize)
 {
-    if (frame.indirectBuffer)
-        base_ref->get().allocator.destroyBuffer(frame.indirectBuffer.buffer, frame.indirectBuffer.memory);
-    if (frame.objectBuffer)
-        base_ref->get().allocator.destroyBuffer(frame.objectBuffer.buffer, frame.objectBuffer.memory);
+    if (frame.indirectBuffer) base_ref->get().allocator.destroyBuffer(frame.indirectBuffer);
+    if (frame.objectBuffer) base_ref->get().allocator.destroyBuffer(frame.objectBuffer);
 
-    frame.indirectBuffer =
-        AllocatedBuffer::create(base_ref->get(), sizeof(vk::DrawIndexedIndirectCommand) * bufferSize,
-                                vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer,
-                                vma::MemoryUsage::eCpuToGpu);
+    frame.indirectBuffer = base_ref->get().allocator.createBuffer(sizeof(vk::DrawIndexedIndirectCommand) * bufferSize,
+                                                                  vk::BufferUsageFlagBits::eStorageBuffer |
+                                                                      vk::BufferUsageFlagBits::eIndirectBuffer,
+                                                                  vma::MemoryUsage::eCpuToGpu);
     vk_debug::setObjectName(base_ref->get().device, frame.indirectBuffer.buffer,
                             "Indirect Command Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
 
-    frame.objectBuffer = AllocatedBuffer::create(base_ref->get(), sizeof(gpu_object::UniformBufferObject) * bufferSize,
-                                                 vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
+    frame.objectBuffer =
+        base_ref->get().allocator.createBuffer(sizeof(gpu_object::UniformBufferObject) * bufferSize,
+                                               vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
     vk_debug::setObjectName(base_ref->get().device, frame.objectBuffer.buffer,
                             "Object Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
     frame.currentBufferSize = bufferSize;

@@ -5,12 +5,12 @@
 #include <vk_mem_alloc.hpp>
 #include <vulkan/vulkan.hpp>
 
-#include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/abstract/AImmediateCommand.hxx"
-#include "pivot/graphics/types/AllocatedBuffer.hxx"
 
 namespace pivot::graphics
 {
+
+class VulkanBase;
 
 /// @class AllocatedImage
 ///
@@ -18,15 +18,6 @@ namespace pivot::graphics
 class AllocatedImage
 {
 public:
-    /// Constructor
-    AllocatedImage();
-    /// Construct an Image and fill it with buffer
-    AllocatedImage(AllocatedBuffer &buffer);
-    /// Descriptor
-    ~AllocatedImage();
-
-    /// Create the image
-    void createImage(VulkanBase &base, const vk::ImageCreateInfo &info, const vma::AllocationCreateInfo &allocInfo);
     /// Create the image view for this image
     void createImageView(VulkanBase &base);
     /// @copydoc createImageView
@@ -35,8 +26,6 @@ public:
     void generateMipmaps(VulkanBase &base, uint32_t mipLevel);
     /// Transition image layout to given format
     void transitionLayout(abstract::AImmediateCommand &i, vk::ImageLayout layout);
-    /// Destroy a image
-    static void destroy(VulkanBase &base, AllocatedImage &image);
 
 public:
     //// @cond

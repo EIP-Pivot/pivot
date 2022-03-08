@@ -11,7 +11,6 @@
 
 namespace pivot::graphics
 {
-class VulkanBase;
 
 namespace vk_utils
 {
@@ -47,9 +46,6 @@ namespace vk_utils
     vk::Format findSupportedFormat(vk::PhysicalDevice &gpu, const std::vector<vk::Format> &candidates,
                                    vk::ImageTiling tiling, vk::FormatFeatureFlags features);
     bool hasStencilComponent(vk::Format format) noexcept;
-
-    AllocatedBuffer cloneBuffer(VulkanBase &i, const AllocatedBuffer &buffer, const vk::BufferUsageFlags usage,
-                                const vma::MemoryUsage memoryUsage);
 
     namespace tools
     {

@@ -90,7 +90,7 @@ bool VulkanApplication::dispatchCulling(const CameraData &cameraData, const vk::
         .srcQueueFamilyIndex = queueIndices.graphicsFamily.value(),
         .dstQueueFamilyIndex = queueIndices.graphicsFamily.value(),
         .buffer = drawResolver.getFrameData(currentFrame).indirectBuffer.buffer,
-        .size = drawResolver.getFrameData(currentFrame).indirectBuffer.size,
+        .size = drawResolver.getFrameData(currentFrame).indirectBuffer.getSize(),
     };
     cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, cullingLayout, 0,
                            drawResolver.getFrameData(currentFrame).objectDescriptor, nullptr);

@@ -83,7 +83,8 @@ void DrawCallResolver::prepareForDraw(std::vector<std::reference_wrapper<const R
     if (frame.currentBufferSize > 0) {
         base_ref->get().allocator.copyBuffer(frame.objectBuffer, objectGPUData);
 
-        auto *sceneData = base_ref->get().allocator.mapMemory<vk::DrawIndexedIndirectCommand>(frame.indirectBuffer);
+        auto *sceneData = frame.indirectBuffer.getMappedPointer<vk::DrawIndexedIndirectCommand>();
+        assert(sceneData);
         for (uint32_t i = 0; i < frame.packedDraws.size(); i++) {
             const auto &mesh = storage_ref->get().get<AssetStorage::Mesh>(frame.packedDraws.at(i).meshId);
 
@@ -93,7 +94,6 @@ void DrawCallResolver::prepareForDraw(std::vector<std::reference_wrapper<const R
             sceneData[i].instanceCount = 0;
             sceneData[i].firstInstance = i;
         }
-        base_ref->get().allocator.unmapMemory(frame.indirectBuffer);
     }
 }
 
@@ -121,10 +121,10 @@ void DrawCallResolver::createBuffers(Frame &frame, const auto bufferSize)
     if (frame.indirectBuffer) base_ref->get().allocator.destroyBuffer(frame.indirectBuffer);
     if (frame.objectBuffer) base_ref->get().allocator.destroyBuffer(frame.objectBuffer);
 
-    frame.indirectBuffer = base_ref->get().allocator.createBuffer(sizeof(vk::DrawIndexedIndirectCommand) * bufferSize,
-                                                                  vk::BufferUsageFlagBits::eStorageBuffer |
-                                                                      vk::BufferUsageFlagBits::eIndirectBuffer,
-                                                                  vma::MemoryUsage::eCpuToGpu);
+    frame.indirectBuffer = base_ref->get().allocator.createBuffer(
+        sizeof(vk::DrawIndexedIndirectCommand) * bufferSize,
+        vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer, vma::MemoryUsage::eCpuToGpu,
+        vma::AllocationCreateFlagBits::eMapped);
     vk_debug::setObjectName(base_ref->get().device, frame.indirectBuffer.buffer,
                             "Indirect Command Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
 

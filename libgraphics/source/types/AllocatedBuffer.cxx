@@ -6,9 +6,6 @@
 namespace pivot::graphics
 {
 
-AllocatedBuffer::AllocatedBuffer() {}
-
-AllocatedBuffer::~AllocatedBuffer() {}
 void AllocatedBuffer::copyToImage(abstract::AImmediateCommand &i, AllocatedImage &dstImage) const
 {
     i.immediateCommand([&](vk::CommandBuffer &cmd) {
@@ -32,12 +29,12 @@ void AllocatedBuffer::copyToImage(abstract::AImmediateCommand &i, AllocatedImage
 
 AllocatedBuffer AllocatedBuffer::cloneBuffer(VulkanBase &i, vk::BufferUsageFlags usage, vma::MemoryUsage memoryUsage)
 {
-    auto dstBuffer = i.allocator.createBuffer(size, usage, memoryUsage);
+    auto dstBuffer = i.allocator.createBuffer(getSize(), usage, memoryUsage);
     i.immediateCommand([&](vk::CommandBuffer &cmd) {
         vk::BufferCopy copyRegion{
             .srcOffset = 0,
             .dstOffset = 0,
-            .size = size,
+            .size = getSize(),
         };
         cmd.copyBuffer(buffer, dstBuffer.buffer, copyRegion);
     });

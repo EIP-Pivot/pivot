@@ -311,7 +311,7 @@ void VulkanApplication::createDescriptorPool()
         },
         {
             .type = vk::DescriptorType::eStorageBuffer,
-            .descriptorCount = assetStorage.getMaterialBuffer().size,
+            .descriptorCount = static_cast<uint32_t>(assetStorage.getMaterialBuffer().getSize()),
         },
     };
 
@@ -355,13 +355,13 @@ void VulkanApplication::createRessourcesDescriptorSets()
     vk::DescriptorBufferInfo materialInfo{
         .buffer = materialBuffer.buffer,
         .offset = 0,
-        .range = materialBuffer.size,
+        .range = materialBuffer.getSize(),
     };
     auto &boundingBoxBuffer = assetStorage.getBoundingBoxBuffer();
     vk::DescriptorBufferInfo boundingBoxInfo{
         .buffer = boundingBoxBuffer.buffer,
         .offset = 0,
-        .range = boundingBoxBuffer.size,
+        .range = boundingBoxBuffer.getSize(),
     };
     std::vector<vk::WriteDescriptorSet> descriptorWrite{
         {

@@ -25,8 +25,8 @@ AllocatedBuffer VulkanAllocator::createBuffer(const vk::DeviceSize &allocSize, c
     vma::AllocationCreateInfo vmaallocInfo;
     vmaallocInfo.usage = memoryUsage;
     vmaallocInfo.flags = flags;
-    AllocatedBuffer buffer{};
-    std::tie(buffer.buffer, buffer.memory) = allocator.createBuffer(bufferInfo, vmaallocInfo);
+    AllocatedBuffer buffer;
+    std::tie(buffer.buffer, buffer.memory) = allocator.createBuffer(bufferInfo, vmaallocInfo, buffer.info);
     buffer.size = allocSize;
     return buffer;
 }

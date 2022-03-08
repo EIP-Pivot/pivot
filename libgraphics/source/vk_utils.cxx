@@ -3,7 +3,6 @@
 #include <fstream>
 #include <stdexcept>
 
-#include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/vk_init.hxx"
 
 namespace pivot::graphics::vk_utils
@@ -63,21 +62,6 @@ vk::Format findSupportedFormat(vk::PhysicalDevice &gpu, const std::vector<vk::Fo
 bool hasStencilComponent(vk::Format format) noexcept
 {
     return format == vk::Format::eD32SfloatS8Uint || format == vk::Format::eD24UnormS8Uint;
-}
-
-AllocatedBuffer cloneBuffer(VulkanBase &i, const AllocatedBuffer &buffer, const vk::BufferUsageFlags usage,
-                            const vma::MemoryUsage memoryUsage)
-{
-    auto dstBuffer = i.allocator.createBuffer(buffer.size, usage, memoryUsage);
-    i.immediateCommand([&](vk::CommandBuffer &cmd) {
-        vk::BufferCopy copyRegion{
-            .srcOffset = 0,
-            .dstOffset = 0,
-            .size = buffer.size,
-        };
-        cmd.copyBuffer(buffer.buffer, dstBuffer.buffer, copyRegion);
-    });
-    return dstBuffer;
 }
 
 namespace tools

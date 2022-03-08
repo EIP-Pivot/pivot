@@ -16,10 +16,15 @@ class AllocatedImage;
 class AllocatedBuffer
 {
 public:
-    /// Constructor
-    AllocatedBuffer();
-    /// Destructor
-    ~AllocatedBuffer();
+    auto getSize() const noexcept { return size; }
+    auto getTrueSize() const noexcept { return info.size; }
+
+    template <typename T>
+    /// If the buffer was created with the flag vma::AllocationCreateFlagBits::eMapped, return the mapped pointer
+    T *getMappedPointer() const noexcept
+    {
+        return static_cast<T *>(info.pMappedData);
+    }
 
     /// Clone the buffer into a new one
     AllocatedBuffer cloneBuffer(VulkanBase &i, const vk::BufferUsageFlags usage, const vma::MemoryUsage memoryUsage);
@@ -33,8 +38,8 @@ public:
     //// @cond
     vk::Buffer buffer = VK_NULL_HANDLE;
     vma::Allocation memory = VK_NULL_HANDLE;
-    std::uint32_t size = 0;
-
+    vk::DeviceSize size = 0;
+    vma::AllocationInfo info;
     //// @endcond
 };
 

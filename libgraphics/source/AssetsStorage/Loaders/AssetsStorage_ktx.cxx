@@ -1,7 +1,6 @@
 #include "pivot/graphics/AssetStorage.hxx"
 
 #include <ktx.h>
-#include <ktxvulkan.h>
 
 namespace pivot::graphics
 {

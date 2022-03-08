@@ -23,15 +23,20 @@ jobs:
         with:
           submodules: recursive
 
+      - uses: actions/cache@v2
+        with:
+            path: ${{ github.workspace }}/build/_deps
+            key: ${{ runner.os }}-build-${{ matrix.build_type }}-${{ github.ref_name }}
+
       - name: Configure CMake
         run: cmake
-          -B ${{github.workspace}}/build
-          -D CMAKE_CXX_COMPILER=${{matrix.cxx_compiler}}
+          -B ${{ github.workspace }}/build
+          -D CMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }}
 
       - name: Build lib
         run: cmake
-          --build ${{github.workspace}}/build
-          --config ${{matrix.build_type}}
+          --build ${{ github.workspace }}/build
+          --config ${{ matrix.build_type }}
 
       - name: Run tests
         run: ctest --test-dir build
@@ -56,14 +61,19 @@ jobs:
         with:
           submodules: recursive
 
+      - uses: actions/cache@v2
+        with:
+            path: ${{ github.workspace }}/build/_deps
+            key: ${{ runner.os }}-build-${{ matrix.build_type }}-${{ github.ref_name }}
+
       - name: Configure CMake
         run: cmake
-          -B ${{github.workspace}}/build
+          -B ${{ github.workspace }}/build
 
       - name: Build lib
         run: cmake
-          --build ${{github.workspace}}/build
-          --config ${{matrix.build_type}}
+          --build ${{ github.workspace }}/build
+          --config ${{ matrix.build_type }}
 
       - name: Run tests
-        run: ctest --test-dir build -C ${{matrix.build_type}}
+        run: ctest --test-dir build -C ${{ matrix.build_type }}

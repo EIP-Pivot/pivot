@@ -15,13 +15,11 @@ else()
     message(STATUS "LTO not supported")
 endif()
 
-
-if(MSVC)
-    # see https://gitlab.kitware.com/cmake/cmake/-/issues/22606
+if (MSVC AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.29.30129 AND CMAKE_VERSION VERSION_GREATER 3.20.3)
     set(CMAKE_CXX_STANDARD 23)
-else()
+else ()
     set(CMAKE_CXX_STANDARD 20)
-endif()
+endif ()
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)

@@ -1,10 +1,8 @@
 #pragma once
 
 #include "pivot/graphics/interface/IPipelineBuilder.hxx"
-#include "pivot/graphics/types/Vertex.hxx"
-#include "pivot/graphics/vk_init.hxx"
 
-#include <vector>
+#include <optional>
 #include <vulkan/vulkan.hpp>
 
 namespace pivot::graphics
@@ -21,21 +19,34 @@ public:
     GraphicsPipelineBuilder(const vk::Extent2D &);
     ~GraphicsPipelineBuilder();
 
-    GraphicsPipelineBuilder &setPipelineLayout(vk::PipelineLayout &);
+    const char *const getDebugPipelineName() const noexcept { return "Graphics Pipeline"; }
+
+    GraphicsPipelineBuilder &setPipelineLayout(vk::PipelineLayout &) noexcept;
 
     /// Set the renderPass use by the pipeline, can be chained
-    GraphicsPipelineBuilder &setRenderPass(vk::RenderPass &);
+    GraphicsPipelineBuilder &setRenderPass(vk::RenderPass &) noexcept;
 
     /// Set the path of the vertex shader to use, can be chained
-    GraphicsPipelineBuilder &setVertexShaderPath(const std::string &);
+    GraphicsPipelineBuilder &setVertexShaderPath(const std::string &) noexcept;
     /// Set the path of the fragment shader to use, can be chained
-    GraphicsPipelineBuilder &setFragmentShaderPath(const std::string &);
+    GraphicsPipelineBuilder &setFragmentShaderPath(const std::string &) noexcept;
+    /// Set the path of the geometry shader to use, can be chained
+    GraphicsPipelineBuilder &setGeometryShaderPath(const std::string &) noexcept;
+    /// Set the path of the tessellation evaluation shader to use, can be chained
+    GraphicsPipelineBuilder &setTessellationEvaluationShaderPath(const std::string &) noexcept;
+    /// Set the path of the tessellation control shader to use, can be chained
+    GraphicsPipelineBuilder &setTessellationControlShaderPath(const std::string &) noexcept;
     /// Set the amount of super sampling, can be chained
-    GraphicsPipelineBuilder &setMsaaSample(vk::SampleCountFlagBits &);
+    GraphicsPipelineBuilder &setMsaaSample(const vk::SampleCountFlagBits &) noexcept;
     /// Set the rasterizer' polygon mode, can be chained
-    GraphicsPipelineBuilder &setPolygonMode(vk::PolygonMode &);
+    GraphicsPipelineBuilder &setPolygonMode(const vk::PolygonMode &) noexcept;
     /// Set the rasterizer' face culling config, can be chained
-    GraphicsPipelineBuilder &setFaceCulling(vk::CullModeFlags, vk::FrontFace);
+    GraphicsPipelineBuilder &setFaceCulling(const vk::CullModeFlags &, const vk::FrontFace &) noexcept;
+
+    /// Return the vertex description vector
+    std::vector<vk::VertexInputBindingDescription> &getVertexDescription() noexcept;
+    /// Return the vertex attributes vector
+    std::vector<vk::VertexInputAttributeDescription> &getVertexAttributes() noexcept;
 
     /// Build the Vulkan pipeline
     ///
@@ -44,7 +55,11 @@ public:
 
 private:
     std::string vertexShaderPath;
-    std::string fragmentShaderPath;
+    std::optional<std::string> fragmentShaderPath;
+    std::optional<std::string> geometryShaderPath;
+    std::optional<std::string> tessellationControlShaderPath;
+    std::optional<std::string> tessellationEvaluationShaderPath;
+
     vk::PipelineInputAssemblyStateCreateInfo inputAssembly;
     vk::PipelineColorBlendAttachmentState colorBlendAttachment;
     vk::PipelineMultisampleStateCreateInfo multisampling;
@@ -54,6 +69,8 @@ private:
     vk::Rect2D scissor;
     vk::PipelineLayout pipelineLayout;
     vk::RenderPass renderPass;
+    std::vector<vk::VertexInputBindingDescription> vertexDescription;
+    std::vector<vk::VertexInputAttributeDescription> vertexAttributes;
 };
 
 }    // namespace pivot::graphics

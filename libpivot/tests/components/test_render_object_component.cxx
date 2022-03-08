@@ -33,12 +33,14 @@ TEST_CASE("RenderObject component works", "[graphics][component]")
     auto array = description.createContainer(description);
 
     const auto data =
-        R"({"meshID": "sponza","materialIndex":"blue","transform":{"scale": [1,2,3], "position": [5, 5, 5], "rotation": [0, 2.7, 0.4]}})";
+        R"({"meshID": "sponza","pipelineID":"default", "materialIndex":"blue","transform":{"scale": [1,2,3], "position": [5, 5, 5], "rotation": [0, 2.7, 0.4]}})";
 
     REQUIRE_NOTHROW(array->setValueForEntity(0, json::parse(data).get<Value>()));
 
-    const RenderObject expected{
-        .meshID = "sponza", .materialIndex = "blue", .transform = {{5, 5, 5}, {0, 2.7, 0.4}, {1, 2, 3}}
+    const RenderObject expected{.meshID = "sponza",
+                                .pipelineID = "default",
+                                .materialIndex = "blue",
+                                .transform = {{5, 5, 5}, {0, 2.7, 0.4}, {1, 2, 3}}
 
     };
     const RenderObject &renderObject = dynamic_cast<DenseTypedComponentArray<RenderObject> &>(*array).getData().front();

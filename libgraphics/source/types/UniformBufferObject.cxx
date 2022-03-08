@@ -1,5 +1,6 @@
 #include "pivot/graphics/types/UniformBufferObject.hxx"
 #include "pivot/graphics/types/Material.hxx"
+#include "pivot/graphics/types/MeshBoundingBox.hxx"
 
 template <class T>
 static inline std::optional<std::uint32_t> getDefault(const pivot::graphics::AssetStorage &stor,

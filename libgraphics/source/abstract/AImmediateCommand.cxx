@@ -1,6 +1,5 @@
 #include "pivot/graphics/abstract/AImmediateCommand.hxx"
 
-#include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
 namespace pivot::graphics::abstract

@@ -11,6 +11,8 @@
 struct RenderObject {
     /// Id of the mesh to use. The id is the stem of the file
     std::string meshID;
+    /// Id of the pipeline to use
+    std::string pipelineID;
     /// The name of the material to use on the object
     std::string materialIndex;
     /// The object transform

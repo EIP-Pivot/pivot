@@ -9,5 +9,5 @@ BOOST_FUSION_ADAPT_STRUCT(Transform, position, rotation, scale);
 
 template struct pivot::ecs::component::helpers::Helpers<Transform>;
 
-BOOST_FUSION_ADAPT_STRUCT(RenderObject, meshID, materialIndex, transform);
+BOOST_FUSION_ADAPT_STRUCT(RenderObject, meshID, pipelineID, materialIndex, transform);
 PIVOT_REGISTER_COMPONENT(RenderObject, DenseTypedComponentArray<RenderObject>);

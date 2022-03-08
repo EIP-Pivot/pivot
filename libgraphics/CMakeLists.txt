@@ -46,9 +46,9 @@ if (NOT tinygltf_POPULATED)
     add_subdirectory(${tinygltf_SOURCE_DIR} ${tinygltf_SOURCE_DIR})
     target_compile_definitions(tinygltf PUBLIC TINYGLTF_NO_STB_IMAGE
                                         TINYGLTF_NO_STB_IMAGE_WRITE
-                                        TINYGLTF_NO_INCLUDE_STB_IMAGE 
-                                        TINYGLTF_NO_INCLUDE_STB_IMAGE_WRITE 
-                                        TINYGLTF_NO_EXTERNAL_IMAGE 
+                                        TINYGLTF_NO_INCLUDE_STB_IMAGE
+                                        TINYGLTF_NO_INCLUDE_STB_IMAGE_WRITE
+                                        TINYGLTF_NO_EXTERNAL_IMAGE
                                         TINYGLTF_NO_INCLUDE_RAPIDJSON
     )
 endif()
@@ -163,12 +163,14 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/AssetsStorage/Loaders/AssetsStorage_ktx.cxx
                                    source/VulkanApplication/VulkanApplication.cxx
                                    source/VulkanApplication/VulkanApplication_init.cxx
+                                   source/VulkanApplication/VulkanApplication_draw.cxx
                                    source/VulkanBase/VulkanBase.cxx
                                    source/VulkanBase/VulkanBase_init.cxx
                                    source/VulkanBase/VulkanBase_static.cxx
                                    source/abstract/AImmediateCommand.cxx
                                    source/culling.cxx
                                    source/DrawCallResolver.cxx
+                                   source/PipelineStorage.cxx
 )
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE <vulkan/vulkan.hpp> <vk_mem_alloc.hpp>)
@@ -180,8 +182,9 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
   VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1
 )
 
-add_shader(${PROJECT_NAME} triangle.vert)
-add_shader(${PROJECT_NAME} triangle.frag)
+add_shader(${PROJECT_NAME} default.vert)
+add_shader(${PROJECT_NAME} default_lit.frag)
+add_shader(${PROJECT_NAME} default_unlit.frag)
 add_shader(${PROJECT_NAME} culling.comp)
 
 target_include_directories(${PROJECT_NAME} PUBLIC include/)

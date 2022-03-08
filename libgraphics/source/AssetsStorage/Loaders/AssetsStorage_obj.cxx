@@ -2,7 +2,6 @@
 
 #include "pivot/graphics/DebugMacros.hxx"
 
-#include <glm/gtc/type_ptr.hpp>
 #include <tiny_obj_loader.h>
 
 namespace pivot::graphics

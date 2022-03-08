@@ -6,10 +6,8 @@
 #include <boost/fusion/include/adapt_struct.hpp>
 
 BOOST_FUSION_ADAPT_STRUCT(Transform, position, rotation, scale);
-namespace pivot::ecs::component::helpers
-{
-template struct Helpers<Transform>;
-}
+
+template struct pivot::ecs::component::helpers::Helpers<Transform>;
 
 BOOST_FUSION_ADAPT_STRUCT(RenderObject, meshID, materialIndex, transform);
 PIVOT_REGISTER_COMPONENT(RenderObject, DenseTypedComponentArray<RenderObject>);

@@ -16,8 +16,10 @@ class AllocatedImage;
 class AllocatedBuffer
 {
 public:
+    /// get the size of the buffer
     auto getSize() const noexcept { return size; }
-    auto getTrueSize() const noexcept { return info.size; }
+    /// get the allocated size (can be different from the size)
+    auto getAllocatedSize() const noexcept { return info.size; }
 
     template <typename T>
     /// If the buffer was created with the flag vma::AllocationCreateFlagBits::eMapped, return the mapped pointer

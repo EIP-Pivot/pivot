@@ -19,10 +19,7 @@ TEST_CASE("transform adapter work", "[graphics]")
     Value transform_value = json::parse(R"({"scale": [1,2,3], "position": [5, 5, 5], "rotation": [0, 2.7, 0.4]})");
     helpers::Helpers<Transform>::updateTypeWithValue(transform, transform_value);
 
-    Transform expected;
-    expected.position = {5, 5, 5};
-    expected.rotation = {0, 2.7, 0.4};
-    expected.scale = {1, 2, 3};
+    Transform expected{{5, 5, 5}, {0, 2.7, 0.4}, {1, 2, 3}};
     Value expected_value = helpers::Helpers<Transform>::createValueFromType(expected);
 
     REQUIRE(transform_value.type() == expected_value.type());
@@ -41,7 +38,7 @@ TEST_CASE("RenderObject component works", "[graphics][component]")
     REQUIRE_NOTHROW(array->setValueForEntity(0, json::parse(data).get<Value>()));
 
     const RenderObject expected{
-        .meshID = "sponza", .materialIndex = "blue", .transform = Transform({5, 5, 5}, {0, 2.7, 0.4}, {1, 2, 3})
+        .meshID = "sponza", .materialIndex = "blue", .transform = {{5, 5, 5}, {0, 2.7, 0.4}, {1, 2, 3}}
 
     };
     const RenderObject &renderObject = dynamic_cast<DenseTypedComponentArray<RenderObject> &>(*array).getData().front();

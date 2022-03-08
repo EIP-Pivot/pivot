@@ -65,12 +65,9 @@ void DrawCallResolver::prepareForDraw(std::vector<std::reference_wrapper<const R
                 .first = drawCount++,
                 .count = 1,
             });
-            objectGPUData.push_back(gpu_object::UniformBufferObject(
-                {
-                    .meshID = model,
-                    .objectInformation = object.get().objectInformation,
-                },
-                *storage_ref));
+            auto obj = object.get();
+            obj.meshID = model;
+            objectGPUData.push_back(gpu_object::UniformBufferObject(obj, *storage_ref));
         }
     }
     assert(frame.packedDraws.size() == objectGPUData.size());

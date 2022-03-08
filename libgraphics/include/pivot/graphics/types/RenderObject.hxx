@@ -13,19 +13,11 @@ struct RenderObject {
     std::string meshID;
     /// Id of the pipeline to use
     std::string pipelineID;
+    /// The name of the material to use on the object
+    std::string materialIndex;
+    /// The object transform
+    Transform transform;
 
-    /// @class ObjectInformation
-    ///
-    /// @brief Hold the information of the 3D object, on the CPU-side
-    struct ObjectInformation {
-        /// The object transform
-        Transform transform;
-        /// The name of the texture to apply on the object
-        std::optional<std::string> textureIndex;
-        /// The name of the material to use on the object
-        std::optional<std::string> materialIndex;
-    }
-    /// The informations about the object
-    /// @see ObjectInformation
-    objectInformation;
+    /// Default comparison operator
+    auto operator<=>(const RenderObject &) const = default;
 };

@@ -39,6 +39,8 @@ void from_json(const nlohmann::json &json, Value &value)
     }
 }
 
+std::ostream &operator<<(std::ostream &stream, const Record &type) { return stream << nlohmann::json(type).dump(); }
+std::ostream &operator<<(std::ostream &stream, const Value &type) { return stream << nlohmann::json(type).dump(); }
 }    // namespace pivot::ecs::data
 
 namespace nlohmann

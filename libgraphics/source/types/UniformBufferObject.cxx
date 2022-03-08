@@ -7,9 +7,9 @@ static inline std::optional<std::uint32_t> getDefault(const pivot::graphics::Ass
                                                       const std::optional<std::string> &value,
                                                       const std::optional<std::string> &defaultValue)
 {
-    if (value)
+    if (value && !value->empty())
         return stor.getIndex<T>(value.value());
-    else if (defaultValue)
+    else if (defaultValue && !defaultValue->empty())
         return stor.getIndex<T>(defaultValue.value());
     else
         return std::nullopt;
@@ -18,12 +18,12 @@ static inline std::optional<std::uint32_t> getDefault(const pivot::graphics::Ass
 namespace pivot::graphics::gpu_object
 {
 UniformBufferObject::UniformBufferObject(const RenderObject &obj, const AssetStorage &assetStorage)
-    : modelMatrix(obj.objectInformation.transform.getModelMatrix())
+    : modelMatrix(obj.transform.getModelMatrix())
 
 {
     const auto &model = assetStorage.get<AssetStorage::Model>(obj.meshID);
 
-    auto tmpIndex = getDefault<Material>(assetStorage, obj.objectInformation.materialIndex, model.default_material);
+    auto tmpIndex = getDefault<Material>(assetStorage, obj.materialIndex, model.default_material);
     if (!tmpIndex || tmpIndex.value() == std::uint32_t(-1))
         throw AssetStorage::AssetStorageException("Missing material for "
                                                   "obj " +

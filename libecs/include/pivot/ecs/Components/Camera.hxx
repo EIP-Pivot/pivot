@@ -1,7 +1,5 @@
 #pragma once
 
-#include <pivot/graphics/types/vk_types.hxx>
-
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
@@ -53,22 +51,6 @@ public:
 
     /// Get camera view
     inline glm::mat4 getView() const { return glm::lookAt(position, position + front, up); }
-
-    /// Get CameraData of the camera
-    pivot::graphics::CameraData getGPUCameraData(float fFOV, float fAspectRatio,
-                                                 float fCloseClippingPlane = PIVOT_MIN_PROJECTION_LIMIT,
-                                                 float fFarClippingPlane = PIVOT_MAX_PROJECTION_LIMIT) const
-    {
-        auto projection = getProjection(fFOV, fAspectRatio, fCloseClippingPlane, fFarClippingPlane);
-        projection[1][1] *= -1;
-        auto view = getView();
-        return {
-            .position = position,
-            .view = view,
-            .projection = projection,
-            .viewProjection = projection * view,
-        };
-    }
 
     /// @cond
     void updateCameraVectors()

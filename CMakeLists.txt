@@ -114,11 +114,11 @@ include(cmake/tests.cmake)
 
 add_subdirectory(libecs/)
 add_subdirectory(libgraphics/)
-target_link_libraries(pivot-ecs PUBLIC pivot-graphics)
+add_subdirectory(libpivot/)
 
-add_library(pivot INTERFACE)
-target_link_libraries(pivot INTERFACE pivot-graphics pivot-ecs)
-
+add_library(pivot::pivot ALIAS pivot)
+add_library(pivot::graphics ALIAS pivot-graphics)
+add_library(pivot::ecs ALIAS pivot-ecs)
 
 target_compile_options(pivot-ecs PRIVATE
      $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
@@ -127,6 +127,12 @@ target_compile_options(pivot-ecs PRIVATE
           /W3 /wd4267 /wd4201 /wd4244>)
 
 target_compile_options(pivot-graphics PRIVATE
+     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+          -Wall>
+     $<$<CXX_COMPILER_ID:MSVC>:
+          /W3 /wd4267 /wd4201 /wd4244>)
+
+target_compile_options(pivot PRIVATE
      $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
           -Wall>
      $<$<CXX_COMPILER_ID:MSVC>:

@@ -109,7 +109,7 @@ FetchContent_Declare(
 if (NOT imgui_POPULATED)
     message(STATUS "Populating imgui")
     FetchContent_Populate(imgui)
-    add_library(imgui ${imgui_SOURCE_DIR}/imgui.cpp
+    add_library(imgui STATIC ${imgui_SOURCE_DIR}/imgui.cpp
 
                     ${imgui_SOURCE_DIR}/imgui_draw.cpp
                     ${imgui_SOURCE_DIR}/imgui_widgets.cpp
@@ -132,7 +132,7 @@ FetchContent_Declare(
 if (NOT imguizmo_POPULATED)
     message(STATUS "Populating imguizmo")
     FetchContent_Populate(imguizmo)
-    add_library(imguizmo ${imguizmo_SOURCE_DIR}/ImGuizmo.cpp
+    add_library(imguizmo STATIC ${imguizmo_SOURCE_DIR}/ImGuizmo.cpp
                     ${imguizmo_SOURCE_DIR}/ImCurveEdit.cpp
                     ${imguizmo_SOURCE_DIR}/GraphEditor.cpp
                     ${imguizmo_SOURCE_DIR}/ImGradient.cpp

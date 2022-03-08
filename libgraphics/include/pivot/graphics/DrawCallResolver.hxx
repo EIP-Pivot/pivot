@@ -82,8 +82,8 @@ public:
 
 private:
     void createDescriptorPool();
-    void createBuffers(Frame &frame, const auto bufferSize);
-    void createDescriptorSets(Frame &frame, const auto bufferSize);
+    void createBuffers(Frame &frame, const vk::DeviceSize bufferSize);
+    void createDescriptorSets(Frame &frame, const vk::DeviceSize bufferSize);
     void createDescriptorSetLayout();
 
 private:

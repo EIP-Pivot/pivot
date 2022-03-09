@@ -1,11 +1,10 @@
 #include "pivot/internal/camera.hxx"
 
-namespace pivot::internal
+namespace pivot::internals
 {
 
-graphics::CameraData getGPUCameraData(Camera camera, float fFOV, float fAspectRatio,
-                                      float fCloseClippingPlane = PIVOT_MIN_PROJECTION_LIMIT,
-                                      float fFarClippingPlane = PIVOT_MAX_PROJECTION_LIMIT)
+graphics::CameraData getGPUCameraData(Camera camera, float fFOV, float fAspectRatio, float fCloseClippingPlane,
+                                      float fFarClippingPlane)
 {
     auto projection = camera.getProjection(fFOV, fAspectRatio, fCloseClippingPlane, fFarClippingPlane);
     projection[1][1] *= -1;
@@ -18,4 +17,4 @@ graphics::CameraData getGPUCameraData(Camera camera, float fFOV, float fAspectRa
     };
 }
 
-}    // namespace pivot::internal
+}    // namespace pivot::internals

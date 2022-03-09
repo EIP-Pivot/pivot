@@ -14,23 +14,21 @@
 class Transform
 {
 public:
-    /// Default ctor
-    Transform() = default;
-
     /// Constructor from vector
-    inline Transform(const glm::vec3 &translation, const glm::vec3 &rotation, const glm::vec3 &scale)
+    Transform(const glm::vec3 &translation = {}, const glm::vec3 &rotation = {},
+              const glm::vec3 &scale = glm::vec3(1.0f))
         : position(translation), rotation(rotation), scale(scale)
     {
     }
 
     /// Get the model matrix
-    inline glm::mat4 getModelMatrix() const noexcept { return recomposeMatrix(*this); }
+    glm::mat4 getModelMatrix() const noexcept { return recomposeMatrix(*this); }
 
     /// Default equality operator
     bool operator==(const Transform &) const = default;
 
 private:
-    inline static glm::mat4 recomposeMatrix(const Transform &tran)
+    static glm::mat4 recomposeMatrix(const Transform &tran)
     {
         return glm::translate(glm::mat4(1.0f), tran.position) * glm::toMat4(glm::quat(tran.rotation)) *
                glm::scale(glm::mat4(1.0f), tran.scale);

@@ -95,7 +95,7 @@ void AllocatedImage::generateMipmaps(VulkanBase &base, uint32_t mipLevel)
     mipLevels = mipLevel;
 }
 
-void AllocatedImage::transitionLayout(abstract::AImmediateCommand &i, vk::ImageLayout layout)
+void AllocatedImage::transitionLayout(VulkanBase &i, vk::ImageLayout layout)
 {
     if (imageLayout == layout) {
         logger.warn("Transition layout") << "Transfert layout is unecessary, already " << vk::to_string(layout);

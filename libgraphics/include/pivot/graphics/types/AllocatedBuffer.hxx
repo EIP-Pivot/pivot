@@ -3,12 +3,9 @@
 #include <vk_mem_alloc.hpp>
 #include <vulkan/vulkan.hpp>
 
-#include "pivot/graphics/abstract/AImmediateCommand.hxx"
-
 namespace pivot::graphics
 {
 class VulkanBase;
-class AllocatedImage;
 
 /// @class AllocatedBuffer
 ///
@@ -29,10 +26,9 @@ public:
     }
 
     /// Clone the buffer into a new one
-    AllocatedBuffer cloneBuffer(VulkanBase &i, const vk::BufferUsageFlags usage, const vma::MemoryUsage memoryUsage);
+    AllocatedBuffer cloneBuffer(VulkanBase &i, const vk::BufferUsageFlags usage, const vma::MemoryUsage memoryUsage,
+                                uint32_t size = 0);
 
-    /// Copy buffer to image
-    void copyToImage(abstract::AImmediateCommand &, AllocatedImage &dstImage) const;
     /// Test if the Vulkan buffer is created
     operator bool() const noexcept { return buffer && memory; }
 

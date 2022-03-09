@@ -5,8 +5,6 @@
 #include <vk_mem_alloc.hpp>
 #include <vulkan/vulkan.hpp>
 
-#include "pivot/graphics/abstract/AImmediateCommand.hxx"
-
 namespace pivot::graphics
 {
 
@@ -25,7 +23,7 @@ public:
     /// Generate mipmaps for the image
     void generateMipmaps(VulkanBase &base, uint32_t mipLevel);
     /// Transition image layout to given format
-    void transitionLayout(abstract::AImmediateCommand &i, vk::ImageLayout layout);
+    void transitionLayout(VulkanBase &i, vk::ImageLayout layout);
 
 public:
     //// @cond

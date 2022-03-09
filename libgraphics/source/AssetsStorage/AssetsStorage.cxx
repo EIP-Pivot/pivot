@@ -156,7 +156,7 @@ void AssetStorage::pushTexturesOnGPU()
         auto image = base_ref->get().allocator.createImage(imageInfo, allocInfo);
         image.createImageView(base_ref->get());
         image.transitionLayout(base_ref->get(), vk::ImageLayout::eTransferDstOptimal);
-        stagingBuffer.copyToImage(base_ref->get(), image);
+        base_ref->get().copyBufferToImage(stagingBuffer, image);
         image.generateMipmaps(base_ref->get(), image.mipLevels);
 
         base_ref->get().allocator.destroyBuffer(stagingBuffer);

@@ -58,6 +58,28 @@ void AImmediateCommand::immediateCommand(std::function<void(vk::CommandBuffer &)
     device_ref->get().resetFences(immediateFence);
     device_ref->get().resetCommandPool(immediateCommandPool);
 }
+
+void AImmediateCommand::copyBufferToImage(const AllocatedBuffer &srcBuffer, AllocatedImage &dstImage)
+{
+    immediateCommand([&](vk::CommandBuffer &cmd) {
+        vk::BufferImageCopy region{
+            .bufferOffset = 0,
+            .bufferRowLength = 0,
+            .bufferImageHeight = 0,
+            .imageSubresource =
+                {
+                    .aspectMask = vk::ImageAspectFlagBits::eColor,
+                    .mipLevel = 0,
+                    .baseArrayLayer = 0,
+                    .layerCount = 1,
+                },
+            .imageOffset = {0, 0, 0},
+            .imageExtent = dstImage.size,
+        };
+        cmd.copyBufferToImage(srcBuffer.buffer, dstImage.image, vk::ImageLayout::eTransferDstOptimal, region);
+    });
+}
+
 void AImmediateCommand::createImmediateContext(const uint32_t queueFamilyIndex)
 {
     vk::FenceCreateInfo fenceInfo{};

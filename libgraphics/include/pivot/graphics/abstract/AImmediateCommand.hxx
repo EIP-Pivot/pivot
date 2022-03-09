@@ -1,6 +1,10 @@
 #pragma once
 
+#include "pivot/graphics/types/AllocatedBuffer.hxx"
+#include "pivot/graphics/types/AllocatedImage.hxx"
 #include "pivot/graphics/types/common.hxx"
+
+#include <vulkan/vulkan.hpp>
 
 namespace pivot::graphics::abstract
 {
@@ -22,6 +26,9 @@ public:
 
     /// Perform an command on the GPU immediately and wait for it to complete
     void immediateCommand(std::function<void(vk::CommandBuffer &)> cmd);
+
+    /// Copy buffer to image
+    void copyBufferToImage(const AllocatedBuffer &srdBuffer, AllocatedImage &dstImage);
 
 private:
     void createImmediateContext(const uint32_t queueFamilyIndex);

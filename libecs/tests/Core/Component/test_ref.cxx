@@ -25,4 +25,6 @@ TEST_CASE("Component refs works", "[component]")
 
     ref = original_tag;
     REQUIRE(array->getValueForEntity(0) == original_tag);
+
+    REQUIRE(ref.description() == description);
 }

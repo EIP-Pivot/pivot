@@ -5,6 +5,7 @@
 #include <ranges>
 
 #include "pivot/ecs/Core/Component/array.hxx"
+#include "pivot/ecs/Core/Component/ref.hxx"
 #include "pivot/ecs/Core/EcsException.hxx"
 #include "pivot/ecs/Core/types.hxx"
 
@@ -55,13 +56,9 @@ public:
     /// Returns a range containing all components of the entity
     auto GetAllComponents(Entity entity)
     {
-        auto components =
-            std::views::transform(m_componentArrays, [entity](std::unique_ptr<IComponentArray> &component_array) {
-                return std::make_pair(component_array->getDescription(), component_array->getValueForEntity(entity));
-            });
-        auto filtered = std::views::filter(components, [](auto pair) { return pair.second.has_value(); });
-        return std::views::transform(filtered,
-                                     [](auto pair) { return std::make_pair(pair.first, pair.second.value()); });
+        return m_componentArrays |
+               std::views::filter([entity](const auto &array) { return array->entityHasValue(entity); }) |
+               std::views::transform([entity](auto &array) { return ComponentRef(*array, entity); });
     }
 };
 }    // namespace pivot::ecs::component

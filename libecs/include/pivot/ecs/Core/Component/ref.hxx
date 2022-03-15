@@ -16,6 +16,9 @@ public:
     /// Basic ComponentRef constructor
     ComponentRef(IComponentArray &array, Entity entity): m_array(array), m_entity(entity) {}
 
+    /// Get the description of the component
+    const Description &description() const;
+
     /// Throws MissingComponent error if the component has no value
     data::Value get() const;
 

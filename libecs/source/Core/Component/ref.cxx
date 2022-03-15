@@ -2,6 +2,9 @@
 
 namespace pivot::ecs::component
 {
+
+const Description &ComponentRef::description() const { return m_array.getDescription(); }
+
 data::Value ComponentRef::get() const
 {
     auto value = m_array.getValueForEntity(m_entity);

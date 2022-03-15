@@ -63,5 +63,8 @@ struct Description {
     {
         using std::logic_error::logic_error;
     };
+
+    /// Compare descriptions.
+    bool operator==(const Description &rhs) const;
 };
 }    // namespace pivot::ecs::component

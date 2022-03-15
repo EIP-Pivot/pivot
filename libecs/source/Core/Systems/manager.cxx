@@ -34,11 +34,9 @@ namespace pivot::ecs::systems {
         }
     }
 
-    std::vector<std::string> Manager::getSystemUsed() {
-        std::vector<std::string> systems;
-        for (const auto &[name, system]: m_systems) { systems.push_back(name); }
-        return systems;
-    }
+    Manager::const_iterator Manager::begin() const { return m_systems.begin(); }
+
+    Manager::const_iterator Manager::end() const { return m_systems.end(); }
 
     std::vector<component::Manager::ComponentId> Manager::getComponentsId(const std::vector<std::string> &components) {
         std::vector<component::Manager::ComponentId> componentsId;

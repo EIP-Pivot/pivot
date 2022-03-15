@@ -24,7 +24,9 @@ public:
 
     void execute(const event::Event &event);
 
-    std::vector<std::string> getSystemUsed();
+    using const_iterator = std::unordered_map<std::string, Description>::const_iterator;
+    const_iterator begin() const;
+    const_iterator end() const;
 
     struct MissingComponent : public std::runtime_error {
         MissingComponent(const std::string &componentName);

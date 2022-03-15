@@ -26,8 +26,8 @@ public:
     std::optional<Description> getDescription(const std::string &systemName) const;
     /// Constant iterator over every system in the index
     using const_iterator = std::map<std::string, Description>::const_iterator;
-    const_iterator begin() const;   ///< Begin iterator
-    const_iterator end() const;     ///< End iterator
+    const_iterator begin() const;    ///< Begin iterator
+    const_iterator end() const;      ///< End iterator
     /// Returns the list of the names of all the system registered in the index
     std::vector<std::string> getAllSystemsNames() const;
 

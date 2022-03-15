@@ -8,25 +8,24 @@
 
 using namespace pivot::ecs;
 
-void
-test_description(const systems::Description &, component::ArrayCombination &, const event::EventWithComponent &) {}
+void test_description(const systems::Description &, component::ArrayCombination &, const event::EventWithComponent &) {}
 
 TEST_CASE("valid system description", "[description]")
 {
     event::Description event{
-            .name = "Colid",
-            .entities = {},
-            .payload = pivot::ecs::data::BasicType::Number,
+        .name = "Colid",
+        .entities = {},
+        .payload = pivot::ecs::data::BasicType::Number,
     };
     systems::Description description{
-            .name = "Test Description",
-            .systemComponents =
-                    {
-                            "RigidBody",
-                            "Tag",
-                    },
-            .eventListener = event,
-            .system = &test_description,
+        .name = "Test Description",
+        .systemComponents =
+            {
+                "RigidBody",
+                "Tag",
+            },
+        .eventListener = event,
+        .system = &test_description,
     };
     REQUIRE_NOTHROW(description.validate());
 }
@@ -40,7 +39,7 @@ TEST_CASE("Empty system description", "[description]")
 TEST_CASE("Empty args system description", "[description]")
 {
     systems::Description description{
-            .name = "Invalid",
+        .name = "Invalid",
     };
     REQUIRE_THROWS_WITH(description.validate(), "Empty system argument");
 }

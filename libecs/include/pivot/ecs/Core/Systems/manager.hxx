@@ -32,8 +32,8 @@ public:
 
     /// Constant iterator over every system used
     using const_iterator = std::unordered_map<std::string, Description>::const_iterator;
-    const_iterator begin() const;   ///< Begin iterator
-    const_iterator end() const;     ///< End iterator
+    const_iterator begin() const;    ///< Begin iterator
+    const_iterator end() const;      ///< End iterator
 
     /// Error thrown when component are not registered
     struct MissingComponent : public std::runtime_error {

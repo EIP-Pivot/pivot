@@ -8,7 +8,7 @@ GlobalIndex eventIndexForRegistrationTest;
 TEST_CASE("Register same event in Global Index", "[description][registration]")
 {
     Description description{
-            .name = "Duplicate",
+        .name = "Duplicate",
     };
     REQUIRE_NOTHROW(eventIndexForRegistrationTest.registerEvent(description));
     REQUIRE_THROWS_AS(eventIndexForRegistrationTest.registerEvent(description), Index::DuplicateError);
@@ -17,12 +17,12 @@ TEST_CASE("Register same event in Global Index", "[description][registration]")
 TEST_CASE("Register valid event in Global Index", "[description][registration]")
 {
     Description description{
-            .name = "Valid",
-            .entities =
-                    {
-                            "Oui",
-                    },
-            .payload = pivot::ecs::data::BasicType::Boolean,
+        .name = "Valid",
+        .entities =
+            {
+                "Oui",
+            },
+        .payload = pivot::ecs::data::BasicType::Boolean,
     };
     REQUIRE_NOTHROW(eventIndexForRegistrationTest.registerEvent(description));
 }

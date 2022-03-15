@@ -44,7 +44,7 @@ Scene &SceneManager::getLevelById(LevelId idToGet)
     if (!_levels.contains(idToGet))
         throw EcsException("Level with id _" + std::to_string(idToGet) + "_ is not registered.");
 
-    return *this->_levels[idToGet].get();
+    return *this->_levels.at(idToGet).get();
 }
 
 Scene &SceneManager::operator[](LevelId id) { return getLevelById(id); }

@@ -1,8 +1,12 @@
 #pragma once
 
+// Important ! Do not change the order
+#include <queue>
+#include <ranges>
+// because msvc suck! Thx
+
 #include <any>
 #include <memory>
-#include <ranges>
 
 #include "pivot/ecs/Core/Component/array.hxx"
 #include "pivot/ecs/Core/Component/ref.hxx"

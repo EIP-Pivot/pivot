@@ -6,9 +6,9 @@ using namespace pivot::ecs::event;
 TEST_CASE("valid event description", "[description]")
 {
     Description description{
-        .name = "Colid",
-        .entities = {"Entity 1", "Entity 2"},
-        .payload = pivot::ecs::data::BasicType::Number,
+            .name = "Colid",
+            .entities = {"Entity 1", "Entity 2"},
+            .payload = pivot::ecs::data::BasicType::Number,
     };
     REQUIRE_NOTHROW(description.validate());
 }

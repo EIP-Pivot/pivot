@@ -26,11 +26,16 @@ struct Description {
     };
 };
 
-using Entities = std::vector<std::vector<component::ComponentRef>>;
+using EntityComponents = std::vector<std::vector<component::ComponentRef>>;
 
 struct Event {
     Description description;
-    Entities entities;
+    std::vector<Entity> entities;
     data::Value payload;
+};
+
+struct EventWithComponent {
+    Event event;
+    EntityComponents components;
 };
 }    // namespace pivot::ecs::event

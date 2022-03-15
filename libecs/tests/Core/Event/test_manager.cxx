@@ -16,8 +16,7 @@ using namespace pivot::ecs;
 using namespace pivot::ecs::data;
 
 void tickSystem(const systems::Description &description, systems::Description::systemArgs &entities,
-                const event::Event &event)
-{
+                const event::EventWithComponent &event) {
     for (auto combination: entities) {
         auto tag = combination[1].get();
         std::get<std::string>(std::get<Record>(tag).at("name")) = "edit";
@@ -42,27 +41,28 @@ TEST_CASE("Manager event", "[description][registration][manager]")
 
     Entity entity = eManager.CreateEntity();
     cManager.AddComponent(entity, Value{Record{{"name", "oui"}}}, tagId);
-    cManager.AddComponent(entity, Value{Record{{"velocity", glm::vec3(0.0f)}, {"acceleration", glm::vec3(0.0f)}}},
+    cManager.AddComponent(entity, Value{Record{{"velocity",     glm::vec3(0.0f)},
+                                               {"acceleration", glm::vec3(0.0f)}}},
                           rigidId);
     cManager.AddComponent(entity, Value{Record{{"force", glm::vec3(0.0f)}}}, gravId);
 
     event::Description eventDescription{
-        .name = "Tick",
-        .entities = {},
-        .payload = pivot::ecs::data::BasicType::Number,
+            .name = "Tick",
+            .entities = {},
+            .payload = pivot::ecs::data::BasicType::Number,
     };
 
     event::GlobalIndex::getSingleton().registerEvent(eventDescription);
 
     systems::Description description{
-        .name = "tickSystem",
-        .systemComponents =
-            {
-                "RigidBody",
-                "Tag",
-            },
-        .eventListener = eventDescription,
-        .system = &tickSystem,
+            .name = "tickSystem",
+            .systemComponents =
+                    {
+                            "RigidBody",
+                            "Tag",
+                    },
+            .eventListener = eventDescription,
+            .system = &tickSystem,
     };
     systems::GlobalIndex::getSingleton().registerSystem(description);
     sManager.useSystem(description);
@@ -70,7 +70,11 @@ TEST_CASE("Manager event", "[description][registration][manager]")
     auto tagValue = cManager.GetComponent(entity, tagId).value();
     auto name = std::get<std::string>(std::get<Record>(tagValue).at("name"));
     REQUIRE(name == "oui");
-    eventManager.sendEvent("Tick", Value{0.0f});
+    event::Event event{
+            .description = eventDescription,
+            .payload = Value{0.0f},
+    };
+    eventManager.sendEvent(event);
     tagValue = cManager.GetComponent(entity, tagId).value();
     name = std::get<std::string>(std::get<Record>(tagValue).at("name"));
     REQUIRE(name == "edit");

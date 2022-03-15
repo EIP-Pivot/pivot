@@ -9,24 +9,25 @@ using namespace pivot::ecs;
 
 systems::GlobalIndex indexForRegistrationTest;
 
-void test_global_registration(const systems::Description &, systems::Description::systemArgs &, const event::Event &) {}
+void test_global_registration(const systems::Description &, systems::Description::systemArgs &,
+                              const event::EventWithComponent &) {}
 
 TEST_CASE("Register same system in Global Index", "[description][registration]")
 {
     event::Description event{
-        .name = "Colid",
-        .entities = {},
-        .payload = pivot::ecs::data::BasicType::Number,
+            .name = "Colid",
+            .entities = {},
+            .payload = pivot::ecs::data::BasicType::Number,
     };
     systems::Description description{
-        .name = "Duplicate",
-        .systemComponents =
-            {
-                "RigidBody",
-                "Tag",
-            },
-        .eventListener = event,
-        .system = &test_global_registration,
+            .name = "Duplicate",
+            .systemComponents =
+                    {
+                            "RigidBody",
+                            "Tag",
+                    },
+            .eventListener = event,
+            .system = &test_global_registration,
     };
     REQUIRE_NOTHROW(indexForRegistrationTest.registerSystem(description));
     REQUIRE_THROWS_AS(indexForRegistrationTest.registerSystem(description), systems::Index::DuplicateError);
@@ -35,19 +36,19 @@ TEST_CASE("Register same system in Global Index", "[description][registration]")
 TEST_CASE("Register valid system in Global Index", "[description][registration]")
 {
     event::Description event{
-        .name = "Colid",
-        .entities = {},
-        .payload = pivot::ecs::data::BasicType::Number,
+            .name = "Colid",
+            .entities = {},
+            .payload = pivot::ecs::data::BasicType::Number,
     };
     systems::Description description{
-        .name = "Valid",
-        .systemComponents =
-            {
-                "RigidBody",
-                "Tag",
-            },
-        .eventListener = event,
-        .system = &test_global_registration,
+            .name = "Valid",
+            .systemComponents =
+                    {
+                            "RigidBody",
+                            "Tag",
+                    },
+            .eventListener = event,
+            .system = &test_global_registration,
     };
     REQUIRE_NOTHROW(indexForRegistrationTest.registerSystem(description));
 }

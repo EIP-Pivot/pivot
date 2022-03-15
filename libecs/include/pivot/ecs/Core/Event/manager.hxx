@@ -16,8 +16,7 @@ class Manager
 public:
     Manager(systems::Manager &systemManager);
 
-    void sendEvent(const std::string &eventName, const data::Value &value, const std::vector<Entity> &entities = {});
-    void sendEvent(const Description &description, const data::Value &value, const std::vector<Entity> &entities = {});
+    void sendEvent(const Event &event);
 
 private:
     systems::Manager &m_systemManager;

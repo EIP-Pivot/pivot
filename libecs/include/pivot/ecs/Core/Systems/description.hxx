@@ -28,7 +28,7 @@ struct Description {
 
     std::vector<std::vector<std::string>> eventComponents;
 
-    std::function<void(const Description &, systemArgs &, const event::Event &)> system;
+    std::function<void(const Description &, systemArgs &, const event::EventWithComponent &)> system;
 
     void validate() const;
 

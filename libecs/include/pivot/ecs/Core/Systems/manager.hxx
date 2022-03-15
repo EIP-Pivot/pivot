@@ -22,8 +22,7 @@ public:
     void useSystem(const std::string &systemName);
     void useSystem(const Description &description);
 
-    void execute(const event::Description &eventDescription, const data::Value &payload,
-                 const std::vector<Entity> &entities = {});
+    void execute(const event::Event &event);
 
     std::vector<std::string> getSystemUsed();
 

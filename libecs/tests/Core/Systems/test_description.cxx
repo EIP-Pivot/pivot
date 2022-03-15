@@ -43,13 +43,3 @@ TEST_CASE("Empty args system description", "[description]")
     };
     REQUIRE_THROWS_WITH(description.validate(), "Empty system argument");
 }
-
-TEST_CASE("Invalid args system description", "[description]")
-{
-    systems::Description description{
-        .name = "Invalid",
-        .systemComponents = {"NOT REGISTERED"},
-    };
-    REQUIRE_THROWS_WITH(description.validate(),
-                        Catch::Matchers::Contains("Component ") && Catch::Matchers::Contains(" is not registered."));
-}

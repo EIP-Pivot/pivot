@@ -13,11 +13,6 @@ void Description::validate() const
 
     if (this->systemComponents.empty()) { throw ValidationError("Empty system argument"); }
 
-    for (const auto &arg: this->systemComponents) {
-        if (!ecs::component::GlobalIndex::getSingleton().getDescription(arg).has_value())
-            throw ValidationError("Component " + arg + " is not registered.");
-    }
-
     this->eventListener.validate();
 
     if (this->eventComponents.size() != this->eventListener.entities.size())

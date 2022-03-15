@@ -19,13 +19,25 @@ public:
     Manager(component::Manager &componentManager, EntityManager &entityManager)
         : m_componentManager(componentManager), m_entityManager(entityManager){};
 
-    bool useSystem(const std::string &systemName);
-    bool useSystem(const Description &description);
+    void useSystem(const std::string &systemName);
+    void useSystem(const Description &description);
 
     void execute(const event::Description &eventDescription, const data::Value &payload,
                  const std::vector<Entity> &entities = {});
 
     std::vector<std::string> getSystemUsed();
+
+    struct MissingComponent : public std::runtime_error {
+        MissingComponent(const std::string &componentName);
+
+        std::string componentName;
+    };
+
+    struct MissingSystem : public std::runtime_error {
+        MissingSystem(const std::string &systemName);
+
+        std::string systemName;
+    };
 
 private:
     std::vector<component::Manager::ComponentId> getComponentsId(const std::vector<std::string> &components);

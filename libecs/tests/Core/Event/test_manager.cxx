@@ -15,7 +15,7 @@
 using namespace pivot::ecs;
 using namespace pivot::ecs::data;
 
-void tickSystem(const systems::Description &description, systems::Description::systemArgs &entities,
+void tickSystem(const systems::Description &description, component::ArrayCombination &entities,
                 const event::EventWithComponent &event) {
     for (auto combination: entities) {
         auto tag = combination[1].get();

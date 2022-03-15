@@ -9,7 +9,7 @@ using namespace pivot::ecs;
 
 systems::GlobalIndex indexForRegistrationTest;
 
-void test_global_registration(const systems::Description &, systems::Description::systemArgs &,
+void test_global_registration(const systems::Description &, component::ArrayCombination &,
                               const event::EventWithComponent &) {}
 
 TEST_CASE("Register same system in Global Index", "[description][registration]")

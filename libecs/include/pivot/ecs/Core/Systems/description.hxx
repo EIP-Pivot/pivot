@@ -16,22 +16,22 @@
 namespace pivot::ecs::systems
 {
 
+/// Describes how to use a systems
 struct Description {
 
-    using systemArgs = component::ArrayCombination;
-
+    /// system name
     std::string name;
-
+    /// list of systeme component
     std::vector<std::string> systemComponents;
-
+    /// When event is emit, the system manager will search all system listening to this event
     event::Description eventListener;
-
+    /// Needed component for event
     std::vector<std::vector<std::string>> eventComponents;
-
-    std::function<void(const Description &, systemArgs &, const event::EventWithComponent &)> system;
-
+    /// System function
+    std::function<void(const Description &, component::ArrayCombination &, const event::EventWithComponent &)> system;
+    /// Check if all needed variable are set
     void validate() const;
-
+    /// Error returned when the validation of a description fails
     class ValidationError : public std::logic_error
     {
         using std::logic_error::logic_error;

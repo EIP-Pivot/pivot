@@ -22,7 +22,7 @@ namespace pivot::ecs::systems {
     }
 
     std::vector<std::string> Index::getAllSystemsNames() const {
-        std::vector <std::string> names;
+        std::vector<std::string> names;
         for (auto &[key, value]: m_descriptionByName) { names.push_back(key); }
         return names;
     }
@@ -34,7 +34,7 @@ namespace pivot::ecs::systems {
     void GlobalIndex::registerSystem(const Description &description) {
         if (m_read_only) { throw std::logic_error("Cannot modify global system index after program started"); }
 
-        const std::lock_guard <std::mutex> guard(m_mutex);
+        const std::lock_guard<std::mutex> guard(m_mutex);
 
         this->Index::registerSystem(description);
     }
@@ -52,7 +52,7 @@ namespace pivot::ecs::systems {
 
     void GlobalIndex::lockReadOnly() {
         if (!m_read_only) {
-            const std::lock_guard <std::mutex> guard(m_mutex);
+            const std::lock_guard<std::mutex> guard(m_mutex);
             m_read_only.store(true);
         }
     }

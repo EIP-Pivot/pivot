@@ -11,11 +11,17 @@
 namespace pivot::ecs::event
 {
 
+/** \brief Manages all the events in a Scene
+ *
+ * The Manager send event and execute systems listing this event
+ */
 class Manager
 {
 public:
+    /// Manager constructor take the scene system manager to execute systems
     Manager(systems::Manager &systemManager);
 
+    /// Send event with event::Event Object
     void sendEvent(const Event &event);
 
 private:

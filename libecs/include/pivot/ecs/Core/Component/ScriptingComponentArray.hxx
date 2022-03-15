@@ -5,6 +5,12 @@
 namespace pivot::ecs::component
 {
 
+/** \brief A generic implementor of IComponentArray, optimized for script components.
+ *
+ * The ScriptingComponentArray stores the values of a script component in a contiguous
+ * array. It is optimized for components which are present on most entities in a
+ * Scene.
+ */
 class ScriptingComponentArray : public IComponentArray
 {
 public:
@@ -21,7 +27,7 @@ public:
 protected:
     /// Description of the component
     Description m_description;
-
+    /// The storage containing the values of the components for each entity.
     std::unordered_map<Entity, data::Value> m_components;
 };
 

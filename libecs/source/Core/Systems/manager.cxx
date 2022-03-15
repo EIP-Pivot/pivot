@@ -29,27 +29,8 @@ namespace pivot::ecs::systems {
 
     void Manager::execute(const event::Event &event) {
         for (const auto &[name, description]: m_systems) {
-            if (event.description.name == description.eventListener.name) {
-
-                if (event.entities.size() != description.eventComponents.size())
-                    throw std::logic_error("This system expect " + std::to_string(description.eventComponents.size()) +
-                                           " entity.");
-
-                event::EntityComponents entitiesComponents;
-                for (std::size_t i = 0; i < event.entities.size(); i++) {
-                    std::vector<component::ComponentRef> entityComponents;
-                    for (const auto index: getComponentsId(description.eventComponents[i]))
-                        entityComponents.emplace_back(m_componentManager.GetComponentArray(index).value().get(),
-                                                      event.entities[i]);
-                    entitiesComponents.push_back(entityComponents);
-                }
-
-                event::EventWithComponent entityComponents{
-                        .event = event,
-                        .components = entitiesComponents
-                };
-                description.system(description, m_combinations.at(name), entityComponents);
-            }
+            if (event.description.name == description.eventListener.name)
+                executeOne(description, event);
         }
     }
 
@@ -70,5 +51,30 @@ namespace pivot::ecs::systems {
         }
         return componentsId;
     }
+
+    void Manager::executeOne(const Description &description, const event::Event &event) {
+        if (event.entities.size() != description.eventComponents.size())
+            throw std::logic_error("This system expect " + std::to_string(description.eventComponents.size()) +
+                                   " entity.");
+
+        event::EntityComponents entitiesComponents;
+        for (std::size_t i = 0; i < event.entities.size(); i++) {
+            std::vector<component::ComponentRef> entityComponents;
+            for (const auto index: getComponentsId(description.eventComponents[i])) {
+                if (!m_componentManager.GetComponent(event.entities[i], index).has_value())
+                    return;
+                entityComponents.emplace_back(m_componentManager.GetComponentArray(index).value().get(),
+                                              event.entities[i]);
+            }
+            entitiesComponents.push_back(entityComponents);
+        }
+
+        event::EventWithComponent entityComponents{
+                .event = event,
+                .components = entitiesComponents
+        };
+        description.system(description, m_combinations.at(description.name), entityComponents);
+    }
+
 
 }    // namespace pivot::ecs::systems

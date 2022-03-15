@@ -40,6 +40,7 @@ public:
 
 private:
     std::vector<component::Manager::ComponentId> getComponentsId(const std::vector<std::string> &components);
+    void executeOne(const Description &, const event::Event &);
     component::Manager &m_componentManager;
     EntityManager &m_entityManager;
     std::unordered_map<std::string, Description> m_systems;

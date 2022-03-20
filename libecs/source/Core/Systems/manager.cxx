@@ -8,7 +8,7 @@ Manager::MissingComponent::MissingComponent(const std::string &componentName)
 }
 
 Manager::MissingSystem::MissingSystem(const std::string &systemName)
-    : std::runtime_error("Missing component: " + systemName), systemName(systemName)
+    : std::runtime_error("Missing system: " + systemName), systemName(systemName)
 {
 }
 

@@ -77,3 +77,40 @@ const pivot::ecs::systems::Manager &Scene::getSystemManager() const { return mSy
 pivot::ecs::event::Manager &Scene::getEventManager() { return mEventManager; }
 
 const pivot::ecs::event::Manager &Scene::getEventManager() const { return mEventManager; }
+
+void Scene::save()
+{
+    if (!std::filesystem::exists("scene")) { std::filesystem::create_directory("scene"); }
+    std::ofstream out("scene/" + name + ".json");
+    nlohmann::json j;
+    j["name"] = name;
+    // for (auto const &[entity, _]: getEntities()) {
+    //     j["entity"][entity]["tag"] = GetComponent<Tag>(entity).name;
+    //     if (hasComponent<RigidBody>(entity)) {
+    //         j["entity"][entity]["RigidBody"] = {{"acceleration",
+    //                                              {{"x", GetComponent<RigidBody>(entity).acceleration.x},
+    //                                               {"y", GetComponent<RigidBody>(entity).acceleration.y},
+    //                                               {"z", GetComponent<RigidBody>(entity).acceleration.z}}},
+    //                                             {"velocity",
+    //                                              {{"x", GetComponent<RigidBody>(entity).velocity.x},
+    //                                               {"y", GetComponent<RigidBody>(entity).velocity.y},
+    //                                               {"z", GetComponent<RigidBody>(entity).velocity.z}}}};
+    //     }
+    //     if (hasComponent<Gravity>(entity)) {
+    //         j["entity"][entity]["Gravity"] = {{"force",
+    //                                            {{"x", GetComponent<Gravity>(entity).force.x},
+    //                                             {"y", GetComponent<Gravity>(entity).force.y},
+    //                                             {"z", GetComponent<Gravity>(entity).force.z}}}};
+    //     }
+    //     if (hasComponent<RenderObject>(entity)) {
+    //         j["entity"][entity]["RenderObject"] = {
+    //             {"meshID", GetComponent<RenderObject>(entity).meshID},
+    //             {"objectInformation",
+    //              {{"textureIndex", GetComponent<RenderObject>(entity).objectInformation.textureIndex},
+    //               {"materialIndex", GetComponent<RenderObject>(entity).objectInformation.materialIndex}}}};
+    //     }
+    // }
+
+    out << std::setw(4) << j << std::endl;
+    out.close();
+}

@@ -28,7 +28,7 @@ void Manager::useSystem(const Description &description)
 
     std::vector<std::reference_wrapper<component::IComponentArray>> componentArrays;
     for (const auto index: getComponentsId(description.systemComponents))
-        componentArrays.push_back(m_componentManager.GetComponentArray(index).value());
+        componentArrays.push_back(m_componentManager.GetComponentArray(index));
     m_combinations.insert({description.name, {componentArrays}});
 }
 
@@ -65,7 +65,7 @@ void Manager::executeOne(const Description &description, const event::Event &eve
         std::vector<component::ComponentRef> entityComponents;
         for (const auto index: getComponentsId(description.eventComponents[i])) {
             if (!m_componentManager.GetComponent(event.entities[i], index).has_value()) return;
-            entityComponents.emplace_back(m_componentManager.GetComponentArray(index).value().get(), event.entities[i]);
+            entityComponents.emplace_back(m_componentManager.GetComponentArray(index), event.entities[i]);
         }
         entitiesComponents.push_back(entityComponents);
     }

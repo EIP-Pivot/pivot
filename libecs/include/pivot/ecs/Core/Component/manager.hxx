@@ -50,7 +50,7 @@ public:
     void EntityDestroyed(Entity entity);
 
     /// Get the component array of ComponentId.
-    std::optional<std::reference_wrapper<IComponentArray>> GetComponentArray(ComponentId index);
+    IComponentArray &GetComponentArray(ComponentId index);
 
 private:
     using component_array_type = std::vector<std::unique_ptr<IComponentArray>>;

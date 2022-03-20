@@ -21,7 +21,7 @@ void SceneManager::unregisterLevel(LevelId toDelete)
     _levels.erase(toDelete);
 }
 
-LevelId SceneManager::getCurrentLevelId() { return _currentActiveLevel; }
+LevelId SceneManager::getCurrentLevelId() { return _currentActiveLevel.value(); }
 
 void SceneManager::setCurrentLevelId(LevelId newScene)
 {
@@ -36,7 +36,7 @@ Scene &SceneManager::getCurrentLevel()
     if (_currentActiveLevel == -1)
         throw EcsException("There is no current level. Register a level before trying to access its Scene.");
 
-    return *this->_levels.at(_currentActiveLevel).get();
+    return *this->_levels.at(_currentActiveLevel.value()).get();
 }
 
 Scene &SceneManager::getLevelById(LevelId idToGet)

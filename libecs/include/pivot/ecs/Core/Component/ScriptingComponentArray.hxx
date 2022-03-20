@@ -24,11 +24,17 @@ public:
 
     void setValueForEntity(Entity entity, std::optional<data::Value> value) override;
 
+    bool entityHasValue(Entity entity) const override;
+
+    Entity maxEntity() const override;
+
 protected:
     /// Description of the component
     Description m_description;
     /// The storage containing the values of the components for each entity.
     std::unordered_map<Entity, data::Value> m_components;
+    /// The maximum entity id that ever had a value in this array
+    Entity m_max_entity = 0;
 };
 
 }    // namespace pivot::ecs::component

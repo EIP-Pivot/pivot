@@ -14,7 +14,16 @@ std::optional<data::Value> ScriptingComponentArray::getValueForEntity(Entity ent
 
 void ScriptingComponentArray::setValueForEntity(Entity entity, std::optional<data::Value> value)
 {
-    m_components[entity] = value.value();
+    if (!value) {
+        m_components.erase(entity);
+    } else {
+        m_components[entity] = value.value();
+        m_max_entity = std::max(entity, m_max_entity);
+    }
 }
+
+bool ScriptingComponentArray::entityHasValue(Entity entity) const { return m_components.contains(entity); }
+
+Entity ScriptingComponentArray::maxEntity() const { return m_max_entity; }
 
 }    // namespace pivot::ecs::component

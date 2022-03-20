@@ -15,10 +15,6 @@ namespace pivot::ecs::component
  *
  * This call contains a list of component Description which can be registered by their name or type, and then retrieved
  * by their name or type.
- *
- * The type based access is only a convenience, and should not be relied upon to
- * get every possible components, as most components are dynamic and have no
- * corresponding C++ type.
  */
 class Index
 {
@@ -45,30 +41,6 @@ public:
         /// Name of the duplicated component
         std::string componentName;
     };
-
-    // /// Registers a component Description by its name, and registered the name by its type
-    // template <typename T>
-    // void registerComponentWithType(const Description &description)
-    // {
-    //     auto index = std::type_index(typeid(T));
-    //     if (m_type_to_name.contains(index) || m_components.contains(description.name)) {
-    //         throw DuplicateError(description.name);
-    //     }
-    //     this->registerComponent(description);
-    //     m_type_to_name.insert({index, description.name});
-    // }
-
-    /// Get the name of a component by its type if it was registered
-    // template <typename T>
-    // std::optional<std::string> getComponentNameByType()
-    // {
-    //     auto it = m_type_to_name.find(std::type_index(typeid(T)));
-    //     if (it == m_type_to_name.end()) {
-    //         return std::nullopt;
-    //     } else {
-    //         return std::make_optional(it->second);
-    //     }
-    // }
 
 private:
     std::map<std::string, Description> m_components;
@@ -105,29 +77,6 @@ public:
     Index::const_iterator begin();
     /// Locks the index in readonly mode. See Index::end()
     Index::const_iterator end();
-
-    // /** \brief See Index::registerComponentWithType()
-    //  *
-    //  * Throws if the GlobalIndex is in read only mode
-    //  */
-    // template <typename T>
-    // void registerComponentWithType(const Description &description)
-    // {
-
-    //     if (m_read_only) { throw std::logic_error("Cannot modify global component index after program started"); }
-
-    //     const std::lock_guard<std::mutex> guard(m_mutex);
-
-    //     this->Index::registerComponentWithType<T>(description);
-    // }
-
-    // /// Locks the index in readonly mode. See Index::getComponentNameByType()
-    // template <typename T>
-    // std::optional<std::string> getComponentNameByType()
-    // {
-    //     this->lockReadOnly();
-    //     return this->Index::getComponentNameByType<T>();
-    // }
 
     /// Gives access to the global GlobalIndex instance, used to register
     /// components globally.

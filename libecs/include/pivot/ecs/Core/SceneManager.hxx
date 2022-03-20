@@ -1,11 +1,12 @@
 #pragma once
 
-#include "pivot/ecs/Core/EcsException.hxx"
-#include "pivot/ecs/Core/Scene.hxx"
 #include <string>
 
+#include "pivot/ecs/Core/EcsException.hxx"
+#include "pivot/ecs/Core/Scene.hxx"
+
 using LevelId = std::uint16_t;
-const LevelId MAX_LEVELS = UINT16_MAX;    // 65535
+const LevelId MAX_LEVELS = std::numeric_limits<LevelId>::max();    // 65535
 
 /// @class SceneManager
 ///
@@ -14,8 +15,7 @@ const LevelId MAX_LEVELS = UINT16_MAX;    // 65535
 class SceneManager
 {
 public:
-    /// Init scene list
-    void Init();
+    SceneManager(): _currentActiveLevel(std::nullopt){};
 
     /// Create new scene with scene name
     LevelId registerLevel(std::string name);
@@ -41,6 +41,6 @@ public:
     std::size_t getLivingScene();
 
 private:
-    std::unordered_map<LevelId, Scene> _levels{};
-    LevelId _currentActiveLevel;
+    std::vector<std::optional<std::unique_ptr<Scene>>> _levels{};
+    std::optional<LevelId> _currentActiveLevel;
 };

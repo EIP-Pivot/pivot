@@ -2,6 +2,12 @@
 
 #include "pivot/ecs/Core/Component/index.hxx"
 #include "pivot/ecs/Core/Component/manager.hxx"
+
+#include "pivot/ecs/Core/Systems/index.hxx"
+#include "pivot/ecs/Core/Systems/manager.hxx"
+
+#include "pivot/ecs/Core/Event/manager.hxx"
+
 #include "pivot/ecs/Core/EntityManager.hxx"
 #include "pivot/ecs/Core/EventManager.hxx"
 #include "pivot/ecs/Core/SystemManager.hxx"
@@ -76,67 +82,19 @@ public:
 
     // System methods
 
-    /// Register a system before its usage
-    /// @code
-    /// gCoordinator.RegisterSystem<{YourSystem}>();
-    /// @endcode
-    template <typename T>
-    std::shared_ptr<T> RegisterSystem()
-    {
-        auto system = mSystemManager->RegisterSystem<T>();
-        mSystems.push_back(system);
-        return system;
-    }
+    /// Get the system manager
+    pivot::ecs::systems::Manager &getSystemManager();
 
-    /// Set a signature on your System to get the good list of entity.
-    /// In this exemple, the system will pass on all entity wich have {YourComponent}
-    /// @code
-    /// Signature signature;
-    /// signature.set(gCoordinator.GetComponentType<{YourComponent}>());
-    /// signature.set(gCoordinator.GetComponentType<Transform>());
-    /// gCoordinator.SetSystemSignature<{YourSystem}>(signature);
-    /// @endcode
-    template <typename T>
-    void SetSystemSignature(Signature signature)
-    {
-        mSystemManager->SetSignature<T>(signature);
-        for (Entity entity = 0; entity < getLivingEntityCount(); entity++) {
-            if ((getSignature(entity) & signature) == signature) mSystemManager->setEntityToSystem<T>(entity);
-        }
-    }
-
-    /// Check if a system is register in a scene
-    template <typename T>
-    bool hasSystem()
-    {
-        return mSystemManager->hasSystem<T>();
-    }
-
-    /// Update registered systems
-    void Update(float dt);
+    /// Get the system manager (const)
+    const pivot::ecs::systems::Manager &getSystemManager() const;
 
     // Event methods
 
-    /// Add a event listener who will treat the Event that as been send
-    /// The eventId is a uint32_t
-    /// @code
-    /// gCoordinator.AddEventListener({YourEventId}, {YourFunction});
-    /// @endcode
-    void AddEventListener(EventId eventId, std::function<void(Event &)> const &listener);
+    /// Get the event manager
+    pivot::ecs::event::Manager &getEventManager();
 
-    /// Send an Event (with data)
-    /// @code
-    /// Event event({YourEventId});
-    /// event.SetParam({ParamID}, {YourData});
-    /// gCoordinator.SendEvent(event);
-    /// @endcode
-    void SendEvent(Event &event);
-
-    /// Send an EventId
-    /// @code
-    /// gCoordinator.SendEvent({YourEventId});
-    /// @endcode
-    void SendEvent(EventId eventId);
+    /// Get the event manager (const)
+    const pivot::ecs::event::Manager &getEventManager() const;
 
     // Camera
     /// Set camera to use
@@ -152,10 +110,10 @@ public:
 
 private:
     std::string name;
-    std::unique_ptr<pivot::ecs::component::Manager> mComponentManager;
-    std::unique_ptr<EntityManager> mEntityManager;
-    std::unique_ptr<EventManager> mEventManager;
-    std::unique_ptr<SystemManager> mSystemManager;
+    pivot::ecs::component::Manager mComponentManager;
+    EntityManager mEntityManager;
+    pivot::ecs::systems::Manager mSystemManager;
+    pivot::ecs::event::Manager mEventManager;
     std::vector<std::shared_ptr<System>> mSystems;
     std::vector<Entity> mCamera;
     std::uint16_t mCurrentCamera;

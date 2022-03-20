@@ -44,4 +44,7 @@ void Manager::EntityDestroyed(Entity entity)
 {
     for (auto &componentArray: m_componentArrays) { componentArray->setValueForEntity(entity, std::nullopt); }
 }
+
+IComponentArray &Manager::GetComponentArray(ComponentId index) { return *m_componentArrays.at(index); }
+
 }    // namespace pivot::ecs::component

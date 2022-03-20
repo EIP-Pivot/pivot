@@ -52,12 +52,19 @@ add_library(${PROJECT_NAME} source/Core/Scene.cxx
                             source/Core/SceneManager.cxx
                             source/Core/Component/description.cxx
                             source/Core/Component/index.cxx
+                            source/Core/Systems/description.cxx
+                            source/Core/Systems/index.cxx
+                            source/Core/Systems/manager.cxx
                             source/Core/Component/manager.cxx
                             source/Core/Component/ref.cxx
                             source/Core/Component/combination.cxx
+                            source/Core/Component/ScriptingComponentArray.cxx
                             source/Core/Data/value.cxx
                             source/Core/Data/value_serialization.cxx
                             source/Core/Data/type.cxx
+                            source/Core/Event/index.cxx
+                            source/Core/Event/description.cxx
+                            source/Core/Event/manager.cxx
                             source/Components/TagArray.cxx
 )
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
@@ -85,4 +92,9 @@ build_tests(${PROJECT_NAME}
   tests/Core/Data/test_value_and_type.cxx
   tests/Core/Data/test_serialization.cxx
   tests/Core/test_scene.cxx
+  tests/Core/Systems/test_description.cxx
+  tests/Core/Systems/test_global_registration.cxx
+  tests/Core/Event/test_description.cxx
+  tests/Core/Event/test_global_registration.cxx
+  tests/Core/Event/test_manager.cxx
   )

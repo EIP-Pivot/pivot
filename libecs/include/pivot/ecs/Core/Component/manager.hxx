@@ -1,8 +1,12 @@
 #pragma once
 
+// Important ! Do not change the order
+#include <queue>
+#include <ranges>
+// because msvc suck! Thx
+
 #include <any>
 #include <memory>
-#include <ranges>
 
 #include "pivot/ecs/Core/Component/array.hxx"
 #include "pivot/ecs/Core/Component/ref.hxx"
@@ -44,6 +48,9 @@ public:
 
     /// Removes the component for every entity.
     void EntityDestroyed(Entity entity);
+
+    /// Get the component array of ComponentId.
+    IComponentArray &GetComponentArray(ComponentId index);
 
 private:
     using component_array_type = std::vector<std::unique_ptr<IComponentArray>>;

@@ -41,6 +41,6 @@ public:
     std::size_t getLivingScene();
 
 private:
-    std::unordered_map<LevelId, std::unique_ptr<Scene>> _levels{};
+    std::vector<std::optional<std::unique_ptr<Scene>>> _levels{};
     std::optional<LevelId> _currentActiveLevel;
 };

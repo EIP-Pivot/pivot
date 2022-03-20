@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+
 #include <pivot/ecs/Core/Component/ref.hxx>
 
 namespace pivot::ecs::component
@@ -21,12 +22,10 @@ public:
      *
      * This allows access to all components of the entity as a ref.
      */
-    class ComponentCombination
-    {
+    struct ComponentCombination {
     public:
         /// Default constructor
-        ComponentCombination(ArrayCombination &intersection, Entity entity)
-            : m_intersection(intersection), m_entity(entity)
+        ComponentCombination(ArrayCombination &intersection, Entity entity): intersection(intersection), entity(entity)
         {
         }
 
@@ -34,11 +33,22 @@ public:
          *
          * The order is the same as in the ArrayCombination.
          */
-        ComponentRef operator[](std::size_t i) { return {m_intersection.m_arrays[i], m_entity}; }
+        ComponentRef operator[](std::size_t i) { return {intersection.m_arrays[i], entity}; }
 
-    private:
-        ArrayCombination &m_intersection;
-        Entity m_entity;
+        /// Compare two ComponentCombonations
+        bool operator==(ComponentCombination other) const
+        {
+            return &this->intersection == &other.intersection && this->entity == other.entity;
+        }
+
+        /// Checks that the entity has a component value for each component array
+        bool isValid() const { return intersection.entityHasValue(entity); }
+
+        /// All the component arrays of the combination
+        ArrayCombination &intersection;
+
+        /// The entity number of the combination
+        Entity entity;
     };
 
     /// Iterator over all entity having components in each array
@@ -47,22 +57,20 @@ public:
     public:
         /// Begin constructor
         explicit iterator(ArrayCombination &intersection)
-            : m_intersection(intersection), m_max_entity(intersection.maxEntity()), m_entity(0)
+            : m_max_entity(intersection.maxEntity()), m_combination(intersection, 0)
         {
+            if (!m_combination.isValid()) { goToNextValidEntity(); }
         }
         /// End constructor
         explicit iterator(ArrayCombination &intersection, bool end)
-            : m_intersection(intersection), m_max_entity(intersection.maxEntity()), m_entity(m_max_entity + 1)
+            : m_max_entity(intersection.maxEntity()), m_combination(intersection, m_max_entity + 1)
         {
         }
 
         /// @cond
         iterator &operator++()
         {
-            while (m_entity <= m_max_entity) {
-                m_entity++;
-                if (m_intersection.entityHasValue(m_entity)) { break; }
-            }
+            goToNextValidEntity();
             return *this;
         }
         iterator operator++(int)
@@ -71,19 +79,24 @@ public:
             ++(*this);
             return retval;
         }
-        bool operator==(iterator other) const
-        {
-            return m_entity == other.m_entity && &m_intersection == &other.m_intersection;
-        }
-        bool operator!=(iterator other) const { return !(*this == other); }
-        ComponentCombination operator*() const { return {m_intersection, m_entity}; }
-        ComponentCombination operator->() const { return **this; }
+        bool operator==(iterator other) const { return m_combination == other.m_combination; }
+        const ComponentCombination &operator*() const { return m_combination; }
+        ComponentCombination &operator*() { return m_combination; }
+        const ComponentCombination *operator->() const { return &m_combination; }
         /// @endcond
 
     private:
-        ArrayCombination &m_intersection;
+        void goToNextValidEntity()
+        {
+            Entity &entity = m_combination.entity;
+            while (entity <= m_max_entity) {
+                entity++;
+                if (m_combination.isValid()) { return; }
+            }
+        }
+
         Entity m_max_entity;
-        Entity m_entity;
+        ComponentCombination m_combination;
     };
 
     /// Begin iterator

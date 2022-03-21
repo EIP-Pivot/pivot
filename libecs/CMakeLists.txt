@@ -2,6 +2,8 @@ project(pivot-ecs)
 
 include(FetchContent)
 
+add_definitions(/bigobj)
+
 function(fetch_boost_library library)
 FetchContent_Declare(
     boost_${library}
@@ -68,6 +70,7 @@ add_library(${PROJECT_NAME} source/Systems/ControlSystem.cxx
                             source/Core/Event/manager.cxx
                             source/Components/TagArray.cxx
                             source/Core/Scripting/ScriptEngine.cxx
+                            source/Core/Scripting/Stack.cxx
 )
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 

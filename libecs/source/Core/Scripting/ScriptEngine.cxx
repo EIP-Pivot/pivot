@@ -1,6 +1,7 @@
 #include "pivot/ecs/Core/Scripting/ScriptEngine.hxx"
 
 using namespace pivot::ecs;
+using namespace pivot::ecs::script;
 
 static std::map<std::string, data::BasicType> variableTypes {
 	{"Vector3", data::BasicType::Vec3},
@@ -35,6 +36,11 @@ ScriptEngine::ScriptEngine()
 	_currentState = START;
 	_currentIndent = 0;
 	// _phComponent.createContainer = arrayFunctor;
+	_totalCompute = 0;
+	_totalReplaceall = 0;
+	_totalCompile = 0;
+	_symbol_table.add_infinity();
+	_expression.register_symbol_table(_symbol_table);
 }
 
 ScriptEngine::~ScriptEngine() {
@@ -191,20 +197,88 @@ catch (std::exception e) {
 // }
 
 void ScriptEngine::executeSystemNew(const pivot::ecs::systems::Description &toExec, pivot::ecs::systems::Description::systemArgs &entities, const pivot::ecs::event::Event &event) {
-	std::cout << "Executing system\t" << toExec.name << std::endl;
-	for (auto entity: entities) {
-		executeSystemOnEntity(toExec, entity, event);
-		// std::cout << std::get<std::string>(std::get<data::Record>(entity[0].get()).at("pos_x")) << std::endl;
-		// std::cout << std::get<double>(std::get<data::Record>(entity[1].get()).at("vel_x")) << std::endl;
+	try {
+		size_t toExecIndex = indexOf(toExec.name); // Correspondance in between vectors for instructions
+		if (toExecIndex == SIZE_MAX) // if for whatever reason the system is not registered in this engine, throw
+			throw UnhandledException("UNKNOWN ERROR: Couldn't find system in\tScriptEngine::executeSystemNew\tScriptEngin.cpp");
+		// std::cout << "Executing system\t" << toExec.name << std::endl;
+		for (auto entity: entities) // input is ALL entities, loop over each
+			executeSystemOnEntity(toExec, entity, event);
+	}
+	catch (InvalidTypeException e) { 
+		std::cerr << "\nInvalidTypeError: " << e.what() << std::endl;
+	}
+	catch (UnhandledException e) { 
+		std::cerr << "\n!Unhandled Exception: " << e.what() << std::endl;
+	}
+	catch (pivot::ecs::component::ComponentRef::MissingComponent e) { // can be thrown by ComponentCombination[].get()
+		std::cerr << "MissingComponentException in ScriptEngine::executeSystemNew :\n\t" <<
+			e.component.name << " was not found in entity " << e.entity << std::endl;
+	}
+	catch (UnknownVariableException e) { 
+		std::cerr << "\nUnknown Variable: " << e.what() << std::endl;
+	}
+	catch (std::exception e) { // ?
+		std::cerr << "std::exception: " << e.what() << std::endl;
 	}
 }
 
 void ScriptEngine::executeSystemOnEntity(const pivot::ecs::systems::Description &toExec, pivot::ecs::component::ArrayCombination::ComponentCombination &entity, const pivot::ecs::event::Event &event) {
-	std::cout << std::get<std::string>(std::get<data::Record>(entity[0].get()).at("pos_x")) << std::endl;
-	std::cout << std::get<double>(std::get<data::Record>(entity[1].get()).at("vel_x")) << std::endl;
+	// std::chrono::high_resolution_clock clock;
+	// Push all input components to stack
+	// auto bchmarkInitStart = clock.now();
+	size_t componentIndex = 0;
+	VariableNew inputEntity = {
+		.type = data::RecordType(),
+		.value = data::Record(),
+		.name = _systemParameters.at(toExec.name).name,
+		.isEntity = true
+	};
+	for (std::string componentString : toExec.systemComponents) {
+		// if (!_components.contains(componentString))
+		// 	throw UnhandledException(("Component " + componentString + " not found when executing system " + toExec.name).c_str());
+		std::get<data::Record>(inputEntity.value).insert_or_assign(componentString, std::get<data::Record>(entity[componentIndex].get()));
+		componentIndex++;
+	}
+	_stackNew.pushVar(inputEntity);
+	_stackNew.pushVar(VariableNew {
+		.type = event.description.payload,
+		.value = event.payload,
+		.name = event.description.payloadName,
+		.isEntity = false
+	});
+	// std::cout << "Time to execute ExecuteSystemOnEntity Inititialization:\t" << std::chrono::duration(clock.now() - bchmarkInitStart).count() / 1000000 << " ms" << std::endl;
+
+	// auto bchmarkExecStart = clock.now();
+	for (std::string &instruction : _systemsInstructions[indexOf(toExec.name)]) {
+		// std::cout << "Instruction:\t'" << instruction << "' to execute." << std::endl;
+		cleanInstruction(instruction);
+		InstructionType iType = getInstructionType(instruction);
+		handleInstruction(instruction, iType);
+	}
+	// std::cout << "Time to execute ExecuteSystemOnEntity Execution:\t" << std::chrono::duration(clock.now() - bchmarkExecStart).count() / 1000000 << " ms" << std::endl;
+
+	// auto bchmarkReassignStart = clock.now();
+	componentIndex = 0;
+		for (auto &[key, var] : _stackNew.getVars()) {
+			if (key == _systemParameters.at(toExec.name).name) {
+				for (auto &[componentName, componentValue] : std::get<data::Record>(var.value)) {
+					entity[componentIndex].set(componentValue);
+					componentIndex++;
+				}
+				break;
+			}
+		}
+	_stack.clear();
+	_stackNew.clear();
+	// std::cout << "Time to execute ExecuteSystemOnEntity Reassign:\t" << std::chrono::duration(clock.now() - bchmarkReassignStart).count() / 1000000 << " ms" << std::endl;
+	// std::cout << std::get<std::string>(std::get<data::Record>(entity[0].get()).at("pos_x")) << std::endl;
+	// std::cout << std::get<double>(std::get<data::Record>(entity[1].get()).at("vel_x")) << std::endl;
 }
 
 void ScriptEngine::handleInstruction(const std::string &instruction, InstructionType iType) {
+	// std::chrono::high_resolution_clock clock;
+	// auto bchmarkhandleInstrucStart = clock.now();
 	switch (iType)
 	{
 	case ASSIGN:
@@ -214,9 +288,56 @@ void ScriptEngine::handleInstruction(const std::string &instruction, Instruction
 			throw UnhandledException("UNKNOWN ERROR: No equal sign in ASSIGN instruction");
 		std::string left = instruction.substr(0, equalPos);
 		std::string right = instruction.substr(equalPos + 1, instruction.size() - equalPos - 1);
-		std::cout << "Left [" << left << "] Right [" << right << "]" << std::endl;
-		std::cout << "Is left solvable: " << (isSolvable(left) ? "yes" : "no") << std::endl;
+		// std::cout << "Left [" << left << "] Right [" << right << "]" << std::endl;
+		if (!isSolvableNew(left))
+			throw UnknownVariableException(left.c_str());
+		// std::cout << "Is left solvable: " << (isSolvableNew(left) ? "yes" : "no") << std::endl;
+		for (std::string &token : split(right, "+-*/%^()")) {
+			if (isLiteralNumber(token))
+				continue ;
+			if (!isSolvableNew(token))
+				throw UnknownVariableException(token.c_str());
+			data::Value &solvedToken = solve(token);
+			try {
+				if (std::get<data::BasicType>(solvedToken.type()) != data::BasicType::Number)
+					throw UnknownVariableException(solvedToken.type().toString().c_str());
+			} catch (std::bad_variant_access e) {
+				throw UnknownVariableException("ScriptEngine::handleInstruction() : can only support BasicType::Number assign for now ( not Record )");
+			} catch (UnknownVariableException e) {
+				throw UnknownVariableException((std::string("ScriptEngine::handleInstruction() : can only support BasicType::Number assign for now ( not ") + e.what() + ")").c_str());
+			}
+		}
+		// std::chrono::high_resolution_clock clock;
+		// auto start = clock.now();
+		data::Value result;
+		_totalCompute += timeThis([&]() {
+			result = computeExpression(right); // *-*
+		});
+		// data::Value result = computeExpression(right); // *-*
+		// std::cout << "Time to execute computeExpression:\t" << std::chrono::duration(clock.now() - start).count() / 1000000 << " ms" << std::endl;
+		// std::cout << right << " = " << std::get<double>(result) << std::endl;
+		_stackNew.updateVar(left, result);
 		break;
+						// std::visit(overloaded {
+						// 	[&](data::BasicType arg) {
+						// 			if (std::get<data::BasicType>(solvedToken.type()) != data::BasicType::Number)
+						// 				throw UnknownVariableException("ScriptEngine::handleInstruction() : can only support BasicType::Number assign for now"); },
+						// 	[&](data::Record arg) { throw UnknownVariableException("ScriptEngine::handleInstruction() : can only support BasicType::Number assign for now"); },
+						// }, solvedToken);
+					// std::visit([&](auto&& arg) {
+					// 	using T = std::decay_t<decltype(arg)>;
+					// 	if constexpr (std::is_same_v<T, data::BasicType &>) {
+					// 		if (std::get<data::BasicType>(solvedToken.type()) != data::BasicType::Number)
+					// 			throw UnknownVariableException("ScriptEngine::handleInstruction() : can only support BasicType::Number assign for now");
+					// 	}
+					// 	else if constexpr (std::is_same_v<T, data::RecordType &>)
+					// 		throw UnknownVariableException("ScriptEngine::handleInstruction() : can only support BasicType::Number assign for now");
+						// else 
+						// 	throw UnhandledException("ScriptEngine::handleInstruction() : std::visit is not exhaustive !");
+					// }, solvedToken);
+
+			// std::cout << "Right token " << token << (isSolvableNew(token) ? " is solvable" : " is not solvable") << " and has type " << solve(token).type().toString() << std::endl;
+		
 	}
 	case FUNCTION:
 	{
@@ -233,10 +354,105 @@ void ScriptEngine::handleInstruction(const std::string &instruction, Instruction
 		throw UnhandledException("UNKNOWN ERROR: Unknown instruction type");
 	}
 	}
+	// std::cout << "Time to execute handleInstruction:\t" << std::chrono::duration(clock.now() - bchmarkhandleInstrucStart).count() / 1000000 << " ms" << std::endl;
+}
+
+
+template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+data::Value ScriptEngine::computeExpression(const std::string &toSolve) { // assumes every token is solvable
+	std::string mut = toSolve;
+	std::vector<std::string> tokens = split(toSolve, "+-*/%^()");
+
+	_totalReplaceall += timeThis([&]() {
+		for (std::string &token : tokens) {
+			if (isLiteralNumber(token))
+				continue ;
+			data::Value &val = solve(token);
+			std::visit(overloaded {
+				[&](int arg) { replaceAll(mut, token, std::to_string(arg)); },
+				[&](double arg) { replaceAll(mut, token, std::to_string(arg)); },
+				[&](bool arg) { replaceAll(mut, token, (arg) ? "true" : "false"); },
+				[&](const std::string &arg) { replaceAll(mut, token, arg); },
+				[&](glm::vec3 arg) { replaceAll(mut, token, std::to_string(arg.x) + ":" + std::to_string(arg.y) + ":" + std::to_string(arg.z)); },
+				[&](data::Record arg) { replaceAll(mut, token, "record"); }
+			}, val);
+		}
+	});
+
+	_totalCompile += timeThis([&]() {
+		if (!_parser.compile(mut, _expression)) // *-*
+			throw UnhandledException(("Failed to compile expression: '" + mut + "' which originated from '" + toSolve + "'").c_str());
+	});
+	return data::Value(_expression.value());	
+}
+
+bool ScriptEngine::isLiteralNumber(const std::string &expr) {
+	try {
+		std::stod(expr);
+		return true;
+	} catch (std::invalid_argument e) {
+		return false;
+	} catch (std::out_of_range e) {
+		throw UnhandledException(("Overflow error in ScriptEngine::isLiteralNumber : expr '" + expr + "' leads to std::out_of_range").c_str());
+	}
+	return false;
+}
+
+data::Value &ScriptEngine::solve(const std::string &toSolve) { // assumes isSolvable has been called
+	std::string mut = toSolve;
+	size_t dotIndex = mut.find('.');
+	std::string token = "";
+	data::Record vars = _stackNew.getAsRecord();
+	data::Record *cursor = &vars;
+	
+	while (dotIndex != std::string::npos) {
+		token = mut.substr(0, dotIndex);
+		if (!cursor->contains(token))
+			throw UnknownVariableException((token + " in " + mut).c_str());
+		try {
+			cursor = &(std::get<data::Record>(cursor->at(token)));
+		} catch (std::bad_variant_access e) {
+			throw UnknownVariableException((token + " is not a data::Record").c_str());
+		}
+		mut = mut.substr(dotIndex + 1);
+		dotIndex = mut.find('.');
+	}
+	token = mut.substr(0, dotIndex);
+	if (!cursor->contains(token))
+		throw UnknownVariableException((token + " in " + mut).c_str());
+	return _stackNew.getVarValue(toSolve);
+}
+
+bool ScriptEngine::isSolvableNew(const std::string &toSolve) {
+	if (isLiteralNumber(toSolve))
+		return true;
+	std::string mut = toSolve;
+	size_t dotIndex = mut.find('.');
+	std::string token = "";
+	data::Record vars = _stackNew.getAsRecord();
+	data::Record *cursor = &vars;
+	
+	while (dotIndex != std::string::npos) {
+		std::string token = mut.substr(0, dotIndex);
+		if (!cursor->contains(token))
+			throw UnknownVariableException((token + " in variable " + mut).c_str());
+		try {
+			cursor = &(std::get<data::Record>(cursor->at(token)));
+		} catch (std::bad_variant_access e) {
+			std::cout << "Token " << token << "of cursor " << cursor << " is not a data::Record" << std::endl;
+			return false;
+		}
+		mut = mut.substr(dotIndex + 1);
+		dotIndex = mut.find('.');
+	}
+	token = mut.substr(0, dotIndex);
+	if (!cursor->contains(token))
+		throw UnknownVariableException((token + " in variable " + mut).c_str());
+	return true;
 }
 
 bool ScriptEngine::isSolvable(const std::string &toSolve) {
-	std::string mut(toSolve);
+	std::string mut = toSolve;
 	std::vector<Variable> toCheck = _variables;
 	size_t index = mut.find('.');
 	bool found = false;
@@ -323,44 +539,58 @@ void ScriptEngine::softReset() {
 
 
 void ScriptEngine::printStack() {
-	std::cout << "-----------------------------------\t\t\t\t\t\nPRINTING STACK\n\n" << std::endl;
-	for (Variable v : _variables) {
-		std::cout << "\t" << v.name << " : " << v.type;
-		if (v.fields.size() == 0) {
-			std::cout << " = ";
-			printValue(v.value, v.type);
-		} else {
-			for (Variable field : v.fields) {
-				std::cout << "\n\t\t" << field.name << " : " << field.type << " = ";
-				printValue(field.value, field.type);
+	static int step = 0;
+	std::cout << "-----------------------------------\t\t\t\t\t\nPRINTING STACK step " << step << "\n\n" << std::endl;
+	for (VariableNew v : _stack) {
+		std::cout << "\t" << v.name << " : " << v.type.toString();
+		try {
+			data::Record rec = std::get<data::Record>(v.value);
+			for (auto &[key, value] : rec) {
+				std::cout << "\n\t\t" << key << " : " << value.type().toString() << " = ";
+				printValue(value, value.type());
 				std::cout << "\n";
 			}
-
+		} catch (std::bad_variant_access e) {
+			std::cout << " = ";
+			printValue(v.value, v.type);
 		}
 	}
 	std::cout << "\t\t\t\t\t\nFINISHED PRINTING STACK\n-----------------------------------\n\n" << std::endl;
 }
 
-void ScriptEngine::printValue(const std::any &value, const std::string &type) {
-	if (type == "Struct")
-		std::cout << "null";
-	else if (type == "Number")
-		std::cout << std::any_cast<double>(value);
-	else if (type == "String")
-		std::cout << std::any_cast<std::string>(value);
-	// else if (type == "Vector3")
-	// 	std::cout << std::any_cast<glm::vec3>(value);
+void ScriptEngine::printVec3(const glm::vec3 &vec) {
+	std::cout << std::format("{ {},{},{} }", vec.x, vec.y, vec.z);
+}
+
+void ScriptEngine::printValue(const data::Value &value, const data::Type &type) {
+	try {
+		std::get<data::Record>(value);
+		std::cout << "Record";
+	} catch (std::bad_variant_access e) {
+		data::BasicType t = std::get<data::BasicType>(type);
+		if (t == data::BasicType::Boolean)
+			std::cout << std::get<bool>(value);
+		else if (t == data::BasicType::String)
+			std::cout << std::get<std::string>(value);
+		else if (t == data::BasicType::Vec3)
+			printVec3(std::get<glm::vec3>(value));
+		else if (t == data::BasicType::Number)
+			std::cout << std::get<double>(value);
+		else
+			std::cout << "UnsupportedType";
+	}
+
 }
 
 
 InstructionType ScriptEngine::getInstructionType(const std::string &instruction) {
 	for (std::string blockOp : blockOperators)
 		if (instruction.find(blockOp) == 0) {
-			std::cout << "Found block operator " << blockOp << std::endl;
+			// std::cout << "Found block operator " << blockOp << std::endl;
 			return BLOCK_OPERATOR;
 		}
 	if (instruction.find('=') != std::string::npos) {
-		std::cout << "Found equal operator =" << std::endl;
+		// std::cout << "Found equal operator =" << std::endl;
 		return ASSIGN;
 	}
 	return FUNCTION;
@@ -447,6 +677,7 @@ bool ScriptEngine::handleSystemDecl(LoadResult &result) {
 				if (!variableTypes.contains(param.type))
 					throw UnknownExpressionException("ERROR", _line.data(), _currentLine, "Unknown expression.");
 				eventDescription.payload = variableTypes[param.type];
+				eventDescription.payloadName = param.name;
 			}
 		}
 	}
@@ -455,12 +686,14 @@ bool ScriptEngine::handleSystemDecl(LoadResult &result) {
 		_phSystem.name = keyWords[1].substr(0, endOfName);
 	else
 		_phSystem.name = keyWords[1];
-	_phSystem.systemComponents = systemParameters[0].components;
+	_phSystem.systemComponents = systemParameters[0].components; // TODO : make sure only one entity is input per system
 	_phSystem.eventListener = eventDescription;
+	// TODO : check if lamda or bind is more appropriate
 	// _phSystem.system = [this](const pivot::ecs::systems::Description &d, pivot::ecs::systems::Description::systemArgs &a, const pivot::ecs::event::Event &e) {
 	// 	this->executeSystemNew(d, a, e);
 	// };
 	_phSystem.system = std::bind(&ScriptEngine::executeSystemNew, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+	_systemParameters.insert_or_assign(_phSystem.name, systemParameters[0]); // TODO : make sure only one entity is input per system
 	return true;
 }
 bool ScriptEngine::handlePropertyDecl() {
@@ -496,6 +729,7 @@ void ScriptEngine::registerComponent(LoadResult &result, bool verbose){
 	}
 	component::GlobalIndex::getSingleton().registerComponent(_phComponent);
 	result.components.push_back(_phComponent);
+	// _components.insert_or_assign(_phComponent.name, _phComponent);
 	try {
 		std::get<data::RecordType>(_phComponent.type).clear();
 	} catch (std::bad_variant_access e) {
@@ -662,24 +896,8 @@ bool ScriptEngine::expectsState(State previous, State next) {
 	}
 }
 
-std::vector<std::string> split(const std::string& str, const std::string& delim)
-{
-    std::vector<std::string> tokens;
-    size_t prev = 0, pos = 0;
-    do
-    {
-        pos = str.find_first_of(delim, prev);
-        if (pos == std::string::npos) pos = str.length();
-        std::string token = str.substr(prev, pos-prev);
-        if (!token.empty()) tokens.push_back(token);
-        prev = pos + 1;
-    }
-    while (pos < str.length() && prev < str.length());
-    return tokens;
-}
 
-
-std::string StateToString(State s) {
+std::string script::StateToString(State s) {
 	switch (s) {
 		case START:
 			return "START";
@@ -762,10 +980,29 @@ Indent ScriptEngine::getIndent(const std::string &line) {
 	return r;
 }
 
-bool doubleSpacePredicate(char left, char right) {
+long long ScriptEngine::timeThis(std::function<void()> toTime, const std::string &name, bool print) {
+	auto start = _clock.now();
+	toTime();
+	auto end = _clock.now();
+	if (print)
+		std::cout << "-timeThis-- " << name << "\t" << std::chrono::duration(end - start).count() / 1000 << "us" << std::endl;
+	return std::chrono::duration(end - start).count();
+}
+
+
+void script::replaceAll(std::string& str, const std::string& from, const std::string& to) {
+    if(from.empty())
+        return;
+    size_t start_pos = 0;
+    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+    }
+}
+bool script::doubleSpacePredicate(char left, char right) {
 	return ((left == right) && (left == ' '));
 }
 
-std::unique_ptr<pivot::ecs::component::IComponentArray> arrayFunctor(pivot::ecs::component::Description description) {
+std::unique_ptr<pivot::ecs::component::IComponentArray> script::arrayFunctor(pivot::ecs::component::Description description) {
 	return std::make_unique<component::ScriptingComponentArray>(description);
 }

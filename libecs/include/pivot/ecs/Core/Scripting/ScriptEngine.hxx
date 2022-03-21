@@ -2,17 +2,10 @@
 #define __SCRIPT__ENGINE__
 #define _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING
 
-#include <iostream>
-#include <vector>
-#include <string>
-#include <fstream>
-#include <any>
+#include "pivot/ecs/Core/Scripting/Stack.hxx"
 
-#include "pivot/ecs/Core/Scripting/Exceptions.hxx"
+namespace pivot::ecs::script {
 
-// TODO : remove this
-// This silences iterator warnings from CombinationArray
-#define _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING
 
 struct ComponentPosition {
 	double pos_x;
@@ -28,13 +21,20 @@ struct ComponentVelocity {
 struct Variable {
 	std::string name;
 	std::string type;
-	std::any value;
+	pivot::ecs::data::Value value;
 	std::vector<Variable> fields;
 };
 
 class ScriptEngine {
-
 public:
+	// class Stack {
+	// public:
+	// 	Stack() = default;
+	// 	~Stack() = default;
+	// protected:
+	// 	std::vector<VariableNew> _stack;
+	// };
+
 	ScriptEngine();
 	~ScriptEngine();
 	LoadResult loadFile(const std::string &fileName, bool verbose);
@@ -44,6 +44,10 @@ public:
 
 	void totalReset(); // This is to reset the entire file (for tests notably)
 	void softReset(); // This is to reset the data needed to read files but not the already registered data
+
+	long long _totalCompute;
+	long long _totalReplaceall;
+	long long _totalCompile;
 
 protected:
 
@@ -76,11 +80,15 @@ protected:
 	InstructionType getInstructionType(const std::string &instruction);
 	void handleInstruction(const std::string &instruction, InstructionType iType);
 	bool isSolvable(const std::string &toSolve);
-	
+	bool isSolvableNew(const std::string &toSolve);
+	data::Value &solve(const std::string &toSolve);
+	data::Value computeExpression(const std::string &toSolve);
+	bool isLiteralNumber(const std::string &expr);
 	std::any getField(const std::any &component, const std::string &componentName, const std::string &fieldName);
 	void printStack();
-	void printValue(const std::any &value, const std::string &type);
-
+	void printVec3(const glm::vec3 &vec);
+	void printValue(const data::Value &value, const data::Type &type);
+	long long timeThis(std::function<void()> toTime, const std::string &name = "", bool print = false);
 
 	std::vector<std::string> _lines;
 	std::string _line;
@@ -94,15 +102,29 @@ protected:
 	std::vector<std::string> _phInstructions;
 
 	std::vector<SystemDescription> _systems;
+	// std::map<std::string, ComponentDescription> _components;
 	std::vector<std::vector<std::string>> _systemsInstructions;
+	std::map<std::string, SystemParameter> _systemParameters;
+	std::map<std::string, EventParameter> _eventParameters;
 	// std::vector<ComponentDescription> _components;
 
 	std::vector<Variable> _variables;
+	std::vector<VariableNew> _stack;
+	Stack _stackNew;
+
+	exprtk::expression<double> _expression;
+	exprtk::symbol_table<double> _symbol_table;
+	exprtk::parser<double> _parser;
+
+
+	std::chrono::high_resolution_clock _clock;
 };
 
+void replaceAll(std::string& str, const std::string& from, const std::string& to);
 bool doubleSpacePredicate(char left, char right);
-std::vector<std::string> split(const std::string& str, const std::string& delim);
 std::unique_ptr<pivot::ecs::component::IComponentArray> arrayFunctor(pivot::ecs::component::Description description);
+
+} // end of namespace pivot::ecs::script
 
 /*
 

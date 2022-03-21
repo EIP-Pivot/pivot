@@ -9,8 +9,6 @@ component Position
 # 	Number x
 # 	Number y
 
-component
-
 component Velocity
 	# Size size
 	Number vel_x

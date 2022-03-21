@@ -1,0 +1,8 @@
+component Position
+	Number pos_x
+
+component Velocity
+	Number vel_x
+
+system	onTickPhysics( anyEntity<	Position, Velocity> ) event Tick( Number deltaTime )
+	anyEntity.Position.pos_x = anyEntity.Position.pos_x + anyEntity.Velocity.vel_x * deltaTime

@@ -23,28 +23,28 @@ TEST_CASE("Scripting-parser") {
 		// { "C:/Users/jonme/eip/pivot/libecs/tests/Core/Scripting/tests/valid/variable/valid_variable.pvt",	"" },
 		// { "C:/Users/jonme/eip/pivot/libecs/tests/Core/Scripting/tests/jeu.pvt",	"" },
 	};
-	ScriptEngine engine;
+	script::ScriptEngine engine;
 	for (auto [file, output] : testFilesOutput) {
-		LoadResult r = engine.loadFile(file, false);
+		script::LoadResult r = engine.loadFile(file, false);
 		REQUIRE(output == r.output);
 		engine.totalReset();
 	}
 }
 
 TEST_CASE("Scripting-parser-main") {
-	std::cout << "--------- Start Parser main --------" << std::endl;
+	// std::cout << "--------- Start Parser main --------" << std::endl;
 	std::vector<std::pair<std::string, std::string>> testFilesOutput = {
-		{ "C:/Users/jonme/eip/pivot/libecs/tests/Core/Scripting/tests/physics.pvt",	"" },
+		// { "C:/Users/jonme/eip/pivot/libecs/tests/Core/Scripting/tests/physics.pvt",	"" },
 		// { "C:/Users/jonme/eip/pivot/libecs/tests/Core/Scripting/tests/valid/variable/valid_variable.pvt",	"" },
 		// { "C:/Users/jonme/eip/pivot/libecs/tests/Core/Scripting/tests/jeu.pvt",	"" },
 	};
 
-	ScriptEngine engine;
+	script::ScriptEngine engine;
 	for (auto [file, output] : testFilesOutput) {
-		LoadResult r = engine.loadFile(file, true);
+		script::LoadResult r = engine.loadFile(file, true);
 		engine.totalReset();
 	}
-	std::cout << "--------- End Parser main --------" << std::endl;
+	// std::cout << "--------- End Parser main --------" << std::endl;
 }
 
 

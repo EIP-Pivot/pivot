@@ -7,6 +7,10 @@
 #include "pivot/ecs/Core/Component/index.hxx"
 #include "pivot/ecs/Core/Component/ScriptingComponentArray.hxx"
 
+
+namespace pivot::ecs::script {
+
+
 // TODO : replace these by the actual components and descriptions
 
 // struct Property {
@@ -72,6 +76,8 @@ enum InstructionType {
 };
 
 std::string StateToString(State s);
+
+} // end of namespace pivot::ecs::script
 
 
 #endif

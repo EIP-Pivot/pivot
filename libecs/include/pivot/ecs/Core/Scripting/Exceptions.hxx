@@ -4,6 +4,9 @@
 #include <exception>
 #include "pivot/ecs/Core/Scripting/Types.hxx"
 
+namespace pivot::ecs::script {
+
+
 class BadIndentException : public std::exception {
     size_t linenb;
     const char* line;
@@ -75,6 +78,24 @@ class UnexpectedStateException : public std::exception {
         State get_new_state() const { return newState; }
 };
 
+class InvalidTypeException : public std::exception {
+    
+    public:
+    	InvalidTypeException(const char* msg) : std::exception(msg)
+        {
+        }
+};
+
+class UnknownVariableException : public std::exception {
+    
+    public:
+    	UnknownVariableException(const char* msg) : std::exception(msg)
+        {
+        }
+};
+
+
+
 class UnhandledException : public std::exception {
     
     public:
@@ -82,5 +103,7 @@ class UnhandledException : public std::exception {
         {
         }
 };
+
+} // end of namespace pivot::ecs::script
 
 #endif

@@ -8,7 +8,7 @@ namespace pivot::graphics
 
 ///@class ComputePipelineBuilder
 ///@brief Utility class to ease the creation of Vulkan compute pipelines
-class ComputePipelineBuilder final : public interface::IPipelineBuilder
+class ComputePipelineBuilder final : public internal::IPipelineBuilder
 {
 public:
     ComputePipelineBuilder() = default;

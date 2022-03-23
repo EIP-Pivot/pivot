@@ -5,7 +5,6 @@
 
 namespace pivot::graphics
 {
-class VulkanBase;
 
 /// @class AllocatedBuffer
 ///
@@ -24,10 +23,6 @@ public:
     {
         return static_cast<T *>(info.pMappedData);
     }
-
-    /// Clone the buffer into a new one
-    AllocatedBuffer cloneBuffer(VulkanBase &i, const vk::BufferUsageFlags usage, const vma::MemoryUsage memoryUsage,
-                                uint32_t size = 0);
 
     /// Test if the Vulkan buffer is created
     operator bool() const noexcept { return buffer && memory; }

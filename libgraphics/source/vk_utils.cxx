@@ -59,11 +59,6 @@ vk::Format findSupportedFormat(vk::PhysicalDevice &gpu, const std::vector<vk::Fo
     throw std::runtime_error("failed to find supported format");
 }
 
-bool hasStencilComponent(vk::Format format) noexcept
-{
-    return format == vk::Format::eD32SfloatS8Uint || format == vk::Format::eD24UnormS8Uint;
-}
-
 namespace tools
 {
     std::string bytesToString(uint64_t bytes)
@@ -86,43 +81,5 @@ namespace tools
         return buffer.str();
     }
 
-    const std::string to_string(vk::SampleCountFlagBits count) noexcept
-    {
-        switch (count) {
-            case vk::SampleCountFlagBits::e1: return "No MSAA";
-            case vk::SampleCountFlagBits::e2: return "2X MSAA";
-            case vk::SampleCountFlagBits::e4: return "4X MSAA";
-            case vk::SampleCountFlagBits::e8: return "8X MSAA";
-            case vk::SampleCountFlagBits::e16: return "16X MSAA";
-            case vk::SampleCountFlagBits::e32: return "32X MSAA";
-            case vk::SampleCountFlagBits::e64: return "64X MSAA";
-            default: return "Unknown";
-        }
-    }
-    const std::string to_string(vk::CullModeFlagBits count) noexcept
-    {
-        switch (count) {
-            case vk::CullModeFlagBits::eNone: return "No culling";
-            case vk::CullModeFlagBits::eBack: return "Back culling";
-            case vk::CullModeFlagBits::eFront: return "Front culling";
-            case vk::CullModeFlagBits::eFrontAndBack: return "Both side culling";
-            default: return "Unknown";
-        }
-    }
-
-    std::string physicalDeviceTypeString(vk::PhysicalDeviceType type) noexcept
-    {
-        switch (type) {
-#define STR(r) \
-    case vk::PhysicalDeviceType::e##r: return #r
-            STR(Other);
-            STR(IntegratedGpu);
-            STR(DiscreteGpu);
-            STR(VirtualGpu);
-            STR(Cpu);
-#undef STR
-            default: return "UNKNOWN_DEVICE_TYPE";
-        }
-    }
 }    // namespace tools
 }    // namespace pivot::graphics::vk_utils

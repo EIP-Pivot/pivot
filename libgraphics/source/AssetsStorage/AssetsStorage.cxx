@@ -109,19 +109,22 @@ void AssetStorage::pushModelsOnGPU()
     }
     auto stagingVertex = base_ref->get().allocator.createBuffer(vertexSize, vk::BufferUsageFlagBits::eTransferSrc,
                                                                 vma::MemoryUsage::eCpuToGpu);
-    base_ref->get().allocator.copyBuffer(stagingVertex, cpuStorage.vertexStagingBuffer);
-    vertexBuffer = stagingVertex.cloneBuffer(
-        base_ref->get(), vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
+    vertexBuffer = base_ref->get().allocator.createBuffer(
+        vertexSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
         vma::MemoryUsage::eGpuOnly);
+
+    base_ref->get().allocator.copyBuffer(stagingVertex, cpuStorage.vertexStagingBuffer);
+    base_ref->get().copyBuffer(stagingVertex, vertexBuffer);
     base_ref->get().allocator.destroyBuffer(stagingVertex);
 
     auto indexSize = cpuStorage.indexStagingBuffer.size() * sizeof(uint32_t);
     auto stagingIndex = base_ref->get().allocator.createBuffer(indexSize, vk::BufferUsageFlagBits::eTransferSrc,
                                                                vma::MemoryUsage::eCpuToGpu);
-    base_ref->get().allocator.copyBuffer(stagingIndex, cpuStorage.indexStagingBuffer);
-    indicesBuffer = stagingIndex.cloneBuffer(
-        base_ref->get(), vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
+    indicesBuffer = base_ref->get().allocator.createBuffer(
+        indexSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
         vma::MemoryUsage::eGpuOnly);
+    base_ref->get().allocator.copyBuffer(stagingIndex, cpuStorage.indexStagingBuffer);
+    base_ref->get().copyBuffer(stagingIndex, indicesBuffer);
     base_ref->get().allocator.destroyBuffer(stagingIndex);
 }
 
@@ -154,10 +157,10 @@ void AssetStorage::pushTexturesOnGPU()
         vma::AllocationCreateInfo allocInfo;
         allocInfo.usage = vma::MemoryUsage::eGpuOnly;
         auto image = base_ref->get().allocator.createImage(imageInfo, allocInfo);
-        image.createImageView(base_ref->get());
-        image.transitionLayout(base_ref->get(), vk::ImageLayout::eTransferDstOptimal);
+        image.createImageView(base_ref->get().device);
+        base_ref->get().transitionLayout(image, vk::ImageLayout::eTransferDstOptimal);
         base_ref->get().copyBufferToImage(stagingBuffer, image);
-        image.generateMipmaps(base_ref->get(), image.mipLevels);
+        base_ref->get().generateMipmaps(image, image.mipLevels);
 
         base_ref->get().allocator.destroyBuffer(stagingBuffer);
         textureStorage.add(name, std::move(image));
@@ -175,6 +178,9 @@ void AssetStorage::pushMaterialOnGPU()
     auto materialStaging = base_ref->get().allocator.createBuffer(
         size, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferSrc,
         vma::MemoryUsage::eCpuToGpu);
+    materialBuffer = base_ref->get().allocator.createBuffer(
+        size, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst,
+        vma::MemoryUsage::eGpuOnly);
 
     for (auto &[name, idx]: cpuStorage.materialStaging) {
         const auto &mat = cpuStorage.materialStaging.getStorage()[idx];
@@ -198,9 +204,7 @@ void AssetStorage::pushMaterialOnGPU()
     }
 
     base_ref->get().allocator.copyBuffer(materialStaging, materialStorage.getStorage());
-    materialBuffer = materialStaging.cloneBuffer(
-        base_ref->get(), vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst,
-        vma::MemoryUsage::eGpuOnly);
+    base_ref->get().copyBuffer(materialStaging, materialBuffer);
     base_ref->get().allocator.destroyBuffer(materialStaging);
 }
 
@@ -215,11 +219,12 @@ void AssetStorage::pushBoundingBoxesOnGPU()
     auto boundingboxStaging = base_ref->get().allocator.createBuffer(
         size, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferSrc,
         vma::MemoryUsage::eCpuToGpu);
+    boundingboxbuffer = base_ref->get().allocator.createBuffer(
+        size, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst,
+        vma::MemoryUsage::eGpuOnly);
 
     base_ref->get().allocator.copyBuffer(boundingboxStaging, meshBoundingBoxStorage.getStorage());
-    boundingboxbuffer = boundingboxStaging.cloneBuffer(
-        base_ref->get(), vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst,
-        vma::MemoryUsage::eGpuOnly);
+    base_ref->get().copyBuffer(boundingboxStaging, boundingboxbuffer);
     base_ref->get().allocator.destroyBuffer(boundingboxStaging);
 }
 

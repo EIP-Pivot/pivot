@@ -1,14 +1,12 @@
 #pragma once
 
-#include <filesystem>
-
 #include <vk_mem_alloc.hpp>
 #include <vulkan/vulkan.hpp>
 
+#include "pivot/graphics/vk_init.hxx"
+
 namespace pivot::graphics
 {
-
-class VulkanBase;
 
 /// @class AllocatedImage
 ///
@@ -17,13 +15,15 @@ class AllocatedImage
 {
 public:
     /// Create the image view for this image
-    void createImageView(VulkanBase &base);
+    void createImageView(vk::Device &device)
+    {
+        createImageView(device, vk_init::populateVkImageViewCreateInfo(image, format, mipLevels));
+    }
     /// @copydoc createImageView
-    void createImageView(VulkanBase &base, const vk::ImageViewCreateInfo &info);
-    /// Generate mipmaps for the image
-    void generateMipmaps(VulkanBase &base, uint32_t mipLevel);
-    /// Transition image layout to given format
-    void transitionLayout(VulkanBase &i, vk::ImageLayout layout);
+    void createImageView(vk::Device &device, const vk::ImageViewCreateInfo &info)
+    {
+        imageView = device.createImageView(info);
+    }
 
 public:
     //// @cond

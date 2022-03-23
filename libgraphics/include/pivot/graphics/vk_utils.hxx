@@ -45,15 +45,10 @@ namespace vk_utils
     vk::SampleCountFlagBits getMaxUsableSampleCount(vk::PhysicalDevice &physical_device);
     vk::Format findSupportedFormat(vk::PhysicalDevice &gpu, const std::vector<vk::Format> &candidates,
                                    vk::ImageTiling tiling, vk::FormatFeatureFlags features);
-    bool hasStencilComponent(vk::Format format) noexcept;
 
     namespace tools
     {
         std::string bytesToString(uint64_t bytes);
-        const std::string to_string(vk::SampleCountFlagBits count) noexcept;
-        const std::string to_string(vk::CullModeFlagBits count) noexcept;
-
-        std::string physicalDeviceTypeString(vk::PhysicalDeviceType type) noexcept;
     }    // namespace tools
 }    // namespace vk_utils
 }    // namespace pivot::graphics

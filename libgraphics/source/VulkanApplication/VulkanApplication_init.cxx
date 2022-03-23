@@ -444,8 +444,8 @@ void VulkanApplication::createDepthResources()
 
     auto createInfo = vk_init::populateVkImageViewCreateInfo(depthResources.image, depthFormat);
     createInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eDepth;
-    depthResources.createImageView(*this, createInfo);
-    depthResources.transitionLayout(*this, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+    depthResources.createImageView(device, createInfo);
+    transitionLayout(depthResources, vk::ImageLayout::eDepthStencilAttachmentOptimal);
     vk_debug::setObjectName(device, depthResources.image, "Depth Image");
     vk_debug::setObjectName(device, depthResources.imageView, "Depth Image view");
     swapchainDeletionQueue.push([&] {
@@ -474,7 +474,7 @@ void VulkanApplication::createColorResources()
     allocInfo.setFlags(vma::AllocationCreateFlagBits::eDedicatedMemory);
 
     colorImage = allocator.createImage(imageInfo, allocInfo);
-    colorImage.createImageView(*this);
+    colorImage.createImageView(device);
     vk_debug::setObjectName(device, colorImage.image, "Color Image");
     vk_debug::setObjectName(device, colorImage.imageView, "Color Image view");
     swapchainDeletionQueue.push([&] {

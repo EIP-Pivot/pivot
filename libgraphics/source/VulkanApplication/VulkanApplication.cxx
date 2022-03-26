@@ -127,9 +127,9 @@ try {
     uint32_t imageIndex = swapchain.getNextImageIndex(UINT64_MAX, frame.imageAvailableSemaphore);
     allocator.setCurrentFrameIndex(imageIndex);
 
-    auto &cmd = commandBuffersPrimary[imageIndex];
-    auto &drawCmd = commandBuffersSecondary[imageIndex];
-    auto &imguiCmd = imguiContext.cmdBuffer[imageIndex];
+    auto &cmd = commandBuffersPrimary[currentFrame];
+    auto &drawCmd = commandBuffersSecondary[currentFrame];
+    auto &imguiCmd = imguiContext.cmdBuffer[currentFrame];
 
     device.resetFences(frame.inFlightFences);
     cmd.reset();

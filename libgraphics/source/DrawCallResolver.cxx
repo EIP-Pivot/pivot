@@ -105,7 +105,7 @@ void DrawCallResolver::createDescriptorPool()
     vk::DescriptorPoolSize poolSize[] = {
         {
             .type = vk::DescriptorType::eUniformBuffer,
-            .descriptorCount = MaxFrameInFlight,
+            .descriptorCount = MaxFrameInFlight * 2,
         },
     };
 

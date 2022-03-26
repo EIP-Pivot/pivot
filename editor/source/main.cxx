@@ -123,10 +123,8 @@ public:
             last = pos;
             ControlSystem::processMouseMovement(camera, glm::dvec2(xoffset, yoffset));
         });
-        assetStorage.loadModels("../assets/plane.obj", "../assets/cube.obj");
-        assetStorage.loadTextures("../assets/rouge.png", "../assets/vert.png", "../assets/bleu.png",
-                                  "../assets/cyan.png", "../assets/orange.png", "../assets/jaune.png",
-                                  "../assets/blanc.png", "../assets/violet.png");
+        assetStorage.loadModels("../editor/assets/cube.obj");
+        assetStorage.loadTextures("../editor/assets/violet.png");
     }
     void processKeyboard(const Camera::Movement direction, float dt) noexcept
     {

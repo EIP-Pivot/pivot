@@ -35,6 +35,9 @@ public:
     const_iterator begin() const;    ///< Begin iterator
     const_iterator end() const;      ///< End iterator
 
+    /// Returns true if the system is registered in the manager
+    bool hasSystem(const std::string &systemName) const { return m_systems.contains(systemName); }
+
     /// Error thrown when component are not registered
     struct MissingComponent : public std::runtime_error {
         /// Created a MissingComponent based on a component's name

@@ -142,6 +142,10 @@ public:
     inline const T &get(const std::string &name) const;
 
     template <typename T>
+    /// Get an asset of type T named name if it exists
+    inline std::optional<std::reference_wrapper<const T>> get_optional(const std::string &name) const;
+
+    template <typename T>
     /// Get the index of the asset of type T named name
     inline std::int32_t getIndex(const std::string &name) const;
 
@@ -209,6 +213,16 @@ inline const AssetStorage::Prefab &AssetStorage::get(const std::string &p) const
 {
     PIVOT_TEST_CONTAINS(prefabStorage, p);
     return prefabStorage.at(p);
+}
+
+template <>
+/// @copydoc AssetStorage::get_optional
+inline std::optional<std::reference_wrapper<const AssetStorage::Prefab>>
+AssetStorage::get_optional(const std::string &p) const
+{
+    auto prefab = prefabStorage.find(p);
+    if (prefab == prefabStorage.end()) return std::nullopt;
+    return prefab->second;
 }
 
 template <>

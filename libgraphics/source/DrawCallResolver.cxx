@@ -58,16 +58,21 @@ void DrawCallResolver::prepareForDraw(std::vector<std::reference_wrapper<const R
                 .size = 0,
             });
         }
-        for (const auto &model: storage_ref->get().get<AssetStorage::Prefab>(object.get().meshID).modelIds) {
-            frame.pipelineBatch.back().size += 1;
-            frame.packedDraws.push_back({
-                .meshId = model,
-                .first = drawCount++,
-                .count = 1,
-            });
-            auto obj = object.get();
-            obj.meshID = model;
-            objectGPUData.push_back(gpu_object::UniformBufferObject(obj, *storage_ref));
+        logger.debug() << object.get().meshID;
+        auto prefab = storage_ref->get().get_optional<AssetStorage::Prefab>(object.get().meshID);
+        if (prefab.has_value()) {
+            for (const auto &model: prefab->get().modelIds) {
+                logger.debug() << model;
+                frame.pipelineBatch.back().size += 1;
+                frame.packedDraws.push_back({
+                    .meshId = model,
+                    .first = drawCount++,
+                    .count = 1,
+                });
+                auto obj = object.get();
+                obj.meshID = model;
+                objectGPUData.push_back(gpu_object::UniformBufferObject(obj, *storage_ref));
+            }
         }
     }
     assert(frame.packedDraws.size() == objectGPUData.size());
@@ -105,7 +110,7 @@ void DrawCallResolver::createDescriptorPool()
     vk::DescriptorPoolSize poolSize[] = {
         {
             .type = vk::DescriptorType::eUniformBuffer,
-            .descriptorCount = MaxFrameInFlight,
+            .descriptorCount = MaxFrameInFlight * 2,
         },
     };
 

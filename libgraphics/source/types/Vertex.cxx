@@ -5,8 +5,6 @@ bool Vertex::operator==(const Vertex &other) const noexcept
     return pos == other.pos && color == other.color && normal == other.normal && texCoord == other.texCoord;
 }
 
-bool Vertex::operator!=(const Vertex &other) const noexcept { return !(*this == other); }
-
 vk::VertexInputBindingDescription Vertex::getBindingDescription() noexcept
 {
     return {

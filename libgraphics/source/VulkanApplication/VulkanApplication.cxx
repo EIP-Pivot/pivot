@@ -125,7 +125,6 @@ try {
     vk_utils::vk_try(device.waitForFences(frame.inFlightFences, VK_TRUE, UINT64_MAX));
 
     uint32_t imageIndex = swapchain.getNextImageIndex(UINT64_MAX, frame.imageAvailableSemaphore);
-    // allocator.setCurrentFrameIndex(imageIndex);
 
     auto &cmd = commandBuffersPrimary[imageIndex];
     auto &drawCmd = commandBuffersSecondary[imageIndex];

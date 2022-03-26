@@ -97,6 +97,15 @@ bool AssetStorage::loadTexture(const std::filesystem::path &path)
     return std::apply(iter->second, std::make_tuple(this, path));
 }
 
+template <typename T>
+static void copy_with_staging_buffer(VulkanBase &base_ref, AllocatedBuffer &staging, AllocatedBuffer &dst,
+                                     const std::vector<T> &data)
+{
+    base_ref.allocator.copyBuffer(staging, std::span(data));
+    base_ref.copyBuffer(staging, dst);
+    base_ref.allocator.destroyBuffer(staging);
+}
+
 void AssetStorage::pushModelsOnGPU()
 {
     DEBUG_FUNCTION
@@ -113,9 +122,7 @@ void AssetStorage::pushModelsOnGPU()
         vertexSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
         vma::MemoryUsage::eGpuOnly);
 
-    base_ref->get().allocator.copyBuffer(stagingVertex, cpuStorage.vertexStagingBuffer);
-    base_ref->get().copyBuffer(stagingVertex, vertexBuffer);
-    base_ref->get().allocator.destroyBuffer(stagingVertex);
+    copy_with_staging_buffer(base_ref->get(), stagingVertex, vertexBuffer, cpuStorage.vertexStagingBuffer);
 
     auto indexSize = cpuStorage.indexStagingBuffer.size() * sizeof(uint32_t);
     auto stagingIndex = base_ref->get().allocator.createBuffer(indexSize, vk::BufferUsageFlagBits::eTransferSrc,
@@ -123,9 +130,7 @@ void AssetStorage::pushModelsOnGPU()
     indicesBuffer = base_ref->get().allocator.createBuffer(
         indexSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
         vma::MemoryUsage::eGpuOnly);
-    base_ref->get().allocator.copyBuffer(stagingIndex, cpuStorage.indexStagingBuffer);
-    base_ref->get().copyBuffer(stagingIndex, indicesBuffer);
-    base_ref->get().allocator.destroyBuffer(stagingIndex);
+    copy_with_staging_buffer(base_ref->get(), stagingIndex, indicesBuffer, cpuStorage.indexStagingBuffer);
 }
 
 void AssetStorage::pushTexturesOnGPU()
@@ -139,7 +144,7 @@ void AssetStorage::pushTexturesOnGPU()
         const auto &img = cpuStorage.textureStaging.get(idx);
         AllocatedBuffer stagingBuffer = base_ref->get().allocator.createBuffer(
             img.image.size(), vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);
-        base_ref->get().allocator.copyBuffer(stagingBuffer, img.image);
+        base_ref->get().allocator.copyBuffer(stagingBuffer, std::span(img.image));
 
         vk::ImageCreateInfo imageInfo{
             .imageType = vk::ImageType::e2D,
@@ -202,10 +207,7 @@ void AssetStorage::pushMaterialOnGPU()
                     (mat.emissiveTexture.empty()) ? (-1) : (textureStorage.getIndex(mat.emissiveTexture)),
             });
     }
-
-    base_ref->get().allocator.copyBuffer(materialStaging, materialStorage.getStorage());
-    base_ref->get().copyBuffer(materialStaging, materialBuffer);
-    base_ref->get().allocator.destroyBuffer(materialStaging);
+    copy_with_staging_buffer(base_ref->get(), materialStaging, materialBuffer, materialStorage.getStorage());
 }
 
 void AssetStorage::pushBoundingBoxesOnGPU()
@@ -222,10 +224,8 @@ void AssetStorage::pushBoundingBoxesOnGPU()
     boundingboxbuffer = base_ref->get().allocator.createBuffer(
         size, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst,
         vma::MemoryUsage::eGpuOnly);
-
-    base_ref->get().allocator.copyBuffer(boundingboxStaging, meshBoundingBoxStorage.getStorage());
-    base_ref->get().copyBuffer(boundingboxStaging, boundingboxbuffer);
-    base_ref->get().allocator.destroyBuffer(boundingboxStaging);
+    copy_with_staging_buffer(base_ref->get(), boundingboxStaging, boundingboxbuffer,
+                             meshBoundingBoxStorage.getStorage());
 }
 
 }    // namespace pivot::graphics

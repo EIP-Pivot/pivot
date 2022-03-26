@@ -13,11 +13,10 @@ void VulkanAllocator::init(const vma::AllocatorCreateInfo &info)
     properties = info.physicalDevice.getMemoryProperties();
 }
 
-AllocatedBuffer VulkanAllocator::createBuffer(const vk::DeviceSize &allocSize, const vk::BufferUsageFlags &usage,
-                                              const vma::MemoryUsage &memoryUsage,
-                                              const vma::AllocationCreateFlags &flags)
+AllocatedBuffer VulkanAllocator::createBuffer(vk::DeviceSize allocSize, vk::BufferUsageFlags usage,
+                                              vma::MemoryUsage memoryUsage, vma::AllocationCreateFlags flags)
 {
-    if (allocSize == 0) throw std::runtime_error("Can't allocated an empty buffer !");
+    assert(allocSize != 0);
     vk::BufferCreateInfo bufferInfo{
         .size = allocSize,
         .usage = usage,
@@ -27,12 +26,14 @@ AllocatedBuffer VulkanAllocator::createBuffer(const vk::DeviceSize &allocSize, c
     vmaallocInfo.flags = flags;
     AllocatedBuffer buffer;
     std::tie(buffer.buffer, buffer.memory) = allocator.createBuffer(bufferInfo, vmaallocInfo, buffer.info);
+    buffer.flags = flags;
     buffer.size = allocSize;
     return buffer;
 }
 
 AllocatedImage VulkanAllocator::createImage(const vk::ImageCreateInfo &info, const vma::AllocationCreateInfo &allocInfo)
 {
+    assert(info.extent.depth != 0 && info.extent.height != 0 && info.extent.width != 0);
     AllocatedImage image{
         .format = info.format,
         .size = info.extent,

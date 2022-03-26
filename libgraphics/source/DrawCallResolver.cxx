@@ -81,7 +81,7 @@ void DrawCallResolver::prepareForDraw(std::vector<std::reference_wrapper<const R
     }
 
     if (frame.currentBufferSize > 0) {
-        base_ref->get().allocator.copyBuffer(frame.objectBuffer, objectGPUData);
+        base_ref->get().allocator.copyBuffer(frame.objectBuffer, std::span(objectGPUData));
 
         auto *sceneData = frame.indirectBuffer.getMappedPointer<vk::DrawIndexedIndirectCommand>();
         assert(sceneData);
@@ -116,7 +116,7 @@ void DrawCallResolver::createDescriptorPool()
     vk_debug::setObjectName(base_ref->get().device, descriptorPool, "Objects DescriptorPool");
 }
 
-void DrawCallResolver::createBuffers(Frame &frame, const vk::DeviceSize bufferSize)
+void DrawCallResolver::createBuffers(Frame &frame, vk::DeviceSize bufferSize)
 {
     if (frame.indirectBuffer) base_ref->get().allocator.destroyBuffer(frame.indirectBuffer);
     if (frame.objectBuffer) base_ref->get().allocator.destroyBuffer(frame.objectBuffer);
@@ -136,7 +136,7 @@ void DrawCallResolver::createBuffers(Frame &frame, const vk::DeviceSize bufferSi
     frame.currentBufferSize = bufferSize;
 }
 
-void DrawCallResolver::createDescriptorSets(Frame &frame, const vk::DeviceSize bufferSize)
+void DrawCallResolver::createDescriptorSets(Frame &frame, vk::DeviceSize bufferSize)
 {
     assert(bufferSize > 0);
     if (frame.objectDescriptor) base_ref->get().device.freeDescriptorSets(descriptorPool, frame.objectDescriptor);

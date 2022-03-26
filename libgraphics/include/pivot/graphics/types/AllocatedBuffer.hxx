@@ -21,6 +21,7 @@ public:
     /// If the buffer was created with the flag vma::AllocationCreateFlagBits::eMapped, return the mapped pointer
     T *getMappedPointer() const noexcept
     {
+        assert(flags & vma::AllocationCreateFlagBits::eMapped);
         return static_cast<T *>(info.pMappedData);
     }
 
@@ -33,6 +34,7 @@ public:
     vma::Allocation memory = VK_NULL_HANDLE;
     vk::DeviceSize size = 0;
     vma::AllocationInfo info;
+    vma::AllocationCreateFlags flags;
     //// @endcond
 };
 

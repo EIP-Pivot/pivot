@@ -75,7 +75,7 @@ public:
                         const uint32_t frameIndex);
 
     /// Get the frame data of a given frame
-    constexpr const Frame &getFrameData(const uint32_t &frameIndex) const { return frames.at(frameIndex); }
+    constexpr const Frame &getFrameData(const uint32_t frameIndex) const { return frames.at(frameIndex); }
 
     /// @return Get the descritor set layout
     constexpr const vk::DescriptorSetLayout &getDescriptorSetLayout() const noexcept { return descriptorSetLayout; }

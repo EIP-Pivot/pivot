@@ -1,5 +1,6 @@
 #pragma once
 
+#include <span>
 #include <string>
 #include <vector>
 #include <vk_mem_alloc.hpp>
@@ -41,8 +42,8 @@ public:
     void destroy() { allocator.destroy(); }
 
     /// Create a buffer.
-    AllocatedBuffer createBuffer(const vk::DeviceSize &allocSize, const vk::BufferUsageFlags &usage,
-                                 const vma::MemoryUsage &memoryUsage, const vma::AllocationCreateFlags &flags = {});
+    AllocatedBuffer createBuffer(vk::DeviceSize allocSize, vk::BufferUsageFlags usage, vma::MemoryUsage memoryUsage,
+                                 vma::AllocationCreateFlags flags = {});
     /// @brief Create an image.
     ///
     /// The layout is undefined
@@ -68,22 +69,23 @@ public:
     /// It is safe to call if the buffer has been created with vma::AllocationCreateFlagBits::eMapped.
     void unmapMemory(AllocatedBuffer &buffer) { allocator.unmapMemory(buffer.memory); }
 
-    template <vk_utils::is_copyable T>
+    template <typename T>
+    requires std::is_standard_layout_v<T>
     /// Copy the data into a buffer
     void copyBuffer(AllocatedBuffer &buffer, const T *data, size_t size)
     {
+        assert(buffer.getSize() >= size);
         auto *mapped = mapMemory<T>(buffer);
         std::memcpy(mapped, data, size);
         unmapMemory(buffer);
     }
 
-    template <vk_utils::is_copyable T>
+    template <typename T>
+    requires std::is_standard_layout_v<T>
     /// Copy the vector into the buffer
-    void copyBuffer(AllocatedBuffer &buffer, const std::vector<T> &data)
+    void copyBuffer(AllocatedBuffer &buffer, const std::span<T> &data)
     {
-        auto *mapped = mapMemory<T>(buffer);
-        std::memcpy(mapped, data.data(), sizeof(T) * data.size());
-        unmapMemory(buffer);
+        copyBuffer(buffer, data.data(), sizeof(T) * data.size());
     }
 
     /// Destroy an allocated buffer

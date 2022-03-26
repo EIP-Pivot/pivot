@@ -11,6 +11,8 @@
 #include <pivot/ecs/Components/RigidBody.hxx>
 #include <pivot/ecs/Components/Tag.hxx>
 
+#include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
+
 #include <pivot/ecs/Core/Event.hxx>
 #include <pivot/ecs/ecs.hxx>
 
@@ -210,7 +212,15 @@ public:
             auto aspectRatio = getAspectRatio();
             float fov = 80;
 
-            auto objects = componentEditor.getObject();
+            auto &cm = gSceneManager.getCurrentLevel().getComponentManager();
+            auto renderobject_id = cm.GetComponentId("RenderObject").value();
+            auto &array = cm.GetComponentArray(renderobject_id);
+            pivot::ecs::component::DenseTypedComponentArray<RenderObject> &dense_array =
+                dynamic_cast<pivot::ecs::component::DenseTypedComponentArray<RenderObject> &>(array);
+
+            auto data = dense_array.getData();
+            std::vector<std::reference_wrapper<const RenderObject>> objects;
+            for (const auto &ro: data) { objects.push_back(ro); }
 
 #ifdef CULLING_DEBUG
             if (editor.cullingCameraFollowsCamera) editor.cullingCamera = camera;
@@ -249,6 +259,7 @@ const event::Description Application::tick = {
 
 int main()
 try {
+    logger.start();
     Application app;
     app.init();
     app.run();

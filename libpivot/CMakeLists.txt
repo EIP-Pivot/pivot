@@ -3,6 +3,7 @@ project(pivot)
 add_library(${PROJECT_NAME} STATIC
   sources/internal/camera.cxx
   sources/systems/ControlSystem.cxx
+  sources/systems/PhysicSystem.cxx
   sources/components/RenderObject.cxx
   )
 

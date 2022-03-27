@@ -1,6 +1,7 @@
 project(pivot)
 
 add_library(${PROJECT_NAME} STATIC
+  sources/engine.cxx
   sources/internal/camera.cxx
   sources/systems/ControlSystem.cxx
   sources/systems/PhysicSystem.cxx

@@ -2,7 +2,7 @@
 
 #include <pivot/ecs/Core/Event/description.hxx>
 
-namespace pivot::events
+namespace pivot::builtins::events
 {
 inline const pivot::ecs::event::Description tick = {
     .name = "Tick",

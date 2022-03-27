@@ -1,5 +1,5 @@
-#include <pivot/events/tick.hxx>
-#include <pivot/systems/PhysicSystem.hxx>
+#include <pivot/builtins/events/tick.hxx>
+#include <pivot/builtins/systems/PhysicSystem.hxx>
 
 using namespace pivot::ecs;
 namespace
@@ -24,7 +24,7 @@ void physicsSystemImpl(const systems::Description &systemDescription, component:
 }
 }    // namespace
 
-namespace pivot::systems
+namespace pivot::builtins::systems
 {
 const pivot::ecs::systems::Description physicSystem{
     .name = "Physics System",

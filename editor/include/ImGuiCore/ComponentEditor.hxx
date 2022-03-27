@@ -9,7 +9,7 @@
 
 #include <pivot/ecs/Core/types.hxx>
 
-#include <pivot/components/RenderObject.hxx>
+#include <pivot/builtins/components/RenderObject.hxx>
 #include <pivot/ecs/Components/Gravity.hxx>
 #include <pivot/ecs/Components/RigidBody.hxx>
 #include <pivot/graphics/types/UniformBufferObject.hxx>
@@ -20,7 +20,7 @@
 
 #include <pivot/ecs/Core/SceneManager.hxx>
 
-using ObjectVector = std::vector<std::reference_wrapper<const RenderObject>>;
+using ObjectVector = std::vector<std::reference_wrapper<const pivot::builtins::components::RenderObject>>;
 
 // TODO: Remove using namespace
 using namespace pivot::ecs::component;

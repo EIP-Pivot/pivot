@@ -15,8 +15,8 @@
 
 #include <pivot/ecs/Core/Event.hxx>
 
+#include <pivot/builtins/systems/ControlSystem.hxx>
 #include <pivot/internal/camera.hxx>
-#include <pivot/systems/ControlSystem.hxx>
 
 #include <pivot/ecs/Core/Systems/description.hxx>
 #include <pivot/ecs/Core/Systems/index.hxx>
@@ -43,8 +43,8 @@
 
 #include "FrameLimiter.hpp"
 
+#include <pivot/builtins/events/tick.hxx>
 #include <pivot/engine.hxx>
-#include <pivot/events/tick.hxx>
 
 class Application : pivot::Engine
 {
@@ -71,7 +71,7 @@ public:
         auto &cm = sceneManager.getCurrentLevel().getComponentManager();
         cm.RegisterComponent(Gravity::description);
         cm.RegisterComponent(RigidBody::description);
-        cm.RegisterComponent(RenderObject::description);
+        cm.RegisterComponent(pivot::builtins::components::RenderObject::description);
 
         window.captureCursor(true);
         window.setKeyReleaseCallback(Window::Key::LEFT_ALT, [&](Window &window, const Window::Key key) {
@@ -121,7 +121,7 @@ public:
             auto yoffset = last.y - pos.y;
 
             last = pos;
-            ControlSystem::processMouseMovement(camera, glm::dvec2(xoffset, yoffset));
+            pivot::builtins::systems::ControlSystem::processMouseMovement(camera, glm::dvec2(xoffset, yoffset));
         });
 
         m_vulkan_application.assetStorage.loadModels("../editor/assets/cube.obj");
@@ -202,7 +202,8 @@ public:
                 //     editor.DisplayGuizmo(entity.getEntitySelected());
                 // }
             } else {
-                sceneManager.getCurrentLevel().getEventManager().sendEvent({pivot::events::tick, {}, data::Value(dt)});
+                sceneManager.getCurrentLevel().getEventManager().sendEvent(
+                    {pivot::builtins::events::tick, {}, data::Value(dt)});
             }
             UpdateCamera(dt);
 
@@ -211,6 +212,7 @@ public:
             auto aspectRatio = m_vulkan_application.getAspectRatio();
             float fov = 80;
 
+            using RenderObject = pivot::builtins::components::RenderObject;
             auto &cm = sceneManager.getCurrentLevel().getComponentManager();
             auto renderobject_id = cm.GetComponentId("RenderObject").value();
             auto &array = cm.GetComponentArray(renderobject_id);

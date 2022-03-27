@@ -90,6 +90,18 @@ if (NOT stb_POPULATED)
 endif()
 
 FetchContent_Declare(
+    freetype
+    GIT_REPOSITORY https://gitlab.freedesktop.org/freetype/freetype.git
+    GIT_TAG a8e4563c3418ed74d39019a6c5e2122d12c8f56f
+)
+if (NOT freetype_POPULATED)
+    message(STATUS "Populating freetype")
+    FetchContent_Populate(freetype)
+    add_subdirectory(${freetype_SOURCE_DIR} ${freetype_BINARY_DIR})
+endif()
+
+
+FetchContent_Declare(
     tinyobjloader
     GIT_REPOSITORY https://github.com/tinyobjloader/tinyobjloader.git
     GIT_TAG 95fe4ef41de28ce6b0aef00bfdd7b788641a15a6
@@ -160,6 +172,7 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/AssetsStorage/Loaders/AssetStorage_png.cxx
                                    source/AssetsStorage/Loaders/AssetStorage_gltf.cxx
                                    source/AssetsStorage/Loaders/AssetStorage_ktx.cxx
+                                   source/AssetsStorage/Loaders/AssetStorage_ttf.cxx
                                    source/VulkanApplication/VulkanApplication.cxx
                                    source/VulkanApplication/VulkanApplication_init.cxx
                                    source/VulkanApplication/VulkanApplication_draw.cxx
@@ -199,6 +212,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC logger
                                       PUBLIC ktx
                                       PUBLIC tinygltf
                                       PUBLIC stb
+                                      PUBLIC freetype
                                       PUBLIC Vulkan::Vulkan
 )
 

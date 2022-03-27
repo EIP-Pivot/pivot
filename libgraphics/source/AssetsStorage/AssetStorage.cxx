@@ -18,6 +18,10 @@ const std::unordered_map<std::string, AssetStorage::AssetHandler> AssetStorage::
     {".gltf", &AssetStorage::loadGltfModel},
 };
 
+const std::unordered_map<std::string, AssetStorage::AssetHandler> AssetStorage::supportedFonts = {
+    {".ttf", &AssetStorage::loadTTFFont},
+};
+
 AssetStorage::AssetStorage(VulkanBase &base): base_ref(base) { cpuStorage.materialStaging.add("white", {}); }
 
 AssetStorage::~AssetStorage() {}
@@ -122,6 +126,17 @@ bool AssetStorage::loadTexture(const std::filesystem::path &path)
     return std::apply(iter->second, std::make_tuple(this, path));
 }
 
+bool AssetStorage::loadFont(const std::filesystem::path &path)
+{
+    auto iter = supportedFonts.find(path.extension().string());
+    if (iter == supportedFonts.end()) {
+        logger.err("LOAD MODEL") << "Not supported font extension: " << path.extension();
+        return false;
+    }
+    logger.info("Asset Storage") << "Loading font at : " << path;
+    return std::apply(iter->second, std::make_tuple(this, path));
+}
+
 template <typename T>
 static void copy_with_staging_buffer(VulkanBase &base_ref, AllocatedBuffer &staging, AllocatedBuffer &dst,
                                      const std::vector<T> &data)
@@ -173,7 +188,7 @@ void AssetStorage::pushTexturesOnGPU()
 
         vk::ImageCreateInfo imageInfo{
             .imageType = vk::ImageType::e2D,
-            .format = vk::Format::eR8G8B8A8Srgb,
+            .format = img.format,
             .extent = img.size,
             .mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(img.size.width, img.size.height))) + 1),
             .arrayLayers = 1,

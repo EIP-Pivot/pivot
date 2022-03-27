@@ -44,6 +44,9 @@ public:
     /// List of supported object extensions
     static const std::unordered_map<std::string, AssetHandler> supportedObject;
 
+    /// List of supported font extensions
+    static const std::unordered_map<std::string, AssetHandler> supportedFonts;
+
     /// @brief Represent a mesh in the buffers
     struct Mesh {
         /// Starting offset of the mesh in the vertex buffer
@@ -70,6 +73,12 @@ public:
         ///@endcond
     };
 
+    struct Character {
+        std::string textureId;
+        glm::ivec2 bearing;
+        unsigned advance;
+    };
+
     /// @brief A mesh with a default texture and a default material
     struct Model {
         /// Model mesh
@@ -89,7 +98,9 @@ public:
         /// The vulkan image containing the texture
         std::vector<std::byte> image;
         /// The size of the texture
-        vk::Extent3D size;
+        vk::Extent3D size = {0, 0, 1};
+        /// The format of the texture
+        vk::Format format = vk::Format::eR8G8B8A8Srgb;
     };
 
     /// Alias for AllocatedImage
@@ -130,6 +141,22 @@ public:
     }
     /// Load a single texture
     bool loadTexture(const std::filesystem::path &path);
+
+    template <class... Path>
+    /// @brief load the font into CPU memory
+    ///
+    /// @arg the path for all individual file to load
+    requires std::is_convertible_v<Path..., std::filesystem::path>
+    void loadFonts(Path... p)
+    {
+        unsigned i = ((loadFont(p)) + ...);
+        if (i < sizeof...(Path)) throw AssetStorageException("A font failed to load. See above for further errors");
+    }
+    /// Load a single font
+    bool loadFont(const std::filesystem::path &path);
+
+    /// @brief add a material into cpu storage
+    void addMaterial(const std::string &name, CPUMaterial material);
 
     /// Push the ressource into GPU memory
     void build();
@@ -223,7 +250,10 @@ private:
     bool loadPngTexture(const std::filesystem::path &path);
     bool loadKtxImage(const std::filesystem::path &path);
 
+    // Load font
+    bool loadTTFFont(const std::filesystem::path &path);
     // Push to gpu
+
     void pushModelsOnGPU();
     void pushBoundingBoxesOnGPU();
     void pushTexturesOnGPU();
@@ -239,6 +269,7 @@ private:
     OptionalRef<VulkanBase> base_ref;
 
     // Abstract ressouces
+    std::unordered_map<std::string, Character> charStorage;
     std::unordered_map<std::string, Model> modelStorage;
     std::unordered_map<std::string, Prefab> prefabStorage;
 
@@ -272,6 +303,14 @@ private:
 
 #define PIVOT_TEST_CONTAINS(stor, key) \
     if (!stor.contains(key)) throw AssetStorage::AssetStorageException("Missing " + key + " in " #stor);
+
+template <>
+/// @copydoc AssetStorage::get
+inline const AssetStorage::Character &AssetStorage::get(const std::string &p) const
+{
+    PIVOT_TEST_CONTAINS(charStorage, p);
+    return charStorage.at(p);
+}
 
 template <>
 /// @copydoc AssetStorage::get

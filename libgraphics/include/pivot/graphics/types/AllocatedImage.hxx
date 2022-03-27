@@ -32,7 +32,7 @@ public:
     vma::Allocation memory = VK_NULL_HANDLE;
     vk::ImageLayout imageLayout = vk::ImageLayout::eUndefined;
     vk::Format format;
-    vk::Extent3D size = {0, 0};
+    vk::Extent3D size = {0, 0, 1};
     uint32_t mipLevels = 1;
     /// @endcond
 };

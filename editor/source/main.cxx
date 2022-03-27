@@ -43,18 +43,18 @@
 
 #include "FrameLimiter.hpp"
 
-class Application : public pivot::graphics::VulkanApplication
+#include <pivot/engine.hxx>
+#include <pivot/events/tick.hxx>
+
+class Application : pivot::Engine
 {
 public:
-    static const event::Description tick;
-
     Application()
-        : VulkanApplication(),
-          editor(sceneManager),
+        : editor(sceneManager),
           entity(sceneManager),
           camera(editor.getCamera()),
-          systemsEditor(systemIndex, sceneManager),
-          componentEditor(componentIndex, sceneManager){};
+          systemsEditor(m_system_index, sceneManager),
+          componentEditor(m_component_index, sceneManager){};
 
     void loadScene()
     {
@@ -64,23 +64,7 @@ public:
 
     void init()
     {
-        componentIndex.registerComponent(Gravity::description);
-        componentIndex.registerComponent(RigidBody::description);
-        componentIndex.registerComponent(RenderObject::description);
-
-        eventIndex.registerEvent(tick);
-
-        pivot::ecs::systems::Description description{
-            .name = "Physics System",
-            .systemComponents =
-                {
-                    "Gravity",
-                    "RigidBody",
-                },
-            .eventListener = tick,
-            .system = &physicsSystem,
-        };
-        systemIndex.registerSystem(description);
+        auto &window = m_vulkan_application.window;
 
         loadScene();
 
@@ -139,8 +123,9 @@ public:
             last = pos;
             ControlSystem::processMouseMovement(camera, glm::dvec2(xoffset, yoffset));
         });
-        assetStorage.loadModels("../editor/assets/cube.obj");
-        assetStorage.loadTextures("../editor/assets/violet.png");
+
+        m_vulkan_application.assetStorage.loadModels("../editor/assets/cube.obj");
+        m_vulkan_application.assetStorage.loadTextures("../editor/assets/violet.png");
     }
     void processKeyboard(const Camera::Movement direction, float dt) noexcept
     {
@@ -197,17 +182,17 @@ public:
         bool useWindow = true;
         Entity currentEdit = 0;
         gridSize = 100.f;
-        this->VulkanApplication::init();
+        m_vulkan_application.init();
         FrameLimiter<60> fpsLimiter;
-        while (!window.shouldClose()) {
+        while (!m_vulkan_application.window.shouldClose()) {
             auto startTime = std::chrono::high_resolution_clock::now();
-            window.pollEvent();
+            m_vulkan_application.window.pollEvent();
 
             imGuiManager.newFrame();
 
             editor.create();
             if (!editor.getRun()) {
-                editor.setAspectRatio(getAspectRatio());
+                editor.setAspectRatio(m_vulkan_application.getAspectRatio());
                 entity.create();
                 entity.hasSelected() ? componentEditor.create(entity.getEntitySelected()) : componentEditor.create();
                 systemsEditor.create();
@@ -217,13 +202,13 @@ public:
                 //     editor.DisplayGuizmo(entity.getEntitySelected());
                 // }
             } else {
-                sceneManager.getCurrentLevel().getEventManager().sendEvent({tick, {}, data::Value(dt)});
+                sceneManager.getCurrentLevel().getEventManager().sendEvent({pivot::events::tick, {}, data::Value(dt)});
             }
             UpdateCamera(dt);
 
             imGuiManager.render();
 
-            auto aspectRatio = getAspectRatio();
+            auto aspectRatio = m_vulkan_application.getAspectRatio();
             float fov = 80;
 
             auto &cm = sceneManager.getCurrentLevel().getComponentManager();
@@ -239,10 +224,11 @@ public:
 #ifdef CULLING_DEBUG
             if (editor.cullingCameraFollowsCamera) editor.cullingCamera = camera;
 #endif
-            draw(objects, pivot::internals::getGPUCameraData(camera, fov, aspectRatio)
+            m_vulkan_application.draw(
+                objects, pivot::internals::getGPUCameraData(camera, fov, aspectRatio)
 #ifdef CULLING_DEBUG
-                              ,
-                 std::make_optional(pivot::internals::getGPUCameraData(editor.cullingCamera, fov, aspectRatio))
+                             ,
+                std::make_optional(pivot::internals::getGPUCameraData(editor.cullingCamera, fov, aspectRatio))
 #endif
             );
             fpsLimiter.sleep();
@@ -268,12 +254,6 @@ public:
     systems::Index systemIndex;
     event::Index eventIndex;
     SceneManager sceneManager;
-};
-
-const event::Description Application::tick = {
-    .name = "Tick",
-    .entities = {},
-    .payload = pivot::ecs::data::BasicType::Number,
 };
 
 int main()

@@ -64,6 +64,10 @@ public:
 
     void init()
     {
+        componentIndex.registerComponent(Gravity::description);
+        componentIndex.registerComponent(RigidBody::description);
+        componentIndex.registerComponent(RenderObject::description);
+
         eventIndex.registerEvent(tick);
 
         pivot::ecs::systems::Description description{
@@ -79,6 +83,11 @@ public:
         systemIndex.registerSystem(description);
 
         loadScene();
+
+        auto &cm = gSceneManager.getCurrentLevel().getComponentManager();
+        cm.RegisterComponent(Gravity::description);
+        cm.RegisterComponent(RigidBody::description);
+        cm.RegisterComponent(RenderObject::description);
 
         window.captureCursor(true);
         window.setKeyReleaseCallback(Window::Key::LEFT_ALT, [&](Window &window, const Window::Key key) {

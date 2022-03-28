@@ -12,15 +12,6 @@ Manager::MissingSystem::MissingSystem(const std::string &systemName)
 {
 }
 
-void Manager::useSystem(const std::string &systemName)
-{
-    std::optional<Description> description = GlobalIndex::getSingleton().getDescription(systemName);
-
-    if (!description.has_value()) throw MissingSystem(systemName);
-
-    useSystem(description.value());
-}
-
 void Manager::useSystem(const Description &description)
 {
     if (m_systems.contains(description.name)) throw EcsException("System already use.");

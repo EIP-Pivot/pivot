@@ -68,3 +68,9 @@ struct Description {
     bool operator==(const Description &rhs) const;
 };
 }    // namespace pivot::ecs::component
+
+namespace pivot::builtins::components
+{
+template <typename T>
+extern const ecs::component::Description description;
+}

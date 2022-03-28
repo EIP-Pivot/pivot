@@ -1,3 +1,5 @@
+#include <catch2/catch_test_macros.hpp>
+
 #include "pivot/ecs/Core/EntityManager.hxx"
 
 #include "pivot/ecs/Core/Event/description.hxx"
@@ -9,8 +11,10 @@
 
 #include "pivot/ecs/Core/Data/value.hxx"
 #include "pivot/ecs/Core/Scene.hxx"
+#include <pivot/ecs/Components/Tag.hxx>
 
-#include <catch2/catch_test_macros.hpp>
+#include <pivot/ecs/Components/Gravity.hxx>
+#include <pivot/ecs/Components/RigidBody.hxx>
 
 using namespace pivot::ecs;
 using namespace pivot::ecs::data;
@@ -32,9 +36,9 @@ TEST_CASE("Manager event", "[description][registration][manager]")
     systems::Manager sManager(cManager, eManager);
     event::Manager eventManager(sManager);
 
-    component::Description tag = component::GlobalIndex::getSingleton().getDescription("Tag").value();
-    component::Description rigid = component::GlobalIndex::getSingleton().getDescription("RigidBody").value();
-    component::Description grav = component::GlobalIndex::getSingleton().getDescription("Gravity").value();
+    component::Description tag = Tag::description;
+    component::Description rigid = RigidBody::description;
+    component::Description grav = Gravity::description;
 
     component::Manager::ComponentId tagId = cManager.RegisterComponent(tag);
     component::Manager::ComponentId rigidId = cManager.RegisterComponent(rigid);
@@ -52,7 +56,7 @@ TEST_CASE("Manager event", "[description][registration][manager]")
         .payload = pivot::ecs::data::BasicType::Number,
     };
 
-    event::GlobalIndex::getSingleton().registerEvent(eventDescription);
+    // event::GlobalIndex::getSingleton().registerEvent(eventDescription);
 
     systems::Description description{
         .name = "tickSystem",
@@ -64,7 +68,7 @@ TEST_CASE("Manager event", "[description][registration][manager]")
         .eventListener = eventDescription,
         .system = &tickSystem,
     };
-    systems::GlobalIndex::getSingleton().registerSystem(description);
+    // systems::GlobalIndex::getSingleton().registerSystem(description);
     sManager.useSystem(description);
 
     auto tagValue = cManager.GetComponent(entity, tagId).value();

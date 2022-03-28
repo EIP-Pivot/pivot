@@ -9,7 +9,7 @@ using namespace pivot::ecs::data;
 
 TEST_CASE("Dense component arrays", "[component][scene]")
 {
-    auto description = GlobalIndex::getSingleton().getDescription("Tag").value();
+    auto description = Tag::description;
 
     DenseTypedComponentArray<Tag> array(description);
 

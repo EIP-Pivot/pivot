@@ -1,4 +1,5 @@
 #include "pivot/ecs/Core/Scene.hxx"
+#include <pivot/ecs/Components/Tag.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
 
 using namespace pivot::ecs;
@@ -9,11 +10,7 @@ Scene::Scene(std::string sceneName)
       mEventManager(mSystemManager),
       mCurrentCamera(0)
 {
-    auto &global_index = component::GlobalIndex::getSingleton();
-    for (auto &[name, description]: global_index) {
-        auto componentId = mComponentManager.RegisterComponent(description);
-        if (name == "Tag") { mTagId = componentId; }
-    }
+    mTagId = mComponentManager.RegisterComponent(Tag::description);
 }
 
 std::string Scene::getName() { return name; }

@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "pivot/ecs/Core/Component/ScriptingComponentArray.hxx"
+#include <pivot/ecs/Components/Tag.hxx>
 #include <pivot/ecs/Core/Component/combination.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
 
@@ -9,7 +10,7 @@ using namespace pivot::ecs::component;
 
 TEST_CASE("Component array combinations", "[component]")
 {
-    auto description = GlobalIndex::getSingleton().getDescription("Tag").value();
+    auto description = Tag::description;
     auto array1 = description.createContainer(description);
     auto array2 = description.createContainer(description);
 

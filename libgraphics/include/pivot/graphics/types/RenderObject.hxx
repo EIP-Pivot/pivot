@@ -5,6 +5,8 @@
 #include <optional>
 #include <string>
 
+namespace pivot::graphics
+{
 /// @class RenderObject
 ///
 /// @brief Structure representing a 3D object
@@ -21,3 +23,4 @@ struct RenderObject {
     /// Default comparison operator
     auto operator<=>(const RenderObject &) const = default;
 };
+}    // namespace pivot::graphics

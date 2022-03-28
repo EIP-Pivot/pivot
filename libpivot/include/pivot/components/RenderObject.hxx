@@ -1,16 +1,9 @@
 #pragma once
 
-#include <string>
-
+#include "pivot/graphics/types/RenderObject.hxx"
 #include <pivot/ecs/Core/Component/description.hxx>
 
-/// @struct Tag
-///
-/// @brief Tag component, used to name entities
-struct Tag {
-    /// Name of an entity
-    std::string name;
-
+struct RenderObject : public pivot::graphics::RenderObject {
     /// Component description
     static const pivot::ecs::component::Description description;
 };

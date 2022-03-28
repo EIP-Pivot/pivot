@@ -24,7 +24,7 @@ void VulkanBase::init(const std::vector<const char *> &instanceExtensions,
     selectPhysicalDevice(deviceExtensions);
     createLogicalDevice(deviceExtensions);
     createAllocator();
-    abstract::AImmediateCommand::init(device, queueIndices.transferFamily.value());
+    abstract::AImmediateCommand::init(device, physical_device, queueIndices.transferFamily.value());
 }
 
 void VulkanBase::destroy()

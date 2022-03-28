@@ -7,13 +7,11 @@ bool Vertex::operator==(const Vertex &other) const noexcept
 
 vk::VertexInputBindingDescription Vertex::getBindingDescription() noexcept
 {
-    vk::VertexInputBindingDescription bindingDescription{
+    return {
         .binding = 0,
         .stride = sizeof(Vertex),
         .inputRate = vk::VertexInputRate::eVertex,
     };
-
-    return bindingDescription;
 }
 
 std::vector<vk::VertexInputAttributeDescription> Vertex::getAttributeDescriptons() noexcept

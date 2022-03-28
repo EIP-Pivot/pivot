@@ -11,7 +11,7 @@ namespace pivot::graphics
 /// @class GraphicsPipelineBuilder
 ///
 /// @brief Utility class to ease the creation of Vulkan pipelines
-class GraphicsPipelineBuilder final : public interface::IPipelineBuilder
+class GraphicsPipelineBuilder final : public internal::IPipelineBuilder
 {
 public:
     GraphicsPipelineBuilder() = delete;

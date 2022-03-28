@@ -2,7 +2,7 @@
 
 #include <vulkan/vulkan.hpp>
 
-namespace pivot::graphics::interface
+namespace pivot::graphics::internal
 {
 
 /// @interface IPipelineBuilder
@@ -18,4 +18,4 @@ public:
     virtual vk::Pipeline build(vk::Device &, vk::PipelineCache = VK_NULL_HANDLE) const = 0;
 };
 
-}    // namespace pivot::graphics::interface
+}    // namespace pivot::graphics::internal

@@ -2,6 +2,7 @@
 
 #include "pivot/graphics/DeletionQueue.hxx"
 #include "pivot/graphics/QueueFamilyIndices.hxx"
+#include "pivot/graphics/VulkanAllocator.hxx"
 #include "pivot/graphics/VulkanLoader.hxx"
 #include "pivot/graphics/Window.hxx"
 #include "pivot/graphics/abstract/AImmediateCommand.hxx"
@@ -57,8 +58,8 @@ public:
     vk::SurfaceKHR surface = VK_NULL_HANDLE;
     /// The selected GPU used by Vulkan
     vk::PhysicalDevice physical_device = VK_NULL_HANDLE;
-    /// A VulkanMemoryAllocator
-    vma::Allocator allocator = VK_NULL_HANDLE;
+    /// a VulkanAllocator
+    VulkanAllocator allocator;
 
 protected:
     /// Maximum support msaaSample value.

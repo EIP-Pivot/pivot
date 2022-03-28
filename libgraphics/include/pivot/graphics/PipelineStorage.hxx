@@ -26,7 +26,7 @@ public:
     void destroy();
 
     /// @brief Store a new pipeline as given name
-    void newPipeline(const std::string &name, const interface::IPipelineBuilder &builder);
+    void newPipeline(const std::string &name, const internal::IPipelineBuilder &builder);
     /// @brief Destroy the pipeline
     void removePipeline(const std::string &name);
     /// @brief Recover the pipeline at id

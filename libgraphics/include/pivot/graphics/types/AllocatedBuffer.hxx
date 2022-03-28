@@ -3,13 +3,8 @@
 #include <vk_mem_alloc.hpp>
 #include <vulkan/vulkan.hpp>
 
-#include "pivot/graphics/VulkanBase.hxx"
-#include "pivot/graphics/vk_utils.hxx"
-
 namespace pivot::graphics
 {
-
-class AllocatedImage;
 
 /// @class AllocatedBuffer
 ///
@@ -17,50 +12,29 @@ class AllocatedImage;
 class AllocatedBuffer
 {
 public:
-    /// Constructor
-    AllocatedBuffer();
-    /// Destructor
-    ~AllocatedBuffer();
+    /// get the size of the buffer
+    auto getSize() const noexcept { return size; }
+    /// get the allocated size (can be different from the size)
+    auto getAllocatedSize() const noexcept { return info.size; }
 
-    /// Clone the buffer into a new one
-    AllocatedBuffer cloneBuffer(VulkanBase &i, const vk::BufferUsageFlags usage, const vma::MemoryUsage memoryUsage);
-
-    template <vk_utils::is_copyable T>
-    /// Copy the data into a buffer
-    void copyBuffer(vma::Allocator &allocator, const T *data, size_t size)
+    template <typename T>
+    /// If the buffer was created with the flag vma::AllocationCreateFlagBits::eMapped, return the mapped pointer
+    T *getMappedPointer() const noexcept
     {
-        void *mapped = allocator.mapMemory(memory);
-        std::memcpy(mapped, data, size);
-        allocator.unmapMemory(memory);
+        assert(flags & vma::AllocationCreateFlagBits::eMapped);
+        return static_cast<T *>(info.pMappedData);
     }
 
-    template <vk_utils::is_copyable T>
-    /// Copy the vector into the buffer
-    void copyBuffer(vma::Allocator &allocator, const std::vector<T> &data)
-    {
-        void *mapped = allocator.mapMemory(memory);
-        std::memcpy(mapped, data.data(), sizeof(T) * data.size());
-        allocator.unmapMemory(memory);
-    }
-
-    /// Copy buffer to image
-    void copyToImage(abstract::AImmediateCommand &, AllocatedImage &dstImage) const;
     /// Test if the Vulkan buffer is created
-    operator bool() const noexcept;
-
-public:
-    /// Create a buffer
-    static AllocatedBuffer create(VulkanBase &base, uint32_t allocSize, vk::BufferUsageFlags usage,
-                                  vma::MemoryUsage memoryUsage);
-    /// Destroy a buffer
-    static void destroy(VulkanBase &base, AllocatedBuffer &buffer);
+    operator bool() const noexcept { return buffer && memory; }
 
 public:
     //// @cond
     vk::Buffer buffer = VK_NULL_HANDLE;
     vma::Allocation memory = VK_NULL_HANDLE;
-    std::uint32_t size = 0;
-
+    vk::DeviceSize size = 0;
+    vma::AllocationInfo info;
+    vma::AllocationCreateFlags flags;
     //// @endcond
 };
 

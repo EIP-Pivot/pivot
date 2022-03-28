@@ -21,7 +21,7 @@ void PipelineStorage::destroy()
     for (auto &[_, pipeline]: storage) base_ref.device.destroyPipeline(pipeline);
 }
 
-void PipelineStorage::newPipeline(const std::string &name, const interface::IPipelineBuilder &builder)
+void PipelineStorage::newPipeline(const std::string &name, const internal::IPipelineBuilder &builder)
 {
     auto pipeline = builder.build(base_ref.device, pipelineCache);
     assert(pipeline);

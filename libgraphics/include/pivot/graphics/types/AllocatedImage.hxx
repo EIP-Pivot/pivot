@@ -1,13 +1,9 @@
 #pragma once
 
-#include <filesystem>
-
 #include <vk_mem_alloc.hpp>
 #include <vulkan/vulkan.hpp>
 
-#include "pivot/graphics/VulkanBase.hxx"
-#include "pivot/graphics/abstract/AImmediateCommand.hxx"
-#include "pivot/graphics/types/AllocatedBuffer.hxx"
+#include "pivot/graphics/vk_init.hxx"
 
 namespace pivot::graphics
 {
@@ -18,25 +14,16 @@ namespace pivot::graphics
 class AllocatedImage
 {
 public:
-    /// Constructor
-    AllocatedImage();
-    /// Construct an Image and fill it with buffer
-    AllocatedImage(AllocatedBuffer &buffer);
-    /// Descriptor
-    ~AllocatedImage();
-
-    /// Create the image
-    void createImage(VulkanBase &base, const vk::ImageCreateInfo &info, const vma::AllocationCreateInfo &allocInfo);
     /// Create the image view for this image
-    void createImageView(VulkanBase &base);
+    void createImageView(vk::Device &device)
+    {
+        createImageView(device, vk_init::populateVkImageViewCreateInfo(image, format, mipLevels));
+    }
     /// @copydoc createImageView
-    void createImageView(VulkanBase &base, const vk::ImageViewCreateInfo &info);
-    /// Generate mipmaps for the image
-    void generateMipmaps(VulkanBase &base, uint32_t mipLevel);
-    /// Transition image layout to given format
-    void transitionLayout(abstract::AImmediateCommand &i, vk::ImageLayout layout);
-    /// Destroy a image
-    static void destroy(VulkanBase &base, AllocatedImage &image);
+    void createImageView(vk::Device &device, const vk::ImageViewCreateInfo &info)
+    {
+        imageView = device.createImageView(info);
+    }
 
 public:
     //// @cond

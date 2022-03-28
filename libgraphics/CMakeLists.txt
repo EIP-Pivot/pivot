@@ -145,8 +145,6 @@ endif()
 add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/types/Vertex.cxx
                                    source/types/UniformBufferObject.cxx
-                                   source/types/AllocatedBuffer.cxx
-                                   source/types/AllocatedImage.cxx
                                    source/Window.cxx
                                    source/vk_utils.cxx
                                    source/vk_init.cxx
@@ -154,6 +152,7 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/SwapchainSupportDetails.cxx
                                    source/PipelineBuilders/GraphicsPipelineBuilder.cxx
                                    source/PipelineBuilders/ComputePipelineBuilder.cxx
+                                   source/VulkanAllocator.cxx
                                    source/VulkanLoader.cxx
                                    source/VulkanSwapchain.cxx
                                    source/AssetsStorage/AssetsStorage.cxx

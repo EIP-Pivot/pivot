@@ -12,15 +12,17 @@
 
 extern SceneManager gSceneManager;
 
-using namespace pivot::ecs::systems;
-
 class SystemsEditor
 {
 public:
+    SystemsEditor(const pivot::ecs::systems::Index &index): m_index(index){};
+
     void create();
 
 private:
     void displaySystem();
 
     void createPopUp();
+
+    const pivot::ecs::systems::Index &m_index;
 };

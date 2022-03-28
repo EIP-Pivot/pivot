@@ -1,3 +1,5 @@
+#include <Logger.hpp>
+
 #include "ImGuiCore/SystemsEditor.hxx"
 
 void SystemsEditor::create()
@@ -13,9 +15,9 @@ void SystemsEditor::createPopUp()
 {
     auto &sm = gSceneManager.getCurrentLevel().getSystemManager();
     if (ImGui::BeginPopup("AddSystem")) {
-        for (const auto &[name, description]: GlobalIndex::getSingleton()) {
-            if (sm.hasSystem(name))
-                if (ImGui::MenuItem(name.c_str())) sm.useSystem(name);
+        for (const auto &[name, description]: m_index) {
+            if (!sm.hasSystem(name))
+                if (ImGui::MenuItem(name.c_str())) sm.useSystem(description);
         }
         ImGui::EndPopup();
     }

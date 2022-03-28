@@ -9,9 +9,9 @@
 
 #include <pivot/ecs/Core/types.hxx>
 
+#include <pivot/components/RenderObject.hxx>
 #include <pivot/ecs/Components/Gravity.hxx>
 #include <pivot/ecs/Components/RigidBody.hxx>
-#include <pivot/graphics/types/RenderObject.hxx>
 #include <pivot/graphics/types/UniformBufferObject.hxx>
 
 #include <pivot/ecs/Core/Component/index.hxx>
@@ -29,6 +29,8 @@ using namespace pivot::ecs::component;
 class ComponentEditor
 {
 public:
+    ComponentEditor(const Index &index): m_index(index) {}
+
     void create(Entity entity);
     void create();
 
@@ -49,4 +51,6 @@ private:
     std::unordered_map<LevelId, ObjectVector> sceneObject;
     std::array<std::string, 8> textures = {"rouge", "vert", "bleu", "cyan", "orange", "jaune", "blanc", "violet"};
     std::array<std::string, 2> models = {"cube", "plane"};
+
+    const Index &m_index;
 };

@@ -203,7 +203,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC logger
 )
 
 build_tests(${PROJECT_NAME}
-  tests/main.cxx
   tests/culling.cxx
   tests/bounding_box.cxx
   )

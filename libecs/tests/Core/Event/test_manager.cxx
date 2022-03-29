@@ -10,7 +10,7 @@
 #include "pivot/ecs/Core/Data/value.hxx"
 #include "pivot/ecs/Core/Scene.hxx"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 using namespace pivot::ecs;
 using namespace pivot::ecs::data;

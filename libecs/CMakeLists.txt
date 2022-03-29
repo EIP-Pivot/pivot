@@ -82,7 +82,6 @@ target_sources(${PROJECT_NAME} INTERFACE source/Components/Tag.cxx
                                          source/Components/Gravity.cxx)
 
 build_tests(${PROJECT_NAME}
-  tests/main.cxx
   tests/Core/Component/test_index.cxx
   tests/Core/Component/test_tag.cxx
   tests/Core/Component/test_global_registration.cxx

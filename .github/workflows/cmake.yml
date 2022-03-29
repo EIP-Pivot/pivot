@@ -22,6 +22,7 @@ jobs:
         build_type: [Debug, Release]
 
     runs-on: ${{matrix.config.os}}
+    name: ${{ matrix.config.os }} - ${{ matrix.build_type }}
     steps:
       - name: Install dependencies - Linux
         if: runner.os == 'Linux'

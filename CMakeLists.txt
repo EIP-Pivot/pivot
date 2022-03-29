@@ -115,7 +115,11 @@ include(cmake/tests.cmake)
 add_subdirectory(libecs/)
 add_subdirectory(libgraphics/)
 add_subdirectory(libpivot/)
-add_subdirectory(editor/)
+
+option(BUILD_EDITOR "Build pivot editor" ON)
+if(BUILD_EDITOR)
+    add_subdirectory(editor/)
+endif()
 
 add_library(pivot::pivot ALIAS pivot)
 add_library(pivot::graphics ALIAS pivot-graphics)

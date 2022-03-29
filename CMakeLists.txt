@@ -91,7 +91,7 @@ if (BUILD_TESTING)
     FetchContent_Declare(
         catch2
         GIT_REPOSITORY https://github.com/EIP-Pivot/Catch2
-        GIT_TAG v3.0.0-preview4
+        GIT_TAG f35dd17f72e67335003accfd7432294f77a1dc3e
     )
     if (NOT catch2_POPULATED)
         message(STATUS "Populating Catch2")
@@ -121,6 +121,8 @@ if (BUILD_DOCUMENTATION)
     endif()
 endif()
 
+
+include(cmake/CompileShaders.cmake)
 add_subdirectory(libecs/)
 add_subdirectory(libgraphics/)
 add_subdirectory(libpivot/)

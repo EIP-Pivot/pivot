@@ -1,7 +1,6 @@
 project(pivot-graphics)
 
 find_package(Vulkan REQUIRED)
-include(shaders/CMakeRule.txt)
 
 FetchContent_Declare(
     glfw

@@ -75,6 +75,10 @@ bool VulkanBase::isDeviceSuitable(const vk::PhysicalDevice &gpu, const vk::Surfa
                                   const std::vector<const char *> &deviceExtensions)
 {
     DEBUG_FUNCTION
+#define IS_VALID(var, message) \
+    isValid |= (var);          \
+    if (!isValid) logger.debug("VulkanBase::isDeviceSuitable") << message;
+
     auto indices = QueueFamilyIndices::findQueueFamilies(gpu, surface);
     bool extensionsSupported = checkDeviceExtensionSupport(gpu, deviceExtensions);
     auto deviceProperties = gpu.getProperties();
@@ -85,8 +89,16 @@ bool VulkanBase::isDeviceSuitable(const vk::PhysicalDevice &gpu, const vk::Surfa
         auto swapChainSupport = VulkanSwapchain::SupportDetails::querySwapChainSupport(gpu, surface);
         swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
     }
-    return indices.isComplete() && extensionsSupported && swapChainAdequate && deviceFeatures.samplerAnisotropy &&
-           deviceProperties.limits.maxPushConstantsSize >= gpu_object::pushConstantsSize;
+
+    bool isValid = false;
+    IS_VALID(indices.isComplete(), "Missing Device queue");
+    IS_VALID(extensionsSupported, "Extension not supported");
+    IS_VALID(swapChainAdequate, "Swapchain not adequate");
+    IS_VALID(deviceFeatures.samplerAnisotropy, "Sampler anisotropy not supported");
+    IS_VALID(deviceProperties.limits.maxPushConstantsSize >= gpu_object::pushConstantsSize,
+             "Supported push constant size not large enough.");
+    return isValid;
+#undef IS_VALID
 }
 
 std::uint32_t VulkanBase::rateDeviceSuitability(const vk::PhysicalDevice &gpu)

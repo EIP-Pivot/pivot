@@ -68,11 +68,16 @@ void VulkanBase::selectPhysicalDevice(const std::vector<const char *> &deviceExt
     std::multimap<std::uint32_t, vk::PhysicalDevice> ratedGpus;
 
     for (const auto &i: gpus) {
-        if (isDeviceSuitable(i, surface, deviceExtensions)) {
+        const auto suitable = isDeviceSuitable(i, surface, deviceExtensions);
+        const auto deviceProperties = i.getProperties();
+        if (suitable) {
             ratedGpus.insert(std::make_pair(rateDeviceSuitability(i), i));
+            logger.debug("Physical Device") << deviceProperties.deviceName << " is a suitable GPU.";
+        } else {
+            logger.debug("Physical Device") << deviceProperties.deviceName << " is not a suitable GPU";
         }
     }
-    if (ratedGpus.rbegin()->first > 0) {
+    if (!ratedGpus.empty() && ratedGpus.rbegin()->first > 0) {
         physical_device = ratedGpus.rbegin()->second;
         maxMsaaSample = pivot::graphics::vk_utils::getMaxUsableSampleCount(physical_device);
     } else {

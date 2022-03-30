@@ -68,18 +68,15 @@ private:
     bool drawImGui(const CameraData &cameraData, const vk::CommandBufferInheritanceInfo &info, vk::CommandBuffer &cmd);
     bool drawScene(const CameraData &cameraData, const vk::CommandBufferInheritanceInfo &info, vk::CommandBuffer &cmd);
 
-    void postInitialization();
+    virtual void postInitialization();
     void recreateSwapchain();
     void initVulkanRessources();
 
     void createSyncStructure();
 
-    void createRessourcesDescriptorSetLayout();
     void createPipelineLayout();
     void createCullingPipelineLayout();
 
-    void createDescriptorPool();
-    void createRessourcesDescriptorSets();
     void createCommandPool();
     void createCommandBuffers();
 
@@ -88,7 +85,6 @@ private:
     void createDepthResources();
     void createColorResources();
     void createRenderPass();
-    void createTextureSampler();
     void createFramebuffers();
 
     void createImGuiDescriptorPool();
@@ -117,12 +113,6 @@ private:
     std::array<Frame, MaxFrameInFlight> frames;
 
     vk::RenderPass renderPass = VK_NULL_HANDLE;
-
-    vk::DescriptorPool descriptorPool = VK_NULL_HANDLE;
-    vk::DescriptorSetLayout ressourcesSetLayout = VK_NULL_HANDLE;
-    vk::DescriptorSet ressourceDescriptorSet = VK_NULL_HANDLE;
-
-    vk::Sampler textureSampler = VK_NULL_HANDLE;
 
     vk::CommandPool commandPool = VK_NULL_HANDLE;
 

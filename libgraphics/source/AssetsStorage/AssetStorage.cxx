@@ -25,6 +25,7 @@ AssetStorage::~AssetStorage() {}
 void AssetStorage::build()
 {
     DEBUG_FUNCTION
+    createTextureSampler();
 
     for (const auto &[name, model]: modelStorage) {
         meshBoundingBoxStorage.add(
@@ -41,7 +42,7 @@ void AssetStorage::build()
 
     logger.info("Asset Storage") << "Pushing " << meshBoundingBoxStorage.size() << " bounding boxes onto the GPU";
     pushBoundingBoxesOnGPU();
-    vk_debug::setObjectName(base_ref->get().device, boundingboxbuffer.buffer, "BoundingBox Buffer");
+    vk_debug::setObjectName(base_ref->get().device, boundingboxBuffer.buffer, "BoundingBox Buffer");
 
     logger.info("Asset Storage") << "Pushing " << cpuStorage.textureStaging.size() << " textures onto the GPU";
     pushTexturesOnGPU();
@@ -56,6 +57,9 @@ void AssetStorage::build()
     vk_debug::setObjectName(base_ref->get().device, materialBuffer.buffer, "Material Buffer");
 
     cpuStorage = {};
+    createDescriptorSetLayout();
+    createDescriptorPool();
+    createDescriptorSet();
 }
 
 void AssetStorage::destroy()
@@ -65,13 +69,34 @@ void AssetStorage::destroy()
         base_ref->get().allocator.destroyBuffer(vertexBuffer);
         base_ref->get().allocator.destroyBuffer(indicesBuffer);
     }
-    if (boundingboxbuffer) base_ref->get().allocator.destroyBuffer(boundingboxbuffer);
+    if (boundingboxBuffer) base_ref->get().allocator.destroyBuffer(boundingboxBuffer);
     if (materialBuffer) base_ref->get().allocator.destroyBuffer(materialBuffer);
 
     for (auto &image: textureStorage.getStorage()) {
         base_ref->get().device.destroyImageView(image.imageView);
         base_ref->get().allocator.destroyImage(image);
     }
+    vulkanDeletionQueue.flush();
+}
+
+bool AssetStorage::bindForGraphics(vk::CommandBuffer &cmd, const vk::PipelineLayout &pipelineLayout,
+                                   std::uint32_t descriptorSetNb)
+{
+    if (!vertexBuffer || !indicesBuffer || !descriptorSet) return false;
+
+    vk::DeviceSize offset = 0;
+    cmd.bindVertexBuffers(0, vertexBuffer.buffer, offset);
+    cmd.bindIndexBuffer(indicesBuffer.buffer, 0, vk::IndexType::eUint32);
+    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, descriptorSetNb, descriptorSet, nullptr);
+    return true;
+}
+
+bool AssetStorage::bindForCompute(vk::CommandBuffer &cmd, const vk::PipelineLayout &pipelineLayout,
+                                  std::uint32_t descriptorSetNb)
+{
+    if (!descriptorSet) return false;
+    cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, pipelineLayout, descriptorSetNb, descriptorSet, nullptr);
+    return true;
 }
 
 bool AssetStorage::loadModel(const std::filesystem::path &path)
@@ -221,10 +246,10 @@ void AssetStorage::pushBoundingBoxesOnGPU()
     auto boundingboxStaging = base_ref->get().allocator.createBuffer(
         size, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferSrc,
         vma::MemoryUsage::eCpuToGpu);
-    boundingboxbuffer = base_ref->get().allocator.createBuffer(
+    boundingboxBuffer = base_ref->get().allocator.createBuffer(
         size, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst,
         vma::MemoryUsage::eGpuOnly);
-    copy_with_staging_buffer(base_ref->get(), boundingboxStaging, boundingboxbuffer,
+    copy_with_staging_buffer(base_ref->get(), boundingboxStaging, boundingboxBuffer,
                              meshBoundingBoxStorage.getStorage());
 }
 

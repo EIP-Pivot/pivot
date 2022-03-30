@@ -70,8 +70,8 @@ public:
     void unmapMemory(AllocatedBuffer &buffer) { allocator.unmapMemory(buffer.memory); }
 
     template <typename T>
-    requires std::is_standard_layout_v<T>
     /// Copy the data into a buffer
+    requires std::is_standard_layout_v<T>
     void copyBuffer(AllocatedBuffer &buffer, const T *data, size_t size)
     {
         assert(buffer.getSize() >= size);
@@ -81,8 +81,8 @@ public:
     }
 
     template <typename T>
-    requires std::is_standard_layout_v<T>
     /// Copy the vector into the buffer
+    requires std::is_standard_layout_v<T>
     void copyBuffer(AllocatedBuffer &buffer, const std::span<T> &data)
     {
         copyBuffer(buffer, data.data(), sizeof(T) * data.size());

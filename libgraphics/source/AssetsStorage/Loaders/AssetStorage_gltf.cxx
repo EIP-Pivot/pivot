@@ -264,7 +264,7 @@ try {
     const auto offset = cpuStorage.textureStaging.size();
     for (const auto &image: gltfModel.images) {
         const auto filepath = path.parent_path() / image.uri;
-        loadTextures(filepath);
+        loadTexture(filepath);
     }
     for (const auto &material: gltfModel.materials) {
         const auto mat = loadGltfMaterial(cpuStorage.textureStaging, gltfModel, material, offset);

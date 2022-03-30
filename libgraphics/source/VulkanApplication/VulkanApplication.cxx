@@ -55,11 +55,9 @@ void VulkanApplication::initVulkanRessources()
     DEBUG_FUNCTION
 
     createSyncStructure();
-    createRessourcesDescriptorSetLayout();
     createPipelineLayout();
     createCullingPipelineLayout();
     createCommandPool();
-    createDescriptorPool();
     createImGuiDescriptorPool();
     createCullingPipeline();
 
@@ -72,15 +70,13 @@ void VulkanApplication::initVulkanRessources()
     createColorResources();
     createFramebuffers();
 
-    createTextureSampler();
-    createRessourcesDescriptorSets();
     createCommandBuffers();
     initDearImGui();
 
     postInitialization();
 }
 
-void VulkanApplication::postInitialization() { DEBUG_FUNCTION }
+void VulkanApplication::postInitialization() {}
 
 void VulkanApplication::recreateSwapchain()
 {

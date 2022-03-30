@@ -2,6 +2,8 @@
 
 #include <vulkan/vulkan.hpp>
 
+#include "pivot/graphics/DebugMacros.hxx"
+
 /// Debug utils for vulkan
 namespace pivot::graphics::vk_debug
 {

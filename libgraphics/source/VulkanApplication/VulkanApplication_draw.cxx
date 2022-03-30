@@ -35,38 +35,31 @@ bool VulkanApplication::drawScene(const CameraData &cameraData, const vk::Comman
         .position = cameraData.position,
     };
 
-    vk::DeviceSize offset = 0;
     vk::CommandBufferBeginInfo drawBeginInfo{
         .flags = vk::CommandBufferUsageFlagBits::eRenderPassContinue,
         .pInheritanceInfo = &inheritanceInfo,
     };
     vk_utils::vk_try(cmd.begin(&drawBeginInfo));
     vk_debug::beginRegion(cmd, "Draw Commands", {0.f, 1.f, 0.f, 1.f});
-    if (drawResolver.getFrameData(currentFrame).packedDraws.size() > 0) {
-        cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0,
-                               drawResolver.getFrameData(currentFrame).objectDescriptor, nullptr);
-        cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, ressourceDescriptorSet, nullptr);
-        cmd.pushConstants<gpu_object::VertexPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0,
-                                                          vertexCamere);
-        cmd.pushConstants<gpu_object::FragmentPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eFragment,
-                                                            sizeof(gpu_object::VertexPushConstant), fragmentCamera);
-        cmd.bindVertexBuffers(0, assetStorage.getVertexBuffer().buffer, offset);
-        cmd.bindIndexBuffer(assetStorage.getIndexBuffer().buffer, 0, vk::IndexType::eUint32);
-
-        for (const auto &packedPipeline: drawResolver.getFrameData(currentFrame).pipelineBatch) {
-            cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelineStorage.getGraphics(packedPipeline.pipelineID));
-
-            if (deviceFeature.multiDrawIndirect == VK_TRUE) {
+    assetStorage.bindForGraphics(cmd, pipelineLayout);
+    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1,
+                           drawResolver.getFrameData(currentFrame).objectDescriptor, nullptr);
+    cmd.pushConstants<gpu_object::VertexPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0,
+                                                      vertexCamere);
+    cmd.pushConstants<gpu_object::FragmentPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eFragment,
+                                                        sizeof(gpu_object::VertexPushConstant), fragmentCamera);
+    for (const auto &packedPipeline: drawResolver.getFrameData(currentFrame).pipelineBatch) {
+        cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelineStorage.getGraphics(packedPipeline.pipelineID));
+        if (deviceFeature.multiDrawIndirect == VK_TRUE) {
+            cmd.drawIndexedIndirect(drawResolver.getFrameData(currentFrame).indirectBuffer.buffer,
+                                    packedPipeline.first * sizeof(vk::DrawIndexedIndirectCommand), packedPipeline.size,
+                                    sizeof(vk::DrawIndexedIndirectCommand));
+        } else {
+            for (auto i = packedPipeline.first; i < packedPipeline.size; i++) {
+                const auto &draw = drawResolver.getFrameData(currentFrame).packedDraws.at(i);
                 cmd.drawIndexedIndirect(drawResolver.getFrameData(currentFrame).indirectBuffer.buffer,
-                                        packedPipeline.first * sizeof(vk::DrawIndexedIndirectCommand),
-                                        packedPipeline.size, sizeof(vk::DrawIndexedIndirectCommand));
-            } else {
-                for (auto i = packedPipeline.first; i < packedPipeline.size; i++) {
-                    const auto &draw = drawResolver.getFrameData(currentFrame).packedDraws.at(i);
-                    cmd.drawIndexedIndirect(drawResolver.getFrameData(currentFrame).indirectBuffer.buffer,
-                                            draw.first * sizeof(vk::DrawIndexedIndirectCommand), draw.count,
-                                            sizeof(vk::DrawIndexedIndirectCommand));
-                }
+                                        draw.first * sizeof(vk::DrawIndexedIndirectCommand), draw.count,
+                                        sizeof(vk::DrawIndexedIndirectCommand));
             }
         }
     }
@@ -92,9 +85,9 @@ bool VulkanApplication::dispatchCulling(const CameraData &cameraData, const vk::
         .buffer = drawResolver.getFrameData(currentFrame).indirectBuffer.buffer,
         .size = drawResolver.getFrameData(currentFrame).indirectBuffer.getSize(),
     };
-    cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, cullingLayout, 0,
+    assetStorage.bindForCompute(cmd, cullingLayout);
+    cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, cullingLayout, 1,
                            drawResolver.getFrameData(currentFrame).objectDescriptor, nullptr);
-    cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, cullingLayout, 1, ressourceDescriptorSet, nullptr);
     cmd.pushConstants<gpu_object::CullingPushConstant>(cullingLayout, vk::ShaderStageFlagBits::eCompute, 0,
                                                        cullingCamera);
     cmd.bindPipeline(vk::PipelineBindPoint::eCompute, pipelineStorage.getCompute("culling"));

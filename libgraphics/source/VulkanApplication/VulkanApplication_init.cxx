@@ -104,7 +104,8 @@ void VulkanApplication::createPipelineLayout()
                                              sizeof(gpu_object::VertexPushConstant)),
     };
 
-    std::vector<vk::DescriptorSetLayout> setLayout = {drawResolver.getDescriptorSetLayout(), ressourcesSetLayout};
+    std::vector<vk::DescriptorSetLayout> setLayout = {assetStorage.getDescriptorSetLayout(),
+                                                      drawResolver.getDescriptorSetLayout()};
     auto pipelineLayoutCreateInfo = vk_init::populateVkPipelineLayoutCreateInfo(setLayout, pipelinePushConstant);
     pipelineLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
     mainDeletionQueue.push([&] { device.destroy(pipelineLayout); });
@@ -115,7 +116,8 @@ void VulkanApplication::createCullingPipelineLayout()
     DEBUG_FUNCTION
     std::vector<vk::PushConstantRange> pipelinePushConstant = {vk_init::populateVkPushConstantRange(
         vk::ShaderStageFlagBits::eCompute, sizeof(gpu_object::CullingPushConstant))};
-    std::vector<vk::DescriptorSetLayout> setLayout = {drawResolver.getDescriptorSetLayout(), ressourcesSetLayout};
+    std::vector<vk::DescriptorSetLayout> setLayout = {assetStorage.getDescriptorSetLayout(),
+                                                      drawResolver.getDescriptorSetLayout()};
     auto pipelineLayoutCreateInfo = vk_init::populateVkPipelineLayoutCreateInfo(setLayout, pipelinePushConstant);
     cullingLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
     mainDeletionQueue.push([&] { device.destroy(cullingLayout); });
@@ -257,170 +259,6 @@ void VulkanApplication::createSyncStructure()
             device.destroy(f.imageAvailableSemaphore);
         }
     });
-}
-
-void VulkanApplication::createRessourcesDescriptorSetLayout()
-{
-    DEBUG_FUNCTION
-    std::vector<vk::DescriptorBindingFlags> flags{
-        {},
-        {},
-        vk::DescriptorBindingFlagBits::eVariableDescriptorCount | vk::DescriptorBindingFlagBits::ePartiallyBound,
-    };
-
-    vk::DescriptorSetLayoutBindingFlagsCreateInfo bindingInfo{
-        .bindingCount = static_cast<uint32_t>(flags.size()),
-        .pBindingFlags = flags.data(),
-    };
-    vk::DescriptorSetLayoutBinding boundingBoxBinding{
-        .binding = 0,
-        .descriptorType = vk::DescriptorType::eStorageBuffer,
-        .descriptorCount = 1,
-        .stageFlags = vk::ShaderStageFlagBits::eCompute,
-    };
-    vk::DescriptorSetLayoutBinding materialLayoutBinding{
-        .binding = 1,
-        .descriptorType = vk::DescriptorType::eStorageBuffer,
-        .descriptorCount = 1,
-        .stageFlags = vk::ShaderStageFlagBits::eFragment,
-    };
-    vk::DescriptorSetLayoutBinding samplerLayoutBiding{
-        .binding = 2,
-        .descriptorType = vk::DescriptorType::eCombinedImageSampler,
-        .descriptorCount = static_cast<uint32_t>(assetStorage.getTextures().size()),
-        .stageFlags = vk::ShaderStageFlagBits::eFragment,
-    };
-    std::array<vk::DescriptorSetLayoutBinding, 3> bindings = {
-        boundingBoxBinding,
-        materialLayoutBinding,
-        samplerLayoutBiding,
-    };
-    vk::DescriptorSetLayoutCreateInfo ressourcesSetLayoutInfo{
-        .pNext = &bindingInfo,
-        .bindingCount = static_cast<uint32_t>(bindings.size()),
-        .pBindings = bindings.data(),
-    };
-    ressourcesSetLayout = device.createDescriptorSetLayout(ressourcesSetLayoutInfo);
-    vk_debug::setObjectName(device, ressourcesSetLayout, "Ressources Set Layout");
-    mainDeletionQueue.push([&] { device.destroy(ressourcesSetLayout); });
-}
-
-void VulkanApplication::createDescriptorPool()
-{
-    DEBUG_FUNCTION
-    vk::DescriptorPoolSize poolSize[] = {
-        {
-            .type = vk::DescriptorType::eCombinedImageSampler,
-            .descriptorCount = static_cast<uint32_t>(assetStorage.getTextures().size()),
-        },
-        {
-            .type = vk::DescriptorType::eStorageBuffer,
-            .descriptorCount = static_cast<uint32_t>(assetStorage.getMaterialBuffer().getSize()),
-        },
-    };
-
-    vk::DescriptorPoolCreateInfo poolInfo{
-        .maxSets = static_cast<uint32_t>(std::accumulate(poolSize, poolSize + std::size(poolSize), 0,
-                                                         [](auto prev, auto &i) { return prev + i.descriptorCount; })),
-        .poolSizeCount = std::size(poolSize),
-        .pPoolSizes = poolSize,
-    };
-    descriptorPool = device.createDescriptorPool(poolInfo);
-    vk_debug::setObjectName(device, descriptorPool, "Main Descriptor Pool");
-    mainDeletionQueue.push([&] { device.destroyDescriptorPool(descriptorPool); });
-}
-
-void VulkanApplication::createRessourcesDescriptorSets()
-{
-    DEBUG_FUNCTION
-
-    uint32_t counts[] = {static_cast<uint32_t>(assetStorage.getTextures().size())};
-    vk::DescriptorSetVariableDescriptorCountAllocateInfo set_counts{
-        .descriptorSetCount = std::size(counts),
-        .pDescriptorCounts = counts,
-    };
-    vk::DescriptorSetAllocateInfo allocInfo{
-        .pNext = &set_counts,
-        .descriptorPool = descriptorPool,
-        .descriptorSetCount = 1,
-        .pSetLayouts = &ressourcesSetLayout,
-    };
-    ressourceDescriptorSet = device.allocateDescriptorSets(allocInfo).front();
-
-    std::vector<vk::DescriptorImageInfo> imagesInfos;
-    for (auto &t: assetStorage.getTextures().getStorage()) {
-        imagesInfos.push_back({
-            .sampler = textureSampler,
-            .imageView = t.imageView,
-            .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
-        });
-    }
-    auto &materialBuffer = assetStorage.getMaterialBuffer();
-    vk::DescriptorBufferInfo materialInfo{
-        .buffer = materialBuffer.buffer,
-        .offset = 0,
-        .range = materialBuffer.getSize(),
-    };
-    auto &boundingBoxBuffer = assetStorage.getBoundingBoxBuffer();
-    vk::DescriptorBufferInfo boundingBoxInfo{
-        .buffer = boundingBoxBuffer.buffer,
-        .offset = 0,
-        .range = boundingBoxBuffer.getSize(),
-    };
-    std::vector<vk::WriteDescriptorSet> descriptorWrite{
-        {
-            .dstSet = ressourceDescriptorSet,
-            .dstBinding = 0,
-            .dstArrayElement = 0,
-            .descriptorCount = 1,
-            .descriptorType = vk::DescriptorType::eStorageBuffer,
-            .pBufferInfo = &boundingBoxInfo,
-        },
-        {
-            .dstSet = ressourceDescriptorSet,
-            .dstBinding = 1,
-            .dstArrayElement = 0,
-            .descriptorCount = 1,
-            .descriptorType = vk::DescriptorType::eStorageBuffer,
-            .pBufferInfo = &materialInfo,
-        },
-        {
-            .dstSet = ressourceDescriptorSet,
-            .dstBinding = 2,
-            .dstArrayElement = 0,
-            .descriptorCount = static_cast<uint32_t>(imagesInfos.size()),
-            .descriptorType = vk::DescriptorType::eCombinedImageSampler,
-            .pImageInfo = imagesInfos.data(),
-        },
-    };
-    device.updateDescriptorSets(descriptorWrite, 0);
-}
-
-void VulkanApplication::createTextureSampler()
-{
-    DEBUG_FUNCTION
-    vk::PhysicalDeviceProperties properties = physical_device.getProperties();
-
-    vk::SamplerCreateInfo samplerInfo{
-        .magFilter = vk::Filter::eNearest,
-        .minFilter = vk::Filter::eNearest,
-        .mipmapMode = vk::SamplerMipmapMode::eLinear,
-        .addressModeU = vk::SamplerAddressMode::eRepeat,
-        .addressModeV = vk::SamplerAddressMode::eRepeat,
-        .addressModeW = vk::SamplerAddressMode::eRepeat,
-        .mipLodBias = 0.0f,
-        .anisotropyEnable = VK_TRUE,
-        .maxAnisotropy = properties.limits.maxSamplerAnisotropy,
-        .compareEnable = VK_FALSE,
-        .compareOp = vk::CompareOp::eAlways,
-        .minLod = 0.0f,
-        .maxLod = 100,
-        .borderColor = vk::BorderColor::eIntOpaqueBlack,
-        .unnormalizedCoordinates = VK_FALSE,
-    };
-    textureSampler = device.createSampler(samplerInfo);
-    vk_debug::setObjectName(device, textureSampler, "Texture Sampler");
-    mainDeletionQueue.push([&] { device.destroySampler(textureSampler); });
 }
 
 void VulkanApplication::createDepthResources()

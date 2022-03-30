@@ -56,11 +56,9 @@ void DrawCallResolver::prepareForDraw(std::vector<std::reference_wrapper<const R
                 .size = 0,
             });
         }
-        logger.debug() << object.get().meshID;
         auto prefab = storage_ref->get().get_optional<AssetStorage::Prefab>(object.get().meshID);
         if (prefab.has_value()) {
             for (const auto &model: prefab->get().modelIds) {
-                logger.debug() << model;
                 frame.pipelineBatch.back().size += 1;
                 frame.packedDraws.push_back({
                     .meshId = model,

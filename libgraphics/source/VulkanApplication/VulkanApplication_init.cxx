@@ -132,8 +132,11 @@ void VulkanApplication::createPipeline()
         .setRenderPass(renderPass)
         .setMsaaSample(maxMsaaSample)
         .setFaceCulling(vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise)
-        .setVertexShaderPath("shaders/default.vert.spv")
-        .setFragmentShaderPath("shaders/default_lit.frag.spv");
+        .setVertexShaderPath("shaders/font_rendering.vert.spv")
+        .setFragmentShaderPath("shaders/font_rendering.frag.spv");
+    pipelineStorage.newPipeline("font", builder);
+
+    builder.setVertexShaderPath("shaders/default.vert.spv").setFragmentShaderPath("shaders/default_lit.frag.spv");
     pipelineStorage.newPipeline("lit", builder);
     pipelineStorage.setDefault("lit");
 
@@ -148,6 +151,7 @@ void VulkanApplication::createPipeline()
     pipelineStorage.newPipeline("skybox", builder);
 
     swapchainDeletionQueue.push([&] {
+        pipelineStorage.removePipeline("font");
         pipelineStorage.removePipeline("lit");
         pipelineStorage.removePipeline("unlit");
         pipelineStorage.removePipeline("wireframe");
@@ -220,6 +224,7 @@ void VulkanApplication::createCommandBuffers()
         .commandBufferCount = static_cast<uint32_t>(swapchain.nbOfImage()),
     };
     commandBuffersSecondary = device.allocateCommandBuffers(drawInfo);
+    textCommandBuffer = device.allocateCommandBuffers(drawInfo);
 
     vk::CommandBufferAllocateInfo imguiInfo{
         .commandPool = imguiContext.cmdPool,
@@ -228,6 +233,7 @@ void VulkanApplication::createCommandBuffers()
     };
     imguiContext.cmdBuffer = device.allocateCommandBuffers(imguiInfo);
     swapchainDeletionQueue.push([&] {
+        device.free(commandPool, textCommandBuffer);
         device.free(commandPool, commandBuffersPrimary);
         device.free(commandPool, commandBuffersSecondary);
         device.free(imguiContext.cmdPool, imguiContext.cmdBuffer);

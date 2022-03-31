@@ -52,7 +52,8 @@ public:
     /// @arg camera The information about the camera
     ///
     /// You must have already loaded your models and texture !
-    void draw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation, const CameraData &camera
+    void draw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
+              const std::vector<std::pair<glm::ivec2, std::string>> &text, const CameraData &camera
 #ifdef CULLING_DEBUG
               ,
               const std::optional<std::reference_wrapper<const CameraData>> cullingCamera = std::nullopt
@@ -67,6 +68,8 @@ private:
                          vk::CommandBuffer &cmd);
     bool drawImGui(const CameraData &cameraData, const vk::CommandBufferInheritanceInfo &info, vk::CommandBuffer &cmd);
     bool drawScene(const CameraData &cameraData, const vk::CommandBufferInheritanceInfo &info, vk::CommandBuffer &cmd);
+    bool drawText(const CameraData &cameraData, const vk::CommandBufferInheritanceInfo &info,
+                  const std::vector<std::pair<glm::ivec2, std::string>> &text, vk::CommandBuffer &cmd);
 
     virtual void postInitialization();
     void recreateSwapchain();
@@ -118,6 +121,7 @@ private:
 
     std::vector<vk::CommandBuffer> commandBuffersPrimary;
     std::vector<vk::CommandBuffer> commandBuffersSecondary;
+    std::vector<vk::CommandBuffer> textCommandBuffer;
 
     AllocatedImage depthResources = {};
     AllocatedImage colorImage = {};
@@ -127,6 +131,7 @@ private:
     vk::PipelineLayout cullingLayout = VK_NULL_HANDLE;
 
     std::vector<vk::Framebuffer> swapChainFramebuffers;
+    AllocatedBuffer textBuffer;
     /// @endcond
 };
 

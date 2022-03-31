@@ -60,6 +60,10 @@ void AssetStorage::build()
     pushMaterialOnGPU();
     vk_debug::setObjectName(base_ref->get().device, materialBuffer.buffer, "Material Buffer");
 
+    logger.info("Asset Storage") << "Pushing " << cpuStorage.characterStaging.size() << " characters onto the GPU";
+    pushCharactersOnGPU();
+    vk_debug::setObjectName(base_ref->get().device, characterBuffer.buffer, "Character Buffer");
+
     cpuStorage = {};
     createDescriptorSetLayout();
     createDescriptorPool();
@@ -80,17 +84,18 @@ void AssetStorage::destroy()
         base_ref->get().device.destroyImageView(image.imageView);
         base_ref->get().allocator.destroyImage(image);
     }
+    if (characterBuffer) base_ref->get().allocator.destroyBuffer(characterBuffer);
     vulkanDeletionQueue.flush();
 }
 
 bool AssetStorage::bindForGraphics(vk::CommandBuffer &cmd, const vk::PipelineLayout &pipelineLayout,
-                                   std::uint32_t descriptorSetNb)
+                                   std::uint32_t descriptorSetNb, bool bindVertex, bool bindIndex)
 {
     if (!vertexBuffer || !indicesBuffer || !descriptorSet) return false;
 
     vk::DeviceSize offset = 0;
-    cmd.bindVertexBuffers(0, vertexBuffer.buffer, offset);
-    cmd.bindIndexBuffer(indicesBuffer.buffer, 0, vk::IndexType::eUint32);
+    if (bindVertex) cmd.bindVertexBuffers(0, vertexBuffer.buffer, offset);
+    if (bindIndex) cmd.bindIndexBuffer(indicesBuffer.buffer, 0, vk::IndexType::eUint32);
     cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, descriptorSetNb, descriptorSet, nullptr);
     return true;
 }
@@ -266,6 +271,33 @@ void AssetStorage::pushBoundingBoxesOnGPU()
         vma::MemoryUsage::eGpuOnly);
     copy_with_staging_buffer(base_ref->get(), boundingboxStaging, boundingboxBuffer,
                              meshBoundingBoxStorage.getStorage());
+}
+
+void AssetStorage::pushCharactersOnGPU()
+{
+    DEBUG_FUNCTION
+    auto size = sizeof(gpu_object::Character) * cpuStorage.characterStaging.size();
+    if (size == 0) {
+        logger.warn("Asset Storage") << "No Characters to push";
+        return;
+    }
+    auto characterStaging = base_ref->get().allocator.createBuffer(
+        size, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferSrc,
+        vma::MemoryUsage::eCpuToGpu);
+    characterBuffer = base_ref->get().allocator.createBuffer(
+        size, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst,
+        vma::MemoryUsage::eGpuOnly);
+    for (auto &[name, idx]: cpuStorage.characterStaging) {
+        const auto &character = cpuStorage.characterStaging.getStorage()[idx];
+        charStorage.add(
+            name,
+            {
+                .textureId = (character.textureId.empty()) ? (-1) : (textureStorage.getIndex(character.textureId)),
+                .bearing = character.bearing,
+                .advance = character.advance,
+            });
+    }
+    copy_with_staging_buffer(base_ref->get(), characterStaging, characterBuffer, charStorage.getStorage());
 }
 
 }    // namespace pivot::graphics

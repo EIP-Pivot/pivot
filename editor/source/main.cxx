@@ -225,9 +225,9 @@ public:
 #ifdef CULLING_DEBUG
             if (editor.cullingCameraFollowsCamera) editor.cullingCamera = camera;
 #endif
-            draw(objects, pivot::internals::getGPUCameraData(camera, fov, aspectRatio)
+            draw(objects, {}, pivot::internals::getGPUCameraData(camera, fov, aspectRatio)
 #ifdef CULLING_DEBUG
-                              ,
+                                  ,
                  std::make_optional(pivot::internals::getGPUCameraData(editor.cullingCamera, fov, aspectRatio))
 #endif
             );

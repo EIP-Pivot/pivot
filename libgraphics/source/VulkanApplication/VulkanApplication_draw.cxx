@@ -104,4 +104,56 @@ bool VulkanApplication::dispatchCulling(const CameraData &cameraData, const vk::
     return true;
 }
 
+bool VulkanApplication::drawText(const CameraData &cameraData, const vk::CommandBufferInheritanceInfo &info,
+                                 const std::vector<std::pair<glm::ivec2, std::string>> &text, vk::CommandBuffer &cmd)
+{
+    vk::DeviceSize offset = 0;
+    const gpu_object::VertexPushConstant vertexCamere{
+        .viewProjection = cameraData.projection,
+    };
+    vk::CommandBufferBeginInfo textBeginInfo{
+        .flags = vk::CommandBufferUsageFlagBits::eRenderPassContinue,
+        .pInheritanceInfo = &info,
+    };
+    vk_utils::vk_try(cmd.begin(&textBeginInfo));
+    vk_debug::beginRegion(cmd, "Text Commands", {0.2f, 0.2f, 0.2f, 1.f});
+    if (!text.empty()) {
+        cmd.pushConstants<gpu_object::VertexPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0,
+                                                          vertexCamere);
+        assetStorage.bindForGraphics(cmd, pipelineLayout, 0, false, false);
+        cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelineStorage.get("font"));
+        auto vert = textBuffer.getMappedPointer<float>();
+
+        glm::vec2 cursor = text.at(0).first * 5;
+        for (const auto &[position, line]: text) {
+            logger.debug("VulkanApplication") << line;
+            for (const auto &c: line) {
+                auto character = assetStorage.getChar(c);
+                const auto &texture = assetStorage.getTextures().get(character.textureId);
+                glm::vec2 pos = {
+                    cursor.x + character.bearing.x,
+                    cursor.y - (texture.size.height - character.bearing.y),
+                };
+                glm::ivec2 size = {texture.size.width, texture.size.height};
+                size *= 20;
+                pos *= 20;
+                float verticies[6][4] = {
+                    {pos.x, pos.y + size.y, 0.0f, 0.0f},          {pos.x, pos.y, 0.0f, 1.0f},
+                    {pos.x + size.x, pos.y, 1.0f, 1.0f},
+
+                    {pos.x, pos.y + size.y, 0.0f, 0.0f},          {pos.x + size.x, pos.y, 1.0f, 1.0f},
+                    {pos.x + size.x, pos.y + size.y, 1.0f, 0.0f},
+                };
+                std::memcpy(vert, verticies, sizeof(float) * 6 * 4);
+                cmd.bindVertexBuffers(0, textBuffer.buffer, offset);
+                cmd.draw(6, 1, 0, 0);
+                cursor += (character.advance >> 6);
+            }
+        }
+    }
+    cmd.end();
+    vk_debug::endRegion(cmd);
+    return true;
+}
+
 }    // namespace pivot::graphics

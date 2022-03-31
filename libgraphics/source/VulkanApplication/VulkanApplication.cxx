@@ -34,6 +34,7 @@ VulkanApplication::~VulkanApplication()
     DEBUG_FUNCTION
     if (device) device.waitIdle();
     if (swapchain) swapchain.destroy();
+    allocator.destroyBuffer(textBuffer);
     assetStorage.destroy();
     swapchainDeletionQueue.flush();
     mainDeletionQueue.flush();
@@ -73,6 +74,9 @@ void VulkanApplication::initVulkanRessources()
     createCommandBuffers();
     initDearImGui();
 
+    textBuffer = allocator.createBuffer(sizeof(float) * 6 * 4, vk::BufferUsageFlagBits::eVertexBuffer,
+                                        vma::MemoryUsage::eCpuToGpu, vma::AllocationCreateFlagBits::eMapped);
+
     postInitialization();
 }
 
@@ -110,7 +114,7 @@ void VulkanApplication::recreateSwapchain()
 }
 
 void VulkanApplication::draw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
-                             const CameraData &cameraData
+                             const std::vector<std::pair<glm::ivec2, std::string>> &text, const CameraData &cameraData
 #ifdef CULLING_DEBUG
                              ,
                              const std::optional<std::reference_wrapper<const CameraData>> cullingCameraData
@@ -123,6 +127,7 @@ try {
     uint32_t imageIndex = swapchain.getNextImageIndex(UINT64_MAX, frame.imageAvailableSemaphore);
 
     auto &cmd = commandBuffersPrimary[currentFrame];
+    auto &textCmd = textCommandBuffer[currentFrame];
     auto &drawCmd = commandBuffersSecondary[currentFrame];
     auto &imguiCmd = imguiContext.cmdBuffer[currentFrame];
 
@@ -161,6 +166,7 @@ try {
     };
     drawImGui(cameraData, inheritanceInfo, imguiCmd);
     drawScene(cameraData, inheritanceInfo, drawCmd);
+    drawText(cameraData, inheritanceInfo, text, textCmd);
 
 #ifdef CULLING_DEBUG
     auto cullingCameraDataSelected = cullingCameraData.value_or(std::ref(cameraData)).get();
@@ -168,7 +174,7 @@ try {
     auto cullingCameraDataSelected = cameraData;
 #endif
 
-    std::array<vk::CommandBuffer, 2> secondaryBuffer{drawCmd, imguiCmd};
+    std::array<vk::CommandBuffer, 3> secondaryBuffer{drawCmd, textCmd, imguiCmd};
     vk::CommandBufferBeginInfo beginInfo;
     vk_utils::vk_try(cmd.begin(&beginInfo));
     vk_debug::beginRegion(cmd, "main command", {1.f, 1.f, 1.f, 1.f});

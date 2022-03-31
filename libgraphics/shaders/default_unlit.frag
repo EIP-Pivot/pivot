@@ -29,7 +29,7 @@ layout (std140, set = 0, binding = 1) readonly buffer ObjectMaterials {
     Material materials[];
 } objectMaterials;
 
-layout(set = 0, binding = 2) uniform sampler2D texSampler[];
+layout(set = 0, binding = 3) uniform sampler2D texSampler[];
 
 
 void main() {

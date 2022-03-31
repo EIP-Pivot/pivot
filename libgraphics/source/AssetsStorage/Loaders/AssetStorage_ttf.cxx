@@ -32,17 +32,17 @@ bool AssetStorage::loadTTFFont(const std::filesystem::path &path)
         texture.format = vk::Format::eR8Unorm;
         texture.size.height = face->glyph->bitmap.rows;
         texture.size.width = face->glyph->bitmap.width;
-        Character character{
+        CPUCharacter character{
             .bearing = {face->glyph->bitmap_left, face->glyph->bitmap_top},
             .advance = unsigned(face->glyph->advance.x),
         };
-        if (texture.image.size() != 0) {
+        texture.image.resize(texture.size.height * texture.size.width);
+        if (!texture.image.empty()) {
             character.textureId = stem + '/' + char(c);
-            texture.image.resize(texture.size.height * texture.size.width);
             std::memcpy(texture.image.data(), face->glyph->bitmap.buffer, texture.size.height * texture.size.width);
             cpuStorage.textureStaging.add(character.textureId, texture);
+            cpuStorage.characterStaging.add(character.textureId, character);
         }
-        charStorage.emplace(character.textureId, character);
     }
     FT_Done_Face(face);
     FT_Done_FreeType(ft);

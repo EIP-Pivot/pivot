@@ -5,6 +5,7 @@
 #include "pivot/graphics/abstract/AImmediateCommand.hxx"
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 #include "pivot/graphics/types/AllocatedImage.hxx"
+#include "pivot/graphics/types/Character.hxx"
 #include "pivot/graphics/types/IndexedStorage.hxx"
 #include "pivot/graphics/types/Material.hxx"
 #include "pivot/graphics/types/MeshBoundingBox.hxx"
@@ -73,7 +74,7 @@ public:
         ///@endcond
     };
 
-    struct Character {
+    struct CPUCharacter {
         std::string textureId;
         glm::ivec2 bearing;
         unsigned advance;
@@ -120,9 +121,8 @@ public:
     void loadModels(Path... p)
     {
         unsigned i = ((loadModel(p)) + ...);
-        if (i < sizeof...(Path)) {
+        if (i < sizeof...(Path))
             throw AssetStorageException("A model file failed to load. See above for further errors");
-        }
     }
     /// Load a single model file
     bool loadModel(const std::filesystem::path &path);
@@ -135,9 +135,8 @@ public:
     void loadTextures(Path... p)
     {
         unsigned i = ((loadTexture(p)) + ...);
-        if (i < sizeof...(Path)) {
+        if (i < sizeof...(Path))
             throw AssetStorageException("A texture file failed to load. See above for further errors");
-        }
     }
     /// Load a single texture
     bool loadTexture(const std::filesystem::path &path);
@@ -150,7 +149,8 @@ public:
     void loadFonts(Path... p)
     {
         unsigned i = ((loadFont(p)) + ...);
-        if (i < sizeof...(Path)) throw AssetStorageException("A font failed to load. See above for further errors");
+        if (i < sizeof...(Path))
+            throw AssetStorageException("A font file failed to load. See above for further errors");
     }
     /// Load a single font
     bool loadFont(const std::filesystem::path &path);
@@ -203,7 +203,7 @@ public:
     /// layout to avoid validation layers erros
     /// @arg The index of the descriptor set to be bind on
     bool bindForGraphics(vk::CommandBuffer &cmd, const vk::PipelineLayout &pipelineLayout,
-                         std::uint32_t descriptorSet = 0);
+                         std::uint32_t descriptorSet = 0, bool bindVertex = true, bool bindIndex = true);
     /// @brief Bind the asset descriptor set on the provided command buffer
     ///
     /// Every ressource will be bind on vk::PipelineBindPoint::eCulling
@@ -218,6 +218,8 @@ public:
     template <typename T>
     /// Get an asset of type T named name
     inline const T &get(const std::string &name) const;
+
+    const gpu_object::Character &getChar(const char &p) const { return charStorage.get(p); }
 
     template <typename T>
     /// Get an asset of type T named name if it exists
@@ -258,6 +260,7 @@ private:
     void pushBoundingBoxesOnGPU();
     void pushTexturesOnGPU();
     void pushMaterialOnGPU();
+    void pushCharactersOnGPU();
 
     // Descriptor ressources
     void createTextureSampler();
@@ -269,11 +272,11 @@ private:
     OptionalRef<VulkanBase> base_ref;
 
     // Abstract ressouces
-    std::unordered_map<std::string, Character> charStorage;
     std::unordered_map<std::string, Model> modelStorage;
     std::unordered_map<std::string, Prefab> prefabStorage;
 
     // Buffers
+    IndexedStorage<gpu_object::Character> charStorage;
     IndexedStorage<gpu_object::MeshBoundingBox> meshBoundingBoxStorage;
     IndexedStorage<Texture> textureStorage;
     IndexedStorage<gpu_object::Material> materialStorage;
@@ -282,6 +285,7 @@ private:
     struct CPUStorage {
         std::vector<Vertex> vertexStagingBuffer;
         std::vector<std::uint32_t> indexStagingBuffer;
+        IndexedStorage<CPUCharacter> characterStaging;
         IndexedStorage<CPUTexture> textureStaging;
         IndexedStorage<CPUMaterial> materialStaging;
     } cpuStorage = {};
@@ -296,6 +300,7 @@ private:
     AllocatedBuffer indicesBuffer;
     AllocatedBuffer boundingboxBuffer;
     AllocatedBuffer materialBuffer;
+    AllocatedBuffer characterBuffer;
 };
 
 #ifndef PIVOT_ASSETSTORAGE_TEMPLATE_INITIALIZED
@@ -306,10 +311,18 @@ private:
 
 template <>
 /// @copydoc AssetStorage::get
-inline const AssetStorage::Character &AssetStorage::get(const std::string &p) const
+inline const AssetStorage::Texture &AssetStorage::get(const std::string &p) const
+{
+    PIVOT_TEST_CONTAINS(textureStorage, p);
+    return textureStorage.get(p);
+}
+
+template <>
+/// @copydoc AssetStorage::get
+inline const gpu_object::Character &AssetStorage::get(const std::string &p) const
 {
     PIVOT_TEST_CONTAINS(charStorage, p);
-    return charStorage.at(p);
+    return charStorage.get(p);
 }
 
 template <>

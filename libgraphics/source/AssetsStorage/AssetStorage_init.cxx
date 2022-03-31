@@ -38,7 +38,7 @@ void AssetStorage::createDescriptorPool()
     DEBUG_FUNCTION
     vk::DescriptorPoolSize poolSize[] = {{
                                              .type = vk::DescriptorType::eStorageBuffer,
-                                             .descriptorCount = MaxFrameInFlight * 2,
+                                             .descriptorCount = MaxFrameInFlight * 3,
                                          },
                                          {
                                              .type = vk::DescriptorType::eCombinedImageSampler,
@@ -61,6 +61,7 @@ void AssetStorage::createDescriptorSetLayout()
     std::vector<vk::DescriptorBindingFlags> flags{
         {},
         {},
+        {},
         vk::DescriptorBindingFlagBits::eVariableDescriptorCount | vk::DescriptorBindingFlagBits::ePartiallyBound,
     };
 
@@ -80,15 +81,22 @@ void AssetStorage::createDescriptorSetLayout()
         .descriptorCount = 1,
         .stageFlags = vk::ShaderStageFlagBits::eFragment,
     };
-    vk::DescriptorSetLayoutBinding samplerLayoutBiding{
+    vk::DescriptorSetLayoutBinding charLayoutBinding{
         .binding = 2,
+        .descriptorType = vk::DescriptorType::eStorageBuffer,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eFragment,
+    };
+    vk::DescriptorSetLayoutBinding samplerLayoutBiding{
+        .binding = 3,
         .descriptorType = vk::DescriptorType::eCombinedImageSampler,
         .descriptorCount = static_cast<uint32_t>(textureStorage.size()),
         .stageFlags = vk::ShaderStageFlagBits::eFragment,
     };
-    std::array<vk::DescriptorSetLayoutBinding, 3> bindings = {
+    std::array<vk::DescriptorSetLayoutBinding, 4> bindings = {
         boundingBoxBinding,
         materialLayoutBinding,
+        charLayoutBinding,
         samplerLayoutBiding,
     };
     vk::DescriptorSetLayoutCreateInfo ressourcesSetLayoutInfo{
@@ -135,6 +143,11 @@ void AssetStorage::createDescriptorSet()
         .offset = 0,
         .range = boundingboxBuffer.getSize(),
     };
+    vk::DescriptorBufferInfo charInfo{
+        .buffer = characterBuffer.buffer,
+        .offset = 0,
+        .range = characterBuffer.getSize(),
+    };
     std::vector<vk::WriteDescriptorSet> descriptorWrite{
         {
             .dstSet = descriptorSet,
@@ -155,6 +168,14 @@ void AssetStorage::createDescriptorSet()
         {
             .dstSet = descriptorSet,
             .dstBinding = 2,
+            .dstArrayElement = 0,
+            .descriptorCount = 1,
+            .descriptorType = vk::DescriptorType::eStorageBuffer,
+            .pBufferInfo = &charInfo,
+        },
+        {
+            .dstSet = descriptorSet,
+            .dstBinding = 3,
             .dstArrayElement = 0,
             .descriptorCount = static_cast<uint32_t>(imagesInfos.size()),
             .descriptorType = vk::DescriptorType::eCombinedImageSampler,

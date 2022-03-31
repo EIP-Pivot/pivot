@@ -12,13 +12,14 @@ struct Character {
     uint advance;
 };
 
-layout(set = 0, binding = 2) uniform sampler2D texSampler[];
-layout (set = 0, binding = 3 ) uniform readonly constants {
+layout (set = 0, binding = 2 )  readonly buffer constants {
     Character character[];
 } charData;
+
+layout(set = 0, binding = 3) uniform sampler2D texSampler[];
 
 void main()
 {
     vec4 sampled = vec4(1.0, 1.0, 1.0, texture(texSampler[charData.character[0].textureId], inTextCoords).r);
-    outColor = vec4(vec3(1.0, 1.0, 1.0), 1.0) * sampled;
+    outColor = vec4(vec3(255.0, 255.0, 255.0), 1.0) * sampled;
 }  

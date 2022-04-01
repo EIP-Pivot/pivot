@@ -5,6 +5,7 @@
 #include "pivot/graphics/DrawCallResolver.hxx"
 #include "pivot/graphics/PipelineStorage.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
+#include "pivot/graphics/VulkanRenderPass.hxx"
 #include "pivot/graphics/VulkanSwapchain.hxx"
 #include "pivot/graphics/types/Frame.hxx"
 #include "pivot/graphics/types/vk_types.hxx"
@@ -114,7 +115,7 @@ private:
     pivot::graphics::DrawCallResolver drawResolver;
     std::array<Frame, MaxFrameInFlight> frames;
 
-    vk::RenderPass renderPass = VK_NULL_HANDLE;
+    VulkanRenderPass renderPass;
 
     vk::CommandPool commandPool = VK_NULL_HANDLE;
 

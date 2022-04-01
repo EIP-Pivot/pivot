@@ -141,7 +141,7 @@ try {
     clearValues.at(1).depthStencil = vk::ClearDepthStencilValue{1.0f, 0};
 
     vk::RenderPassBeginInfo renderPassInfo{
-        .renderPass = renderPass,
+        .renderPass = renderPass.getRenderPass(),
         .framebuffer = swapChainFramebuffers[imageIndex],
         .renderArea =
             {
@@ -155,7 +155,7 @@ try {
     drawResolver.prepareForDraw(sceneInformation, currentFrame);
 
     vk::CommandBufferInheritanceInfo inheritanceInfo{
-        .renderPass = renderPass,
+        .renderPass = renderPass.getRenderPass(),
         .subpass = 0,
         .framebuffer = swapChainFramebuffers.at(imageIndex),
     };

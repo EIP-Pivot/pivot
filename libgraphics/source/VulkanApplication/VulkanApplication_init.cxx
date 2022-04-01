@@ -18,80 +18,33 @@ namespace pivot::graphics
 void VulkanApplication::createRenderPass()
 {
     DEBUG_FUNCTION
-    vk::AttachmentDescription colorAttachment{
-        .format = swapchain.getSwapchainFormat(),
-        .samples = maxMsaaSample,
-        .loadOp = vk::AttachmentLoadOp::eClear,
-        .storeOp = vk::AttachmentStoreOp::eDontCare,
-        .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
-        .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
-        .initialLayout = vk::ImageLayout::eUndefined,
-        .finalLayout = vk::ImageLayout::eColorAttachmentOptimal,
-    };
-    vk::AttachmentDescription depthAttachment{
-        .format = pivot::graphics::vk_utils::findSupportedFormat(
-            physical_device, {vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint},
-            vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment),
-        .samples = maxMsaaSample,
-        .loadOp = vk::AttachmentLoadOp::eClear,
-        .storeOp = vk::AttachmentStoreOp::eDontCare,
-        .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
-        .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
-        .initialLayout = vk::ImageLayout::eUndefined,
-        .finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal,
-    };
     vk::AttachmentDescription colorAttachmentResolve{
         .format = swapchain.getSwapchainFormat(),
         .samples = vk::SampleCountFlagBits::e1,
         .loadOp = vk::AttachmentLoadOp::eDontCare,
-        .storeOp = vk::AttachmentStoreOp::eStore,
+        .storeOp = vk::AttachmentStoreOp::eDontCare,
         .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
         .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
         .initialLayout = vk::ImageLayout::eUndefined,
         .finalLayout = vk::ImageLayout::ePresentSrcKHR,
     };
-    vk::AttachmentReference colorAttachmentRef{
-        .attachment = 0,
-        .layout = vk::ImageLayout::eColorAttachmentOptimal,
-    };
-    vk::AttachmentReference depthAttachmentRef{
-        .attachment = 1,
-        .layout = vk::ImageLayout::eDepthStencilAttachmentOptimal,
-    };
-    vk::AttachmentReference colorAttachmentResolveRef{
-        .attachment = 2,
-        .layout = vk::ImageLayout::eColorAttachmentOptimal,
-    };
-    vk::SubpassDescription subpass{
-        .pipelineBindPoint = vk::PipelineBindPoint::eGraphics,
-        .colorAttachmentCount = 1,
-        .pColorAttachments = &colorAttachmentRef,
-        .pResolveAttachments = &colorAttachmentResolveRef,
-        .pDepthStencilAttachment = &depthAttachmentRef,
-    };
-    vk::SubpassDependency dependency{
-        .srcSubpass = VK_SUBPASS_EXTERNAL,
-        .dstSubpass = 0,
-        .srcStageMask =
-            vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests,
-        .dstStageMask =
-            vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests,
-        .srcAccessMask = vk::AccessFlagBits::eNoneKHR,
-        .dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite,
-    };
+    const auto depthFormat =
+        vk_utils::findSupportedFormat(physical_device,
+                                      {
+                                          vk::Format::eD32Sfloat,
+                                          vk::Format::eD32SfloatS8Uint,
+                                          vk::Format::eD24UnormS8Uint,
+                                      },
+                                      vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
 
-    std::array<vk::AttachmentDescription, 3> attachments = {colorAttachment, depthAttachment, colorAttachmentResolve};
-    vk::RenderPassCreateInfo renderPassInfo{
-        .attachmentCount = static_cast<uint32_t>(attachments.size()),
-        .pAttachments = attachments.data(),
-        .subpassCount = 1,
-        .pSubpasses = &subpass,
-        .dependencyCount = 1,
-        .pDependencies = &dependency,
-    };
-    renderPass = device.createRenderPass(renderPassInfo);
+    renderPass.addAttachement(VulkanRenderPass::Color, swapchain.getSwapchainFormat(), maxMsaaSample,
+                              vk::ImageLayout::eColorAttachmentOptimal);
+    renderPass.addAttachement(VulkanRenderPass::Depth, depthFormat, maxMsaaSample,
+                              vk::ImageLayout::eDepthReadOnlyStencilAttachmentOptimal);
+    renderPass.addAttachement(VulkanRenderPass::Resolve, colorAttachmentResolve);
+    renderPass.build(device);
 
-    swapchainDeletionQueue.push([&] { device.destroy(renderPass); });
+    swapchainDeletionQueue.push([&] { renderPass.destroy(device); });
 }
 
 void VulkanApplication::createPipelineLayout()
@@ -129,7 +82,7 @@ void VulkanApplication::createPipeline()
 
     pivot::graphics::GraphicsPipelineBuilder builder(swapchain.getSwapchainExtent());
     builder.setPipelineLayout(pipelineLayout)
-        .setRenderPass(renderPass)
+        .setRenderPass(renderPass.getRenderPass())
         .setMsaaSample(maxMsaaSample)
         .setFaceCulling(vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise)
         .setVertexShaderPath("shaders/default_pbr.vert.spv")
@@ -176,7 +129,7 @@ void VulkanApplication::createFramebuffers()
                                                     swapchain.getSwapchainImageView(i)};
 
         vk::FramebufferCreateInfo framebufferInfo{
-            .renderPass = renderPass,
+            .renderPass = renderPass.getRenderPass(),
             .width = swapchain.getSwapchainExtent().width,
             .height = swapchain.getSwapchainExtent().height,
             .layers = 1,
@@ -381,7 +334,7 @@ void VulkanApplication::initDearImGui()
     init_info.MSAASamples = static_cast<VkSampleCountFlagBits>(maxMsaaSample);
     init_info.CheckVkResultFn = pivot::graphics::vk_utils::vk_try;
 
-    ImGui_ImplVulkan_Init(&init_info, renderPass);
+    ImGui_ImplVulkan_Init(&init_info, renderPass.getRenderPass());
 
     immediateCommand([&](vk::CommandBuffer cmd) { ImGui_ImplVulkan_CreateFontsTexture(cmd); });
     ImGui_ImplVulkan_DestroyFontUploadObjects();

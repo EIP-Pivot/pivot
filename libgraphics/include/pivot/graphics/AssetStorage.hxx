@@ -140,7 +140,7 @@ public:
     /// @brief Return the descriptor set layout of the asset storage
     ///
     /// This is the corresponding code in glsl code
-    /// @code {.glsl}
+    /// @code{.glsl}
     /// struct BoundingBox {
     ///     vec3 low;
     ///     vec3 high;

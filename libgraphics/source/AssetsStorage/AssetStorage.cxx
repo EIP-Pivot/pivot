@@ -146,7 +146,6 @@ void AssetStorage::pushModelsOnGPU()
     vertexBuffer = base_ref->get().allocator.createBuffer(
         vertexSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
         vma::MemoryUsage::eGpuOnly);
-
     copy_with_staging_buffer(base_ref->get(), stagingVertex, vertexBuffer, cpuStorage.vertexStagingBuffer);
 
     auto indexSize = cpuStorage.indexStagingBuffer.size() * sizeof(uint32_t);

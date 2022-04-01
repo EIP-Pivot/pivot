@@ -50,7 +50,6 @@ void VulkanBase::createDebugMessenger()
     debugUtilsMessenger = instance.createDebugUtilsMessengerEXT(debugInfo);
 
     logger.warn("Validation Layers") << "Validation Layers are activated !";
-
     baseDeletionQueue.push([&] { instance.destroyDebugUtilsMessengerEXT(debugUtilsMessenger); });
 }
 

@@ -151,6 +151,8 @@ void DrawCallResolver::createDescriptorSets(Frame &frame, vk::DeviceSize bufferS
     };
 
     frame.objectDescriptor = base_ref->get().device.allocateDescriptorSets(allocInfo).front();
+    vk_debug::setObjectName(base_ref->get().device, frame.objectDescriptor,
+                            "Object Descriptor Set " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
 
     vk::DescriptorBufferInfo bufferInfo{
         .buffer = frame.objectBuffer.buffer,

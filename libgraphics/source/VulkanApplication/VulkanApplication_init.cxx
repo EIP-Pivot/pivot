@@ -44,6 +44,7 @@ void VulkanApplication::createRenderPass()
     renderPass.addAttachement(VulkanRenderPass::Resolve, colorAttachmentResolve);
     renderPass.build(device);
 
+    vk_debug::setObjectName(device, renderPass.getRenderPass(), "Main Render Pass");
     swapchainDeletionQueue.push([&] { renderPass.destroy(device); });
 }
 
@@ -61,6 +62,7 @@ void VulkanApplication::createPipelineLayout()
                                                       drawResolver.getDescriptorSetLayout()};
     auto pipelineLayoutCreateInfo = vk_init::populateVkPipelineLayoutCreateInfo(setLayout, pipelinePushConstant);
     pipelineLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
+    vk_debug::setObjectName(device, pipelineLayout, "Graphics pipeline Layout");
     mainDeletionQueue.push([&] { device.destroy(pipelineLayout); });
 }
 
@@ -73,6 +75,7 @@ void VulkanApplication::createCullingPipelineLayout()
                                                       drawResolver.getDescriptorSetLayout()};
     auto pipelineLayoutCreateInfo = vk_init::populateVkPipelineLayoutCreateInfo(setLayout, pipelinePushConstant);
     cullingLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
+    vk_debug::setObjectName(device, pipelineLayout, "Culling pipeline Layout");
     mainDeletionQueue.push([&] { device.destroy(cullingLayout); });
 }
 
@@ -80,7 +83,7 @@ void VulkanApplication::createPipeline()
 {
     DEBUG_FUNCTION
 
-    pivot::graphics::GraphicsPipelineBuilder builder(swapchain.getSwapchainExtent());
+    GraphicsPipelineBuilder builder(swapchain.getSwapchainExtent());
     builder.setPipelineLayout(pipelineLayout)
         .setRenderPass(renderPass.getRenderPass())
         .setMsaaSample(maxMsaaSample)
@@ -115,7 +118,7 @@ void VulkanApplication::createPipeline()
 void VulkanApplication::createCullingPipeline()
 {
     DEBUG_FUNCTION
-    pivot::graphics::ComputePipelineBuilder builder;
+    ComputePipelineBuilder builder;
     builder.setPipelineLayout(cullingLayout).setComputeShaderPath("shaders/culling.comp.spv");
     pipelineStorage.newComputePipeline("culling", builder);
 }
@@ -137,7 +140,7 @@ void VulkanApplication::createFramebuffers()
         framebufferInfo.setAttachments(attachments);
 
         swapChainFramebuffers.at(i) = device.createFramebuffer(framebufferInfo);
-        vk_debug::setObjectName(device, swapChainFramebuffers.at(i), "FrameBuffer " + std::to_string(i));
+        vk_debug::setObjectName(device, swapChainFramebuffers.at(i), "FrameBuffer nb " + std::to_string(i));
     }
     swapchainDeletionQueue.push([&] {
         for (auto &framebuffer: swapChainFramebuffers) { device.destroy(framebuffer); }
@@ -170,6 +173,8 @@ void VulkanApplication::createCommandBuffers()
         .commandBufferCount = static_cast<uint32_t>(swapchain.nbOfImage()),
     };
     commandBuffersPrimary = device.allocateCommandBuffers(allocInfo);
+    for (unsigned i = 0; i < commandBuffersPrimary.size(); i++)
+        vk_debug::setObjectName(device, commandBuffersPrimary[i], "Main Command Buffer nb " + std::to_string(i));
 
     vk::CommandBufferAllocateInfo drawInfo{
         .commandPool = commandPool,
@@ -177,6 +182,8 @@ void VulkanApplication::createCommandBuffers()
         .commandBufferCount = static_cast<uint32_t>(swapchain.nbOfImage()),
     };
     commandBuffersSecondary = device.allocateCommandBuffers(drawInfo);
+    for (unsigned i = 0; i < commandBuffersSecondary.size(); i++)
+        vk_debug::setObjectName(device, commandBuffersSecondary[i], "Secondary Command Buffer nb " + std::to_string(i));
 
     vk::CommandBufferAllocateInfo imguiInfo{
         .commandPool = imguiContext.cmdPool,
@@ -184,6 +191,9 @@ void VulkanApplication::createCommandBuffers()
         .commandBufferCount = static_cast<uint32_t>(swapchain.nbOfImage()),
     };
     imguiContext.cmdBuffer = device.allocateCommandBuffers(imguiInfo);
+    for (unsigned i = 0; i < imguiContext.cmdBuffer.size(); i++)
+        vk_debug::setObjectName(device, imguiContext.cmdBuffer[i], "ImGui Command Buffer nb " + std::to_string(i));
+
     swapchainDeletionQueue.push([&] {
         device.free(commandPool, commandBuffersPrimary);
         device.free(commandPool, commandBuffersSecondary);
@@ -199,10 +209,15 @@ void VulkanApplication::createSyncStructure()
         .flags = vk::FenceCreateFlagBits::eSignaled,
     };
 
-    for (auto &f: frames) {
-        f.imageAvailableSemaphore = device.createSemaphore(semaphoreInfo);
-        f.renderFinishedSemaphore = device.createSemaphore(semaphoreInfo);
-        f.inFlightFences = device.createFence(fenceInfo);
+    for (unsigned i = 0; i < frames.size(); i++) {
+        auto &[imageAvailableSemaphore, renderFinishedSemaphore, inFlightFences] = frames[i];
+        const auto &frame_txt = "Frame nb " + std::to_string(i);
+        imageAvailableSemaphore = device.createSemaphore(semaphoreInfo);
+        renderFinishedSemaphore = device.createSemaphore(semaphoreInfo);
+        inFlightFences = device.createFence(fenceInfo);
+        vk_debug::setObjectName(device, imageAvailableSemaphore, frame_txt + ": image available Semaphore");
+        vk_debug::setObjectName(device, renderFinishedSemaphore, frame_txt + ": render finished Semaphore");
+        vk_debug::setObjectName(device, inFlightFences, frame_txt + ": fence");
     }
 
     mainDeletionQueue.push([&] {

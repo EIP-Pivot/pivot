@@ -116,6 +116,7 @@ void AssetStorage::createDescriptorSet()
         .pSetLayouts = &descriptorSetLayout,
     };
     descriptorSet = base_ref->get().device.allocateDescriptorSets(allocInfo).front();
+    vk_debug::setObjectName(base_ref->get().device, descriptorSet, "AssetStorage Descriptor Set");
 
     std::vector<vk::DescriptorImageInfo> imagesInfos;
     for (auto &t: textureStorage.getStorage()) {

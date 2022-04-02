@@ -64,10 +64,9 @@ public:
     float getAspectRatio() const noexcept { return swapchain.getAspectRatio(); }
 
 private:
-    bool dispatchCulling(const CameraData &cameraData, const vk::CommandBufferInheritanceInfo &info,
-                         vk::CommandBuffer &cmd);
-    bool drawImGui(const CameraData &cameraData, const vk::CommandBufferInheritanceInfo &info, vk::CommandBuffer &cmd);
-    bool drawScene(const CameraData &cameraData, const vk::CommandBufferInheritanceInfo &info, vk::CommandBuffer &cmd);
+    bool dispatchCulling(const CameraData &cameraData, DrawCallResolver &resolver, vk::CommandBuffer &cmd);
+    bool drawImGui(const CameraData &cameraData, DrawCallResolver &resolver, vk::CommandBuffer &cmd);
+    bool drawScene(const CameraData &cameraData, DrawCallResolver &resolver, vk::CommandBuffer &cmd);
 
     virtual void postInitialization();
     void recreateSwapchain();
@@ -112,7 +111,6 @@ private:
     VulkanSwapchain swapchain;
 
     uint8_t currentFrame = 0;
-    pivot::graphics::DrawCallResolver drawResolver;
     std::array<Frame, MaxFrameInFlight> frames;
 
     VulkanRenderPass renderPass;

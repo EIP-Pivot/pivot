@@ -9,10 +9,7 @@ namespace pivot::graphics
 {
 
 VulkanApplication::VulkanApplication()
-    : VulkanBase("Pivot Game Engine", true),
-      assetStorage(*this),
-      pipelineStorage(*this),
-      drawResolver(*this, assetStorage)
+    : VulkanBase("Pivot Game Engine", true), assetStorage(*this), pipelineStorage(*this)
 {
     DEBUG_FUNCTION;
 
@@ -37,15 +34,14 @@ VulkanApplication::~VulkanApplication()
     assetStorage.destroy();
     swapchainDeletionQueue.flush();
     mainDeletionQueue.flush();
-    drawResolver.destroy();
     pipelineStorage.destroy();
+    std::for_each(frames.begin(), frames.end(), [&](Frame &fr) { fr.destroy(*this); });
     VulkanBase::destroy();
 }
 
 void VulkanApplication::init()
 {
     VulkanBase::init({}, deviceExtensions, validationLayers);
-    drawResolver.init();
     assetStorage.build();
     initVulkanRessources();
 }
@@ -54,7 +50,7 @@ void VulkanApplication::initVulkanRessources()
 {
     DEBUG_FUNCTION
 
-    createSyncStructure();
+    std::for_each(frames.begin(), frames.end(), [&](Frame &fr) { fr.initFrame(*this, assetStorage); });
     createPipelineLayout();
     createCullingPipelineLayout();
     createCommandPool();
@@ -152,15 +148,28 @@ try {
         .pClearValues = clearValues.data(),
     };
 
-    drawResolver.prepareForDraw(sceneInformation, currentFrame);
+    frame.drawResolver.prepareForDraw(sceneInformation);
 
     vk::CommandBufferInheritanceInfo inheritanceInfo{
         .renderPass = renderPass.getRenderPass(),
         .subpass = 0,
         .framebuffer = swapChainFramebuffers.at(imageIndex),
     };
-    drawImGui(cameraData, inheritanceInfo, imguiCmd);
-    drawScene(cameraData, inheritanceInfo, drawCmd);
+    vk::CommandBufferBeginInfo drawBeginInfo{
+        .flags = vk::CommandBufferUsageFlagBits::eRenderPassContinue,
+        .pInheritanceInfo = &inheritanceInfo,
+    };
+    vk_utils::vk_try(imguiCmd.begin(&drawBeginInfo));
+    {
+        drawImGui(cameraData, frame.drawResolver, imguiCmd);
+    }
+    imguiCmd.end();
+
+    vk_utils::vk_try(drawCmd.begin(&drawBeginInfo));
+    {
+        drawScene(cameraData, frame.drawResolver, drawCmd);
+    }
+    drawCmd.end();
 
 #ifdef CULLING_DEBUG
     auto cullingCameraDataSelected = cullingCameraData.value_or(std::ref(cameraData)).get();
@@ -172,7 +181,7 @@ try {
     vk::CommandBufferBeginInfo beginInfo;
     vk_utils::vk_try(cmd.begin(&beginInfo));
     vk_debug::beginRegion(cmd, "main command", {1.f, 1.f, 1.f, 1.f});
-    dispatchCulling(cullingCameraDataSelected, {}, cmd);
+    dispatchCulling(cullingCameraDataSelected, frame.drawResolver, cmd);
     cmd.beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
     cmd.executeCommands(secondaryBuffer);
     cmd.endRenderPass();

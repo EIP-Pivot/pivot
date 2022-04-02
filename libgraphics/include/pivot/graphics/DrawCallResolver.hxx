@@ -61,35 +61,34 @@ public:
 
 public:
     /// Constructor
-    DrawCallResolver(VulkanBase &, AssetStorage &);
+    DrawCallResolver();
     /// Destructor
     ~DrawCallResolver();
 
     /// Initialize the ressources
-    void init();
+    void init(VulkanBase &, AssetStorage &);
     /// Destroy them
     void destroy();
 
     /// Build the buffer for the draw
-    void prepareForDraw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
-                        const uint32_t frameIndex);
+    void prepareForDraw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation);
 
     /// Get the frame data of a given frame
-    constexpr const Frame &getFrameData(const uint32_t frameIndex) const { return frames.at(frameIndex); }
+    constexpr const Frame &getFrameData() const { return frame; }
 
     /// @return Get the descritor set layout
     constexpr const vk::DescriptorSetLayout &getDescriptorSetLayout() const noexcept { return descriptorSetLayout; }
 
 private:
     void createDescriptorPool();
-    void createBuffers(Frame &frame, const vk::DeviceSize bufferSize);
-    void createDescriptorSets(Frame &frame, const vk::DeviceSize bufferSize);
+    void createBuffer(const vk::DeviceSize bufferSize);
+    void createDescriptorSet(const vk::DeviceSize bufferSize);
     void createDescriptorSetLayout();
 
 private:
     OptionalRef<VulkanBase> base_ref;
     OptionalRef<AssetStorage> storage_ref;
-    std::array<Frame, MaxFrameInFlight> frames;
+    Frame frame;
     vk::DescriptorPool descriptorPool = VK_NULL_HANDLE;
     vk::DescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
 };

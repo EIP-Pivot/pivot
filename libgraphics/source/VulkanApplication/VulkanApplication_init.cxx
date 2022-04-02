@@ -59,7 +59,7 @@ void VulkanApplication::createPipelineLayout()
     };
 
     std::vector<vk::DescriptorSetLayout> setLayout = {assetStorage.getDescriptorSetLayout(),
-                                                      drawResolver.getDescriptorSetLayout()};
+                                                      frames.at(0).drawResolver.getDescriptorSetLayout()};
     auto pipelineLayoutCreateInfo = vk_init::populateVkPipelineLayoutCreateInfo(setLayout, pipelinePushConstant);
     pipelineLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
     vk_debug::setObjectName(device, pipelineLayout, "Graphics pipeline Layout");
@@ -72,7 +72,7 @@ void VulkanApplication::createCullingPipelineLayout()
     std::vector<vk::PushConstantRange> pipelinePushConstant = {vk_init::populateVkPushConstantRange(
         vk::ShaderStageFlagBits::eCompute, sizeof(gpu_object::CullingPushConstant))};
     std::vector<vk::DescriptorSetLayout> setLayout = {assetStorage.getDescriptorSetLayout(),
-                                                      drawResolver.getDescriptorSetLayout()};
+                                                      frames.at(0).drawResolver.getDescriptorSetLayout()};
     auto pipelineLayoutCreateInfo = vk_init::populateVkPipelineLayoutCreateInfo(setLayout, pipelinePushConstant);
     cullingLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
     vk_debug::setObjectName(device, pipelineLayout, "Culling pipeline Layout");
@@ -198,34 +198,6 @@ void VulkanApplication::createCommandBuffers()
         device.free(commandPool, commandBuffersPrimary);
         device.free(commandPool, commandBuffersSecondary);
         device.free(imguiContext.cmdPool, imguiContext.cmdBuffer);
-    });
-}
-
-void VulkanApplication::createSyncStructure()
-{
-    DEBUG_FUNCTION
-    vk::SemaphoreCreateInfo semaphoreInfo{};
-    vk::FenceCreateInfo fenceInfo{
-        .flags = vk::FenceCreateFlagBits::eSignaled,
-    };
-
-    for (unsigned i = 0; i < frames.size(); i++) {
-        auto &[imageAvailableSemaphore, renderFinishedSemaphore, inFlightFences] = frames[i];
-        const auto &frame_txt = "Frame nb " + std::to_string(i);
-        imageAvailableSemaphore = device.createSemaphore(semaphoreInfo);
-        renderFinishedSemaphore = device.createSemaphore(semaphoreInfo);
-        inFlightFences = device.createFence(fenceInfo);
-        vk_debug::setObjectName(device, imageAvailableSemaphore, frame_txt + ": image available Semaphore");
-        vk_debug::setObjectName(device, renderFinishedSemaphore, frame_txt + ": render finished Semaphore");
-        vk_debug::setObjectName(device, inFlightFences, frame_txt + ": fence");
-    }
-
-    mainDeletionQueue.push([&] {
-        for (auto &f: frames) {
-            device.destroy(f.inFlightFences);
-            device.destroy(f.renderFinishedSemaphore);
-            device.destroy(f.imageAvailableSemaphore);
-        }
     });
 }
 

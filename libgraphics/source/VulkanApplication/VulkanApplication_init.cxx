@@ -92,22 +92,21 @@ void VulkanApplication::createCommandBuffers()
         .level = vk::CommandBufferLevel::eSecondary,
         .commandBufferCount = swapchain.nbOfImage(),
     };
-    cullingBuffer = device.allocateCommandBuffers(allocInfo);
-    for (unsigned i = 0; i < cullingBuffer.size(); i++)
-        vk_debug::setObjectName(device, cullingBuffer[i], "Culling Command Buffer nb " + std::to_string(i));
-
-    graphicsBuffer = device.allocateCommandBuffers(allocInfo);
-    for (unsigned i = 0; i < graphicsBuffer.size(); i++)
-        vk_debug::setObjectName(device, graphicsBuffer[i], "Graphics Command Buffer nb " + std::to_string(i));
-
-    ImGuiBuffer = device.allocateCommandBuffers(allocInfo);
-    for (unsigned i = 0; i < ImGuiBuffer.size(); i++)
-        vk_debug::setObjectName(device, ImGuiBuffer[i], "ImGui Command Buffer nb " + std::to_string(i));
-
+    for (auto &[rendy, buffers]: graphicsRenderer) {
+        buffers = device.allocateCommandBuffers(allocInfo);
+        const auto name = rendy->getName() + "/" + rendy->getType() + " Command Buffer (";
+        for (unsigned i = 0; i < buffers.size(); i++)
+            vk_debug::setObjectName(device, buffers[i], name + std::to_string(i) + ")");
+    }
+    for (auto &[rendy, buffers]: computeRenderer) {
+        buffers = device.allocateCommandBuffers(allocInfo);
+        const auto name = rendy->getName() + "/" + rendy->getType() + " Command Buffer (";
+        for (unsigned i = 0; i < buffers.size(); i++)
+            vk_debug::setObjectName(device, buffers[i], name + std::to_string(i) + ")");
+    }
     swapchainDeletionQueue.push([&] {
-        device.free(commandPool, cullingBuffer);
-        device.free(commandPool, graphicsBuffer);
-        device.free(commandPool, ImGuiBuffer);
+        for (auto &[_, buffers]: computeRenderer) device.freeCommandBuffers(commandPool, buffers);
+        for (auto &[_, buffers]: graphicsRenderer) device.freeCommandBuffers(commandPool, buffers);
     });
 }
 

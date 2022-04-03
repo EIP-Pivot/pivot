@@ -9,12 +9,7 @@ namespace pivot::graphics
 {
 
 VulkanApplication::VulkanApplication()
-    : VulkanBase("Pivot Game Engine", true),
-      assetStorage(*this),
-      pipelineStorage(*this),
-      culling(pipelineStorage, assetStorage),
-      graphics(pipelineStorage, assetStorage),
-      ImGui(pipelineStorage, assetStorage)
+    : VulkanBase("Pivot Game Engine", true), assetStorage(*this), pipelineStorage(*this)
 {
     DEBUG_FUNCTION;
 
@@ -36,11 +31,12 @@ VulkanApplication::~VulkanApplication()
     DEBUG_FUNCTION
     if (device) device.waitIdle();
     if (swapchain) swapchain.destroy();
-    ImGui.onStop(*this);
-    graphics.onStop(*this);
-    culling.onStop(*this);
     assetStorage.destroy();
+
+    std::for_each(graphicsRenderer.begin(), graphicsRenderer.end(), [this](auto &pair) { pair.first->onStop(*this); });
+    std::for_each(computeRenderer.begin(), computeRenderer.end(), [this](auto &pair) { pair.first->onStop(*this); });
     std::for_each(frames.begin(), frames.end(), [&](Frame &fr) { fr.destroy(*this, commandPool); });
+
     swapchainDeletionQueue.flush();
     mainDeletionQueue.flush();
     pipelineStorage.destroy();
@@ -62,17 +58,17 @@ void VulkanApplication::initVulkanRessources()
     std::for_each(frames.begin(), frames.end(), [&](Frame &fr) { fr.initFrame(*this, assetStorage, commandPool); });
     auto size = window.getSize();
     swapchain.create(size, physical_device, device, surface);
-    createCommandBuffers();
     createDepthResources();
     createColorResources();
     createRenderPass();
-
-    auto layout = frames[0].drawResolver.getDescriptorSetLayout();
-    culling.onInit(*this, layout);
-    graphics.onInit(swapchain.getSwapchainExtent(), *this, layout, renderPass.getRenderPass());
-    ImGui.onInit(swapchain.getSwapchainExtent(), *this, layout, renderPass.getRenderPass());
     createFramebuffers();
 
+    auto layout = frames[0].drawResolver.getDescriptorSetLayout();
+    for (auto &[rendy, buffers]: graphicsRenderer)
+        rendy->onInit(swapchain.getSwapchainExtent(), *this, layout, renderPass.getRenderPass());
+    for (auto &[rendy, buffers]: computeRenderer) rendy->onInit(*this, layout);
+
+    createCommandBuffers();
     postInitialization();
     logger.info("Vulkan Application") << "Initialisation complete !";
 }
@@ -95,13 +91,16 @@ void VulkanApplication::recreateSwapchain()
     device.waitIdle();
     swapchainDeletionQueue.flush();
     swapchain.recreate(size, physical_device, device, surface);
-    createCommandBuffers();
     createColorResources();
     createDepthResources();
     createRenderPass();
+    createCommandBuffers();
     auto layout = frames[0].drawResolver.getDescriptorSetLayout();
-    graphics.onRecreate(swapchain.getSwapchainExtent(), *this, layout, renderPass.getRenderPass());
-    ImGui.onRecreate(swapchain.getSwapchainExtent(), *this, layout, renderPass.getRenderPass());
+
+    std::for_each(graphicsRenderer.begin(), graphicsRenderer.end(),
+                  [&](std::pair<std::unique_ptr<IGraphicsRenderer>, CommandVector> &pair) {
+                      pair.first->onRecreate(swapchain.getSwapchainExtent(), *this, layout, renderPass.getRenderPass());
+                  });
 
     createFramebuffers();
     logger.info("Swapchain recreation") << "New height = " << swapchain.getSwapchainExtent().height
@@ -125,15 +124,9 @@ try {
     uint32_t imageIndex = swapchain.getNextImageIndex(UINT64_MAX, frame.imageAvailableSemaphore);
 
     auto &cmd = frame.cmdBuffer;
-    auto &cullingBuff = cullingBuffer.at(imageIndex);
-    auto &imGui = ImGuiBuffer.at(imageIndex);
-    auto &graphicsBuff = graphicsBuffer.at(imageIndex);
 
     device.resetFences(frame.inFlightFences);
     cmd.reset();
-    cullingBuff.reset();
-    imGui.reset();
-    graphicsBuff.reset();
 
     vk::Semaphore waitSemaphores[] = {frame.imageAvailableSemaphore};
     vk::PipelineStageFlags waitStages[] = {vk::PipelineStageFlagBits::eColorAttachmentOutput};
@@ -171,32 +164,31 @@ try {
         .pInheritanceInfo = &inheritanceInfo,
     };
 
-    vk_utils::vk_try(cullingBuff.begin(&computeInfo));
-    {
-        culling.onDraw(cameraData, frame.drawResolver, cullingBuff);
+    std::vector<vk::CommandBuffer> secondaryBuffer;
+    std::vector<vk::CommandBuffer> computeBuffer;
+    for (auto &[rendy, buffers]: computeRenderer) {
+        auto &cmdBuf = buffers.at(imageIndex);
+        cmdBuf.reset();
+        vk_utils::vk_try(cmdBuf.begin(&computeInfo));
+        rendy->onDraw(cameraData, frame.drawResolver, cmdBuf);
+        cmdBuf.end();
+        computeBuffer.push_back(cmdBuf);
     }
-    cullingBuff.end();
-
-    vk_utils::vk_try(imGui.begin(&drawBeginInfo));
-    {
-        ImGui.onDraw(cameraData, frame.drawResolver, imGui);
+    for (auto &[rendy, buffers]: graphicsRenderer) {
+        auto &cmdBuf = buffers.at(imageIndex);
+        cmdBuf.reset();
+        vk_utils::vk_try(cmdBuf.begin(&drawBeginInfo));
+        rendy->onDraw(cameraData, frame.drawResolver, cmdBuf);
+        cmdBuf.end();
+        secondaryBuffer.push_back(cmdBuf);
     }
-    imGui.end();
 
-    vk_utils::vk_try(graphicsBuff.begin(&drawBeginInfo));
-    {
-        graphics.onDraw(cameraData, frame.drawResolver, graphicsBuff);
-    }
-    graphicsBuff.end();
+    // #ifdef CULLING_DEBUG
+    //     auto cullingCameraDataSelected = cullingCameraData.value_or(std::ref(cameraData)).get();
+    // #else
+    //     auto cullingCameraDataSelected = cameraData;
+    // #endif
 
-#ifdef CULLING_DEBUG
-    auto cullingCameraDataSelected = cullingCameraData.value_or(std::ref(cameraData)).get();
-#else
-    auto cullingCameraDataSelected = cameraData;
-#endif
-
-    std::array<vk::CommandBuffer, 2> secondaryBuffer{graphicsBuff, imGui};
-    std::array<vk::CommandBuffer, 1> computeBuffer{cullingBuff};
     vk::CommandBufferBeginInfo beginInfo;
     vk_utils::vk_try(cmd.begin(&beginInfo));
     vk_debug::beginRegion(cmd, "main command", {1.f, 1.f, 1.f, 1.f});

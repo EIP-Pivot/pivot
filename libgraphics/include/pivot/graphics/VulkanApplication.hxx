@@ -1,13 +1,16 @@
 #pragma once
 
 #include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/DeletionQueue.hxx"
 #include "pivot/graphics/PipelineStorage.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/VulkanRenderPass.hxx"
 #include "pivot/graphics/VulkanSwapchain.hxx"
+#include "pivot/graphics/interface/IRenderer.hxx"
 #include "pivot/graphics/types/Frame.hxx"
 #include "pivot/graphics/types/vk_types.hxx"
+#include "pivot/graphics/vk_debug.hxx"
 
 #include "pivot/graphics/Renderer/CullingRenderer.hxx"
 #include "pivot/graphics/Renderer/GraphicsRenderer.hxx"
@@ -40,6 +43,15 @@ const std::vector<const char *> deviceExtensions = {
 class VulkanApplication : public VulkanBase
 {
 public:
+    /// Alias for a vector of command buffer
+    using CommandVector = std::vector<vk::CommandBuffer>;
+
+    template <typename T>
+    /// Alias for storing a Renderer and its associated command buffer
+    requires std::is_base_of_v<IRenderer, T>
+    using RendererStorage = std::vector<std::pair<std::unique_ptr<T>, CommandVector>>;
+
+public:
     /// Default constructor
     VulkanApplication();
     /// Default destructor
@@ -64,7 +76,24 @@ public:
     );
 
     /// @brief get Swapchain aspect ratio
-    float getAspectRatio() const noexcept { return swapchain.getAspectRatio(); }
+    constexpr float getAspectRatio() const noexcept { return swapchain.getAspectRatio(); }
+
+    template <validRenderer T>
+    /// Add a Renderer to the frame
+    T &addRenderer()
+    {
+        DEBUG_FUNCTION
+        auto rendy = std::make_unique<T>(pipelineStorage, assetStorage);
+        auto &ret = *rendy;
+        if constexpr (std::is_base_of_v<IGraphicsRenderer, T>) {
+            graphicsRenderer.emplace_back(std::move(rendy), CommandVector());
+        } else if constexpr (std::is_base_of_v<IComputeRenderer, T>) {
+            computeRenderer.emplace_back(std::move(rendy), CommandVector());
+        } else {
+            throw std::logic_error("Unsuported Renderer : " + rendy->getType());
+        }
+        return ret;
+    }
 
 private:
     virtual void postInitialization();
@@ -90,14 +119,8 @@ private:
     vk::DescriptorPool imGuiPool = VK_NULL_HANDLE;
     vk::CommandPool commandPool = VK_NULL_HANDLE;
 
-    CullingRenderer culling;
-    std::vector<vk::CommandBuffer> cullingBuffer;
-
-    GraphicsRenderer graphics;
-    std::vector<vk::CommandBuffer> graphicsBuffer;
-
-    ImGuiRenderer ImGui;
-    std::vector<vk::CommandBuffer> ImGuiBuffer;
+    RendererStorage<IGraphicsRenderer> graphicsRenderer;
+    RendererStorage<IComputeRenderer> computeRenderer;
 
     DeletionQueue mainDeletionQueue;
     DeletionQueue swapchainDeletionQueue;

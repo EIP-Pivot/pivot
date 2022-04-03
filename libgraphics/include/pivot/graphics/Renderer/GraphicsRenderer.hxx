@@ -5,12 +5,15 @@
 namespace pivot::graphics
 {
 
+/// Draw the scene
 class GraphicsRenderer : public IGraphicsRenderer
 {
 public:
+    /// @copydoc IRenderer::IRenderer
     GraphicsRenderer(PipelineStorage &storage, AssetStorage &assets);
     ~GraphicsRenderer();
 
+    std::string getName() const noexcept override { return "Graphics"; }
     bool onInit(const vk::Extent2D &size, VulkanBase &base_ref, vk::DescriptorSetLayout &resolverLayout,
                 vk::RenderPass &pass) override;
     void onStop(VulkanBase &base_ref) override;

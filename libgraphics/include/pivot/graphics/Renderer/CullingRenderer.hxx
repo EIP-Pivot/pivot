@@ -9,12 +9,15 @@
 namespace pivot::graphics
 {
 
+/// Dispach compute shader to cull the scene
 class CullingRenderer : public IComputeRenderer
 {
 public:
+    /// @copydoc IRenderer::IRenderer
     CullingRenderer(PipelineStorage &storage, AssetStorage &assets);
     ~CullingRenderer();
 
+    std::string getName() const noexcept override { return "Culling"; }
     bool onInit(VulkanBase &base_ref, vk::DescriptorSetLayout &resolverLayout) override;
     void onStop(VulkanBase &base_ref) override;
 

@@ -23,9 +23,6 @@ private:
     void createDescriptorPool(vk::Device &device);
 
 private:
-    PipelineStorage &stor;
-    AssetStorage &assets;
-
     vk::DescriptorPool pool = VK_NULL_HANDLE;
 };
 

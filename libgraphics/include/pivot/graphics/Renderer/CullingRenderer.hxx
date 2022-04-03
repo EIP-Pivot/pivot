@@ -25,8 +25,6 @@ private:
     void createPipeline(vk::Device &device);
 
 private:
-    PipelineStorage &stor;
-    AssetStorage &assets;
     QueueFamilyIndices indices;
 
     vk::PipelineLayout cullingLayout = VK_NULL_HANDLE;

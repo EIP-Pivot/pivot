@@ -6,7 +6,7 @@
 namespace pivot::graphics
 {
 
-CullingRenderer::CullingRenderer(PipelineStorage &storage, AssetStorage &assets): stor(storage), assets(assets) {}
+CullingRenderer::CullingRenderer(PipelineStorage &storage, AssetStorage &assets): IComputeRenderer(storage, assets) {}
 CullingRenderer::~CullingRenderer() {}
 
 bool CullingRenderer::onInit(VulkanBase &base_ref, vk::DescriptorSetLayout &resolverLayout)

@@ -6,7 +6,9 @@
 namespace pivot::graphics
 {
 
-GraphicsRenderer::GraphicsRenderer(PipelineStorage &storage, AssetStorage &assets): stor(storage), assets(assets) {}
+GraphicsRenderer::GraphicsRenderer(PipelineStorage &storage, AssetStorage &assets): IGraphicsRenderer(storage, assets)
+{
+}
 GraphicsRenderer::~GraphicsRenderer() {}
 
 bool GraphicsRenderer::onInit(const vk::Extent2D &size, VulkanBase &base_ref, vk::DescriptorSetLayout &resolverLayout,

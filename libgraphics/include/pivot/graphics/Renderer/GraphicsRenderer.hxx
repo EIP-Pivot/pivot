@@ -23,9 +23,6 @@ private:
     void createPipeline(VulkanBase &base_ref, vk::RenderPass &pass, const vk::Extent2D &size);
 
 private:
-    PipelineStorage &stor;
-    AssetStorage &assets;
-
     bool bIsMultiDraw = false;
     vk::PipelineLayout pipelineLayout = VK_NULL_HANDLE;
 };

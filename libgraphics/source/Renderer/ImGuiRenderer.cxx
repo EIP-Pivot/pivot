@@ -9,7 +9,7 @@
 namespace pivot::graphics
 {
 
-ImGuiRenderer::ImGuiRenderer(PipelineStorage &storage, AssetStorage &assets): stor(storage), assets(assets) {}
+ImGuiRenderer::ImGuiRenderer(PipelineStorage &storage, AssetStorage &assets): IGraphicsRenderer(storage, assets) {}
 ImGuiRenderer::~ImGuiRenderer() {}
 
 bool ImGuiRenderer::onInit(const vk::Extent2D &size, VulkanBase &base_ref, vk::DescriptorSetLayout &resolverLayout,

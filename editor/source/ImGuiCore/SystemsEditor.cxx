@@ -14,7 +14,7 @@ void SystemsEditor::createPopUp()
     auto &sm = gSceneManager.getCurrentLevel().getSystemManager();
     if (ImGui::BeginPopup("AddSystem")) {
         for (const auto &[name, description]: GlobalIndex::getSingleton()) {
-            if (sm.hasSystem(name))
+            if (!sm.hasSystem(name))
                 if (ImGui::MenuItem(name.c_str())) sm.useSystem(name);
         }
         ImGui::EndPopup();

@@ -67,6 +67,7 @@ public:
                 {
                     "Gravity",
                     "RigidBody",
+                    "RenderObject",
                 },
             .eventListener = tick,
             .system = &physicsSystem,
@@ -82,7 +83,8 @@ public:
             button.reset();
         });
         window.setKeyReleaseCallback(Window::Key::V, [&](Window &window, const Window::Key key) {
-            gSceneManager.getCurrentLevel().switchCamera();
+            if (window.captureCursor())
+                gSceneManager.getCurrentLevel().switchCamera();
         });
 
         auto key_lambda_press = [&](Window &window, const Window::Key key) {

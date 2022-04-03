@@ -268,10 +268,10 @@ private:
 };
 
 #ifndef PIVOT_ASSETSTORAGE_TEMPLATE_INITIALIZED
-#define PIVOT_ASSETSTORAGE_TEMPLATE_INITIALIZED
+    #define PIVOT_ASSETSTORAGE_TEMPLATE_INITIALIZED
 
-#define PIVOT_TEST_CONTAINS(stor, key) \
-    if (!stor.contains(key)) throw AssetStorage::AssetStorageException("Missing " + key + " in " #stor);
+    #define PIVOT_TEST_CONTAINS(stor, key) \
+        if (!stor.contains(key)) throw AssetStorage::AssetStorageException("Missing " + key + " in " #stor);
 
 template <>
 /// @copydoc AssetStorage::get
@@ -305,7 +305,7 @@ inline const AssetStorage::Mesh &AssetStorage::get(const std::string &p) const
     return get<Model>(p).mesh;
 }
 
-#undef PIVOT_TEST_CONTAINS
+    #undef PIVOT_TEST_CONTAINS
 
 // Get Index of asset in the buffers
 template <>

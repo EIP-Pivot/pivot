@@ -96,7 +96,7 @@ void ImGuiRenderer::createImGuiContext(VulkanBase &base_ref, vk::RenderPass &pas
     init_info.QueueFamily = base_ref.queueIndices.graphicsFamily.value();
     init_info.Queue = base_ref.graphicsQueue;
     init_info.DescriptorPool = pool;
-#warning this
+    // FIXME: Need to get swapchain image count
     init_info.MinImageCount = 2;
     init_info.ImageCount = 2;
     init_info.MSAASamples = static_cast<VkSampleCountFlagBits>(base_ref.maxMsaaSample);

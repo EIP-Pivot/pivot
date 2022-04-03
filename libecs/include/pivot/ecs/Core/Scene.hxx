@@ -1,5 +1,12 @@
 #pragma once
 
+#include <filesystem>
+#include <fstream>
+
+#include <nlohmann/json.hpp>
+
+#include <pivot/ecs/Core/Data/value_serialization.hxx>
+
 #include "pivot/ecs/Core/Component/index.hxx"
 #include "pivot/ecs/Core/Component/manager.hxx"
 
@@ -107,6 +114,8 @@ public:
     Camera &getCamera();
     /// Get camera list
     std::vector<Entity> &getCameras();
+    // Save scene in json file
+    void save();
 
 private:
     std::string name;

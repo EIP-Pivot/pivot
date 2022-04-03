@@ -74,3 +74,17 @@ const pivot::ecs::systems::Manager &Scene::getSystemManager() const { return mSy
 pivot::ecs::event::Manager &Scene::getEventManager() { return mEventManager; }
 
 const pivot::ecs::event::Manager &Scene::getEventManager() const { return mEventManager; }
+
+void Scene::save()
+{
+    if (!std::filesystem::exists("scene")) { std::filesystem::create_directory("scene"); }
+    std::ofstream out("scene/" + name + ".json");
+    std::string oui = nlohmann::json(pivot::ecs::data::Value{"hello"}).dump();
+    nlohmann::json output;
+    output["name"] = name;
+    for (auto &[entity, _]: mEntityManager.getEntities())
+        for (pivot::ecs::component::ComponentRef ref: mComponentManager.GetAllComponents(entity))
+            output["components"][entity][ref.description().name] = nlohmann::json(ref.get());
+    out << std::setw(4) << output << std::endl;
+    out.close();
+}

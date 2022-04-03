@@ -19,6 +19,8 @@ void Editor::create()
         }
         if (ImGui::Selectable(" +", false, 0, newSceneSize)) { ImGui::OpenPopup("AddScene"); }
         ImGui::Separator();
+        if (ImGui::Button("Save" )) { gSceneManager.getCurrentLevel().save(); }
+        ImGui::Separator();
         if (ImGui::RadioButton("Translate", currentGizmoOperation == ImGuizmo::TRANSLATE))
             currentGizmoOperation = ImGuizmo::TRANSLATE;
         ImGui::SameLine();

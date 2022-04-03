@@ -16,11 +16,12 @@ public:
     Frame() = default;
     ~Frame() = default;
 
-    void initFrame(VulkanBase &base, AssetStorage &stor);
-    void destroy(VulkanBase &base);
+    void initFrame(VulkanBase &base, AssetStorage &stor, vk::CommandPool &pool);
+    void destroy(VulkanBase &base, vk::CommandPool &pool);
 
 public:
     DrawCallResolver drawResolver;
+    vk::CommandBuffer cmdBuffer;
     /// Indicate if the image can be recover from the swapchain
     vk::Semaphore imageAvailableSemaphore;
     /// Indicate if the image has completed render

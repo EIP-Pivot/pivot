@@ -23,8 +23,6 @@ public:
     /// @cond
     vk::Instance instance = VK_NULL_HANDLE;
     vk::Device device = VK_NULL_HANDLE;
-
-protected:
     vk::DynamicLoader loader;
     /// @endcond
 };

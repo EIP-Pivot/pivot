@@ -2,13 +2,16 @@
 
 #include "pivot/graphics/AssetStorage.hxx"
 #include "pivot/graphics/DeletionQueue.hxx"
-#include "pivot/graphics/DrawCallResolver.hxx"
 #include "pivot/graphics/PipelineStorage.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/VulkanRenderPass.hxx"
 #include "pivot/graphics/VulkanSwapchain.hxx"
 #include "pivot/graphics/types/Frame.hxx"
 #include "pivot/graphics/types/vk_types.hxx"
+
+#include "pivot/graphics/Renderer/CullingRenderer.hxx"
+#include "pivot/graphics/Renderer/GraphicsRenderer.hxx"
+#include "pivot/graphics/Renderer/ImGuiRenderer.hxx"
 
 #include <optional>
 #include <vector>
@@ -64,31 +67,17 @@ public:
     float getAspectRatio() const noexcept { return swapchain.getAspectRatio(); }
 
 private:
-    bool dispatchCulling(const CameraData &cameraData, DrawCallResolver &resolver, vk::CommandBuffer &cmd);
-    bool drawImGui(const CameraData &cameraData, DrawCallResolver &resolver, vk::CommandBuffer &cmd);
-    bool drawScene(const CameraData &cameraData, DrawCallResolver &resolver, vk::CommandBuffer &cmd);
-
     virtual void postInitialization();
     void recreateSwapchain();
     void initVulkanRessources();
 
-    void createSyncStructure();
-
-    void createPipelineLayout();
-    void createCullingPipelineLayout();
-
     void createCommandPool();
     void createCommandBuffers();
 
-    void createPipeline();
-    void createCullingPipeline();
     void createDepthResources();
     void createColorResources();
     void createRenderPass();
     void createFramebuffers();
-
-    void createImGuiDescriptorPool();
-    void initDearImGui();
 
 public:
     /// The application asssets storage
@@ -98,13 +87,17 @@ public:
 
 private:
     /// @cond
-    uint32_t mipLevels = 0;
+    vk::DescriptorPool imGuiPool = VK_NULL_HANDLE;
+    vk::CommandPool commandPool = VK_NULL_HANDLE;
 
-    struct ImGuiContext {
-        vk::CommandPool cmdPool = VK_NULL_HANDLE;
-        std::vector<vk::CommandBuffer> cmdBuffer;
-        vk::DescriptorPool pool = VK_NULL_HANDLE;
-    } imguiContext;
+    CullingRenderer culling;
+    std::vector<vk::CommandBuffer> cullingBuffer;
+
+    GraphicsRenderer graphics;
+    std::vector<vk::CommandBuffer> graphicsBuffer;
+
+    ImGuiRenderer ImGui;
+    std::vector<vk::CommandBuffer> ImGuiBuffer;
 
     DeletionQueue mainDeletionQueue;
     DeletionQueue swapchainDeletionQueue;
@@ -115,16 +108,8 @@ private:
 
     VulkanRenderPass renderPass;
 
-    vk::CommandPool commandPool = VK_NULL_HANDLE;
-
-    std::vector<vk::CommandBuffer> commandBuffersPrimary;
-    std::vector<vk::CommandBuffer> commandBuffersSecondary;
-
     AllocatedImage depthResources = {};
     AllocatedImage colorImage = {};
-
-    vk::PipelineLayout pipelineLayout = VK_NULL_HANDLE;
-    vk::PipelineLayout cullingLayout = VK_NULL_HANDLE;
 
     std::vector<vk::Framebuffer> swapChainFramebuffers;
     /// @endcond

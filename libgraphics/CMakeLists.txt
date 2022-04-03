@@ -164,10 +164,12 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/AssetsStorage/Loaders/AssetStorage_ktx.cxx
                                    source/VulkanApplication/VulkanApplication.cxx
                                    source/VulkanApplication/VulkanApplication_init.cxx
-                                   source/VulkanApplication/VulkanApplication_draw.cxx
                                    source/VulkanBase/VulkanBase.cxx
                                    source/VulkanBase/VulkanBase_init.cxx
                                    source/VulkanBase/VulkanBase_static.cxx
+                                   source/Renderer/CullingRenderer.cxx
+                                   source/Renderer/GraphicsRenderer.cxx
+                                   source/Renderer/ImGuiRenderer.cxx
                                    source/abstract/AImmediateCommand.cxx
                                    source/culling.cxx
                                    source/DrawCallResolver.cxx

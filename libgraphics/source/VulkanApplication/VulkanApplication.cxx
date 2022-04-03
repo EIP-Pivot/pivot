@@ -9,7 +9,12 @@ namespace pivot::graphics
 {
 
 VulkanApplication::VulkanApplication()
-    : VulkanBase("Pivot Game Engine", true), assetStorage(*this), pipelineStorage(*this)
+    : VulkanBase("Pivot Game Engine", true),
+      assetStorage(*this),
+      pipelineStorage(*this),
+      culling(pipelineStorage, assetStorage),
+      graphics(pipelineStorage, assetStorage),
+      ImGui(pipelineStorage, assetStorage)
 {
     DEBUG_FUNCTION;
 
@@ -31,11 +36,14 @@ VulkanApplication::~VulkanApplication()
     DEBUG_FUNCTION
     if (device) device.waitIdle();
     if (swapchain) swapchain.destroy();
+    ImGui.onStop(*this);
+    graphics.onStop(*this);
+    culling.onStop(*this);
     assetStorage.destroy();
+    std::for_each(frames.begin(), frames.end(), [&](Frame &fr) { fr.destroy(*this, commandPool); });
     swapchainDeletionQueue.flush();
     mainDeletionQueue.flush();
     pipelineStorage.destroy();
-    std::for_each(frames.begin(), frames.end(), [&](Frame &fr) { fr.destroy(*this); });
     VulkanBase::destroy();
 }
 
@@ -50,26 +58,23 @@ void VulkanApplication::initVulkanRessources()
 {
     DEBUG_FUNCTION
 
-    std::for_each(frames.begin(), frames.end(), [&](Frame &fr) { fr.initFrame(*this, assetStorage); });
-    createPipelineLayout();
-    createCullingPipelineLayout();
     createCommandPool();
-    createImGuiDescriptorPool();
-    createCullingPipeline();
-
+    std::for_each(frames.begin(), frames.end(), [&](Frame &fr) { fr.initFrame(*this, assetStorage, commandPool); });
     auto size = window.getSize();
     swapchain.create(size, physical_device, device, surface);
-
-    createRenderPass();
-    createPipeline();
+    createCommandBuffers();
     createDepthResources();
     createColorResources();
+    createRenderPass();
+
+    auto layout = frames[0].drawResolver.getDescriptorSetLayout();
+    culling.onInit(*this, layout);
+    graphics.onInit(swapchain.getSwapchainExtent(), *this, layout, renderPass.getRenderPass());
+    ImGui.onInit(swapchain.getSwapchainExtent(), *this, layout, renderPass.getRenderPass());
     createFramebuffers();
 
-    createCommandBuffers();
-    initDearImGui();
-
     postInitialization();
+    logger.info("Vulkan Application") << "Initialisation complete !";
 }
 
 void VulkanApplication::postInitialization() {}
@@ -89,15 +94,16 @@ void VulkanApplication::recreateSwapchain()
 
     device.waitIdle();
     swapchainDeletionQueue.flush();
-
     swapchain.recreate(size, physical_device, device, surface);
-    createRenderPass();
-    createPipeline();
+    createCommandBuffers();
     createColorResources();
     createDepthResources();
+    createRenderPass();
+    auto layout = frames[0].drawResolver.getDescriptorSetLayout();
+    graphics.onRecreate(swapchain.getSwapchainExtent(), *this, layout, renderPass.getRenderPass());
+    ImGui.onRecreate(swapchain.getSwapchainExtent(), *this, layout, renderPass.getRenderPass());
+
     createFramebuffers();
-    createCommandBuffers();
-    initDearImGui();
     logger.info("Swapchain recreation") << "New height = " << swapchain.getSwapchainExtent().height
                                         << ", New width =" << swapchain.getSwapchainExtent().width
                                         << ", numberOfImage = " << swapchain.nbOfImage();
@@ -118,14 +124,16 @@ try {
 
     uint32_t imageIndex = swapchain.getNextImageIndex(UINT64_MAX, frame.imageAvailableSemaphore);
 
-    auto &cmd = commandBuffersPrimary[currentFrame];
-    auto &drawCmd = commandBuffersSecondary[currentFrame];
-    auto &imguiCmd = imguiContext.cmdBuffer[currentFrame];
+    auto &cmd = frame.cmdBuffer;
+    auto &cullingBuff = cullingBuffer.at(imageIndex);
+    auto &imGui = ImGuiBuffer.at(imageIndex);
+    auto &graphicsBuff = graphicsBuffer.at(imageIndex);
 
     device.resetFences(frame.inFlightFences);
     cmd.reset();
-    drawCmd.reset();
-    imguiCmd.reset();
+    cullingBuff.reset();
+    imGui.reset();
+    graphicsBuff.reset();
 
     vk::Semaphore waitSemaphores[] = {frame.imageAvailableSemaphore};
     vk::PipelineStageFlags waitStages[] = {vk::PipelineStageFlagBits::eColorAttachmentOutput};
@@ -138,7 +146,7 @@ try {
 
     vk::RenderPassBeginInfo renderPassInfo{
         .renderPass = renderPass.getRenderPass(),
-        .framebuffer = swapChainFramebuffers[imageIndex],
+        .framebuffer = swapChainFramebuffers.at(imageIndex),
         .renderArea =
             {
                 .offset = {0, 0},
@@ -159,17 +167,27 @@ try {
         .flags = vk::CommandBufferUsageFlagBits::eRenderPassContinue,
         .pInheritanceInfo = &inheritanceInfo,
     };
-    vk_utils::vk_try(imguiCmd.begin(&drawBeginInfo));
-    {
-        drawImGui(cameraData, frame.drawResolver, imguiCmd);
-    }
-    imguiCmd.end();
+    vk::CommandBufferBeginInfo computeInfo{
+        .pInheritanceInfo = &inheritanceInfo,
+    };
 
-    vk_utils::vk_try(drawCmd.begin(&drawBeginInfo));
+    vk_utils::vk_try(cullingBuff.begin(&computeInfo));
     {
-        drawScene(cameraData, frame.drawResolver, drawCmd);
+        culling.onDraw(cameraData, frame.drawResolver, cullingBuff);
     }
-    drawCmd.end();
+    cullingBuff.end();
+
+    vk_utils::vk_try(imGui.begin(&drawBeginInfo));
+    {
+        ImGui.onDraw(cameraData, frame.drawResolver, imGui);
+    }
+    imGui.end();
+
+    vk_utils::vk_try(graphicsBuff.begin(&drawBeginInfo));
+    {
+        graphics.onDraw(cameraData, frame.drawResolver, graphicsBuff);
+    }
+    graphicsBuff.end();
 
 #ifdef CULLING_DEBUG
     auto cullingCameraDataSelected = cullingCameraData.value_or(std::ref(cameraData)).get();
@@ -177,11 +195,12 @@ try {
     auto cullingCameraDataSelected = cameraData;
 #endif
 
-    std::array<vk::CommandBuffer, 2> secondaryBuffer{drawCmd, imguiCmd};
+    std::array<vk::CommandBuffer, 2> secondaryBuffer{graphicsBuff, imGui};
+    std::array<vk::CommandBuffer, 1> computeBuffer{cullingBuff};
     vk::CommandBufferBeginInfo beginInfo;
     vk_utils::vk_try(cmd.begin(&beginInfo));
     vk_debug::beginRegion(cmd, "main command", {1.f, 1.f, 1.f, 1.f});
-    dispatchCulling(cullingCameraDataSelected, frame.drawResolver, cmd);
+    cmd.executeCommands(computeBuffer);
     cmd.beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
     cmd.executeCommands(secondaryBuffer);
     cmd.endRenderPass();

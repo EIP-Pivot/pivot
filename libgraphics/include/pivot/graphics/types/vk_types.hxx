@@ -66,6 +66,6 @@ struct CameraData {
 };
 
 /// Indicated the number of frame rendered in advance by the engine
-constexpr const auto MaxFrameInFlight = 3;
+constexpr const auto MaxFrameInFlight = 1;
 
 }    // namespace pivot::graphics

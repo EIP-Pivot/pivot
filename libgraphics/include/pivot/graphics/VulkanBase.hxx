@@ -60,8 +60,6 @@ public:
     vk::PhysicalDevice physical_device = VK_NULL_HANDLE;
     /// a VulkanAllocator
     VulkanAllocator allocator;
-
-protected:
     /// Maximum support msaaSample value.
     vk::SampleCountFlagBits maxMsaaSample = vk::SampleCountFlagBits::e1;
     /// List of GPU features

@@ -51,9 +51,80 @@ public:
 
     Application(): VulkanApplication(), editor(Editor()), camera(editor.getCamera()){};
 
+    void addRandomObject(const std::string &object)
+    {
+        auto gravityId = gSceneManager.getCurrentLevel().getComponentManager().GetComponentId("Gravity").value();
+        auto rigidBodyId = gSceneManager.getCurrentLevel().getComponentManager().GetComponentId("RigidBody").value();
+        auto renderObjectId =
+            gSceneManager.getCurrentLevel().getComponentManager().GetComponentId("RenderObject").value();
+
+        std::array<std::string, 8> textures = {"white", "vert", "bleu", "cyan", "orange", "jaune", "blanc", "violet"};
+        std::random_device generator;
+        std::uniform_real_distribution<float> randPositionY(0.0f, 50.0f);
+        std::uniform_real_distribution<float> randPositionXZ(-50.0f, 50.0f);
+        std::uniform_real_distribution<float> randRotation(0.0f, 3.0f);
+        std::uniform_real_distribution<float> randColor(0.0f, 1.0f);
+        std::uniform_real_distribution<float> randGravity(-10.0f, -1.0f);
+        std::uniform_real_distribution<float> randVelocityY(10.0f, 200.0f);
+        std::uniform_real_distribution<float> randVelocityXZ(-200.0f, 200.0f);
+        std::uniform_real_distribution<float> randScale(0.5f, 1.0f);
+        std::uniform_int_distribution<int> randTexture(0, textures.size() - 1);
+
+        auto newEntity = entity.addEntity();
+
+        pivot::ecs::data::Value gravity =
+            pivot::ecs::data::Value{
+                pivot::ecs::data::Record{
+                    {"force", glm::vec3(0.0f, randGravity(generator), 0.0f)}
+                }
+            };
+
+        pivot::ecs::data::Value rigidBody =
+            pivot::ecs::data::Value{
+                pivot::ecs::data::Record{
+                    {"velocity", glm::vec3(randVelocityXZ(generator), randVelocityY(generator), randVelocityXZ(generator))},
+                    {"acceleration",  glm::vec3(0.0f, 0.0f, 0.0f)}
+                }
+            };
+
+        glm::vec3 position = glm::vec3(randPositionXZ(generator), randPositionY(generator), randPositionXZ(generator));
+        glm::vec3 rotation = glm::vec3(randRotation(generator),randRotation(generator), randRotation(generator));
+        glm::vec3 scale = glm::vec3(randScale(generator));
+
+        pivot::ecs::data::Value renderObject =
+            pivot::ecs::data::Value{
+                pivot::ecs::data::Record{
+                    {"materialIndex", "white"},
+                    {"meshID",  object},
+                    {"pipelineID",  "lit"},
+                    {"transform",  pivot::ecs::data::Record{
+                            {"position", position},
+                            {"rotation", rotation},
+                            {"scale", scale},
+                        }
+                    }
+                }
+            };
+
+        gSceneManager.getCurrentLevel().getComponentManager().AddComponent(newEntity, gravity, gravityId);
+        gSceneManager.getCurrentLevel().getComponentManager().AddComponent(newEntity, rigidBody, rigidBodyId);
+        gSceneManager.getCurrentLevel().getComponentManager().AddComponent(newEntity, renderObject, renderObjectId);
+    }
+
+    void DemoScene()
+    {
+        editor.addScene("Demo");
+        gSceneManager.getCurrentLevel().getSystemManager().useSystem("Physics System");
+
+        std::vector<Entity> entities(300);
+
+        for (auto &_entity: entities) { addRandomObject("cube"); }
+    }
+
     void loadScene()
     {
         LevelId defaultScene = editor.addScene("Default");
+        DemoScene();
         gSceneManager.setCurrentLevelId(defaultScene);
     }
 

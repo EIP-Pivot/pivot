@@ -11,7 +11,8 @@ void physicsSystem(const systems::Description &systemDescription, component::Arr
         auto rigidBody = combination[1].get();
         auto renderObject = combination[2].get();
 
-        auto &position = std::get<glm::vec3>(std::get<data::Record>(std::get<data::Record>(renderObject).at("transform")).at("position"));
+        auto &position = std::get<glm::vec3>(
+            std::get<data::Record>(std::get<data::Record>(renderObject).at("transform")).at("position"));
         auto &velocity = std::get<glm::vec3>(std::get<data::Record>(rigidBody).at("velocity"));
         auto &force = std::get<glm::vec3>(std::get<data::Record>(gravity).at("force"));
 

@@ -73,38 +73,25 @@ public:
         auto newEntity = entity.addEntity();
 
         pivot::ecs::data::Value gravity =
-            pivot::ecs::data::Value{
-                pivot::ecs::data::Record{
-                    {"force", glm::vec3(0.0f, randGravity(generator), 0.0f)}
-                }
-            };
+            pivot::ecs::data::Value{pivot::ecs::data::Record{{"force", glm::vec3(0.0f, randGravity(generator), 0.0f)}}};
 
-        pivot::ecs::data::Value rigidBody =
-            pivot::ecs::data::Value{
-                pivot::ecs::data::Record{
-                    {"velocity", glm::vec3(randVelocityXZ(generator), randVelocityY(generator), randVelocityXZ(generator))},
-                    {"acceleration",  glm::vec3(0.0f, 0.0f, 0.0f)}
-                }
-            };
+        pivot::ecs::data::Value rigidBody = pivot::ecs::data::Value{pivot::ecs::data::Record{
+            {"velocity", glm::vec3(randVelocityXZ(generator), randVelocityY(generator), randVelocityXZ(generator))},
+            {"acceleration", glm::vec3(0.0f, 0.0f, 0.0f)}}};
 
         glm::vec3 position = glm::vec3(randPositionXZ(generator), randPositionY(generator), randPositionXZ(generator));
-        glm::vec3 rotation = glm::vec3(randRotation(generator),randRotation(generator), randRotation(generator));
+        glm::vec3 rotation = glm::vec3(randRotation(generator), randRotation(generator), randRotation(generator));
         glm::vec3 scale = glm::vec3(randScale(generator));
 
         pivot::ecs::data::Value renderObject =
-            pivot::ecs::data::Value{
-                pivot::ecs::data::Record{
-                    {"materialIndex", "white"},
-                    {"meshID",  object},
-                    {"pipelineID",  "lit"},
-                    {"transform",  pivot::ecs::data::Record{
-                            {"position", position},
-                            {"rotation", rotation},
-                            {"scale", scale},
-                        }
-                    }
-                }
-            };
+            pivot::ecs::data::Value{pivot::ecs::data::Record{{"materialIndex", "white"},
+                                                             {"meshID", object},
+                                                             {"pipelineID", "lit"},
+                                                             {"transform", pivot::ecs::data::Record{
+                                                                               {"position", position},
+                                                                               {"rotation", rotation},
+                                                                               {"scale", scale},
+                                                                           }}}};
 
         gSceneManager.getCurrentLevel().getComponentManager().AddComponent(newEntity, gravity, gravityId);
         gSceneManager.getCurrentLevel().getComponentManager().AddComponent(newEntity, rigidBody, rigidBodyId);

@@ -200,20 +200,6 @@ public:
     /// Get the index of the asset of type T named name
     inline std::int32_t getIndex(const std::string &name) const;
 
-    /// @return Get the Index buffer
-    constexpr const AllocatedBuffer &getIndexBuffer() const noexcept { return indicesBuffer; }
-    /// @return Get the VertexBuffer
-    constexpr const AllocatedBuffer &getVertexBuffer() const noexcept { return vertexBuffer; }
-
-    /// @return Get the Material buffer
-    constexpr const AllocatedBuffer &getMaterialBuffer() const noexcept { return materialBuffer; }
-
-    /// @return Get the bounding box buffer
-    constexpr const AllocatedBuffer &getBoundingBoxBuffer() const noexcept { return boundingboxBuffer; }
-
-    /// @return Get all the loaded Textures
-    constexpr const auto &getTextures() const noexcept { return textureStorage; }
-
 private:
     /// Load models
     bool loadObjModel(const std::filesystem::path &path);

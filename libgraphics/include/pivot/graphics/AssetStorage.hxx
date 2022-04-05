@@ -24,6 +24,13 @@
 namespace pivot::graphics
 {
 
+template <typename T>
+/// @brief Is the type convertible to filesystem path ?
+concept is_valid_path = requires
+{
+    std::is_convertible_v<T, std::filesystem::path>;
+};
+
 /// @brief Store all of the assets used by the game
 class AssetStorage
 {
@@ -101,11 +108,10 @@ public:
     /// Destructor
     ~AssetStorage();
 
-    template <class... Path>
+    template <is_valid_path... Path>
     /// @brief load the 3D models into CPU memory
     ///
     /// @arg the path for all individual file to load
-    requires std::is_convertible_v<Path..., std::filesystem::path>
     void loadModels(Path... p)
     {
         unsigned i = ((loadModel(p)) + ...);
@@ -116,11 +122,10 @@ public:
     /// Load a single model file
     bool loadModel(const std::filesystem::path &path);
 
-    template <class... Path>
+    template <is_valid_path... Path>
     /// @brief load the textures into CPU memory
     ///
     /// @arg the path for all individual file to load
-    requires std::is_convertible_v<Path..., std::filesystem::path>
     void loadTextures(Path... p)
     {
         unsigned i = ((loadTexture(p)) + ...);
@@ -207,6 +212,7 @@ private:
 
     /// Load texture
     bool loadPngTexture(const std::filesystem::path &path);
+    bool loadJpgTexture(const std::filesystem::path &path);
     bool loadKtxImage(const std::filesystem::path &path);
 
     // Push to gpu

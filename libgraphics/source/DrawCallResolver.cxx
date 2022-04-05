@@ -1,6 +1,7 @@
 #include "pivot/graphics/DrawCallResolver.hxx"
 
 #include "pivot/graphics/DebugMacros.hxx"
+#include "pivot/graphics/pivot.hxx"
 #include "pivot/graphics/types/UniformBufferObject.hxx"
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_utils.hxx"

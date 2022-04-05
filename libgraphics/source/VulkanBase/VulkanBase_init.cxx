@@ -3,6 +3,7 @@
 #include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/VulkanException.hxx"
 #include "pivot/graphics/Window.hxx"
+#include "pivot/graphics/pivot.hxx"
 #include "pivot/graphics/types/vk_types.hxx"
 #include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"

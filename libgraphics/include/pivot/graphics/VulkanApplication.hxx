@@ -8,6 +8,7 @@
 #include "pivot/graphics/VulkanRenderPass.hxx"
 #include "pivot/graphics/VulkanSwapchain.hxx"
 #include "pivot/graphics/interface/IRenderer.hxx"
+#include "pivot/graphics/pivot.hxx"
 #include "pivot/graphics/types/Frame.hxx"
 #include "pivot/graphics/types/vk_types.hxx"
 #include "pivot/graphics/vk_debug.hxx"

@@ -146,8 +146,8 @@ public:
             last = pos;
             ControlSystem::processMouseMovement(camera, glm::dvec2(xoffset, yoffset));
         });
-        assetStorage.loadModels("../editor/assets/cube.obj");
-        assetStorage.loadTextures("../editor/assets/violet.png");
+        assetStorage.loadModels("cube.obj");
+        assetStorage.loadTextures("violet.png");
     }
     void processKeyboard(const Camera::Movement direction, float dt) noexcept
     {

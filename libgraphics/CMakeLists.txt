@@ -141,6 +141,7 @@ if (NOT imguizmo_POPULATED)
     target_link_libraries(imguizmo PRIVATE imgui)
 endif()
 
+
 add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/types/Vertex.cxx
                                    source/types/Frame.cxx
@@ -179,12 +180,16 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE <vulkan/vulkan.hpp> <vk_mem_alloc.hpp>)
 
+set(PIVOT_ASSET_DEFAULT_DIRECTORY "${CMAKE_SOURCE_DIR}/editor/assets/" CACHE STRING "Path to the default lookup directory for the asset loading")
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC
   VULKAN_HPP_NO_CONSTRUCTORS
   VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
   VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1
+  PIVOT_ASSET_DEFAULT_DIRECTORY="${PIVOT_ASSET_DEFAULT_DIRECTORY}"
 )
+
+
 
 add_shader(${PROJECT_NAME} default.vert)
 add_shader(${PROJECT_NAME} default_pbr.vert)

@@ -21,6 +21,10 @@
 #include <variant>
 #include <vector>
 
+#ifndef PIVOT_ASSET_DEFAULT_DIRECTORY
+    #define PIVOT_ASSET_DEFAULT_DIRECTORY "."
+#endif
+
 namespace pivot::graphics
 {
 
@@ -108,13 +112,16 @@ public:
     /// Destructor
     ~AssetStorage();
 
+    /// Set the asset directory
+    void setAssetDirectory(const std::filesystem::path &path) noexcept { asset_dir = path; }
+
     template <is_valid_path... Path>
     /// @brief load the 3D models into CPU memory
     ///
     /// @arg the path for all individual file to load
     void loadModels(Path... p)
     {
-        unsigned i = ((loadModel(p)) + ...);
+        unsigned i = ((loadModel(asset_dir / p)) + ...);
         if (i < sizeof...(Path)) {
             throw AssetStorageException("A model file failed to load. See above for further errors");
         }
@@ -128,7 +135,7 @@ public:
     /// @arg the path for all individual file to load
     void loadTextures(Path... p)
     {
-        unsigned i = ((loadTexture(p)) + ...);
+        unsigned i = ((loadTexture(asset_dir / p)) + ...);
         if (i < sizeof...(Path)) {
             throw AssetStorageException("A texture file failed to load. See above for further errors");
         }
@@ -229,6 +236,7 @@ private:
 
 private:
     OptionalRef<VulkanBase> base_ref;
+    std::filesystem::path asset_dir = PIVOT_ASSET_DEFAULT_DIRECTORY;
 
     // Abstract ressouces
     std::unordered_map<std::string, Model> modelStorage;

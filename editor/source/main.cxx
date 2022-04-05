@@ -26,6 +26,10 @@
 
 #include <Logger.hpp>
 
+#include "pivot/graphics/Renderer/CullingRenderer.hxx"
+#include "pivot/graphics/Renderer/GraphicsRenderer.hxx"
+#include "pivot/graphics/Renderer/ImGuiRenderer.hxx"
+
 // #include "Scene.hxx"
 #include "Systems/PhysicsSystem.hxx"
 #include <pivot/ecs/Core/Scene.hxx>
@@ -90,6 +94,9 @@ public:
         cm.RegisterComponent(RenderObject::description);
 
         window.captureCursor(true);
+        addRenderer<pivot::graphics::CullingRenderer>();
+        addRenderer<pivot::graphics::GraphicsRenderer>();
+        addRenderer<pivot::graphics::ImGuiRenderer>();
         window.setKeyReleaseCallback(Window::Key::LEFT_ALT, [&](Window &window, const Window::Key key) {
             window.captureCursor(!window.captureCursor());
             bFirstMouse = window.captureCursor();

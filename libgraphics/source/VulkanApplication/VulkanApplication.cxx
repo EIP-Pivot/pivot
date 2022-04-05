@@ -19,7 +19,6 @@ VulkanApplication::VulkanApplication()
 
     if (bEnableValidationLayers && !VulkanBase::checkValidationLayerSupport(validationLayers)) {
         logger.warn("Vulkan Instance") << "Validation layers requested, but not available!";
-
         bEnableValidationLayers = false;
     }
     window.setKeyPressCallback(Window::Key::ESCAPE,
@@ -29,7 +28,13 @@ VulkanApplication::VulkanApplication()
 VulkanApplication::~VulkanApplication()
 {
     DEBUG_FUNCTION
-    if (device) device.waitIdle();
+    if (device)
+        device.waitIdle();
+    else {
+        /// if the device is not initialized, there is no need to continue further as no other ressources would have
+        /// been created
+        return;
+    }
     if (swapchain) swapchain.destroy();
     assetStorage.destroy();
 
@@ -53,6 +58,10 @@ void VulkanApplication::init()
 void VulkanApplication::initVulkanRessources()
 {
     DEBUG_FUNCTION
+    if (graphicsRenderer.empty() || computeRenderer.empty()) {
+        logger.err("Vulkan Application") << "No renderer found !";
+        throw std::logic_error("No renderer present in the Vulkan Application.");
+    }
 
     createCommandPool();
     std::for_each(frames.begin(), frames.end(), [&](Frame &fr) { fr.initFrame(*this, assetStorage, commandPool); });
@@ -118,6 +127,8 @@ void VulkanApplication::draw(std::vector<std::reference_wrapper<const RenderObje
 #endif
 )
 try {
+    assert(!graphicsRenderer.empty() && !computeRenderer.empty());
+    assert(currentFrame < MaxFrameInFlight);
     auto &frame = frames[currentFrame];
     vk_utils::vk_try(device.waitForFences(frame.inFlightFences, VK_TRUE, UINT64_MAX));
 
@@ -128,29 +139,8 @@ try {
     device.resetFences(frame.inFlightFences);
     cmd.reset();
 
-    vk::Semaphore waitSemaphores[] = {frame.imageAvailableSemaphore};
-    vk::PipelineStageFlags waitStages[] = {vk::PipelineStageFlagBits::eColorAttachmentOutput};
-    vk::Semaphore signalSemaphores[] = {frame.renderFinishedSemaphore};
-
-    const std::array<float, 4> vClearColor = {0.0f, 0.0f, 0.0f, 1.0f};
-    std::array<vk::ClearValue, 2> clearValues{};
-    clearValues.at(0).color = vk::ClearColorValue{vClearColor};
-    clearValues.at(1).depthStencil = vk::ClearDepthStencilValue{1.0f, 0};
-
-    vk::RenderPassBeginInfo renderPassInfo{
-        .renderPass = renderPass.getRenderPass(),
-        .framebuffer = swapChainFramebuffers.at(imageIndex),
-        .renderArea =
-            {
-                .offset = {0, 0},
-                .extent = swapchain.getSwapchainExtent(),
-            },
-        .clearValueCount = static_cast<uint32_t>(clearValues.size()),
-        .pClearValues = clearValues.data(),
-    };
-
-    frame.drawResolver.prepareForDraw(sceneInformation);
-
+    std::vector<vk::CommandBuffer> secondaryBuffer;
+    std::vector<vk::CommandBuffer> computeBuffer;
     vk::CommandBufferInheritanceInfo inheritanceInfo{
         .renderPass = renderPass.getRenderPass(),
         .subpass = 0,
@@ -164,8 +154,7 @@ try {
         .pInheritanceInfo = &inheritanceInfo,
     };
 
-    std::vector<vk::CommandBuffer> secondaryBuffer;
-    std::vector<vk::CommandBuffer> computeBuffer;
+    frame.drawResolver.prepareForDraw(sceneInformation);
     for (auto &[rendy, buffers]: computeRenderer) {
         auto &cmdBuf = buffers.at(imageIndex);
         cmdBuf.reset();
@@ -189,6 +178,21 @@ try {
     //     auto cullingCameraDataSelected = cameraData;
     // #endif
 
+    const std::array<float, 4> vClearColor = {0.0f, 0.0f, 0.0f, 1.0f};
+    std::array<vk::ClearValue, 2> clearValues{};
+    clearValues.at(0).color = vk::ClearColorValue{vClearColor};
+    clearValues.at(1).depthStencil = vk::ClearDepthStencilValue{1.0f, 0};
+    vk::RenderPassBeginInfo renderPassInfo{
+        .renderPass = renderPass.getRenderPass(),
+        .framebuffer = swapChainFramebuffers.at(imageIndex),
+        .renderArea =
+            {
+                .offset = {0, 0},
+                .extent = swapchain.getSwapchainExtent(),
+            },
+        .clearValueCount = clearValues.size(),
+        .pClearValues = clearValues.data(),
+    };
     vk::CommandBufferBeginInfo beginInfo;
     vk_utils::vk_try(cmd.begin(&beginInfo));
     vk_debug::beginRegion(cmd, "main command", {1.f, 1.f, 1.f, 1.f});
@@ -199,20 +203,32 @@ try {
     vk_debug::endRegion(cmd);
     cmd.end();
 
-    const std::array<vk::CommandBuffer, 1> submitCmd{cmd};
+    std::array<vk::Semaphore, 1> waitSemaphores{
+        frame.imageAvailableSemaphore,
+    };
+    std::array<vk::PipelineStageFlags, 1> waitStages{
+        vk::PipelineStageFlagBits::eColorAttachmentOutput,
+    };
+    std::array<vk::Semaphore, 1> signalSemaphores{
+        frame.renderFinishedSemaphore,
+    };
+    std::array<vk::CommandBuffer, 1> submitCmd{
+        cmd,
+    };
+    assert(signalSemaphores.size() == waitStages.size());
     vk::SubmitInfo submitInfo{
-        .waitSemaphoreCount = 1,
-        .pWaitSemaphores = waitSemaphores,
-        .pWaitDstStageMask = waitStages,
-        .signalSemaphoreCount = 1,
-        .pSignalSemaphores = signalSemaphores,
+        .waitSemaphoreCount = waitSemaphores.size(),
+        .pWaitSemaphores = waitSemaphores.data(),
+        .pWaitDstStageMask = waitStages.data(),
+        .signalSemaphoreCount = signalSemaphores.size(),
+        .pSignalSemaphores = signalSemaphores.data(),
     };
     submitInfo.setCommandBuffers(submitCmd);
     graphicsQueue.submit(submitInfo, frame.inFlightFences);
 
     vk::PresentInfoKHR presentInfo{
-        .waitSemaphoreCount = 1,
-        .pWaitSemaphores = signalSemaphores,
+        .waitSemaphoreCount = signalSemaphores.size(),
+        .pWaitSemaphores = signalSemaphores.data(),
         .swapchainCount = 1,
         .pSwapchains = &(swapchain.getSwapchain()),
         .pImageIndices = &imageIndex,

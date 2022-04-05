@@ -67,6 +67,12 @@ void VulkanSwapchain::createSwapchain(const vk::Extent2D &size, vk::PhysicalDevi
     auto surfaceFormat = swapChainSupport.chooseSwapSurfaceFormat();
     auto presentMode = swapChainSupport.chooseSwapPresentMode();
     auto extent = swapChainSupport.chooseSwapExtent(size);
+    if (!(swapChainSupport.capabilities.supportedUsageFlags & vk::ImageUsageFlagBits::eTransferDst)) {
+        logger.err("Vulkan Swapchain") << "Swapchain image does not support "
+                                       << vk::to_string(vk::ImageUsageFlagBits::eTransferDst) << "usage";
+        throw VulkanSwapchainError("Bad surface capability");
+    }
+
     uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
     if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
         imageCount = swapChainSupport.capabilities.maxImageCount;

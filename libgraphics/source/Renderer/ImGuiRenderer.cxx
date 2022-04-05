@@ -30,10 +30,12 @@ bool ImGuiRenderer::onInit(const vk::Extent2D &size, VulkanBase &base_ref, vk::D
 
 void ImGuiRenderer::onStop(VulkanBase &base_ref)
 {
-    ImGui_ImplVulkan_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-    base_ref.device.destroyDescriptorPool(pool);
+    if (ImGui::GetCurrentContext() != nullptr) {
+        ImGui_ImplVulkan_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+    }
+    if (pool) base_ref.device.destroyDescriptorPool(pool);
 }
 
 bool ImGuiRenderer::onRecreate(const vk::Extent2D &size, VulkanBase &base_ref, vk::DescriptorSetLayout &resolverLayout,

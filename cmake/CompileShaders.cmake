@@ -10,9 +10,17 @@ function(add_shader TARGET SHADER)
     get_filename_component(current-output-dir ${current-output-path} DIRECTORY)
     file(MAKE_DIRECTORY ${current-output-dir})
 
+    set(GLSLC_EXTRA_ARGS "" CACHE INTERNAL "" FORCE)
+    if (CMAKE_BUILD_TYPE STREQUAL Release)
+        set(GLSLC_EXTRA_ARGS "-O")
+    elseif (CMAKE_BUILD_TYPE STREQUAL Debug)
+        set(GLSLC_EXTRA_ARGS "-g")
+    else()
+        set(GLSLC_EXTRA_ARGS "-O0")
+    endif()
     add_custom_command(
            OUTPUT ${current-output-path}
-           COMMAND ${Vulkan_GLSLC_EXECUTABLE} --target-env=vulkan1.2 -o ${current-output-path} ${current-shader-path}
+           COMMAND ${Vulkan_GLSLC_EXECUTABLE} -fnan-clamp -x glsl --target-env=vulkan1.2 ${GLSLC_EXTRA_ARGS} -o ${current-output-path} ${current-shader-path}
            DEPENDS ${current-shader-path}
            IMPLICIT_DEPENDS CXX ${current-shader-path}
            VERBATIM)

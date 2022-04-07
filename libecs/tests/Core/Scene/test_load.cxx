@@ -12,8 +12,13 @@ TEST_CASE("Load the scene", "[Scene][Load]")
    
     Scene LaS;
     LaS.load(obj);
-    
-    // auto &cManager = LaS.getComponentManager();
-    // for (auto entities: obj["components"]) {
-    // }
+
+    REQUIRE(LaS.getLivingEntityCount() == 1);
+    auto &cManager = LaS.getComponentManager();
+    auto tagId = cManager.GetComponentId("Tag");
+    auto GravityId = cManager.GetComponentId("Gravity");
+    auto RigidBodyId = cManager.GetComponentId("RigidBody");
+    REQUIRE(cManager.GetComponent(0, tagId.value()).has_value());
+    REQUIRE(cManager.GetComponent(0, GravityId.value()).has_value());
+    REQUIRE(cManager.GetComponent(0, RigidBodyId.value()).has_value());
 }

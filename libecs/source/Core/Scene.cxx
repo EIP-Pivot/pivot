@@ -74,3 +74,8 @@ const pivot::ecs::systems::Manager &Scene::getSystemManager() const { return mSy
 pivot::ecs::event::Manager &Scene::getEventManager() { return mEventManager; }
 
 const pivot::ecs::event::Manager &Scene::getEventManager() const { return mEventManager; }
+
+void Scene::Load(obj)
+{
+
+}

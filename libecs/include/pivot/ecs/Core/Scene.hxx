@@ -1,5 +1,10 @@
 #pragma once
 
+
+#include <nlohmann/json.hpp>
+
+#include <pivot/ecs/Core/Data/value_serialization.hxx>
+
 #include "pivot/ecs/Core/Component/index.hxx"
 #include "pivot/ecs/Core/Component/manager.hxx"
 
@@ -107,6 +112,10 @@ public:
     Camera &getCamera();
     /// Get camera list
     std::vector<Entity> &getCameras();
+
+    // Load
+    /// Load a scene from JSON object
+    void load(const nlohmann::json &obj);
 
 private:
     std::string name;

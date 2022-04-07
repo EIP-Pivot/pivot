@@ -75,7 +75,16 @@ pivot::ecs::event::Manager &Scene::getEventManager() { return mEventManager; }
 
 const pivot::ecs::event::Manager &Scene::getEventManager() const { return mEventManager; }
 
-void Scene::Load(obj)
+void Scene::load(const nlohmann::json &obj)
 {
-
+    for (auto entities: obj["components"]) {
+        auto entity = mEntityManager.CreateEntity();
+        for (auto component= entities.begin(); component!= entities.end(); ++component) {
+            auto componentId = mComponentManager.GetComponentId(component.key());
+            if (!componentId.has_value())
+                throw std::runtime_error("Invalid Component " +  component.key());
+            auto componentValue = component.value().get<pivot::ecs::data::Value>();
+            mComponentManager.AddComponent(entity, componentValue, componentId.value());
+        }
+    }
 }

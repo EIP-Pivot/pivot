@@ -21,7 +21,8 @@ std::string Scene::getName() { return name; }
 Entity Scene::CreateEntity()
 {
     Entity newEntity = mEntityManager.CreateEntity();
-    mComponentManager.AddComponent(newEntity, "Entity " + std::to_string(newEntity), mTagId);
+    mComponentManager.AddComponent(newEntity,
+                                   data::Value{data::Record{{"name", "Entity " + std::to_string(newEntity)}}}, mTagId);
     return newEntity;
 }
 

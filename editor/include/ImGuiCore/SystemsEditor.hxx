@@ -5,8 +5,6 @@
 // Must be after imgui
 #include <ImGuizmo.h>
 
-#include "Systems/PhysicsSystem.hxx"
-
 #include <pivot/ecs/Core/SceneManager.hxx>
 #include <pivot/ecs/Core/Systems/index.hxx>
 

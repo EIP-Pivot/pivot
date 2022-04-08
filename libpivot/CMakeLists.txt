@@ -3,6 +3,8 @@ project(pivot)
 add_library(${PROJECT_NAME} STATIC
   sources/internal/camera.cxx
   sources/systems/ControlSystem.cxx
+  sources/systems/PhysicsSystem.cxx
+  sources/systems/KeyPressedSystem.cxx
   )
 
 target_sources(${PROJECT_NAME} INTERFACE

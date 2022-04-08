@@ -1,4 +1,4 @@
-#include "Systems/PhysicsSystem.hxx"
+#include "pivot/systems/PhysicsSystem.hxx"
 
 using namespace pivot::ecs;
 

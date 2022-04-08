@@ -12,7 +12,6 @@ else()
 endif()
 
 add_executable(${PROJECT_NAME} source/main.cxx
-                               source/Systems/PhysicsSystem.cxx
                                source/ImGuiCore/ImGuiManager.cxx
                                source/ImGuiCore/Editor.cxx
                                source/ImGuiCore/EntityModule.cxx

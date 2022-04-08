@@ -25,10 +25,12 @@
 #include <pivot/ecs/Core/Event/description.hxx>
 #include <pivot/ecs/Core/Event/index.hxx>
 
+#include <pivot/systems/PhysicsSystem.hxx>
+#include <pivot/systems/KeyPressedSystem.hxx>
+
 #include <Logger.hpp>
 
 // #include "Scene.hxx"
-#include "Systems/PhysicsSystem.hxx"
 #include <pivot/ecs/Core/Scene.hxx>
 #include <pivot/ecs/Core/SceneManager.hxx>
 
@@ -48,6 +50,7 @@ class Application : public pivot::graphics::VulkanApplication
 {
 public:
     static const event::Description tick;
+    static const event::Description keyPressed;
 
     Application(): VulkanApplication(), editor(Editor()), camera(editor.getCamera()){};
 
@@ -119,6 +122,16 @@ public:
     {
         pivot::ecs::event::GlobalIndex::getSingleton().registerEvent(tick);
 
+        pivot::ecs::systems::Description keyPressedSystem {
+            .name = "Control System",
+            .systemComponents  = {
+                    "Gravity",
+                },
+            .eventListener = keyPressed,
+            .system = &controlSystem,
+        };
+        pivot::ecs::systems::GlobalIndex::getSingleton().registerSystem(keyPressedSystem);
+
         pivot::ecs::systems::Description description{
             .name = "Physics System",
             .systemComponents =
@@ -145,6 +158,7 @@ public:
         });
 
         auto key_lambda_press = [&](Window &window, const Window::Key key) {
+            gSceneManager.getCurrentLevel().getEventManager().sendEvent({keyPressed, {}, data::Value((int)key)});
             if (window.captureCursor()) button.set(static_cast<std::size_t>(key));
         };
         auto key_lambda_release = [&](Window &window, const Window::Key key) {
@@ -314,6 +328,12 @@ const event::Description Application::tick = {
     .name = "Tick",
     .entities = {},
     .payload = pivot::ecs::data::BasicType::Number,
+};
+
+const event::Description Application::keyPressed = {
+    .name = "KeyPressed",
+    .entities = {},
+    .payload = pivot::ecs::data::BasicType::Integer,
 };
 
 int main()

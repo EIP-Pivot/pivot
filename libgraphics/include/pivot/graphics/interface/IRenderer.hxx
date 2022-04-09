@@ -62,10 +62,7 @@ public:
 
 template <typename T>
 /// This concept is valid for a renderer and is able to be constructed
-concept validRenderer = requires
-{
-    std::is_base_of_v<IRenderer, T>;
-    std::is_constructible_v<T, PipelineStorage, AssetStorage>;
-};
+concept validRenderer =
+    std::is_base_of_v<IRenderer, T> && std::is_constructible_v<T, PipelineStorage &, AssetStorage &>;
 
 }    // namespace pivot::graphics

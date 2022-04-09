@@ -38,9 +38,9 @@ VulkanApplication::~VulkanApplication()
     if (swapchain) swapchain.destroy();
     assetStorage.destroy();
 
-    std::for_each(graphicsRenderer.begin(), graphicsRenderer.end(), [this](auto &pair) { pair.first->onStop(*this); });
-    std::for_each(computeRenderer.begin(), computeRenderer.end(), [this](auto &pair) { pair.first->onStop(*this); });
-    std::for_each(frames.begin(), frames.end(), [&](Frame &fr) { fr.destroy(*this, commandPool); });
+    std::ranges::for_each(graphicsRenderer, [this](auto &pair) { pair.first->onStop(*this); });
+    std::ranges::for_each(computeRenderer, [this](auto &pair) { pair.first->onStop(*this); });
+    std::ranges::for_each(frames, [&](Frame &fr) { fr.destroy(*this, commandPool); });
 
     swapchainDeletionQueue.flush();
     mainDeletionQueue.flush();
@@ -64,7 +64,7 @@ void VulkanApplication::initVulkanRessources()
     }
 
     createCommandPool();
-    std::for_each(frames.begin(), frames.end(), [&](Frame &fr) { fr.initFrame(*this, assetStorage, commandPool); });
+    std::ranges::for_each(frames, [&](Frame &fr) { fr.initFrame(*this, assetStorage, commandPool); });
     auto size = window.getSize();
     swapchain.create(size, physical_device, device, surface);
     createDepthResources();
@@ -106,10 +106,9 @@ void VulkanApplication::recreateSwapchain()
     createCommandBuffers();
     auto layout = frames[0].drawResolver.getDescriptorSetLayout();
 
-    std::for_each(graphicsRenderer.begin(), graphicsRenderer.end(),
-                  [&](std::pair<std::unique_ptr<IGraphicsRenderer>, CommandVector> &pair) {
-                      pair.first->onRecreate(swapchain.getSwapchainExtent(), *this, layout, renderPass.getRenderPass());
-                  });
+    std::ranges::for_each(graphicsRenderer, [&](std::pair<std::unique_ptr<IGraphicsRenderer>, CommandVector> &pair) {
+        pair.first->onRecreate(swapchain.getSwapchainExtent(), *this, layout, renderPass.getRenderPass());
+    });
 
     createFramebuffers();
     logger.info("Swapchain recreation") << "New height = " << swapchain.getSwapchainExtent().height

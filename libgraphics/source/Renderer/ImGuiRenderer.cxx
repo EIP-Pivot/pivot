@@ -1,5 +1,6 @@
 #include "pivot/graphics/Renderer/ImGuiRenderer.hxx"
 
+#include "pivot/graphics/pivot.hxx"
 #include "pivot/graphics/vk_debug.hxx"
 
 #include <backends/imgui_impl_glfw.h>
@@ -98,9 +99,8 @@ void ImGuiRenderer::createImGuiContext(VulkanBase &base_ref, vk::RenderPass &pas
     init_info.QueueFamily = base_ref.queueIndices.graphicsFamily.value();
     init_info.Queue = base_ref.graphicsQueue;
     init_info.DescriptorPool = pool;
-    // FIXME: Need to get swapchain image count
-    init_info.MinImageCount = 2;
-    init_info.ImageCount = 2;
+    init_info.MinImageCount = MaxFrameInFlight;
+    init_info.ImageCount = MaxFrameInFlight;
     init_info.MSAASamples = static_cast<VkSampleCountFlagBits>(base_ref.maxMsaaSample);
     init_info.CheckVkResultFn = vk_utils::vk_try;
 

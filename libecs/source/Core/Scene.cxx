@@ -1,6 +1,8 @@
 #include "pivot/ecs/Core/Scene.hxx"
 #include <pivot/ecs/Core/Component/index.hxx>
 
+#include <nlohmann/json.hpp>
+
 using namespace pivot::ecs;
 
 Scene::Scene(std::string sceneName)
@@ -78,10 +80,10 @@ pivot::ecs::event::Manager &Scene::getEventManager() { return mEventManager; }
 
 const pivot::ecs::event::Manager &Scene::getEventManager() const { return mEventManager; }
 
-void Scene::save()
+void Scene::saveScene()
 {
     if (!std::filesystem::exists("scene")) { std::filesystem::create_directory("scene"); }
-    std::ofstream out("scene/" + name + ".json");
+    std::ofstream out("scenes/" + name + ".json");
     nlohmann::json j;
     j["name"] = name;
     // for (auto const &[entity, _]: getEntities()) {

@@ -10,12 +10,11 @@
 #include <pivot/ecs/Core/SceneManager.hxx>
 #include <pivot/ecs/Core/Systems/index.hxx>
 
-extern SceneManager gSceneManager;
-
 class SystemsEditor
 {
 public:
-    SystemsEditor(const pivot::ecs::systems::Index &index): m_index(index){};
+    SystemsEditor(const pivot::ecs::systems::Index &index, pivot::ecs::SceneManager &sceneManager)
+        : m_index(index), m_sceneManager(sceneManager){};
 
     void create();
 
@@ -25,4 +24,5 @@ private:
     void createPopUp();
 
     const pivot::ecs::systems::Index &m_index;
+    pivot::ecs::SceneManager &m_sceneManager;
 };

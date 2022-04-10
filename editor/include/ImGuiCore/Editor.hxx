@@ -11,8 +11,9 @@
 class Editor
 {
 public:
-    Editor()
-        : run(false),
+    Editor(pivot::ecs::SceneManager &sceneManager)
+        : m_sceneManager(sceneManager),
+          run(false),
           camera(Camera(glm::vec3(0, 200, 500))),
           currentGizmoOperation(ImGuizmo::TRANSLATE),
           currentGizmoMode(ImGuizmo::LOCAL),
@@ -29,6 +30,8 @@ public:
 
 private:
     void createPopUp();
+
+    pivot::ecs::SceneManager &m_sceneManager;
 
     bool run;
     Camera camera;

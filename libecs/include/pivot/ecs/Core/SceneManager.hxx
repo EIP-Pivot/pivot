@@ -8,6 +8,8 @@
 using LevelId = std::uint16_t;
 const LevelId MAX_LEVELS = std::numeric_limits<LevelId>::max();    // 65535
 
+namespace pivot::ecs
+{
 /// @class SceneManager
 ///
 /// @brief Scene manager is the main part of the ecs, a global is set for using it everywhere: gSceneManager (
@@ -44,3 +46,5 @@ private:
     std::vector<std::optional<std::unique_ptr<Scene>>> _levels{};
     std::optional<LevelId> _currentActiveLevel;
 };
+
+}    // namespace pivot::ecs

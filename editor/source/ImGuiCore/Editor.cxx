@@ -2,8 +2,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <misc/cpp/imgui_stdlib.h>
 
-extern SceneManager gSceneManager;
-
 void Editor::create()
 {
     ImVec2 sceneSize = ImVec2(50, 15);
@@ -12,10 +10,10 @@ void Editor::create()
     ImGui::Begin("Editor");
     if (!run) {
         createPopUp();
-        for (LevelId sceneId = 0; sceneId < gSceneManager.getLivingScene(); sceneId++) {
-            if (ImGui::Selectable(gSceneManager.getLevelById(sceneId).getName().c_str(),
-                                  gSceneManager.getCurrentLevelId() == sceneId, 0, sceneSize)) {
-                gSceneManager.setCurrentLevelId(sceneId);
+        for (LevelId sceneId = 0; sceneId < m_sceneManager.getLivingScene(); sceneId++) {
+            if (ImGui::Selectable(m_sceneManager.getLevelById(sceneId).getName().c_str(),
+                                  m_sceneManager.getCurrentLevelId() == sceneId, 0, sceneSize)) {
+                m_sceneManager.setCurrentLevelId(sceneId);
             }
             ImGui::SameLine();
         }
@@ -70,17 +68,17 @@ void Editor::create()
 
 LevelId Editor::addScene()
 {
-    LevelId newScene = gSceneManager.registerLevel();
-    gSceneManager.setCurrentLevelId(newScene);
-    // gSceneManager.getCurrentLevel().Init();
+    LevelId newScene = m_sceneManager.registerLevel();
+    m_sceneManager.setCurrentLevelId(newScene);
+    // m_sceneManager.getCurrentLevel().Init();
     return newScene;
 }
 
 LevelId Editor::addScene(std::string name)
 {
-    LevelId newScene = gSceneManager.registerLevel(name);
-    gSceneManager.setCurrentLevelId(newScene);
-    // gSceneManager.getCurrentLevel().Init();
+    LevelId newScene = m_sceneManager.registerLevel(name);
+    m_sceneManager.setCurrentLevelId(newScene);
+    // m_sceneManager.getCurrentLevel().Init();
     return newScene;
 }
 
@@ -97,7 +95,7 @@ void Editor::DisplayGuizmo(Entity entity)
 
     // const float *view_ptr = glm::value_ptr(view);
     // const float *projection_ptr = glm::value_ptr(projection);
-    // float *matrix = glm::value_ptr(gSceneManager.getCurrentLevel()
+    // float *matrix = glm::value_ptr(m_sceneManager.getCurrentLevel()
     //                                    .GetComponent<RenderObject>(entity)
     //                                    .objectInformation.transform.getModelMatrix());
     // ImGuiIO &io = ImGui::GetIO();

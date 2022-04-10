@@ -14,7 +14,6 @@
 #include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
 
 #include <pivot/ecs/Core/Event.hxx>
-#include <pivot/ecs/ecs.hxx>
 
 #include <pivot/internal/camera.hxx>
 #include <pivot/systems/ControlSystem.hxx>
@@ -51,15 +50,16 @@ public:
 
     Application()
         : VulkanApplication(),
-          editor(Editor()),
+          editor(sceneManager),
+          entity(sceneManager),
           camera(editor.getCamera()),
-          systemsEditor(systemIndex),
-          componentEditor(componentIndex){};
+          systemsEditor(systemIndex, sceneManager),
+          componentEditor(componentIndex, sceneManager){};
 
     void loadScene()
     {
         LevelId defaultScene = editor.addScene("Default");
-        gSceneManager.setCurrentLevelId(defaultScene);
+        sceneManager.setCurrentLevelId(defaultScene);
     }
 
     void init()
@@ -84,7 +84,7 @@ public:
 
         loadScene();
 
-        auto &cm = gSceneManager.getCurrentLevel().getComponentManager();
+        auto &cm = sceneManager.getCurrentLevel().getComponentManager();
         cm.RegisterComponent(Gravity::description);
         cm.RegisterComponent(RigidBody::description);
         cm.RegisterComponent(RenderObject::description);
@@ -96,7 +96,7 @@ public:
             button.reset();
         });
         window.setKeyReleaseCallback(Window::Key::V, [&](Window &window, const Window::Key key) {
-            gSceneManager.getCurrentLevel().switchCamera();
+            sceneManager.getCurrentLevel().switchCamera();
         });
 
         auto key_lambda_press = [&](Window &window, const Window::Key key) {
@@ -213,11 +213,11 @@ public:
                 systemsEditor.create();
 
                 // if (entity.hasSelected() &&
-                //     gSceneManager.getCurrentLevel().hasComponent<RenderObject>(entity.getEntitySelected())) {
+                //     sceneManager.getCurrentLevel().hasComponent<RenderObject>(entity.getEntitySelected())) {
                 //     editor.DisplayGuizmo(entity.getEntitySelected());
                 // }
             } else {
-                gSceneManager.getCurrentLevel().getEventManager().sendEvent({tick, {}, data::Value(dt)});
+                sceneManager.getCurrentLevel().getEventManager().sendEvent({tick, {}, data::Value(dt)});
             }
             UpdateCamera(dt);
 
@@ -226,7 +226,7 @@ public:
             auto aspectRatio = getAspectRatio();
             float fov = 80;
 
-            auto &cm = gSceneManager.getCurrentLevel().getComponentManager();
+            auto &cm = sceneManager.getCurrentLevel().getComponentManager();
             auto renderobject_id = cm.GetComponentId("RenderObject").value();
             auto &array = cm.GetComponentArray(renderobject_id);
             pivot::ecs::component::DenseTypedComponentArray<RenderObject> &dense_array =
@@ -267,6 +267,7 @@ public:
     component::Index componentIndex;
     systems::Index systemIndex;
     event::Index eventIndex;
+    SceneManager sceneManager;
 };
 
 const event::Description Application::tick = {

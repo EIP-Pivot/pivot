@@ -25,20 +25,20 @@ public:
 
 public:
     /// Init system
-    void Init();
+    // void Init();
 
     /// Update camera movement when key press
-    virtual void Update(float dt);
+    // virtual void Update(float dt);
 
     /// Update mouse movement (Called in Update())
     static void processMouseMovement(Camera &cam, const glm::dvec2 &offset);
 
 private:
-    std::bitset<UINT16_MAX> button;
-    std::optional<glm::dvec2> offset;
+    // std::bitset<UINT16_MAX> button;
+    // std::optional<glm::dvec2> offset;
 
-    void InputListener(Event &event);
-    void MouseListener(Event &event);
+    // void InputListener(Event &event);
+    // void MouseListener(Event &event);
 
-    static void processKeyboard(Camera &cam, const Camera::Movement direction, float dt) noexcept;
+    // static void processKeyboard(Camera &cam, const Camera::Movement direction, float dt) noexcept;
 };

@@ -84,8 +84,6 @@ LevelId Editor::addScene(std::string name)
 
 bool Editor::getRun() { return run; }
 
-Camera &Editor::getCamera() { return camera; }
-
 void Editor::setAspectRatio(float aspect) { aspectRatio = aspect; }
 
 void Editor::DisplayGuizmo(Entity entity)

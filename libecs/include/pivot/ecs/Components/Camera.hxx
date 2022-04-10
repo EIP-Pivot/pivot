@@ -17,6 +17,7 @@
 /// @class Camera
 ///
 /// @brief Camera component (Component exemple)
+// TODO: Namespace
 class Camera
 {
 public:

@@ -41,19 +41,16 @@
 #include "ImGuiCore/ImGuiManager.hxx"
 #include "ImGuiCore/SystemsEditor.hxx"
 
-#include "FrameLimiter.hpp"
-
 #include <pivot/builtins/events/tick.hxx>
 #include <pivot/engine.hxx>
 
-class Application : pivot::Engine
+class Application : public pivot::Engine
 {
 public:
     Application()
         : Engine(),
           editor(m_scene_manager),
           entity(m_scene_manager),
-          camera(editor.getCamera()),
           systemsEditor(m_system_index, m_scene_manager),
           componentEditor(m_component_index, m_scene_manager){};
 
@@ -122,7 +119,7 @@ public:
             auto yoffset = last.y - pos.y;
 
             last = pos;
-            pivot::builtins::systems::ControlSystem::processMouseMovement(camera, glm::dvec2(xoffset, yoffset));
+            pivot::builtins::systems::ControlSystem::processMouseMovement(m_camera, glm::dvec2(xoffset, yoffset));
         });
 
         m_vulkan_application.assetStorage.loadModels("../editor/assets/cube.obj");
@@ -132,25 +129,25 @@ public:
     {
         switch (direction) {
             case Camera::Movement::FORWARD: {
-                camera.position.x += camera.front.x * 2.5f * (dt * 500);
-                camera.position.z += camera.front.z * 2.5f * (dt * 500);
+                m_camera.position.x += m_camera.front.x * 2.5f * (dt * 500);
+                m_camera.position.z += m_camera.front.z * 2.5f * (dt * 500);
             } break;
             case Camera::Movement::BACKWARD: {
-                camera.position.x -= camera.front.x * 2.5f * (dt * 500);
-                camera.position.z -= camera.front.z * 2.5f * (dt * 500);
+                m_camera.position.x -= m_camera.front.x * 2.5f * (dt * 500);
+                m_camera.position.z -= m_camera.front.z * 2.5f * (dt * 500);
             } break;
             case Camera::Movement::RIGHT: {
-                camera.position.x += camera.right.x * 2.5f * (dt * 500);
-                camera.position.z += camera.right.z * 2.5f * (dt * 500);
+                m_camera.position.x += m_camera.right.x * 2.5f * (dt * 500);
+                m_camera.position.z += m_camera.right.z * 2.5f * (dt * 500);
             } break;
             case Camera::Movement::LEFT: {
-                camera.position.x -= camera.right.x * 2.5f * (dt * 500);
-                camera.position.z -= camera.right.z * 2.5f * (dt * 500);
+                m_camera.position.x -= m_camera.right.x * 2.5f * (dt * 500);
+                m_camera.position.z -= m_camera.right.z * 2.5f * (dt * 500);
             } break;
             case Camera::Movement::UP: {
-                camera.position.y += 2.5f * (dt * 500);
+                m_camera.position.y += 2.5f * (dt * 500);
             } break;
-            case Camera::Movement::DOWN: camera.position.y -= 2.5f * (dt * 500); break;
+            case Camera::Movement::DOWN: m_camera.position.y -= 2.5f * (dt * 500); break;
         }
     }
 
@@ -176,68 +173,31 @@ public:
         }
     }
 
-    void run()
+    void onTick(float dt) override
     {
-        float dt = 0.0f;
-        float fov = 27.f;
-        bool useWindow = true;
-        Entity currentEdit = 0;
-        gridSize = 100.f;
-        m_vulkan_application.init();
-        FrameLimiter<60> fpsLimiter;
-        while (!m_vulkan_application.window.shouldClose()) {
-            auto startTime = std::chrono::high_resolution_clock::now();
-            m_vulkan_application.window.pollEvent();
 
-            imGuiManager.newFrame();
+        imGuiManager.newFrame();
 
-            editor.create();
-            if (!editor.getRun()) {
-                editor.setAspectRatio(m_vulkan_application.getAspectRatio());
-                entity.create();
-                entity.hasSelected() ? componentEditor.create(entity.getEntitySelected()) : componentEditor.create();
-                systemsEditor.create();
+        editor.create();
+        m_paused = !editor.getRun();
+        if (m_paused) {
+            editor.setAspectRatio(m_vulkan_application.getAspectRatio());
+            entity.create();
+            entity.hasSelected() ? componentEditor.create(entity.getEntitySelected()) : componentEditor.create();
+            systemsEditor.create();
 
-                // if (entity.hasSelected() &&
-                //     m_scene_manager.getCurrentLevel().hasComponent<RenderObject>(entity.getEntitySelected())) {
-                //     editor.DisplayGuizmo(entity.getEntitySelected());
-                // }
-            } else {
-                m_scene_manager.getCurrentLevel().getEventManager().sendEvent(
-                    {pivot::builtins::events::tick, {}, data::Value(dt)});
-            }
-            UpdateCamera(dt);
-
-            imGuiManager.render();
-
-            auto aspectRatio = m_vulkan_application.getAspectRatio();
-            float fov = 80;
-
-            using RenderObject = pivot::builtins::components::RenderObject;
-            auto &cm = m_scene_manager.getCurrentLevel().getComponentManager();
-            auto renderobject_id = cm.GetComponentId("RenderObject").value();
-            auto &array = cm.GetComponentArray(renderobject_id);
-            pivot::ecs::component::DenseTypedComponentArray<RenderObject> &dense_array =
-                dynamic_cast<pivot::ecs::component::DenseTypedComponentArray<RenderObject> &>(array);
-
-            auto data = dense_array.getData();
-            std::vector<std::reference_wrapper<const pivot::graphics::RenderObject>> objects;
-            for (const auto &ro: data) { objects.push_back(ro); }
-
-#ifdef CULLING_DEBUG
-            if (editor.cullingCameraFollowsCamera) editor.cullingCamera = camera;
-#endif
-            m_vulkan_application.draw(
-                objects, pivot::internals::getGPUCameraData(camera, fov, aspectRatio)
-#ifdef CULLING_DEBUG
-                             ,
-                std::make_optional(pivot::internals::getGPUCameraData(editor.cullingCamera, fov, aspectRatio))
-#endif
-            );
-            fpsLimiter.sleep();
-            auto stopTime = std::chrono::high_resolution_clock::now();
-            dt = std::chrono::duration<float>(stopTime - startTime).count();
+            // if (entity.hasSelected() &&
+            //     m_scene_manager.getCurrentLevel().hasComponent<RenderObject>(entity.getEntitySelected())) {
+            //     editor.DisplayGuizmo(entity.getEntitySelected());
+            // }
         }
+        UpdateCamera(dt);
+
+#ifdef CULLING_DEBUG
+        if (editor.cullingCameraFollowsCamera) m_culling_camera = m_camera;
+#endif
+
+        imGuiManager.render();
     }
 
 public:
@@ -246,12 +206,10 @@ public:
     EntityModule entity;
     ComponentEditor componentEditor;
     SystemsEditor systemsEditor;
-    Camera &camera;
     glm::dvec2 last;
 
     bool bFirstMouse = true;
     std::bitset<UINT16_MAX> button;
-    int gridSize;
 };
 
 int main()

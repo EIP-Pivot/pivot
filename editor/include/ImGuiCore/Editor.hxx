@@ -14,7 +14,6 @@ public:
     Editor(pivot::ecs::SceneManager &sceneManager)
         : m_sceneManager(sceneManager),
           run(false),
-          camera(Camera(glm::vec3(0, 200, 500))),
           currentGizmoOperation(ImGuizmo::TRANSLATE),
           currentGizmoMode(ImGuizmo::LOCAL),
           useSnap(false),
@@ -24,7 +23,6 @@ public:
     LevelId addScene(std::string name);
 
     bool getRun();
-    Camera &getCamera();
     void setAspectRatio(float aspect);
     void DisplayGuizmo(Entity entity);
 
@@ -34,7 +32,6 @@ private:
     pivot::ecs::SceneManager &m_sceneManager;
 
     bool run;
-    Camera camera;
     ImGuizmo::OPERATION currentGizmoOperation;
     ImGuizmo::MODE currentGizmoMode;
     bool useSnap;
@@ -43,7 +40,6 @@ private:
 
 #ifdef CULLING_DEBUG
 public:
-    Camera cullingCamera;
     bool cullingCameraFollowsCamera = true;
 
 private:

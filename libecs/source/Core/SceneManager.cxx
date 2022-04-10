@@ -1,5 +1,7 @@
 #include "pivot/ecs/Core/SceneManager.hxx"
 
+namespace pivot::ecs
+{
 LevelId SceneManager::registerLevel(std::string name)
 {
     _levels.push_back(std::make_unique<Scene>(name));
@@ -50,3 +52,5 @@ Scene &SceneManager::getLevelById(LevelId idToGet)
 Scene &SceneManager::operator[](LevelId id) { return getLevelById(id); }
 
 std::size_t SceneManager::getLivingScene() { return _levels.size(); }
+
+}    // namespace pivot::ecs

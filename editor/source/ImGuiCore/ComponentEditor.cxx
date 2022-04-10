@@ -25,11 +25,11 @@ void ComponentEditor::setVectorObject(LevelId scene) { sceneObject[scene] = Obje
 
 std::unordered_map<LevelId, ObjectVector> &ComponentEditor::getVectorObject() { return sceneObject; }
 
-ObjectVector ComponentEditor::getObject() { return sceneObject[gSceneManager.getCurrentLevelId()]; }
+ObjectVector ComponentEditor::getObject() { return sceneObject[m_sceneManager.getCurrentLevelId()]; }
 
 void ComponentEditor::createPopUp()
 {
-    auto &cm = gSceneManager.getCurrentLevel().getComponentManager();
+    auto &cm = m_sceneManager.getCurrentLevel().getComponentManager();
     if (ImGui::BeginPopup("AddComponent")) {
         for (const auto &[name, description]: m_index) {
             if (cm.GetComponent(currentEntity, cm.GetComponentId(name).value()) == std::nullopt) {
@@ -42,7 +42,7 @@ void ComponentEditor::createPopUp()
 
 void ComponentEditor::displayComponent()
 {
-    auto &cm = gSceneManager.getCurrentLevel().getComponentManager();
+    auto &cm = m_sceneManager.getCurrentLevel().getComponentManager();
     for (ComponentRef ref: cm.GetAllComponents(currentEntity)) {
         if (ImGui::TreeNode(ref.description().name.c_str())) {
             ImGui::TreePop();
@@ -57,7 +57,7 @@ void ComponentEditor::displayComponent()
 
 void ComponentEditor::addComponent(const Description &description)
 {
-    auto &cm = gSceneManager.getCurrentLevel().getComponentManager();
+    auto &cm = m_sceneManager.getCurrentLevel().getComponentManager();
     auto id = cm.GetComponentId(description.name).value();
     Value newComponent = createValue(description.type);
     cm.AddComponent(currentEntity, newComponent, id);

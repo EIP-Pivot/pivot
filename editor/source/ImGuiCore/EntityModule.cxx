@@ -2,20 +2,18 @@
 #include <misc/cpp/imgui_stdlib.h>
 #include <pivot/graphics/DebugMacros.hxx>
 
-extern SceneManager gSceneManager;
-
 void EntityModule::create()
 {
-    auto &componentManager = gSceneManager.getCurrentLevel().getComponentManager();
+    auto &componentManager = m_sceneManager.getCurrentLevel().getComponentManager();
     auto tagId = componentManager.GetComponentId("Tag").value();
-    if (gSceneManager.getCurrentLevelId() != currentScene) {
+    if (m_sceneManager.getCurrentLevelId() != currentScene) {
         _hasSelected = false;
         entitySelected = -1;
     }
-    currentScene = gSceneManager.getCurrentLevelId();
+    currentScene = m_sceneManager.getCurrentLevelId();
     ImGui::Begin("Entity");
     createPopUp();
-    for (auto const &[entity, _]: gSceneManager.getCurrentLevel().getEntities()) {
+    for (auto const &[entity, _]: m_sceneManager.getCurrentLevel().getEntities()) {
         if (ImGui::Selectable(
                 std::get<std::string>(
                     std::get<pivot::ecs::data::Record>(componentManager.GetComponent(entity, tagId).value()).at("name"))
@@ -36,7 +34,7 @@ void EntityModule::create()
 
 Entity EntityModule::addEntity()
 {
-    Entity newEntity = gSceneManager.getCurrentLevel().CreateEntity();
+    Entity newEntity = m_sceneManager.getCurrentLevel().CreateEntity();
     entitySelected = newEntity;
     _hasSelected = true;
     return newEntity;
@@ -44,7 +42,7 @@ Entity EntityModule::addEntity()
 
 Entity EntityModule::addEntity(std::string name)
 {
-    Entity newEntity = gSceneManager.getCurrentLevel().CreateEntity(name);
+    Entity newEntity = m_sceneManager.getCurrentLevel().CreateEntity(name);
     entitySelected = newEntity;
     _hasSelected = true;
     return newEntity;
@@ -52,7 +50,7 @@ Entity EntityModule::addEntity(std::string name)
 
 void EntityModule::removeEntity()
 {
-    gSceneManager.getCurrentLevel().DestroyEntity(entitySelected);
+    m_sceneManager.getCurrentLevel().DestroyEntity(entitySelected);
     entitySelected = 0;
     _hasSelected = false;
 }

@@ -20,16 +20,18 @@
 
 #include <pivot/ecs/Core/SceneManager.hxx>
 
-extern SceneManager gSceneManager;
-
 using ObjectVector = std::vector<std::reference_wrapper<const RenderObject>>;
 
+// TODO: Remove using namespace
 using namespace pivot::ecs::component;
 
 class ComponentEditor
 {
 public:
-    ComponentEditor(const Index &index): m_index(index) {}
+    ComponentEditor(const Index &index, pivot::ecs::SceneManager &sceneManager)
+        : m_index(index), m_sceneManager(sceneManager)
+    {
+    }
 
     void create(Entity entity);
     void create();
@@ -53,4 +55,5 @@ private:
     std::array<std::string, 2> models = {"cube", "plane"};
 
     const Index &m_index;
+    pivot::ecs::SceneManager &m_sceneManager;
 };

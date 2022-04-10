@@ -31,7 +31,7 @@ void ComponentEditor::createPopUp()
 {
     auto &cm = gSceneManager.getCurrentLevel().getComponentManager();
     if (ImGui::BeginPopup("AddComponent")) {
-        for (const auto &[name, description]: GlobalIndex::getSingleton()) {
+        for (const auto &[name, description]: m_index) {
             if (cm.GetComponent(currentEntity, cm.GetComponentId(name).value()) == std::nullopt) {
                 if (ImGui::MenuItem(name.c_str())) { addComponent(description); }
             }

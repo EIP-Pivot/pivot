@@ -22,8 +22,7 @@ constexpr const char *component_name<TestComponent> = "TestComponent";
 }
 
 static const Description description =
-    helpers::build_component_description<TestComponent, DenseTypedComponentArray<TestComponent>>("TestComponent",
-                                                                                                 false);
+    helpers::build_component_description<TestComponent, DenseTypedComponentArray<TestComponent>>("TestComponent");
 
 TEST_CASE("A scene can register components and add entities", "[component][scene]")
 {
@@ -38,7 +37,6 @@ TEST_CASE("A scene can register components and add entities", "[component][scene
     auto &cm = scene.getComponentManager();
 
     REQUIRE(cm.GetComponentId("Tag").has_value());
-    for (auto &[name, description]: GlobalIndex::getSingleton()) { REQUIRE(cm.GetComponentId(name).has_value()); }
 
     REQUIRE(!cm.GetComponentId("TestComponent").has_value());
     cm.RegisterComponent(description);

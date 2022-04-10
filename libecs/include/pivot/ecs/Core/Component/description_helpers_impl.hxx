@@ -94,10 +94,9 @@ std::unique_ptr<IComponentArray> createContainer(Description description)
 }
 
 template <typename T, typename A>
-Description build_component_description(const char *name, bool registerComponent = true)
+Description build_component_description(const char *name)
 {
     Description description{name, helpers::Helpers<T>::getType(), helpers::createContainer<A>};
-    if (registerComponent) { GlobalIndex::getSingleton().registerComponent(description); }
     return description;
 }
 }    // namespace pivot::ecs::component::helpers
@@ -110,5 +109,7 @@ Description build_component_description(const char *name, bool registerComponent
         constexpr const char *component_name<component_type> = #component_type;                                   \
                                                                                                                   \
         template struct Helpers<component_type>;                                                                  \
-        static const auto description = build_component_description<component_type, array_type>(#component_type); \
-    }
+        static auto description_value = build_component_description<component_type, array_type>(#component_type); \
+    }                                                                                                             \
+    const pivot::ecs::component::Description component_type::description =                                        \
+        pivot::ecs::component::helpers::description_value;

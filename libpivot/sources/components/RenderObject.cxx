@@ -1,4 +1,4 @@
-#include "pivot/graphics/types/RenderObject.hxx"
+#include "pivot/components/RenderObject.hxx"
 #include "pivot/ecs/Core/Component/DenseComponentArray.hxx"
 #include "pivot/ecs/Core/Component/description_helpers_impl.hxx"
 #include "pivot/graphics/types/Transform.hxx"

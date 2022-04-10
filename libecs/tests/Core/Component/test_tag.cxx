@@ -9,7 +9,7 @@ using namespace pivot::ecs::component::helpers;
 
 TEST_CASE("Correct description for tag component", "[component][tag]")
 {
-    auto description = GlobalIndex::getSingleton().getDescription("Tag").value();
+    auto description = Tag::description;
 
     REQUIRE(description.name == "Tag");
     REQUIRE(description.type == Type{RecordType{{"name", Type{BasicType::String}}}});

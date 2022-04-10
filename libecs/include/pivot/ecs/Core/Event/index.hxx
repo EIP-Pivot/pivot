@@ -44,41 +44,4 @@ private:
     std::map<std::string, Description> m_events;
 };
 
-/** \brief A variant of the event Index supporting concurrent accesses
- *
- * The GlobalIndex handles those concurrent accesses by synchronizing explicitely
- * every event registration. To prevent a performance penalty once every
- * global event registration has been performed, the first read in the
- * GlobalIndex puts it into a readonly mode, where events cannot be
- * registered anymore.
- */
-class GlobalIndex : private Index
-{
-public:
-    /** \brief See Index::registerEvent()
-     *
-     * Throws if the GlobalIndex is in read only mode
-     */
-    void registerEvent(const Description &description);
-    /// Locks the index in readonly mode. See Index::getDescription()
-    std::optional<Description> getDescription(const std::string &eventName);
-    /// Locks the index in readonly mode. See Index::begin()
-    Index::const_iterator begin();
-    /// Locks the index in readonly mode. See Index::end()
-    Index::const_iterator end();
-
-    /// Get a list of event name
-    std::vector<std::string> getAllEventsNames();
-
-    /// Gives access to the global GlobalIndex instance, used to register
-    /// events globally.
-    static GlobalIndex &getSingleton();
-
-private:
-    std::atomic<bool> m_read_only;
-    std::mutex m_mutex;
-
-    void lockReadOnly();
-};
-
 }    // namespace pivot::ecs::event

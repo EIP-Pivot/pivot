@@ -49,7 +49,12 @@ class Application : public pivot::graphics::VulkanApplication
 public:
     static const event::Description tick;
 
-    Application(): VulkanApplication(), editor(Editor()), camera(editor.getCamera()){};
+    Application()
+        : VulkanApplication(),
+          editor(Editor()),
+          camera(editor.getCamera()),
+          systemsEditor(systemIndex),
+          componentEditor(componentIndex){};
 
     void loadScene()
     {
@@ -59,7 +64,11 @@ public:
 
     void init()
     {
-        pivot::ecs::event::GlobalIndex::getSingleton().registerEvent(tick);
+        componentIndex.registerComponent(Gravity::description);
+        componentIndex.registerComponent(RigidBody::description);
+        componentIndex.registerComponent(RenderObject::description);
+
+        eventIndex.registerEvent(tick);
 
         pivot::ecs::systems::Description description{
             .name = "Physics System",
@@ -71,9 +80,14 @@ public:
             .eventListener = tick,
             .system = &physicsSystem,
         };
-        pivot::ecs::systems::GlobalIndex::getSingleton().registerSystem(description);
+        systemIndex.registerSystem(description);
 
         loadScene();
+
+        auto &cm = gSceneManager.getCurrentLevel().getComponentManager();
+        cm.RegisterComponent(Gravity::description);
+        cm.RegisterComponent(RigidBody::description);
+        cm.RegisterComponent(RenderObject::description);
 
         window.captureCursor(true);
         window.setKeyReleaseCallback(Window::Key::LEFT_ALT, [&](Window &window, const Window::Key key) {
@@ -219,7 +233,7 @@ public:
                 dynamic_cast<pivot::ecs::component::DenseTypedComponentArray<RenderObject> &>(array);
 
             auto data = dense_array.getData();
-            std::vector<std::reference_wrapper<const RenderObject>> objects;
+            std::vector<std::reference_wrapper<const pivot::graphics::RenderObject>> objects;
             for (const auto &ro: data) { objects.push_back(ro); }
 
 #ifdef CULLING_DEBUG
@@ -249,6 +263,10 @@ public:
     bool bFirstMouse = true;
     std::bitset<UINT16_MAX> button;
     int gridSize;
+
+    component::Index componentIndex;
+    systems::Index systemIndex;
+    event::Index eventIndex;
 };
 
 const event::Description Application::tick = {

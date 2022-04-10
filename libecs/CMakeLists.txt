@@ -66,6 +66,9 @@ add_library(${PROJECT_NAME} source/Core/Scene.cxx
                             source/Core/Event/description.cxx
                             source/Core/Event/manager.cxx
                             source/Components/TagArray.cxx
+                            source/Components/Tag.cxx
+                            source/Components/RigidBody.cxx
+                            source/Components/Gravity.cxx
 )
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 
@@ -77,14 +80,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   logger
 )
 
-target_sources(${PROJECT_NAME} INTERFACE source/Components/Tag.cxx
-                                         source/Components/RigidBody.cxx
-                                         source/Components/Gravity.cxx)
-
 build_tests(${PROJECT_NAME}
   tests/Core/Component/test_index.cxx
   tests/Core/Component/test_tag.cxx
-  tests/Core/Component/test_global_registration.cxx
   tests/Core/Component/test_dense_component_array.cxx
   tests/Core/Component/test_ref.cxx
   tests/Core/Component/test_combination.cxx
@@ -92,8 +90,6 @@ build_tests(${PROJECT_NAME}
   tests/Core/Data/test_serialization.cxx
   tests/Core/test_scene.cxx
   tests/Core/Systems/test_description.cxx
-  tests/Core/Systems/test_global_registration.cxx
   tests/Core/Event/test_description.cxx
-  tests/Core/Event/test_global_registration.cxx
   tests/Core/Event/test_manager.cxx
   )

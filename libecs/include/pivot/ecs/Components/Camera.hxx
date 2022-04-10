@@ -4,6 +4,8 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
+#include <pivot/ecs/Core/Component/description.hxx>
+
 #ifndef PIVOT_MAX_PROJECTION_LIMIT
 #define PIVOT_MAX_PROJECTION_LIMIT 10000.0f
 #endif
@@ -23,6 +25,9 @@ public:
     static constexpr const double YAW = -90.0;
     static constexpr const double PITCH = 0.0;
     /// @endcond
+
+    /// Component description
+    static const pivot::ecs::component::Description description;
 
 public:
     /// Default Constructor, can be init with default position

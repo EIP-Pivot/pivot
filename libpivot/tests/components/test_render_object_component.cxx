@@ -1,12 +1,12 @@
 #include <catch2/catch_test_macros.hpp>
 #include <nlohmann/json.hpp>
 
+#include <pivot/components/RenderObject.hxx>
 #include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
 #include <pivot/ecs/Core/Component/array.hxx>
 #include <pivot/ecs/Core/Component/description_helpers.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
 #include <pivot/ecs/Core/Data/value_serialization.hxx>
-#include <pivot/graphics/types/RenderObject.hxx>
 
 using namespace nlohmann;
 using namespace pivot::ecs::data;
@@ -29,7 +29,7 @@ TEST_CASE("transform adapter work", "[graphics]")
 
 TEST_CASE("RenderObject component works", "[graphics][component]")
 {
-    auto description = GlobalIndex::getSingleton().getDescription("RenderObject").value();
+    auto description = RenderObject::description;
     auto array = description.createContainer(description);
 
     const auto data =
@@ -37,10 +37,7 @@ TEST_CASE("RenderObject component works", "[graphics][component]")
 
     REQUIRE_NOTHROW(array->setValueForEntity(0, json::parse(data).get<Value>()));
 
-    const RenderObject expected{.meshID = "sponza",
-                                .pipelineID = "default",
-                                .materialIndex = "blue",
-                                .transform = {{5, 5, 5}, {0, 2.7, 0.4}, {1, 2, 3}}
+    const RenderObject expected{"sponza", "default", "blue", {{5, 5, 5}, {0, 2.7, 0.4}, {1, 2, 3}}
 
     };
     const RenderObject &renderObject = dynamic_cast<DenseTypedComponentArray<RenderObject> &>(*array).getData().front();

@@ -20,13 +20,12 @@ class TestType2
 
 TEST_CASE("correct synchronisation", "[component][index]")
 {
-    GlobalIndex index;
+    Index index;
 
     index.registerComponent(emptyComponent("Test Component"));
     REQUIRE_THROWS_AS(index.registerComponent(emptyComponent("Test Component")), Index::DuplicateError);
     index.registerComponent(emptyComponent("Test Component 2"));
 
     REQUIRE(index.getDescription("Unknown") == std::nullopt);
-    REQUIRE_THROWS(index.registerComponent(emptyComponent("Unknown")));
     REQUIRE(index.getDescription("Test Component").value().name == "Test Component");
 }

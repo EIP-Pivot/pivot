@@ -3,9 +3,6 @@ project(pivot)
 add_library(${PROJECT_NAME} STATIC
   sources/internal/camera.cxx
   sources/systems/ControlSystem.cxx
-  )
-
-target_sources(${PROJECT_NAME} INTERFACE
   sources/components/RenderObject.cxx
   )
 

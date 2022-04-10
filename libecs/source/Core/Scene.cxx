@@ -75,16 +75,20 @@ pivot::ecs::event::Manager &Scene::getEventManager() { return mEventManager; }
 
 const pivot::ecs::event::Manager &Scene::getEventManager() const { return mEventManager; }
 
-void Scene::save()
+void Scene::save(const std::filesystem::path &path)
 {
-    if (!std::filesystem::exists("scene")) { std::filesystem::create_directory("scene"); }
-    std::ofstream out("scene/" + name + ".json");
-    std::string oui = nlohmann::json(pivot::ecs::data::Value{"hello"}).dump();
+    // serialize scene
     nlohmann::json output;
     output["name"] = name;
     for (auto &[entity, _]: mEntityManager.getEntities())
         for (pivot::ecs::component::ComponentRef ref: mComponentManager.GetAllComponents(entity))
             output["components"][entity][ref.description().name] = nlohmann::json(ref.get());
+    std::vector<std::string> systems;
+    for (auto &[systemName, _]: mSystemManager) { systems.push_back(systemName); }
+    output["systems"] = systems;
+    // write in file
+    if (!std::filesystem::exists(path)) { std::filesystem::create_directories(path.parent_path()); }
+    std::ofstream out(path);
     out << std::setw(4) << output << std::endl;
     out.close();
 }

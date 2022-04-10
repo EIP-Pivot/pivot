@@ -114,7 +114,7 @@ public:
     Camera &getCamera();
     /// Get camera list
     std::vector<Entity> &getCameras();
-    // Save scene in json file
+    /// Save scene in json file
     void save(const std::filesystem::path &path);
 
 private:

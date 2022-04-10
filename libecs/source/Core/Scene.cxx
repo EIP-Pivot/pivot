@@ -95,6 +95,6 @@ Scene Scene::load(const nlohmann::json &obj)
             componentManager.AddComponent(entity, componentValue, componentId.value());
         }
     }
-    for (auto systems: obj["systems"]) { systemManager.useSystem(systems.dump()); }
+    // for (auto systems: obj["systems"]) { systemManager.useSystem(systems.dump()); }
     return scene;
 }

@@ -50,16 +50,17 @@ class Application : pivot::Engine
 {
 public:
     Application()
-        : editor(sceneManager),
-          entity(sceneManager),
+        : Engine(),
+          editor(m_scene_manager),
+          entity(m_scene_manager),
           camera(editor.getCamera()),
-          systemsEditor(m_system_index, sceneManager),
-          componentEditor(m_component_index, sceneManager){};
+          systemsEditor(m_system_index, m_scene_manager),
+          componentEditor(m_component_index, m_scene_manager){};
 
     void loadScene()
     {
         LevelId defaultScene = editor.addScene("Default");
-        sceneManager.setCurrentLevelId(defaultScene);
+        m_scene_manager.setCurrentLevelId(defaultScene);
     }
 
     void init()
@@ -68,7 +69,7 @@ public:
 
         loadScene();
 
-        auto &cm = sceneManager.getCurrentLevel().getComponentManager();
+        auto &cm = m_scene_manager.getCurrentLevel().getComponentManager();
         cm.RegisterComponent(Gravity::description);
         cm.RegisterComponent(RigidBody::description);
         cm.RegisterComponent(pivot::builtins::components::RenderObject::description);
@@ -80,7 +81,7 @@ public:
             button.reset();
         });
         window.setKeyReleaseCallback(Window::Key::V, [&](Window &window, const Window::Key key) {
-            sceneManager.getCurrentLevel().switchCamera();
+            m_scene_manager.getCurrentLevel().switchCamera();
         });
 
         auto key_lambda_press = [&](Window &window, const Window::Key key) {
@@ -198,11 +199,11 @@ public:
                 systemsEditor.create();
 
                 // if (entity.hasSelected() &&
-                //     sceneManager.getCurrentLevel().hasComponent<RenderObject>(entity.getEntitySelected())) {
+                //     m_scene_manager.getCurrentLevel().hasComponent<RenderObject>(entity.getEntitySelected())) {
                 //     editor.DisplayGuizmo(entity.getEntitySelected());
                 // }
             } else {
-                sceneManager.getCurrentLevel().getEventManager().sendEvent(
+                m_scene_manager.getCurrentLevel().getEventManager().sendEvent(
                     {pivot::builtins::events::tick, {}, data::Value(dt)});
             }
             UpdateCamera(dt);
@@ -213,7 +214,7 @@ public:
             float fov = 80;
 
             using RenderObject = pivot::builtins::components::RenderObject;
-            auto &cm = sceneManager.getCurrentLevel().getComponentManager();
+            auto &cm = m_scene_manager.getCurrentLevel().getComponentManager();
             auto renderobject_id = cm.GetComponentId("RenderObject").value();
             auto &array = cm.GetComponentArray(renderobject_id);
             pivot::ecs::component::DenseTypedComponentArray<RenderObject> &dense_array =
@@ -251,11 +252,6 @@ public:
     bool bFirstMouse = true;
     std::bitset<UINT16_MAX> button;
     int gridSize;
-
-    component::Index componentIndex;
-    systems::Index systemIndex;
-    event::Index eventIndex;
-    SceneManager sceneManager;
 };
 
 int main()

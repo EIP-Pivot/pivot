@@ -25,8 +25,9 @@
 #include <pivot/ecs/Core/Event/description.hxx>
 #include <pivot/ecs/Core/Event/index.hxx>
 
-#include <pivot/systems/PhysicsSystem.hxx>
 #include <pivot/systems/KeyPressedSystem.hxx>
+#include <pivot/systems/MouseMovementSystem.hxx>
+#include <pivot/systems/PhysicsSystem.hxx>
 
 #include <Logger.hpp>
 
@@ -51,6 +52,7 @@ class Application : public pivot::graphics::VulkanApplication
 public:
     static const event::Description tick;
     static const event::Description keyPressed;
+    static const event::Description MouseMoved;
 
     Application(): VulkanApplication(), editor(Editor()), camera(editor.getCamera()){};
 
@@ -122,9 +124,21 @@ public:
     {
         pivot::ecs::event::GlobalIndex::getSingleton().registerEvent(tick);
 
-        pivot::ecs::systems::Description keyPressedSystem {
+        pivot::ecs::systems::Description mouseSystem{
+            .name = "Mouse System",
+            .systemComponents =
+                {
+                    "Gravity",
+                },
+            .eventListener = MouseMoved,
+            .system = &mouseMovementSystem,
+        };
+        pivot::ecs::systems::GlobalIndex::getSingleton().registerSystem(mouseSystem);
+
+        pivot::ecs::systems::Description keyPressedSystem{
             .name = "Control System",
-            .systemComponents  = {
+            .systemComponents =
+                {
                     "Gravity",
                 },
             .eventListener = keyPressed,
@@ -186,6 +200,7 @@ public:
         window.setKeyReleaseCallback(Window::Key::LEFT_SHIFT, key_lambda_release);
 
         window.setMouseMovementCallback([&](Window &window, const glm::dvec2 pos) {
+            gSceneManager.getCurrentLevel().getEventManager().sendEvent({MouseMoved, {}, data::Value()});
             if (!window.captureCursor()) return;
 
             if (bFirstMouse) {
@@ -334,6 +349,11 @@ const event::Description Application::keyPressed = {
     .name = "KeyPressed",
     .entities = {},
     .payload = pivot::ecs::data::BasicType::Integer,
+};
+
+const event::Description Application::MouseMoved = {
+    .name = "MouseMoved",
+    .entities = {},
 };
 
 int main()

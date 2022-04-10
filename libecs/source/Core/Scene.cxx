@@ -75,16 +75,26 @@ pivot::ecs::event::Manager &Scene::getEventManager() { return mEventManager; }
 
 const pivot::ecs::event::Manager &Scene::getEventManager() const { return mEventManager; }
 
-void Scene::load(const nlohmann::json &obj)
+EntityManager &Scene::getEntityManager() { return mEntityManager; }
+
+const EntityManager &Scene::getEntityManager() const { return mEntityManager; }
+
+Scene Scene::load(const nlohmann::json &obj)
 {
+    Scene scene(obj["name"].dump());
+    auto &componentManager = scene.getComponentManager();
+    auto &entityManager = scene.getEntityManager();
+    auto &systemManager = scene.getSystemManager();
+
     for (auto entities: obj["components"]) {
-        auto entity = mEntityManager.CreateEntity();
-        for (auto component= entities.begin(); component!= entities.end(); ++component) {
-            auto componentId = mComponentManager.GetComponentId(component.key());
-            if (!componentId.has_value())
-                throw std::runtime_error("Invalid Component " +  component.key());
+        auto entity = entityManager.CreateEntity();
+        for (auto component = entities.begin(); component != entities.end(); ++component) {
+            auto componentId = componentManager.GetComponentId(component.key());
+            if (!componentId.has_value()) throw std::runtime_error("Invalid Component " + component.key());
             auto componentValue = component.value().get<pivot::ecs::data::Value>();
-            mComponentManager.AddComponent(entity, componentValue, componentId.value());
+            componentManager.AddComponent(entity, componentValue, componentId.value());
         }
     }
+    for (auto systems: obj["systems"]) { systemManager.useSystem(systems.dump()); }
+    return scene;
 }

@@ -93,6 +93,12 @@ public:
     /// Get the system manager (const)
     const pivot::ecs::systems::Manager &getSystemManager() const;
 
+    /// Get the Entity manager
+    EntityManager &getEntityManager();
+
+    /// Get the Entity manager (const)
+    const EntityManager &getEntityManager() const;
+    
     // Event methods
 
     /// Get the event manager
@@ -115,7 +121,7 @@ public:
 
     // Load
     /// Load a scene from JSON object
-    void load(const nlohmann::json &obj);
+    static Scene load(const nlohmann::json &obj);
 
 private:
     std::string name;

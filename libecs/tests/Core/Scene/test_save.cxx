@@ -1,8 +1,9 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <fstream>
-#include <iostream>
 #include <pivot/ecs/Core/Scene.hxx>
+
+#include <pivot/ecs/Components/RigidBody.hxx>
 
 using namespace pivot::ecs;
 
@@ -16,6 +17,7 @@ TEST_CASE("Test save scene", "[Scene][save]")
     Scene scene("test");
 
     auto &cManager = scene.getComponentManager();
+    cManager.RegisterComponent(RigidBody::description);
     Entity e = scene.CreateEntity("test");
 
     event::Description event{
@@ -43,8 +45,6 @@ TEST_CASE("Test save scene", "[Scene][save]")
         .eventListener = event,
         .system = &test_save_scene_system,
     };
-    systems::GlobalIndex::getSingleton().registerSystem(description);
-    systems::GlobalIndex::getSingleton().registerSystem(description2);
     scene.getSystemManager().useSystem(description);
     scene.getSystemManager().useSystem(description2);
     scene.save("test/save.json");

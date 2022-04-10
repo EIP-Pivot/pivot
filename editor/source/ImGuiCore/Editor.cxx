@@ -20,7 +20,7 @@ void Editor::create()
         if (ImGui::Selectable(" +", false, 0, newSceneSize)) { ImGui::OpenPopup("AddScene"); }
         ImGui::Separator();
         if (ImGui::Button("Save")) {
-            gSceneManager.getCurrentLevel().save("scene/" + gSceneManager.getCurrentLevel().getName() + ".json");
+            m_sceneManager.getCurrentLevel().save("scene/" + m_sceneManager.getCurrentLevel().getName() + ".json");
         }
         ImGui::Separator();
         if (ImGui::RadioButton("Translate", currentGizmoOperation == ImGuizmo::TRANSLATE))

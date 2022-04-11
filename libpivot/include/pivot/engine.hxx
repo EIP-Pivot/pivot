@@ -1,11 +1,14 @@
 #pragma once
 
+#include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
 #include <pivot/ecs/Core/Event/index.hxx>
 #include <pivot/ecs/Core/SceneManager.hxx>
 #include <pivot/ecs/Core/Systems/index.hxx>
 
 #include <pivot/graphics/VulkanApplication.hxx>
+
+#include <pivot/builtins/components/RenderObject.hxx>
 
 namespace pivot
 {
@@ -17,8 +20,8 @@ public:
     void run();
 
     void changeCurrentScene(ecs::SceneManager::SceneId sceneId);
-    ecs::SceneManager::SceneId registerScene() { return m_scene_manager.registerScene(); }
-    ecs::SceneManager::SceneId registerScene(std::string name) { return m_scene_manager.registerScene(name); }
+    ecs::SceneManager::SceneId registerScene();
+    ecs::SceneManager::SceneId registerScene(std::string name);
 
 protected:
     pivot::ecs::component::Index m_component_index;
@@ -37,6 +40,8 @@ protected:
     const ecs::SceneManager &getSceneManager() { return m_scene_manager; };
 
 private:
-    pivot::ecs::SceneManager m_scene_manager;
+    ecs::SceneManager m_scene_manager;
+    OptionalRef<ecs::component::DenseTypedComponentArray<builtins::components::RenderObject>>
+        m_current_scene_render_object;
 };
 }    // namespace pivot

@@ -6,9 +6,6 @@
 #include <pivot/ecs/Components/Gravity.hxx>
 #include <pivot/ecs/Components/RigidBody.hxx>
 
-#include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
-
-#include <pivot/builtins/components/RenderObject.hxx>
 #include <pivot/builtins/events/tick.hxx>
 #include <pivot/builtins/systems/PhysicSystem.hxx>
 
@@ -26,8 +23,6 @@ Engine::Engine(): m_camera(Camera(glm::vec3(0, 200, 500)))
     m_system_index.registerSystem(builtins::systems::physicSystem);
 }
 
-void Engine::changeCurrentScene(ecs::SceneManager::SceneId sceneId) { m_scene_manager.setCurrentSceneId(sceneId); }
-
 void Engine::run()
 {
 
@@ -43,14 +38,8 @@ void Engine::run()
         auto aspectRatio = m_vulkan_application.getAspectRatio();
         float fov = 80;
 
-        using RenderObject = pivot::builtins::components::RenderObject;
-        auto &cm = m_scene_manager.getCurrentScene().getComponentManager();
-        auto renderobject_id = cm.GetComponentId("RenderObject").value();
-        auto &array = cm.GetComponentArray(renderobject_id);
-        pivot::ecs::component::DenseTypedComponentArray<RenderObject> &dense_array =
-            dynamic_cast<pivot::ecs::component::DenseTypedComponentArray<RenderObject> &>(array);
-
-        auto data = dense_array.getData();
+        auto data = m_current_scene_render_object.value().get().getData();
+        // FIXME: Send data and existence vector directly to the graphic library
         std::vector<std::reference_wrapper<const pivot::graphics::RenderObject>> objects;
         for (const auto &ro: data) { objects.push_back(ro); }
 
@@ -71,5 +60,42 @@ void Engine::run()
         auto stopTime = std::chrono::high_resolution_clock::now();
         dt = std::chrono::duration<float>(stopTime - startTime).count();
     }
+}
+
+void Engine::changeCurrentScene(ecs::SceneManager::SceneId sceneId)
+{
+    m_scene_manager.setCurrentSceneId(sceneId);
+
+    using RenderObject = pivot::builtins::components::RenderObject;
+    auto &cm = m_scene_manager.getCurrentScene().getComponentManager();
+    if (auto renderobject_id = cm.GetComponentId(RenderObject::description.name)) {
+        auto &array = cm.GetComponentArray(*renderobject_id);
+        m_current_scene_render_object =
+            dynamic_cast<pivot::ecs::component::DenseTypedComponentArray<RenderObject> &>(array);
+    } else {
+        m_current_scene_render_object = std::nullopt;
+    }
+}
+
+namespace
+{
+    void postSceneRegister(Scene &scene)
+    {
+        scene.getComponentManager().RegisterComponent(builtins::components::RenderObject::description);
+    }
+}    // namespace
+
+ecs::SceneManager::SceneId Engine::registerScene()
+{
+    auto id = m_scene_manager.registerScene();
+    postSceneRegister(m_scene_manager.getSceneById(id));
+    return id;
+}
+ecs::SceneManager::SceneId Engine::registerScene(std::string name)
+{
+
+    auto id = m_scene_manager.registerScene(name);
+    postSceneRegister(m_scene_manager.getSceneById(id));
+    return id;
 }
 }    // namespace pivot

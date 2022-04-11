@@ -214,13 +214,10 @@ public:
 };
 
 int main()
-try {
+{
     logger.start();
     Application app;
     app.init();
     app.run();
     return 0;
-} catch (std::exception &e) {
-    logger.err("THROW") << e.what();
-    return 1;
 }

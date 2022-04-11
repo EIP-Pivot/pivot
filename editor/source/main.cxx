@@ -49,15 +49,15 @@ class Application : public pivot::Engine
 public:
     Application()
         : Engine(),
-          editor(m_scene_manager),
-          entity(m_scene_manager),
-          systemsEditor(m_system_index, m_scene_manager),
-          componentEditor(m_component_index, m_scene_manager){};
+          editor(getSceneManager()),
+          entity(getCurrentScene()),
+          systemsEditor(m_system_index, getCurrentScene()),
+          componentEditor(m_component_index, getCurrentScene()){};
 
     void loadScene()
     {
-        LevelId defaultScene = editor.addScene("Default");
-        m_scene_manager.setCurrentLevelId(defaultScene);
+        SceneManager::SceneId defaultScene = registerScene("Default");
+        changeCurrentScene(defaultScene);
     }
 
     void init()
@@ -66,7 +66,9 @@ public:
 
         loadScene();
 
-        auto &cm = m_scene_manager.getCurrentLevel().getComponentManager();
+        Scene &scene = *getCurrentScene();
+
+        auto &cm = scene.getComponentManager();
         cm.RegisterComponent(Gravity::description);
         cm.RegisterComponent(RigidBody::description);
         cm.RegisterComponent(pivot::builtins::components::RenderObject::description);
@@ -77,9 +79,8 @@ public:
             bFirstMouse = window.captureCursor();
             button.reset();
         });
-        window.setKeyReleaseCallback(Window::Key::V, [&](Window &window, const Window::Key key) {
-            m_scene_manager.getCurrentLevel().switchCamera();
-        });
+        window.setKeyReleaseCallback(Window::Key::V,
+                                     [&](Window &window, const Window::Key key) { scene.switchCamera(); });
 
         auto key_lambda_press = [&](Window &window, const Window::Key key) {
             if (window.captureCursor()) button.set(static_cast<std::size_t>(key));
@@ -178,7 +179,7 @@ public:
 
         imGuiManager.newFrame();
 
-        editor.create();
+        editor.create(*this);
         m_paused = !editor.getRun();
         if (m_paused) {
             editor.setAspectRatio(m_vulkan_application.getAspectRatio());

@@ -2,55 +2,74 @@
 
 namespace pivot::ecs
 {
-LevelId SceneManager::registerLevel(std::string name)
+SceneManager::SceneId SceneManager::registerScene(std::string name)
 {
-    _levels.push_back(std::make_unique<Scene>(name));
-    return (LevelId(_levels.size() - 1));
+    m_scenes.push_back(std::make_unique<Scene>(name));
+    SceneId id = SceneId(m_scenes.size() - 1);
+    m_sceneNameToLevel[name] = id;
+    return (id);
 }
 
-LevelId SceneManager::registerLevel()
+SceneManager::SceneId SceneManager::registerScene()
 {
-    _levels.push_back(std::make_unique<Scene>("Scene " + std::to_string(LevelId(_levels.size()))));
-    return (LevelId(_levels.size() - 1));
+    return this->registerScene("Scene " + std::to_string(m_scenes.size()));
 }
 
-void SceneManager::unregisterLevel(LevelId toDelete)
+void SceneManager::unregisterScene(SceneId toDelete)
 {
-    if (toDelete >= _levels.size() || !_levels[toDelete].has_value())
+    if (toDelete >= m_scenes.size() || !m_scenes[toDelete].has_value())
         throw EcsException("Scene with id _" + std::to_string(toDelete) +
                            "_ doesn't exist. Register it before trying to delete it.");
 
-    _levels[toDelete] = std::nullopt;
+    m_scenes[toDelete] = std::nullopt;
 }
 
-LevelId SceneManager::getCurrentLevelId() { return _currentActiveLevel.value(); }
+SceneManager::SceneId SceneManager::getCurrentSceneId() const { return m_currentActiveScene.value(); }
 
-void SceneManager::setCurrentLevelId(LevelId newScene)
+void SceneManager::setCurrentSceneId(SceneId newScene)
 {
-    if (newScene >= _levels.size())
+    if (newScene >= m_scenes.size())
         throw EcsException("Scene with id _" + std::to_string(newScene) + "_ hasn't been registered.");
 
-    _currentActiveLevel = newScene;
+    m_currentActiveScene = newScene;
 }
 
-Scene &SceneManager::getCurrentLevel()
+std::optional<SceneManager::SceneId> SceneManager::getSceneId(const std::string &sceneName) const
 {
-    if (_currentActiveLevel == -1)
+    auto id = m_sceneNameToLevel.find(sceneName);
+    if (id == m_sceneNameToLevel.end()) {
+        return std::nullopt;
+    } else {
+        return id->second;
+    }
+}
+
+Scene &SceneManager::getCurrentScene()
+{
+    if (!m_currentActiveScene.has_value())
         throw EcsException("There is no current level. Register a level before trying to access its Scene.");
 
-    return *this->_levels.at(_currentActiveLevel.value()).value();
+    return *this->m_scenes.at(m_currentActiveScene.value()).value();
 }
 
-Scene &SceneManager::getLevelById(LevelId idToGet)
+const Scene &SceneManager::getCurrentScene() const
 {
-    if (idToGet >= _levels.size() || !_levels[idToGet].has_value())
+    if (!m_currentActiveScene.has_value())
+        throw EcsException("There is no current level. Register a level before trying to access its Scene.");
+
+    return *this->m_scenes.at(m_currentActiveScene.value()).value();
+}
+
+const Scene &SceneManager::getSceneById(SceneId idToGet) const
+{
+    if (idToGet >= m_scenes.size() || !m_scenes[idToGet].has_value())
         throw EcsException("Level with id _" + std::to_string(idToGet) + "_ is not registered.");
 
-    return *this->_levels.at(idToGet).value();
+    return *this->m_scenes.at(idToGet).value();
 }
 
-Scene &SceneManager::operator[](LevelId id) { return getLevelById(id); }
+const Scene &SceneManager::operator[](SceneId id) const { return getSceneById(id); }
 
-std::size_t SceneManager::getLivingScene() { return _levels.size(); }
+std::size_t SceneManager::getLivingScene() const { return m_scenes.size(); }
 
 }    // namespace pivot::ecs

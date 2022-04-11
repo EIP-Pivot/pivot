@@ -45,7 +45,7 @@ public:
     Scene(std::string sceneName = "Scene");
 
     /// Get scene name
-    std::string getName();
+    const std::string &getName() const;
 
     /// Set scene name
     void setName(std::string newName) { name = newName; }

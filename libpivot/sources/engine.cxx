@@ -26,6 +26,8 @@ Engine::Engine(): m_camera(Camera(glm::vec3(0, 200, 500)))
     m_system_index.registerSystem(builtins::systems::physicSystem);
 }
 
+void Engine::changeCurrentScene(ecs::SceneManager::SceneId sceneId) { m_scene_manager.setCurrentSceneId(sceneId); }
+
 void Engine::run()
 {
 
@@ -42,7 +44,7 @@ void Engine::run()
         float fov = 80;
 
         using RenderObject = pivot::builtins::components::RenderObject;
-        auto &cm = m_scene_manager.getCurrentLevel().getComponentManager();
+        auto &cm = m_scene_manager.getCurrentScene().getComponentManager();
         auto renderobject_id = cm.GetComponentId("RenderObject").value();
         auto &array = cm.GetComponentArray(renderobject_id);
         pivot::ecs::component::DenseTypedComponentArray<RenderObject> &dense_array =
@@ -61,7 +63,7 @@ void Engine::run()
         );
 
         if (!m_paused) {
-            m_scene_manager.getCurrentLevel().getEventManager().sendEvent(
+            m_scene_manager.getCurrentScene().getEventManager().sendEvent(
                 {pivot::builtins::events::tick, {}, data::Value(dt)});
         }
 

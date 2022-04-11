@@ -4,6 +4,8 @@
 #include <magic_enum.hpp>
 #include <misc/cpp/imgui_stdlib.h>
 
+using namespace pivot::ecs;
+
 void ComponentEditor::create(Entity entity)
 {
     currentEntity = entity;
@@ -21,15 +23,9 @@ void ComponentEditor::create()
     ImGui::End();
 }
 
-void ComponentEditor::setVectorObject(LevelId scene) { sceneObject[scene] = ObjectVector(); }
-
-std::unordered_map<LevelId, ObjectVector> &ComponentEditor::getVectorObject() { return sceneObject; }
-
-ObjectVector ComponentEditor::getObject() { return sceneObject[m_sceneManager.getCurrentLevelId()]; }
-
 void ComponentEditor::createPopUp()
 {
-    auto &cm = m_sceneManager.getCurrentLevel().getComponentManager();
+    auto &cm = m_scene->getComponentManager();
     if (ImGui::BeginPopup("AddComponent")) {
         for (const auto &[name, description]: m_index) {
             if (cm.GetComponent(currentEntity, cm.GetComponentId(name).value()) == std::nullopt) {
@@ -42,7 +38,7 @@ void ComponentEditor::createPopUp()
 
 void ComponentEditor::displayComponent()
 {
-    auto &cm = m_sceneManager.getCurrentLevel().getComponentManager();
+    auto &cm = m_scene->getComponentManager();
     for (ComponentRef ref: cm.GetAllComponents(currentEntity)) {
         if (ImGui::TreeNode(ref.description().name.c_str())) {
             ImGui::TreePop();
@@ -57,7 +53,7 @@ void ComponentEditor::displayComponent()
 
 void ComponentEditor::addComponent(const Description &description)
 {
-    auto &cm = m_sceneManager.getCurrentLevel().getComponentManager();
+    auto &cm = m_scene->getComponentManager();
     auto id = cm.GetComponentId(description.name).value();
     Value newComponent = createValue(description.type);
     cm.AddComponent(currentEntity, newComponent, id);

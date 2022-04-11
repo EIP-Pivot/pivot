@@ -4,16 +4,16 @@
 
 void EntityModule::create()
 {
-    auto &componentManager = m_sceneManager.getCurrentLevel().getComponentManager();
+    auto &componentManager = m_scene->getComponentManager();
     auto tagId = componentManager.GetComponentId("Tag").value();
-    if (m_sceneManager.getCurrentLevelId() != currentScene) {
+    if (m_scene.id() != currentScene) {
         _hasSelected = false;
         entitySelected = -1;
     }
-    currentScene = m_sceneManager.getCurrentLevelId();
+    currentScene = m_scene.id();
     ImGui::Begin("Entity");
     createPopUp();
-    for (auto const &[entity, _]: m_sceneManager.getCurrentLevel().getEntities()) {
+    for (auto const &[entity, _]: m_scene->getEntities()) {
         if (ImGui::Selectable(
                 std::get<std::string>(
                     std::get<pivot::ecs::data::Record>(componentManager.GetComponent(entity, tagId).value()).at("name"))
@@ -34,7 +34,7 @@ void EntityModule::create()
 
 Entity EntityModule::addEntity()
 {
-    Entity newEntity = m_sceneManager.getCurrentLevel().CreateEntity();
+    Entity newEntity = m_scene->CreateEntity();
     entitySelected = newEntity;
     _hasSelected = true;
     return newEntity;
@@ -42,7 +42,7 @@ Entity EntityModule::addEntity()
 
 Entity EntityModule::addEntity(std::string name)
 {
-    Entity newEntity = m_sceneManager.getCurrentLevel().CreateEntity(name);
+    Entity newEntity = m_scene->CreateEntity(name);
     entitySelected = newEntity;
     _hasSelected = true;
     return newEntity;
@@ -50,7 +50,7 @@ Entity EntityModule::addEntity(std::string name)
 
 void EntityModule::removeEntity()
 {
-    m_sceneManager.getCurrentLevel().DestroyEntity(entitySelected);
+    m_scene->DestroyEntity(entitySelected);
     entitySelected = 0;
     _hasSelected = false;
 }

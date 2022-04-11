@@ -13,7 +13,7 @@ Scene::Scene(std::string sceneName)
     mTagId = mComponentManager.RegisterComponent(Tag::description);
 }
 
-std::string Scene::getName() { return name; }
+const std::string &Scene::getName() const { return name; }
 
 Entity Scene::CreateEntity()
 {

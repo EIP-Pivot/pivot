@@ -68,11 +68,6 @@ public:
 
         Scene &scene = *getCurrentScene();
 
-        auto &cm = scene.getComponentManager();
-        cm.RegisterComponent(Gravity::description);
-        cm.RegisterComponent(RigidBody::description);
-        cm.RegisterComponent(pivot::builtins::components::RenderObject::description);
-
         window.captureCursor(true);
         window.setKeyReleaseCallback(Window::Key::LEFT_ALT, [&](Window &window, const Window::Key key) {
             window.captureCursor(!window.captureCursor());

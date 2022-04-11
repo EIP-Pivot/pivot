@@ -70,6 +70,16 @@ const Scene &SceneManager::getSceneById(SceneId idToGet) const
 
 const Scene &SceneManager::operator[](SceneId id) const { return getSceneById(id); }
 
+Scene &SceneManager::getSceneById(SceneId id)
+{
+    return const_cast<Scene &>(const_cast<const SceneManager *>(this)->getSceneById(id));
+}
+
+Scene &SceneManager::operator[](SceneId id)
+{
+    return const_cast<Scene &>(const_cast<const SceneManager *>(this)->getSceneById(id));
+}
+
 std::size_t SceneManager::getLivingScene() const { return m_scenes.size(); }
 
 }    // namespace pivot::ecs

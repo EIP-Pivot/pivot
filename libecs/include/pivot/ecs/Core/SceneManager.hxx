@@ -42,6 +42,10 @@ public:
     /// Get current scene object (const)
     const Scene &getCurrentScene() const;
     /// Get scene object with an id
+    Scene &getSceneById(SceneId idToGet);
+    /// Operator overload [] to get scene with id
+    Scene &operator[](SceneId id);
+    /// Get scene object with an id
     const Scene &getSceneById(SceneId idToGet) const;
     /// Operator overload [] to get scene with id
     const Scene &operator[](SceneId id) const;

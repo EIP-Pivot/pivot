@@ -28,8 +28,12 @@ void ComponentEditor::createPopUp()
     auto &cm = m_scene->getComponentManager();
     if (ImGui::BeginPopup("AddComponent")) {
         for (const auto &[name, description]: m_index) {
-            if (cm.GetComponent(currentEntity, cm.GetComponentId(name).value()) == std::nullopt) {
-                if (ImGui::MenuItem(name.c_str())) { addComponent(description); }
+            auto id = cm.GetComponentId(name);
+            if (!id || cm.GetComponent(currentEntity, *id) == std::nullopt) {
+                if (ImGui::MenuItem(name.c_str())) {
+                    if (!id) { cm.RegisterComponent(description); }
+                    addComponent(description);
+                }
             }
         }
         ImGui::EndPopup();

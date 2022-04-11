@@ -143,6 +143,11 @@ if(BUILD_EDITOR)
     add_subdirectory(editor/)
 endif()
 
+option(BUILD_LAUNCHER "Build pivot launcher" ON)
+if(BUILD_LAUNCHER)
+    add_subdirectory(launcher/)
+endif()
+
 add_library(pivot::pivot ALIAS pivot)
 add_library(pivot::graphics ALIAS pivot-graphics)
 add_library(pivot::ecs ALIAS pivot-ecs)

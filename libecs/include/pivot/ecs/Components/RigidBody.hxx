@@ -4,6 +4,8 @@
 
 #include <pivot/ecs/Core/Component/description.hxx>
 
+namespace pivot::builtins::components
+{
 /// @struct RigidBody
 ///
 /// @brief RigidBody component (Example of rigidbody component)
@@ -16,3 +18,4 @@ struct RigidBody {
     /// Component description
     static const pivot::ecs::component::Description description;
 };
+}    // namespace pivot::builtins::components

@@ -6,6 +6,8 @@
 #include <vector>
 #include <vulkan/vulkan.hpp>
 
+namespace pivot::graphics
+{
 /// @struct QueueFamilyIndices
 ///
 /// @brief Utility struct to find viable Vulkan queue
@@ -43,3 +45,4 @@ struct QueueFamilyIndices {
         return indices;
     }
 };
+}    // namespace pivot::graphics

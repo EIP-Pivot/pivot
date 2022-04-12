@@ -41,6 +41,7 @@
 #include <pivot/engine.hxx>
 
 using namespace pivot::ecs;
+using Window = pivot::graphics::Window;
 
 class Application : public pivot::Engine
 {

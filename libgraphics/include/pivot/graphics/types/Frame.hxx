@@ -4,6 +4,8 @@
 
 #include <vulkan/vulkan.hpp>
 
+namespace pivot::graphics
+{
 /// @struct Frame
 /// @brief Store all of the per frame ressources
 struct Frame {
@@ -14,3 +16,5 @@ struct Frame {
     /// Indicate if the image has been displayed and if it's ressources can be reused
     vk::Fence inFlightFences;
 };
+
+}    // namespace pivot::graphics

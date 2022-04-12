@@ -9,8 +9,6 @@
 #include "pivot/ecs/Core/Event/manager.hxx"
 
 #include "pivot/ecs/Core/EntityManager.hxx"
-#include "pivot/ecs/Core/EventManager.hxx"
-#include "pivot/ecs/Core/SystemManager.hxx"
 #include "pivot/ecs/Core/types.hxx"
 #include <memory>
 
@@ -117,7 +115,6 @@ private:
     EntityManager mEntityManager;
     pivot::ecs::systems::Manager mSystemManager;
     pivot::ecs::event::Manager mEventManager;
-    std::vector<std::shared_ptr<System>> mSystems;
     std::vector<Entity> mCamera;
     std::uint16_t mCurrentCamera;
     pivot::ecs::component::Manager::ComponentId mTagId;

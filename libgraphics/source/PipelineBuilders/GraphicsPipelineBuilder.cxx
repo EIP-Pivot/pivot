@@ -2,6 +2,7 @@
 
 #include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/types/Vertex.hxx"
+#include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
@@ -107,6 +108,7 @@ static void loadShader(const std::string &path, const vk::ShaderStageFlagBits &s
 {
     auto shaderCode = vk_utils::readFile(path);
     auto shaderModule = vk_utils::createShaderModule(device, shaderCode);
+    vk_debug::setObjectName(device, shaderModule, path);
     shaderStages.push_back(vk_init::populateVkPipelineShaderStageCreateInfo(stage, shaderModule));
 }
 

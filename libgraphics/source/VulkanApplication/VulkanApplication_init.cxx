@@ -130,10 +130,13 @@ void VulkanApplication::createPipeline()
         .setRenderPass(renderPass)
         .setMsaaSample(maxMsaaSample)
         .setFaceCulling(vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise)
-        .setVertexShaderPath("shaders/default.vert.spv")
-        .setFragmentShaderPath("shaders/default_lit.frag.spv");
+        .setVertexShaderPath("shaders/default_pbr.vert.spv")
+        .setFragmentShaderPath("shaders/default_pbr.frag.spv");
+    pipelineStorage.newPipeline("pbr", builder);
+    pipelineStorage.setDefault("pbr");
+
+    builder.setVertexShaderPath("shaders/default.vert.spv").setFragmentShaderPath("shaders/default_lit.frag.spv");
     pipelineStorage.newPipeline("lit", builder);
-    pipelineStorage.setDefault("lit");
 
     builder.setFragmentShaderPath("shaders/default_unlit.frag.spv");
     pipelineStorage.newPipeline("unlit", builder);
@@ -141,11 +144,12 @@ void VulkanApplication::createPipeline()
     builder.setPolygonMode(vk::PolygonMode::eLine);
     pipelineStorage.newPipeline("wireframe", builder);
 
-    builder.setPolygonMode(vk::PolygonMode::eFill);
-    builder.setFaceCulling(vk::CullModeFlagBits::eFront, vk::FrontFace::eCounterClockwise);
+    builder.setPolygonMode(vk::PolygonMode::eFill)
+        .setFaceCulling(vk::CullModeFlagBits::eFront, vk::FrontFace::eCounterClockwise);
     pipelineStorage.newPipeline("skybox", builder);
 
     swapchainDeletionQueue.push([&] {
+        pipelineStorage.removePipeline("pbr");
         pipelineStorage.removePipeline("lit");
         pipelineStorage.removePipeline("unlit");
         pipelineStorage.removePipeline("wireframe");

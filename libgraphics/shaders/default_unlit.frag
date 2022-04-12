@@ -15,9 +15,9 @@ layout (push_constant) uniform readonly constants {
 } cameraData;
 
 struct Material {
+    vec4 baseColor;
     float metallic;
     float roughness;
-    vec4 baseColor;
     int baseColorTexture;
     int metallicRoughnessTexture;
     int normalTexture;
@@ -30,7 +30,6 @@ layout (std140, set = 1, binding = 1) readonly buffer ObjectMaterials {
 } objectMaterials;
 
 layout(set = 1, binding = 2) uniform sampler2D texSampler[];
-
 
 void main() {
     Material material = objectMaterials.materials[materialIndex];

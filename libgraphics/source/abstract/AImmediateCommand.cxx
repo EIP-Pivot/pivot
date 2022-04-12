@@ -60,22 +60,7 @@ void AImmediateCommand::immediateCommand(std::function<void(vk::CommandBuffer &)
     device_ref->get().resetCommandPool(immediateCommandPool);
 }
 
-void AImmediateCommand::copyBuffer(AllocatedBuffer &src, AllocatedBuffer &dst)
-{
-    if (src.getSize() > dst.getAllocatedSize()) throw VulkanException("The destination buffer is too small");
-
-    immediateCommand([&](vk::CommandBuffer &cmd) {
-        vk::BufferCopy copyRegion{
-            .srcOffset = 0,
-            .dstOffset = 0,
-            .size = src.getSize(),
-        };
-        cmd.copyBuffer(src.buffer, dst.buffer, copyRegion);
-    });
-    dst.size = src.getSize();
-}
-
-void AImmediateCommand::copyBufferToImage(const AllocatedBuffer &srcBuffer, AllocatedImage &dstImage)
+void AImmediateCommand::copyBufferToImage(const AllocatedBuffer<std::byte> &srcBuffer, AllocatedImage &dstImage)
 {
     immediateCommand([&](vk::CommandBuffer &cmd) {
         vk::BufferImageCopy region{

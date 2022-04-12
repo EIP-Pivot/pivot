@@ -261,10 +261,10 @@ private:
     vk::DescriptorPool descriptorPool;
     vk::DescriptorSetLayout descriptorSetLayout;
     vk::DescriptorSet descriptorSet;
-    AllocatedBuffer vertexBuffer;
-    AllocatedBuffer indicesBuffer;
-    AllocatedBuffer boundingboxBuffer;
-    AllocatedBuffer materialBuffer;
+    AllocatedBuffer<Vertex> vertexBuffer;
+    AllocatedBuffer<std::uint32_t> indicesBuffer;
+    AllocatedBuffer<gpu_object::MeshBoundingBox> boundingboxBuffer;
+    AllocatedBuffer<gpu_object::Material> materialBuffer;
 };
 
 #ifndef PIVOT_ASSETSTORAGE_TEMPLATE_INITIALIZED

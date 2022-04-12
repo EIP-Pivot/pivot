@@ -4,6 +4,7 @@
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 #include "pivot/graphics/types/RenderObject.hxx"
+#include "pivot/graphics/types/UniformBufferObject.hxx"
 #include "pivot/graphics/types/common.hxx"
 #include "pivot/graphics/types/vk_types.hxx"
 
@@ -44,9 +45,9 @@ public:
     /// Represent a frame ressources
     struct Frame {
         /// Hold the indirect command
-        AllocatedBuffer indirectBuffer{};
+        AllocatedBuffer<vk::DrawIndexedIndirectCommand> indirectBuffer{};
         /// Hold the uniform object buffer
-        AllocatedBuffer objectBuffer{};
+        AllocatedBuffer<gpu_object::UniformBufferObject> objectBuffer{};
         /// The descriptor set holding the object buffer
         vk::DescriptorSet objectDescriptor = VK_NULL_HANDLE;
         /// The draw batches
@@ -81,8 +82,8 @@ public:
 
 private:
     void createDescriptorPool();
-    void createBuffer(const vk::DeviceSize bufferSize);
-    void createDescriptorSet(const vk::DeviceSize bufferSize);
+    void createBuffer(const std::uint32_t bufferSize);
+    void createDescriptorSet(const std::uint32_t bufferSize);
     void createDescriptorSetLayout();
 
 private:

@@ -13,8 +13,6 @@
 
 #include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
 
-#include <pivot/ecs/Core/Event.hxx>
-
 #include <pivot/builtins/systems/ControlSystem.hxx>
 #include <pivot/internal/camera.hxx>
 

@@ -26,8 +26,6 @@
 
 #include <Logger.hpp>
 
-// #include "Scene.hxx"
-#include "Systems/PhysicsSystem.hxx"
 #include <pivot/ecs/Core/Scene.hxx>
 #include <pivot/ecs/Core/SceneManager.hxx>
 
@@ -43,6 +41,8 @@
 
 #include <pivot/builtins/events/tick.hxx>
 #include <pivot/engine.hxx>
+
+using namespace pivot::ecs;
 
 class Application : public pivot::Engine
 {

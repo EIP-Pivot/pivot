@@ -17,6 +17,9 @@
 #include "pivot/ecs/Components/Camera.hxx"
 #include "pivot/ecs/Components/Tag.hxx"
 
+namespace pivot::ecs
+{
+
 /// @class IScene
 ///
 /// @brief Scene interface for transitional event
@@ -120,3 +123,5 @@ private:
     pivot::ecs::component::Manager::ComponentId mTagId;
     pivot::ecs::component::Index mComponentIndex;
 };
+
+}    // namespace pivot::ecs

@@ -14,10 +14,12 @@
 #define PIVOT_MIN_PROJECTION_LIMIT 0.1f
 #endif
 
+namespace pivot::builtins
+{
+
 /// @class Camera
 ///
 /// @brief Camera component (Component exemple)
-// TODO: Namespace
 class Camera
 {
 public:
@@ -72,3 +74,5 @@ public:
     }
     /// @endcond
 };
+
+}    // namespace pivot::builtins

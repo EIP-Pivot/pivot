@@ -24,15 +24,15 @@ public:
     ecs::SceneManager::SceneId registerScene(std::string name);
 
 protected:
-    pivot::ecs::component::Index m_component_index;
-    pivot::ecs::event::Index m_event_index;
-    pivot::ecs::systems::Index m_system_index;
-    pivot::graphics::VulkanApplication m_vulkan_application;
-    Camera m_camera;
+    ecs::component::Index m_component_index;
+    ecs::event::Index m_event_index;
+    ecs::systems::Index m_system_index;
+    graphics::VulkanApplication m_vulkan_application;
+    builtins::Camera m_camera;
     bool m_paused = true;
 
 #ifdef CULLING_DEBUG
-    Camera m_culling_camera;
+    builtins::Camera m_culling_camera;
 #endif
 
     virtual void onTick(float delta){};

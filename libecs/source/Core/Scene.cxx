@@ -53,7 +53,7 @@ void Scene::addCamera(Entity camera) { mCamera.push_back(camera); }
 
 void Scene::switchCamera() { mCurrentCamera = (mCurrentCamera + 1) % mCamera.size(); }
 
-Camera &Scene::getCamera()
+pivot::builtins::Camera &Scene::getCamera()
 {
     if (mCamera.size() == 0) throw EcsException("No camera set");
     throw std::logic_error("Unimplemented");

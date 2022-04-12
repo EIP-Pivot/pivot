@@ -107,7 +107,7 @@ public:
     /// Switch camera
     void switchCamera();
     /// Get current camera
-    Camera &getCamera();
+    builtins::Camera &getCamera();
     /// Get camera list
     std::vector<Entity> &getCameras();
 

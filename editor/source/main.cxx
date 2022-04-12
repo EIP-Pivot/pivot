@@ -121,8 +121,9 @@ public:
         m_vulkan_application.assetStorage.loadModels("../editor/assets/cube.obj");
         m_vulkan_application.assetStorage.loadTextures("../editor/assets/violet.png");
     }
-    void processKeyboard(const Camera::Movement direction, float dt) noexcept
+    void processKeyboard(const pivot::builtins::Camera::Movement direction, float dt) noexcept
     {
+        using Camera = pivot::builtins::Camera;
         switch (direction) {
             case Camera::Movement::FORWARD: {
                 m_camera.position.x += m_camera.front.x * 2.5f * (dt * 500);
@@ -149,6 +150,7 @@ public:
 
     void UpdateCamera(float dt)
     {
+        using Camera = pivot::builtins::Camera;
         try {
             if (button.test(static_cast<std::size_t>(Window::Key::W)))
                 processKeyboard(Camera::FORWARD, dt);

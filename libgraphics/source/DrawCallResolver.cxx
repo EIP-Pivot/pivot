@@ -13,15 +13,34 @@ DrawCallResolver::DrawCallResolver() {}
 
 DrawCallResolver::~DrawCallResolver() {}
 
-void DrawCallResolver::init(VulkanBase &base, AssetStorage &stor)
+void DrawCallResolver::init(VulkanBase &base, AssetStorage &stor, DescriptorBuilder &builder)
 {
+
     DEBUG_FUNCTION
     base_ref = base;
     storage_ref = stor;
-    createDescriptorPool();
-    createDescriptorSetLayout();
     createBuffer(defaultBufferSize);
-    createDescriptorSet(defaultBufferSize);
+
+    vk::DescriptorBufferInfo bufferInfo{
+        .buffer = frame.objectBuffer.buffer,
+        .offset = 0,
+        .range = sizeof(gpu_object::UniformBufferObject) * defaultBufferSize,
+    };
+    vk::DescriptorBufferInfo indirectInfo{
+        .buffer = frame.indirectBuffer.buffer,
+        .offset = 0,
+        .range = sizeof(vk::DrawIndexedIndirectCommand) * defaultBufferSize,
+    };
+    auto success =
+        builder
+            .bindBuffer(0, &bufferInfo, vk::DescriptorType::eStorageBuffer,
+                        vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute)
+            .bindBuffer(1, &indirectInfo, vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eCompute)
+            .build(base_ref->get().device, frame.objectDescriptor, descriptorSetLayout);
+    assert(success);
+    vk_debug::setObjectName(base_ref->get().device, frame.objectDescriptor,
+                            "Object Descriptor Set " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
+    updateDescriptorSet(defaultBufferSize);
 }
 
 void DrawCallResolver::destroy()
@@ -29,9 +48,6 @@ void DrawCallResolver::destroy()
     DEBUG_FUNCTION
     if (frame.indirectBuffer) base_ref->get().allocator.destroyBuffer(frame.indirectBuffer);
     if (frame.objectBuffer) base_ref->get().allocator.destroyBuffer(frame.objectBuffer);
-
-    if (descriptorPool) base_ref->get().device.destroyDescriptorPool(descriptorPool);
-    if (descriptorSetLayout) base_ref->get().device.destroyDescriptorSetLayout(descriptorSetLayout);
 }
 
 void DrawCallResolver::prepareForDraw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation)
@@ -73,10 +89,10 @@ void DrawCallResolver::prepareForDraw(std::vector<std::reference_wrapper<const R
     auto descriptorCmp = objectGPUData.size() <=> frame.currentDescriptorSetSize;
     if (std::is_gt(bufferCmp)) {
         createBuffer(objectGPUData.size());
-        createDescriptorSet(objectGPUData.size());
+        updateDescriptorSet(objectGPUData.size());
     }
     if (objectGPUData.size() > 0 && (std::is_lt(bufferCmp) || std::is_gt(descriptorCmp))) {
-        createDescriptorSet(objectGPUData.size());
+        updateDescriptorSet(objectGPUData.size());
     }
 
     if (frame.currentBufferSize > 0) {
@@ -94,25 +110,6 @@ void DrawCallResolver::prepareForDraw(std::vector<std::reference_wrapper<const R
             sceneData[i].firstInstance = i;
         }
     }
-}
-
-void DrawCallResolver::createDescriptorPool()
-{
-    vk::DescriptorPoolSize poolSize[] = {
-        {
-            .type = vk::DescriptorType::eUniformBuffer,
-            .descriptorCount = MaxFrameInFlight * 2,
-        },
-    };
-
-    vk::DescriptorPoolCreateInfo poolInfo{
-        .flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
-        .maxSets = MaxFrameInFlight,
-        .poolSizeCount = std::size(poolSize),
-        .pPoolSizes = poolSize,
-    };
-    descriptorPool = base_ref->get().device.createDescriptorPool(poolInfo);
-    vk_debug::setObjectName(base_ref->get().device, descriptorPool, "Objects DescriptorPool");
 }
 
 void DrawCallResolver::createBuffer(vk::DeviceSize bufferSize)
@@ -135,21 +132,9 @@ void DrawCallResolver::createBuffer(vk::DeviceSize bufferSize)
     frame.currentBufferSize = bufferSize;
 }
 
-void DrawCallResolver::createDescriptorSet(vk::DeviceSize bufferSize)
+void DrawCallResolver::updateDescriptorSet(vk::DeviceSize bufferSize)
 {
     assert(bufferSize > 0);
-    if (frame.objectDescriptor) base_ref->get().device.freeDescriptorSets(descriptorPool, frame.objectDescriptor);
-
-    vk::DescriptorSetAllocateInfo allocInfo{
-        .descriptorPool = descriptorPool,
-        .descriptorSetCount = 1,
-        .pSetLayouts = &descriptorSetLayout,
-    };
-
-    frame.objectDescriptor = base_ref->get().device.allocateDescriptorSets(allocInfo).front();
-    vk_debug::setObjectName(base_ref->get().device, frame.objectDescriptor,
-                            "Object Descriptor Set " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
-
     vk::DescriptorBufferInfo bufferInfo{
         .buffer = frame.objectBuffer.buffer,
         .offset = 0,
@@ -181,30 +166,4 @@ void DrawCallResolver::createDescriptorSet(vk::DeviceSize bufferSize)
     base_ref->get().device.updateDescriptorSets(descriptorWrites, 0);
     frame.currentDescriptorSetSize = bufferSize;
 }
-
-void DrawCallResolver::createDescriptorSetLayout()
-{
-    vk::DescriptorSetLayoutBinding uboLayoutBinding{
-        .binding = 0,
-        .descriptorType = vk::DescriptorType::eStorageBuffer,
-        .descriptorCount = 1,
-        .stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute,
-    };
-    vk::DescriptorSetLayoutBinding indirectBuffer{
-        .binding = 1,
-        .descriptorType = vk::DescriptorType::eStorageBuffer,
-        .descriptorCount = 1,
-        .stageFlags = vk::ShaderStageFlagBits::eCompute,
-    };
-
-    std::vector<vk::DescriptorSetLayoutBinding> bindings = {uboLayoutBinding, indirectBuffer};
-    vk::DescriptorSetLayoutCreateInfo layoutInfo{
-        .bindingCount = static_cast<uint32_t>(bindings.size()),
-        .pBindings = bindings.data(),
-    };
-
-    descriptorSetLayout = base_ref->get().device.createDescriptorSetLayout(layoutInfo);
-    vk_debug::setObjectName(base_ref->get().device, descriptorSetLayout, "Object DescriptorSet Layout");
-}
-
 }    // namespace pivot::graphics

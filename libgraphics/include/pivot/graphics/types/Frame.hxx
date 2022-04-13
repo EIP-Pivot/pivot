@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/DescriptorAllocator/DescriptorBuilder.hxx"
 #include "pivot/graphics/DrawCallResolver.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
@@ -17,7 +18,7 @@ public:
     ~Frame() = default;
 
     /// Initialize the frame's ressources
-    void initFrame(VulkanBase &base, AssetStorage &stor, vk::CommandPool &pool);
+    void initFrame(VulkanBase &base, DescriptorBuilder build, AssetStorage &stor, vk::CommandPool &pool);
     /// Destroy the frame's ressources
     void destroy(VulkanBase &base, vk::CommandPool &pool);
 

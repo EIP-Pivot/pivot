@@ -172,6 +172,9 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/Renderer/CullingRenderer.cxx
                                    source/Renderer/GraphicsRenderer.cxx
                                    source/Renderer/ImGuiRenderer.cxx
+                                   source/DescriptorAllocator/DescriptorAllocator.cxx
+                                   source/DescriptorAllocator/DescriptorBuilder.cxx
+                                   source/DescriptorAllocator/DescriptorLayoutCache.cxx
                                    source/abstract/AImmediateCommand.cxx
                                    source/culling.cxx
                                    source/DrawCallResolver.cxx

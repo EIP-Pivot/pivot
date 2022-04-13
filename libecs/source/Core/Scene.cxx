@@ -100,6 +100,10 @@ Scene Scene::load(const nlohmann::json &obj, const pivot::ecs::component::Index 
             componentManager.AddComponent(entity, componentValue, componentId.value());
         }
     }
-    // for (auto systems: obj["systems"]) { systemManager.useSystem(systems.dump()); }
+    for (auto systems: obj["systems"]) {
+        auto description = sIndex.getDescription(systems.get<std::string>());
+        if (!description.has_value()) throw std::runtime_error("Unknown System " + systems.get<std::string>());
+        systemManager.useSystem(description.value());
+    }
     return scene;
 }

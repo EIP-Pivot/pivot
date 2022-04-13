@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <nlohmann/json.hpp>
 
 #include <pivot/ecs/Core/Data/value_serialization.hxx>
@@ -98,7 +97,7 @@ public:
 
     /// Get the Entity manager (const)
     const EntityManager &getEntityManager() const;
-    
+
     // Event methods
 
     /// Get the event manager
@@ -121,7 +120,8 @@ public:
 
     // Load
     /// Load a scene from JSON object
-    static Scene load(const nlohmann::json &obj);
+    static Scene load(const nlohmann::json &obj, const pivot::ecs::component::Index &cIndex,
+                      const pivot::ecs::systems::Index &sIndex);
 
 private:
     std::string name;

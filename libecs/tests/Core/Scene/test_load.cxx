@@ -1,6 +1,9 @@
 #include "pivot/ecs/Core/Scene.hxx"
 #include <catch2/catch_test_macros.hpp>
 #include <nlohmann/json.hpp>
+#include <pivot/ecs/Components/Gravity.hxx>
+#include <pivot/ecs/Components/RigidBody.hxx>
+#include <pivot/ecs/Components/Tag.hxx>
 
 using namespace nlohmann;
 using namespace pivot::ecs::data;
@@ -11,11 +14,17 @@ TEST_CASE("Load the scene", "[Scene][Load]")
                            "{\"acceleration\": [0.0,0.0,0.0],\"velocity\": [0.0,0.0,0.0]},\"Tag\": {\"name\": "
                            "\"yolo\"}}],\"name\": \"Default\",\"systems\":[]}");
 
-    Scene LaS = Scene::load(obj);
+    pivot::ecs::component::Index cIndex;
+    pivot::ecs::systems::Index sIndex;
+    cIndex.registerComponent(Gravity::description);
+    cIndex.registerComponent(RigidBody::description);
+    cIndex.registerComponent(Tag::description);
+    Scene LaS = Scene::load(obj, cIndex, sIndex);
 
     REQUIRE(LaS.getLivingEntityCount() == 1);
     auto &cManager = LaS.getComponentManager();
     auto tagId = cManager.GetComponentId("Tag");
+
     auto GravityId = cManager.GetComponentId("Gravity");
     auto RigidBodyId = cManager.GetComponentId("RigidBody");
     REQUIRE(cManager.GetComponent(0, tagId.value()).has_value());

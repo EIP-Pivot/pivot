@@ -47,6 +47,7 @@ TEST_CASE("Test save scene", "[Scene][save]")
     };
     scene.getSystemManager().useSystem(description);
     scene.getSystemManager().useSystem(description2);
+    if (!std::filesystem::exists("test")) { std::filesystem::create_directory("test"); }
     scene.save("test/save.json");
     REQUIRE(std::filesystem::exists("test/save.json"));
     // read file
@@ -55,6 +56,8 @@ TEST_CASE("Test save scene", "[Scene][save]")
     std::ifstream save("test/save.json");
     while (std::getline(save, line)) { output += line; }
     save.close();
-    REQUIRE("{\"components\":[{\"Tag\":{\"name\":\"test\"}}],\"name\":\"test\",\"systems\":[\"Test "
-            "Description\",\"Test Description 2\"]}" == to_string(nlohmann::json::parse(output)));
+    REQUIRE(
+        nlohmann::json::parse(
+            R"({"components":[{"Tag":{"name":"test"}}],"name":"test","systems":["Test Description","Test Description 2"]})") ==
+        nlohmann::json::parse(output));
 }

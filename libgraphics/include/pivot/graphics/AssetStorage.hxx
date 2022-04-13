@@ -243,16 +243,16 @@ private:
     std::unordered_map<std::string, Prefab> prefabStorage;
 
     // Buffers
-    IndexedStorage<gpu_object::MeshBoundingBox> meshBoundingBoxStorage;
-    IndexedStorage<Texture> textureStorage;
-    IndexedStorage<gpu_object::Material> materialStorage;
+    IndexedStorage<std::string, gpu_object::MeshBoundingBox> meshBoundingBoxStorage;
+    IndexedStorage<std::string, Texture> textureStorage;
+    IndexedStorage<std::string, gpu_object::Material> materialStorage;
 
     // CPU-side storage
     struct CPUStorage {
         std::vector<Vertex> vertexStagingBuffer;
         std::vector<std::uint32_t> indexStagingBuffer;
-        IndexedStorage<CPUTexture> textureStaging;
-        IndexedStorage<CPUMaterial> materialStaging;
+        IndexedStorage<std::string, CPUTexture> textureStaging;
+        IndexedStorage<std::string, CPUMaterial> materialStaging;
     } cpuStorage = {};
 
     // Vulkan Ressouces

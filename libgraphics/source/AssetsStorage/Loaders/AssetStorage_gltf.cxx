@@ -212,7 +212,7 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
 }
 
 static std::pair<std::string, AssetStorage::CPUMaterial>
-loadGltfMaterial(const IndexedStorage<AssetStorage::CPUTexture> &texture, const tinygltf::Model &gltfModel,
+loadGltfMaterial(const IndexedStorage<std::string, AssetStorage::CPUTexture> &texture, const tinygltf::Model &gltfModel,
                  const tinygltf::Material &mat, const unsigned offset)
 {
     DEBUG_FUNCTION

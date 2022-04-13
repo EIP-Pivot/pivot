@@ -15,8 +15,8 @@ const std::pair<std::string, std::string> pair3 = std::make_pair(key3, value3);
 const std::string key4 = "arrow";
 const std::string value4 = "is the knee";
 
-template <typename T>
-bool testIndex(const IndexedStorage<T> &storage, const std::string &key, const T &value, const unsigned index)
+template <typename F, typename T>
+bool testIndex(const IndexedStorage<F, T> &storage, const std::string &key, const T &value, const unsigned index)
 {
 
     REQUIRE(storage.contains(key));
@@ -30,7 +30,7 @@ bool testIndex(const IndexedStorage<T> &storage, const std::string &key, const T
 
 TEST_CASE("Indexed Storage", "[indexedStorage]")
 {
-    IndexedStorage<std::string> storage;
+    IndexedStorage<std::string, std::string> storage;
 
     REQUIRE(storage.size() == 0);
     REQUIRE(storage.empty());
@@ -55,7 +55,7 @@ TEST_CASE("Indexed Storage", "[indexedStorage]")
 
     SECTION("Test appends")
     {
-        IndexedStorage<std::string> storage2;
+        IndexedStorage<std::string, std::string> storage2;
         storage2.add(key4, value4);
 
         REQUIRE_NOTHROW(storage.append(storage2));

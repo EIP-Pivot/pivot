@@ -10,8 +10,6 @@ namespace pivot::graphics::internal
 class IPipelineBuilder
 {
 public:
-    /// @brief Get the debug name of the builders
-    virtual const char *const getDebugPipelineName() const noexcept = 0;
     /// @brief Set the pipeline layout, can be chained
     virtual IPipelineBuilder &setPipelineLayout(vk::PipelineLayout &) = 0;
     /// @brief Build the pipeline

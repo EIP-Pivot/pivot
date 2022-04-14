@@ -54,7 +54,7 @@ bool VulkanApplication::drawScene(const CameraData &cameraData, const vk::Comman
         cmd.bindIndexBuffer(assetStorage.getIndexBuffer().buffer, 0, vk::IndexType::eUint32);
 
         for (const auto &packedPipeline: drawResolver.getFrameData(currentFrame).pipelineBatch) {
-            cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelineStorage.get(packedPipeline.pipelineID));
+            cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelineStorage.getGraphics(packedPipeline.pipelineID));
 
             if (deviceFeature.multiDrawIndirect == VK_TRUE) {
                 cmd.drawIndexedIndirect(drawResolver.getFrameData(currentFrame).indirectBuffer.buffer,
@@ -97,7 +97,7 @@ bool VulkanApplication::dispatchCulling(const CameraData &cameraData, const vk::
     cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, cullingLayout, 1, ressourceDescriptorSet, nullptr);
     cmd.pushConstants<gpu_object::CullingPushConstant>(cullingLayout, vk::ShaderStageFlagBits::eCompute, 0,
                                                        cullingCamera);
-    cmd.bindPipeline(vk::PipelineBindPoint::eCompute, pipelineStorage.get("culling"));
+    cmd.bindPipeline(vk::PipelineBindPoint::eCompute, pipelineStorage.getCompute("culling"));
     cmd.pipelineBarrier(vk::PipelineStageFlagBits::eDrawIndirect, vk::PipelineStageFlagBits::eComputeShader, {}, {},
                         barrier, {});
     cmd.dispatch((drawResolver.getFrameData(currentFrame).packedDraws.size() / 256) + 1, 1, 1);

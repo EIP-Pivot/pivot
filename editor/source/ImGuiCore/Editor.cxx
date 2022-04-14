@@ -53,6 +53,7 @@ void Editor::create()
             case ImGuizmo::TRANSLATE: ImGui::InputFloat3("Snap", &snap[0]); break;
             case ImGuizmo::ROTATE: ImGui::InputFloat("Angle Snap", &snap[0]); break;
             case ImGuizmo::SCALE: ImGui::InputFloat("Scale Snap", &snap[0]); break;
+            default: break;
         }
         ImGui::Separator();
     }

@@ -19,8 +19,6 @@ public:
     GraphicsPipelineBuilder(const vk::Extent2D &);
     ~GraphicsPipelineBuilder();
 
-    const char *const getDebugPipelineName() const noexcept { return "Graphics Pipeline"; }
-
     GraphicsPipelineBuilder &setPipelineLayout(vk::PipelineLayout &) noexcept;
 
     /// Set the renderPass use by the pipeline, can be chained

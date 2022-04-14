@@ -8,8 +8,7 @@
 namespace pivot::graphics
 {
 
-VulkanApplication::VulkanApplication()
-    : VulkanBase("Pivot Game Engine", true), assetStorage(*this), pipelineStorage(*this)
+VulkanApplication::VulkanApplication(): VulkanBase("Pivot Game Engine"), assetStorage(*this), pipelineStorage(*this)
 {
     DEBUG_FUNCTION;
 

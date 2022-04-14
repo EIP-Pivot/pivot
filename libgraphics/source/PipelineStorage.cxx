@@ -33,6 +33,10 @@ void PipelineStorage::newPipeline(const std::string &name, const internal::IPipe
 {
     auto pipeline = builder.build(base_ref.device, pipelineCache);
     if (!pipeline) throw std::runtime_error("Failed to create a pipeline named " + name);
+    if (storage.contains(name)) {
+        logger.warn("Pipeline Builder") << "A pipeline named " + name + " already exist, replacing with new one";
+        removePipeline(name);
+    }
     storage.insert(std::make_pair(name, pipeline));
 
     vk_debug::setObjectName(base_ref.device, pipeline, name + " " + builder.getDebugPipelineName());

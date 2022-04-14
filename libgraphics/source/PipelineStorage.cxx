@@ -21,6 +21,14 @@ void PipelineStorage::destroy()
     for (auto &[_, pipeline]: storage) base_ref.device.destroyPipeline(pipeline);
 }
 
+std::vector<std::string> PipelineStorage::getNames() const
+{
+    std::vector<std::string> names;
+    names.reserve(storage.size());
+    for (const auto &[name, _]: storage) { names.push_back(name); }
+    return names;
+}
+
 void PipelineStorage::newPipeline(const std::string &name, const internal::IPipelineBuilder &builder)
 {
     auto pipeline = builder.build(base_ref.device, pipelineCache);

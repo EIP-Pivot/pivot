@@ -30,22 +30,35 @@ public:
     /// @brief Destroy the pipeline
     void removePipeline(const std::string &name);
     /// @brief Recover the pipeline at id
-    inline vk::Pipeline &get(const std::string &id)
+    vk::Pipeline &get(const std::string &id)
     {
-        if (id.empty()) return getDefault();
+        if (id.empty() || bForceDefault) return getDefault();
         return storage.at(id);
     }
 
+    /// @brief get all available pipeline id
+    std::vector<std::string> getNames() const;
+
     /// @brief Get the default pipeline
-    inline vk::Pipeline &getDefault() { return get(defaultPipeline); }
+    vk::Pipeline &getDefault() { return get(defaultPipeline); }
+
+    /// @brief Get the default pipeline name
+    const std::string &getDefaultName() const noexcept { return defaultPipeline; }
+
     /// @brief Set the name of the default pipeline
-    inline void setDefault(const std::string &id) { defaultPipeline = id; }
+    void setDefault(const std::string &id, bool bForce = false)
+    {
+        defaultPipeline = id;
+        bForceDefault = bForce;
+    }
 
 private:
     VulkanBase &base_ref;
     vk::PipelineCache pipelineCache;
-    std::string defaultPipeline;
     std::unordered_map<std::string, vk::Pipeline> storage;
+
+    std::string defaultPipeline;
+    bool bForceDefault = false;
 };
 
 }    // namespace pivot::graphics

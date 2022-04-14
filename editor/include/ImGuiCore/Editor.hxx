@@ -6,6 +6,7 @@
 #include <ImGuizmo.h>
 
 #include <pivot/ecs/Core/SceneManager.hxx>
+#include <pivot/graphics/VulkanApplication.hxx>
 #include <pivot/graphics/types/common.hxx>
 
 class Editor
@@ -19,6 +20,12 @@ public:
           currentGizmoMode(ImGuizmo::LOCAL),
           useSnap(false),
           aspectRatio(0.f){};
+
+    void init(pivot::graphics::VulkanApplication &app)
+    {
+        availableModes = app.pipelineStorage.getNames();
+        storage = app.pipelineStorage;
+    }
     void create();
     LevelId addScene();
     LevelId addScene(std::string name);
@@ -32,6 +39,8 @@ private:
     void createPopUp();
 
     pivot::ecs::SceneManager &m_sceneManager;
+    OptionalRef<pivot::graphics::PipelineStorage> storage;
+    bool shouldForce = false;
 
     bool run;
     Camera camera;
@@ -40,6 +49,7 @@ private:
     bool useSnap;
     float aspectRatio;
     float snap[3] = {20.f, 20.f, 20.f};
+    std::vector<std::string> availableModes;
 
 #ifdef CULLING_DEBUG
 public:

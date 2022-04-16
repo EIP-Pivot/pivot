@@ -8,7 +8,7 @@ struct UniformBufferObject {
     uint boundingBoxIndex;
 };
 
-layout (std140, set = 0, binding = 0) readonly buffer ObjectBuffer {
+layout (std140, set = 1, binding = 0) readonly buffer ObjectBuffer {
     UniformBufferObject objects[];
 } objectBuffer;
 
@@ -20,7 +20,7 @@ struct DrawIndexedIndirect {
     uint    firstInstance;
 };
 
-layout (set = 0, binding = 1) buffer DrawIndexedIndirectBuffer {
+layout (set = 1, binding = 1) buffer DrawIndexedIndirectBuffer {
     DrawIndexedIndirect drawIndexedIndirect[];
 } drawIndexedIndirectBuffer;
 
@@ -29,7 +29,7 @@ struct BoundingBox {
     vec3 high;
 };
 
-layout (set = 1, binding = 0) readonly buffer ObjectBoundingBoxes {
+layout (set = 0, binding = 0) readonly buffer ObjectBoundingBoxes {
     BoundingBox boundingBoxes[];
 } objectBoundingBoxes;
 

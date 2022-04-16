@@ -6,6 +6,7 @@
 
 #include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/QueueFamilyIndices.hxx"
+#include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
@@ -66,6 +67,12 @@ void VulkanSwapchain::createSwapchain(const vk::Extent2D &size, vk::PhysicalDevi
     auto surfaceFormat = swapChainSupport.chooseSwapSurfaceFormat();
     auto presentMode = swapChainSupport.chooseSwapPresentMode();
     auto extent = swapChainSupport.chooseSwapExtent(size);
+    if (!(swapChainSupport.capabilities.supportedUsageFlags & vk::ImageUsageFlagBits::eTransferDst)) {
+        logger.err("Vulkan Swapchain") << "Swapchain image does not support "
+                                       << vk::to_string(vk::ImageUsageFlagBits::eTransferDst) << "usage";
+        throw VulkanSwapchainError("Bad surface capability");
+    }
+
     uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
     if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
         imageCount = swapChainSupport.capabilities.maxImageCount;
@@ -98,6 +105,7 @@ void VulkanSwapchain::createSwapchain(const vk::Extent2D &size, vk::PhysicalDevi
     }
 
     swapChain = device->createSwapchainKHR(createInfo);
+    vk_debug::setObjectName(device.value(), swapChain, "Main Swapchain");
     chainDeletionQueue.push([&] { device->destroy(swapChain); });
     swapChainImageFormat = surfaceFormat.format;
     swapChainExtent = extent;
@@ -108,6 +116,10 @@ void VulkanSwapchain::getImages()
     DEBUG_FUNCTION;
     assert(swapChain);
     swapChainImages = device->getSwapchainImagesKHR(swapChain);
+
+    for (unsigned i = 0; i < swapChainImages.size(); i++) {
+        vk_debug::setObjectName(device.value(), swapChainImages[i], "Swapchain Image nb " + std::to_string(i));
+    }
 }
 
 void VulkanSwapchain::createImageViews()
@@ -115,10 +127,12 @@ void VulkanSwapchain::createImageViews()
     DEBUG_FUNCTION
     swapChainImageViews.resize(swapChainImages.size());
 
-    for (size_t i = 0; i < swapChainImages.size(); ++i) {
+    for (unsigned i = 0; i < swapChainImages.size(); i++) {
         vk::ImageViewCreateInfo createInfo =
             vk_init::populateVkImageViewCreateInfo(this->getSwapchainImage(i), this->getSwapchainFormat());
         swapChainImageViews.at(i) = device->createImageView(createInfo);
+        vk_debug::setObjectName(device.value(), swapChainImageViews.at(i),
+                                "Swapchain Image view nb " + std::to_string(i));
     }
     chainDeletionQueue.push([&] {
         for (auto &imageView: swapChainImageViews) { device->destroyImageView(imageView); }

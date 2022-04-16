@@ -14,7 +14,10 @@ bool AssetStorage::loadPngTexture(const std::filesystem::path &path)
     stbi_uc *pixels = stbi_load(path.string().c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
     VkDeviceSize imageSize = texWidth * texHeight * 4;
 
-    if (!pixels) return false;
+    if (!pixels) {
+        logger.err("Asset Storage") << "stbi_load() returned NULL";
+        return false;
+    }
 
     std::vector<std::byte> image(imageSize);
     std::memcpy(image.data(), pixels, imageSize);

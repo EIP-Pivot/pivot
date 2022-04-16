@@ -26,6 +26,10 @@
 
 #include <Logger.hpp>
 
+#include "pivot/graphics/Renderer/CullingRenderer.hxx"
+#include "pivot/graphics/Renderer/GraphicsRenderer.hxx"
+#include "pivot/graphics/Renderer/ImGuiRenderer.hxx"
+
 // #include "Scene.hxx"
 #include "Systems/PhysicsSystem.hxx"
 #include <pivot/ecs/Core/Scene.hxx>
@@ -90,6 +94,9 @@ public:
         cm.RegisterComponent(RenderObject::description);
 
         window.captureCursor(true);
+        addRenderer<pivot::graphics::CullingRenderer>();
+        addRenderer<pivot::graphics::GraphicsRenderer>();
+        addRenderer<pivot::graphics::ImGuiRenderer>();
         window.setKeyReleaseCallback(Window::Key::LEFT_ALT, [&](Window &window, const Window::Key key) {
             window.captureCursor(!window.captureCursor());
             bFirstMouse = window.captureCursor();
@@ -139,8 +146,8 @@ public:
             last = pos;
             ControlSystem::processMouseMovement(camera, glm::dvec2(xoffset, yoffset));
         });
-        assetStorage.loadModels("../editor/assets/cube.obj");
-        assetStorage.loadTextures("../editor/assets/violet.png");
+        assetStorage.loadModels("cube.obj");
+        assetStorage.loadTextures("violet.png");
     }
     void processKeyboard(const Camera::Movement direction, float dt) noexcept
     {

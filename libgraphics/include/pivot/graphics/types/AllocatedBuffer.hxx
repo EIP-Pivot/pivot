@@ -5,7 +5,7 @@
 
 namespace pivot::graphics
 {
-
+template <typename T>
 /// @class AllocatedBuffer
 ///
 /// @brief Utility class to keep track of a Vulkan buffer and its allocated memory
@@ -16,8 +16,9 @@ public:
     auto getSize() const noexcept { return size; }
     /// get the allocated size (can be different from the size)
     auto getAllocatedSize() const noexcept { return info.size; }
+    /// get the byte size
+    auto getBytesSize() const noexcept { return getSize() * sizeof(T); }
 
-    template <typename T>
     /// If the buffer was created with the flag vma::AllocationCreateFlagBits::eMapped, return the mapped pointer
     T *getMappedPointer() const noexcept
     {

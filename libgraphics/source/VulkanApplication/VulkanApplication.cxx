@@ -155,7 +155,7 @@ try {
 
     frame.drawResolver.prepareForDraw(sceneInformation);
     for (auto &[rendy, buffers]: computeRenderer) {
-        auto &cmdBuf = buffers.at(imageIndex);
+        auto &cmdBuf = buffers.at(currentFrame);
         cmdBuf.reset();
         vk_utils::vk_try(cmdBuf.begin(&computeInfo));
         rendy->onDraw(cameraData, frame.drawResolver, cmdBuf);
@@ -163,7 +163,7 @@ try {
         computeBuffer.push_back(cmdBuf);
     }
     for (auto &[rendy, buffers]: graphicsRenderer) {
-        auto &cmdBuf = buffers.at(imageIndex);
+        auto &cmdBuf = buffers.at(currentFrame);
         cmdBuf.reset();
         vk_utils::vk_try(cmdBuf.begin(&drawBeginInfo));
         rendy->onDraw(cameraData, frame.drawResolver, cmdBuf);

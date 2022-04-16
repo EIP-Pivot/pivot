@@ -8,7 +8,10 @@ namespace
 {
 std::unique_ptr<IComponentArray> emptyCreateContainer(Description) { return std::unique_ptr<IComponentArray>(nullptr); }
 
-Description emptyComponent(const std::string &name) { return {name, {}, emptyCreateContainer}; }
+Description emptyComponent(const std::string &name)
+{
+    return {name, {}, pivot::ecs::Provenance::builtin(), emptyCreateContainer};
+}
 }    // namespace
 
 class TestType1

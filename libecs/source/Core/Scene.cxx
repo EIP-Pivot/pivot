@@ -79,13 +79,19 @@ void Scene::save(const std::filesystem::path &path) const
 {
     // serialize scene
     nlohmann::json output;
+    std::set<std::string> scriptUsed;
     output["name"] = name;
-    for (auto &[entity, _]: mEntityManager.getEntities())
-        for (pivot::ecs::component::ComponentRef ref: mComponentManager.GetAllComponents(entity))
+    for (auto &[entity, _]: mEntityManager.getEntities()) {
+        for (pivot::ecs::component::ComponentRef ref: mComponentManager.GetAllComponents(entity)) {
+            auto &provenance = ref.description().provenance;
+            if (provenance.isExternalRessource()) scriptUsed.insert(provenance.getExternalRessource());
             output["components"][entity][ref.description().name] = nlohmann::json(ref.get());
+        }
+    }
     std::vector<std::string> systems;
     for (auto &[systemName, _]: mSystemManager) { systems.push_back(systemName); }
     output["systems"] = systems;
+    output["scripts"] = scriptUsed;
     // write in file
     std::ofstream out(path);
     out << std::setw(4) << output << std::endl;

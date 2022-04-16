@@ -29,7 +29,7 @@ Entity Scene::CreateEntity(std::string newName)
     return newEntity;
 }
 
-std::unordered_map<Entity, Signature> Scene::getEntities() { return mEntityManager.getEntities(); }
+std::unordered_map<Entity, Signature> Scene::getEntities() const { return mEntityManager.getEntities(); }
 
 void Scene::DestroyEntity(Entity entity)
 {
@@ -75,7 +75,7 @@ pivot::ecs::event::Manager &Scene::getEventManager() { return mEventManager; }
 
 const pivot::ecs::event::Manager &Scene::getEventManager() const { return mEventManager; }
 
-void Scene::save(const std::filesystem::path &path)
+void Scene::save(const std::filesystem::path &path) const
 {
     // serialize scene
     nlohmann::json output;

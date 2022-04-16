@@ -16,7 +16,7 @@ public:
     void DestroyEntity(Entity entity);
     void SetSignature(Entity entity, Signature signature);
     Signature GetSignature(Entity entity);
-    std::unordered_map<Entity, Signature> getEntities();
+    std::unordered_map<Entity, Signature> getEntities() const;
     uint32_t getLivingEntityCount();
 
 private:

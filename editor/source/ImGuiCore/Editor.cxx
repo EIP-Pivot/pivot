@@ -27,7 +27,8 @@ void Editor::create(pivot::Engine &engine)
         if (ImGui::Selectable(" +", false, 0, newSceneSize)) { ImGui::OpenPopup("AddScene"); }
         ImGui::Separator();
         if (ImGui::Button("Save")) {
-            m_sceneManager.getCurrentLevel().save("scene/" + m_sceneManager.getCurrentLevel().getName() + ".json");
+            const auto &scene = m_sceneManager.getCurrentScene();
+            scene.save("scene/" + scene.getName() + ".json");
         }
         ImGui::Separator();
         if (ImGui::RadioButton("Translate", currentGizmoOperation == ImGuizmo::TRANSLATE))

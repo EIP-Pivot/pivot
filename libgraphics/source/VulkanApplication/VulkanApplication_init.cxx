@@ -18,147 +18,34 @@ namespace pivot::graphics
 void VulkanApplication::createRenderPass()
 {
     DEBUG_FUNCTION
-    vk::AttachmentDescription colorAttachment{
-        .format = swapchain.getSwapchainFormat(),
-        .samples = maxMsaaSample,
-        .loadOp = vk::AttachmentLoadOp::eClear,
-        .storeOp = vk::AttachmentStoreOp::eDontCare,
-        .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
-        .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
-        .initialLayout = vk::ImageLayout::eUndefined,
-        .finalLayout = vk::ImageLayout::eColorAttachmentOptimal,
-    };
-    vk::AttachmentDescription depthAttachment{
-        .format = pivot::graphics::vk_utils::findSupportedFormat(
-            physical_device, {vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint},
-            vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment),
-        .samples = maxMsaaSample,
-        .loadOp = vk::AttachmentLoadOp::eClear,
-        .storeOp = vk::AttachmentStoreOp::eDontCare,
-        .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
-        .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
-        .initialLayout = vk::ImageLayout::eUndefined,
-        .finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal,
-    };
     vk::AttachmentDescription colorAttachmentResolve{
         .format = swapchain.getSwapchainFormat(),
         .samples = vk::SampleCountFlagBits::e1,
         .loadOp = vk::AttachmentLoadOp::eDontCare,
-        .storeOp = vk::AttachmentStoreOp::eStore,
+        .storeOp = vk::AttachmentStoreOp::eDontCare,
         .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
         .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
         .initialLayout = vk::ImageLayout::eUndefined,
         .finalLayout = vk::ImageLayout::ePresentSrcKHR,
     };
-    vk::AttachmentReference colorAttachmentRef{
-        .attachment = 0,
-        .layout = vk::ImageLayout::eColorAttachmentOptimal,
-    };
-    vk::AttachmentReference depthAttachmentRef{
-        .attachment = 1,
-        .layout = vk::ImageLayout::eDepthStencilAttachmentOptimal,
-    };
-    vk::AttachmentReference colorAttachmentResolveRef{
-        .attachment = 2,
-        .layout = vk::ImageLayout::eColorAttachmentOptimal,
-    };
-    vk::SubpassDescription subpass{
-        .pipelineBindPoint = vk::PipelineBindPoint::eGraphics,
-        .colorAttachmentCount = 1,
-        .pColorAttachments = &colorAttachmentRef,
-        .pResolveAttachments = &colorAttachmentResolveRef,
-        .pDepthStencilAttachment = &depthAttachmentRef,
-    };
-    vk::SubpassDependency dependency{
-        .srcSubpass = VK_SUBPASS_EXTERNAL,
-        .dstSubpass = 0,
-        .srcStageMask =
-            vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests,
-        .dstStageMask =
-            vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests,
-        .srcAccessMask = vk::AccessFlagBits::eNoneKHR,
-        .dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite,
-    };
+    const auto depthFormat =
+        vk_utils::findSupportedFormat(physical_device,
+                                      {
+                                          vk::Format::eD32Sfloat,
+                                          vk::Format::eD32SfloatS8Uint,
+                                          vk::Format::eD24UnormS8Uint,
+                                      },
+                                      vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
 
-    std::array<vk::AttachmentDescription, 3> attachments = {colorAttachment, depthAttachment, colorAttachmentResolve};
-    vk::RenderPassCreateInfo renderPassInfo{
-        .attachmentCount = static_cast<uint32_t>(attachments.size()),
-        .pAttachments = attachments.data(),
-        .subpassCount = 1,
-        .pSubpasses = &subpass,
-        .dependencyCount = 1,
-        .pDependencies = &dependency,
-    };
-    renderPass = device.createRenderPass(renderPassInfo);
+    renderPass.addAttachement(VulkanRenderPass::Color, swapchain.getSwapchainFormat(), maxMsaaSample,
+                              vk::ImageLayout::eColorAttachmentOptimal);
+    renderPass.addAttachement(VulkanRenderPass::Depth, depthFormat, maxMsaaSample,
+                              vk::ImageLayout::eDepthReadOnlyStencilAttachmentOptimal);
+    renderPass.addAttachement(VulkanRenderPass::Resolve, colorAttachmentResolve);
+    renderPass.build(device);
 
-    swapchainDeletionQueue.push([&] { device.destroy(renderPass); });
-}
-
-void VulkanApplication::createPipelineLayout()
-{
-    DEBUG_FUNCTION
-    std::vector<vk::PushConstantRange> pipelinePushConstant = {
-        vk_init::populateVkPushConstantRange(vk::ShaderStageFlagBits::eVertex, sizeof(gpu_object::VertexPushConstant)),
-        vk_init::populateVkPushConstantRange(vk::ShaderStageFlagBits::eFragment,
-                                             sizeof(gpu_object::FragmentPushConstant),
-                                             sizeof(gpu_object::VertexPushConstant)),
-    };
-
-    std::vector<vk::DescriptorSetLayout> setLayout = {drawResolver.getDescriptorSetLayout(), ressourcesSetLayout};
-    auto pipelineLayoutCreateInfo = vk_init::populateVkPipelineLayoutCreateInfo(setLayout, pipelinePushConstant);
-    pipelineLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
-    mainDeletionQueue.push([&] { device.destroy(pipelineLayout); });
-}
-
-void VulkanApplication::createCullingPipelineLayout()
-{
-    DEBUG_FUNCTION
-    std::vector<vk::PushConstantRange> pipelinePushConstant = {vk_init::populateVkPushConstantRange(
-        vk::ShaderStageFlagBits::eCompute, sizeof(gpu_object::CullingPushConstant))};
-    std::vector<vk::DescriptorSetLayout> setLayout = {drawResolver.getDescriptorSetLayout(), ressourcesSetLayout};
-    auto pipelineLayoutCreateInfo = vk_init::populateVkPipelineLayoutCreateInfo(setLayout, pipelinePushConstant);
-    cullingLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
-    mainDeletionQueue.push([&] { device.destroy(cullingLayout); });
-}
-
-void VulkanApplication::createPipeline()
-{
-    DEBUG_FUNCTION
-
-    pivot::graphics::GraphicsPipelineBuilder builder(swapchain.getSwapchainExtent());
-    builder.setPipelineLayout(pipelineLayout)
-        .setRenderPass(renderPass)
-        .setMsaaSample(maxMsaaSample)
-        .setFaceCulling(vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise)
-        .setVertexShaderPath("shaders/default.vert.spv")
-        .setFragmentShaderPath("shaders/default_lit.frag.spv");
-    pipelineStorage.newPipeline("lit", builder);
-    pipelineStorage.setDefault("lit");
-
-    builder.setFragmentShaderPath("shaders/default_unlit.frag.spv");
-    pipelineStorage.newPipeline("unlit", builder);
-
-    builder.setPolygonMode(vk::PolygonMode::eLine);
-    pipelineStorage.newPipeline("wireframe", builder);
-
-    builder.setPolygonMode(vk::PolygonMode::eFill);
-    builder.setFaceCulling(vk::CullModeFlagBits::eFront, vk::FrontFace::eCounterClockwise);
-    pipelineStorage.newPipeline("skybox", builder);
-
-    swapchainDeletionQueue.push([&] {
-        pipelineStorage.removePipeline("lit");
-        pipelineStorage.removePipeline("unlit");
-        pipelineStorage.removePipeline("wireframe");
-        pipelineStorage.removePipeline("skybox");
-    });
-}
-
-void VulkanApplication::createCullingPipeline()
-{
-    DEBUG_FUNCTION
-    pivot::graphics::ComputePipelineBuilder builder;
-    builder.setPipelineLayout(cullingLayout).setComputeShaderPath("shaders/culling.comp.spv");
-    pipelineStorage.newPipeline("culling", builder);
+    vk_debug::setObjectName(device, renderPass.getRenderPass(), "Main Render Pass");
+    swapchainDeletionQueue.push([&] { renderPass.destroy(device); });
 }
 
 void VulkanApplication::createFramebuffers()
@@ -170,7 +57,7 @@ void VulkanApplication::createFramebuffers()
                                                     swapchain.getSwapchainImageView(i)};
 
         vk::FramebufferCreateInfo framebufferInfo{
-            .renderPass = renderPass,
+            .renderPass = renderPass.getRenderPass(),
             .width = swapchain.getSwapchainExtent().width,
             .height = swapchain.getSwapchainExtent().height,
             .layers = 1,
@@ -178,7 +65,7 @@ void VulkanApplication::createFramebuffers()
         framebufferInfo.setAttachments(attachments);
 
         swapChainFramebuffers.at(i) = device.createFramebuffer(framebufferInfo);
-        vk_debug::setObjectName(device, swapChainFramebuffers.at(i), "FrameBuffer " + std::to_string(i));
+        vk_debug::setObjectName(device, swapChainFramebuffers.at(i), "FrameBuffer nb " + std::to_string(i));
     }
     swapchainDeletionQueue.push([&] {
         for (auto &framebuffer: swapChainFramebuffers) { device.destroy(framebuffer); }
@@ -194,12 +81,7 @@ void VulkanApplication::createCommandPool()
     };
     commandPool = device.createCommandPool(poolInfo);
     vk_debug::setObjectName(device, commandPool, "Main Command Pool");
-    imguiContext.cmdPool = device.createCommandPool(poolInfo);
-    vk_debug::setObjectName(device, imguiContext.cmdPool, "ImGui Command Pool");
-    mainDeletionQueue.push([&] {
-        device.destroy(imguiContext.cmdPool);
-        device.destroy(commandPool);
-    });
+    mainDeletionQueue.push([&] { device.destroy(commandPool); });
 }
 
 void VulkanApplication::createCommandBuffers()
@@ -207,216 +89,25 @@ void VulkanApplication::createCommandBuffers()
     DEBUG_FUNCTION
     vk::CommandBufferAllocateInfo allocInfo{
         .commandPool = commandPool,
-        .level = vk::CommandBufferLevel::ePrimary,
-        .commandBufferCount = static_cast<uint32_t>(swapchain.nbOfImage()),
-    };
-    commandBuffersPrimary = device.allocateCommandBuffers(allocInfo);
-
-    vk::CommandBufferAllocateInfo drawInfo{
-        .commandPool = commandPool,
         .level = vk::CommandBufferLevel::eSecondary,
-        .commandBufferCount = static_cast<uint32_t>(swapchain.nbOfImage()),
+        .commandBufferCount = swapchain.nbOfImage(),
     };
-    commandBuffersSecondary = device.allocateCommandBuffers(drawInfo);
-
-    vk::CommandBufferAllocateInfo imguiInfo{
-        .commandPool = imguiContext.cmdPool,
-        .level = vk::CommandBufferLevel::eSecondary,
-        .commandBufferCount = static_cast<uint32_t>(swapchain.nbOfImage()),
-    };
-    imguiContext.cmdBuffer = device.allocateCommandBuffers(imguiInfo);
+    for (auto &[rendy, buffers]: graphicsRenderer) {
+        buffers = device.allocateCommandBuffers(allocInfo);
+        const auto name = rendy->getName() + "/" + rendy->getType() + " Command Buffer (";
+        for (unsigned i = 0; i < buffers.size(); i++)
+            vk_debug::setObjectName(device, buffers[i], name + std::to_string(i) + ")");
+    }
+    for (auto &[rendy, buffers]: computeRenderer) {
+        buffers = device.allocateCommandBuffers(allocInfo);
+        const auto name = rendy->getName() + "/" + rendy->getType() + " Command Buffer (";
+        for (unsigned i = 0; i < buffers.size(); i++)
+            vk_debug::setObjectName(device, buffers[i], name + std::to_string(i) + ")");
+    }
     swapchainDeletionQueue.push([&] {
-        device.free(commandPool, commandBuffersPrimary);
-        device.free(commandPool, commandBuffersSecondary);
-        device.free(imguiContext.cmdPool, imguiContext.cmdBuffer);
+        for (auto &[_, buffers]: computeRenderer) device.freeCommandBuffers(commandPool, buffers);
+        for (auto &[_, buffers]: graphicsRenderer) device.freeCommandBuffers(commandPool, buffers);
     });
-}
-
-void VulkanApplication::createSyncStructure()
-{
-    DEBUG_FUNCTION
-    vk::SemaphoreCreateInfo semaphoreInfo{};
-    vk::FenceCreateInfo fenceInfo{
-        .flags = vk::FenceCreateFlagBits::eSignaled,
-    };
-
-    for (auto &f: frames) {
-        f.imageAvailableSemaphore = device.createSemaphore(semaphoreInfo);
-        f.renderFinishedSemaphore = device.createSemaphore(semaphoreInfo);
-        f.inFlightFences = device.createFence(fenceInfo);
-    }
-
-    mainDeletionQueue.push([&] {
-        for (auto &f: frames) {
-            device.destroy(f.inFlightFences);
-            device.destroy(f.renderFinishedSemaphore);
-            device.destroy(f.imageAvailableSemaphore);
-        }
-    });
-}
-
-void VulkanApplication::createRessourcesDescriptorSetLayout()
-{
-    DEBUG_FUNCTION
-    std::vector<vk::DescriptorBindingFlags> flags{
-        {},
-        {},
-        vk::DescriptorBindingFlagBits::eVariableDescriptorCount | vk::DescriptorBindingFlagBits::ePartiallyBound,
-    };
-
-    vk::DescriptorSetLayoutBindingFlagsCreateInfo bindingInfo{
-        .bindingCount = static_cast<uint32_t>(flags.size()),
-        .pBindingFlags = flags.data(),
-    };
-    vk::DescriptorSetLayoutBinding boundingBoxBinding{
-        .binding = 0,
-        .descriptorType = vk::DescriptorType::eStorageBuffer,
-        .descriptorCount = 1,
-        .stageFlags = vk::ShaderStageFlagBits::eCompute,
-    };
-    vk::DescriptorSetLayoutBinding materialLayoutBinding{
-        .binding = 1,
-        .descriptorType = vk::DescriptorType::eStorageBuffer,
-        .descriptorCount = 1,
-        .stageFlags = vk::ShaderStageFlagBits::eFragment,
-    };
-    vk::DescriptorSetLayoutBinding samplerLayoutBiding{
-        .binding = 2,
-        .descriptorType = vk::DescriptorType::eCombinedImageSampler,
-        .descriptorCount = static_cast<uint32_t>(assetStorage.getTextures().size()),
-        .stageFlags = vk::ShaderStageFlagBits::eFragment,
-    };
-    std::array<vk::DescriptorSetLayoutBinding, 3> bindings = {
-        boundingBoxBinding,
-        materialLayoutBinding,
-        samplerLayoutBiding,
-    };
-    vk::DescriptorSetLayoutCreateInfo ressourcesSetLayoutInfo{
-        .pNext = &bindingInfo,
-        .bindingCount = static_cast<uint32_t>(bindings.size()),
-        .pBindings = bindings.data(),
-    };
-    ressourcesSetLayout = device.createDescriptorSetLayout(ressourcesSetLayoutInfo);
-    vk_debug::setObjectName(device, ressourcesSetLayout, "Ressources Set Layout");
-    mainDeletionQueue.push([&] { device.destroy(ressourcesSetLayout); });
-}
-
-void VulkanApplication::createDescriptorPool()
-{
-    DEBUG_FUNCTION
-    vk::DescriptorPoolSize poolSize[] = {
-        {
-            .type = vk::DescriptorType::eCombinedImageSampler,
-            .descriptorCount = static_cast<uint32_t>(assetStorage.getTextures().size()),
-        },
-        {
-            .type = vk::DescriptorType::eStorageBuffer,
-            .descriptorCount = static_cast<uint32_t>(assetStorage.getMaterialBuffer().getSize()),
-        },
-    };
-
-    vk::DescriptorPoolCreateInfo poolInfo{
-        .maxSets = static_cast<uint32_t>(std::accumulate(poolSize, poolSize + std::size(poolSize), 0,
-                                                         [](auto prev, auto &i) { return prev + i.descriptorCount; })),
-        .poolSizeCount = std::size(poolSize),
-        .pPoolSizes = poolSize,
-    };
-    descriptorPool = device.createDescriptorPool(poolInfo);
-    vk_debug::setObjectName(device, descriptorPool, "Main Descriptor Pool");
-    mainDeletionQueue.push([&] { device.destroyDescriptorPool(descriptorPool); });
-}
-
-void VulkanApplication::createRessourcesDescriptorSets()
-{
-    DEBUG_FUNCTION
-
-    uint32_t counts[] = {static_cast<uint32_t>(assetStorage.getTextures().size())};
-    vk::DescriptorSetVariableDescriptorCountAllocateInfo set_counts{
-        .descriptorSetCount = std::size(counts),
-        .pDescriptorCounts = counts,
-    };
-    vk::DescriptorSetAllocateInfo allocInfo{
-        .pNext = &set_counts,
-        .descriptorPool = descriptorPool,
-        .descriptorSetCount = 1,
-        .pSetLayouts = &ressourcesSetLayout,
-    };
-    ressourceDescriptorSet = device.allocateDescriptorSets(allocInfo).front();
-
-    std::vector<vk::DescriptorImageInfo> imagesInfos;
-    for (auto &t: assetStorage.getTextures().getStorage()) {
-        imagesInfos.push_back({
-            .sampler = textureSampler,
-            .imageView = t.imageView,
-            .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
-        });
-    }
-    auto &materialBuffer = assetStorage.getMaterialBuffer();
-    vk::DescriptorBufferInfo materialInfo{
-        .buffer = materialBuffer.buffer,
-        .offset = 0,
-        .range = materialBuffer.getSize(),
-    };
-    auto &boundingBoxBuffer = assetStorage.getBoundingBoxBuffer();
-    vk::DescriptorBufferInfo boundingBoxInfo{
-        .buffer = boundingBoxBuffer.buffer,
-        .offset = 0,
-        .range = boundingBoxBuffer.getSize(),
-    };
-    std::vector<vk::WriteDescriptorSet> descriptorWrite{
-        {
-            .dstSet = ressourceDescriptorSet,
-            .dstBinding = 0,
-            .dstArrayElement = 0,
-            .descriptorCount = 1,
-            .descriptorType = vk::DescriptorType::eStorageBuffer,
-            .pBufferInfo = &boundingBoxInfo,
-        },
-        {
-            .dstSet = ressourceDescriptorSet,
-            .dstBinding = 1,
-            .dstArrayElement = 0,
-            .descriptorCount = 1,
-            .descriptorType = vk::DescriptorType::eStorageBuffer,
-            .pBufferInfo = &materialInfo,
-        },
-        {
-            .dstSet = ressourceDescriptorSet,
-            .dstBinding = 2,
-            .dstArrayElement = 0,
-            .descriptorCount = static_cast<uint32_t>(imagesInfos.size()),
-            .descriptorType = vk::DescriptorType::eCombinedImageSampler,
-            .pImageInfo = imagesInfos.data(),
-        },
-    };
-    device.updateDescriptorSets(descriptorWrite, 0);
-}
-
-void VulkanApplication::createTextureSampler()
-{
-    DEBUG_FUNCTION
-    vk::PhysicalDeviceProperties properties = physical_device.getProperties();
-
-    vk::SamplerCreateInfo samplerInfo{
-        .magFilter = vk::Filter::eNearest,
-        .minFilter = vk::Filter::eNearest,
-        .mipmapMode = vk::SamplerMipmapMode::eLinear,
-        .addressModeU = vk::SamplerAddressMode::eRepeat,
-        .addressModeV = vk::SamplerAddressMode::eRepeat,
-        .addressModeW = vk::SamplerAddressMode::eRepeat,
-        .mipLodBias = 0.0f,
-        .anisotropyEnable = VK_TRUE,
-        .maxAnisotropy = properties.limits.maxSamplerAnisotropy,
-        .compareEnable = VK_FALSE,
-        .compareOp = vk::CompareOp::eAlways,
-        .minLod = 0.0f,
-        .maxLod = 100,
-        .borderColor = vk::BorderColor::eIntOpaqueBlack,
-        .unnormalizedCoordinates = VK_FALSE,
-    };
-    textureSampler = device.createSampler(samplerInfo);
-    vk_debug::setObjectName(device, textureSampler, "Texture Sampler");
-    mainDeletionQueue.push([&] { device.destroySampler(textureSampler); });
 }
 
 void VulkanApplication::createDepthResources()
@@ -480,74 +171,6 @@ void VulkanApplication::createColorResources()
     swapchainDeletionQueue.push([&] {
         device.destroyImageView(colorImage.imageView);
         allocator.destroyImage(colorImage);
-    });
-}
-
-void VulkanApplication::createImGuiDescriptorPool()
-{
-    DEBUG_FUNCTION;
-    const vk::DescriptorPoolSize pool_sizes[]{
-        {vk::DescriptorType::eSampler, 1000},
-        {vk::DescriptorType::eCombinedImageSampler, 1000},
-        {vk::DescriptorType::eSampledImage, 1000},
-        {vk::DescriptorType::eStorageImage, 1000},
-        {vk::DescriptorType::eUniformTexelBuffer, 1000},
-        {vk::DescriptorType::eStorageTexelBuffer, 1000},
-        {vk::DescriptorType::eUniformBuffer, 1000},
-        {vk::DescriptorType::eStorageBuffer, 1000},
-        {vk::DescriptorType::eUniformBufferDynamic, 1000},
-        {vk::DescriptorType::eStorageBufferDynamic, 1000},
-        {vk::DescriptorType::eInputAttachment, 1000},
-    };
-
-    const vk::DescriptorPoolCreateInfo pool_info{
-        .flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
-        .maxSets = 1000,
-        .poolSizeCount = std::size(pool_sizes),
-        .pPoolSizes = pool_sizes,
-    };
-
-    imguiContext.pool = device.createDescriptorPool(pool_info);
-    vk_debug::setObjectName(device, imguiContext.pool, "ImGui Descriptor Pool");
-    mainDeletionQueue.push([&] { device.destroyDescriptorPool(imguiContext.pool); });
-}
-
-void VulkanApplication::initDearImGui()
-{
-    DEBUG_FUNCTION;
-
-    ImGui_ImplVulkan_LoadFunctions(
-        [](const char *function_name, void *user) {
-            auto loader = reinterpret_cast<vk::DynamicLoader *>(user);
-            return loader->getProcAddress<PFN_vkVoidFunction>(function_name);
-        },
-        &loader);
-
-    ImGui::CreateContext();
-    ImGui_ImplGlfw_InitForVulkan(window.getWindow(), true);
-
-    ImGui_ImplVulkan_InitInfo init_info{};
-
-    init_info.Instance = instance;
-    init_info.PhysicalDevice = physical_device;
-    init_info.Device = device;
-    init_info.QueueFamily = queueIndices.graphicsFamily.value();
-    init_info.Queue = graphicsQueue;
-    init_info.DescriptorPool = imguiContext.pool;
-    init_info.MinImageCount = swapchain.nbOfImage();
-    init_info.ImageCount = swapchain.nbOfImage();
-    init_info.MSAASamples = static_cast<VkSampleCountFlagBits>(maxMsaaSample);
-    init_info.CheckVkResultFn = pivot::graphics::vk_utils::vk_try;
-
-    ImGui_ImplVulkan_Init(&init_info, renderPass);
-
-    immediateCommand([&](vk::CommandBuffer cmd) { ImGui_ImplVulkan_CreateFontsTexture(cmd); });
-    ImGui_ImplVulkan_DestroyFontUploadObjects();
-
-    swapchainDeletionQueue.push([&] {
-        ImGui_ImplVulkan_Shutdown();
-        ImGui_ImplGlfw_Shutdown();
-        ImGui::DestroyContext();
     });
 }
 

@@ -15,9 +15,9 @@ layout (push_constant) uniform readonly constants {
 } cameraData;
 
 struct Material {
+    vec4 baseColor;
     float metallic;
     float roughness;
-    vec4 baseColor;
     int baseColorTexture;
     int metallicRoughnessTexture;
     int normalTexture;
@@ -25,11 +25,11 @@ struct Material {
     int emissiveTexture;
 };
 
-layout (std140, set = 1, binding = 1) readonly buffer ObjectMaterials {
+layout (std140, set = 0, binding = 1) readonly buffer ObjectMaterials {
     Material materials[];
 } objectMaterials;
 
-layout(set = 1, binding = 2) uniform sampler2D texSampler[];
+layout(set = 0, binding = 2) uniform sampler2D texSampler[];
 
 const vec3 lightDirection = vec3(11.0, 16.0, 24.0);
 

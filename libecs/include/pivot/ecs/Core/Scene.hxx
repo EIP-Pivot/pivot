@@ -1,5 +1,12 @@
 #pragma once
 
+#include <filesystem>
+#include <fstream>
+
+#include <nlohmann/json.hpp>
+
+#include <pivot/ecs/Core/Data/value_serialization.hxx>
+
 #include "pivot/ecs/Core/Component/index.hxx"
 #include "pivot/ecs/Core/Component/manager.hxx"
 
@@ -61,7 +68,7 @@ public:
     Entity CreateEntity(std::string newName);
 
     /// Get entity list
-    std::unordered_map<Entity, Signature> getEntities();
+    std::unordered_map<Entity, Signature> getEntities() const;
 
     /// @param[in] entity  Entity to remove.
     void DestroyEntity(Entity entity);
@@ -108,6 +115,8 @@ public:
     builtins::Camera &getCamera();
     /// Get camera list
     std::vector<Entity> &getCameras();
+    /// Save scene in json file
+    void save(const std::filesystem::path &path) const;
 
 private:
     std::string name;

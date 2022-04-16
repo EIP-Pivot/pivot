@@ -24,6 +24,10 @@
 
 #include <Logger.hpp>
 
+#include "pivot/graphics/Renderer/CullingRenderer.hxx"
+#include "pivot/graphics/Renderer/GraphicsRenderer.hxx"
+#include "pivot/graphics/Renderer/ImGuiRenderer.hxx"
+
 #include <pivot/ecs/Core/Scene.hxx>
 #include <pivot/ecs/Core/SceneManager.hxx>
 
@@ -68,6 +72,9 @@ public:
         Scene &scene = *getCurrentScene();
 
         window.captureCursor(true);
+        m_vulkan_application.addRenderer<pivot::graphics::CullingRenderer>();
+        m_vulkan_application.addRenderer<pivot::graphics::GraphicsRenderer>();
+        m_vulkan_application.addRenderer<pivot::graphics::ImGuiRenderer>();
         window.setKeyReleaseCallback(Window::Key::LEFT_ALT, [&](Window &window, const Window::Key key) {
             window.captureCursor(!window.captureCursor());
             bFirstMouse = window.captureCursor();
@@ -117,8 +124,8 @@ public:
             pivot::builtins::systems::ControlSystem::processMouseMovement(m_camera, glm::dvec2(xoffset, yoffset));
         });
 
-        m_vulkan_application.assetStorage.loadModels("../editor/assets/cube.obj");
-        m_vulkan_application.assetStorage.loadTextures("../editor/assets/violet.png");
+        m_vulkan_application.assetStorage.loadModels("cube.obj");
+        m_vulkan_application.assetStorage.loadTextures("violet.png");
     }
     void processKeyboard(const pivot::builtins::Camera::Movement direction, float dt) noexcept
     {
@@ -172,10 +179,9 @@ public:
 
     void onTick(float dt) override
     {
-
         imGuiManager.newFrame();
 
-        editor.create(*this);
+        editor.create(*this, m_vulkan_application.pipelineStorage);
         m_paused = !editor.getRun();
         if (m_paused) {
             editor.setAspectRatio(m_vulkan_application.getAspectRatio());

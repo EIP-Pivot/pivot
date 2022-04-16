@@ -120,6 +120,8 @@ public:
 
         m_vulkan_application.assetStorage.loadModels("../editor/assets/cube.obj");
         m_vulkan_application.assetStorage.loadTextures("../editor/assets/violet.png");
+
+        editor.init(m_vulkan_application);
     }
     void processKeyboard(const Camera::Movement direction, float dt) noexcept
     {
@@ -171,7 +173,6 @@ public:
 
     void onTick(float dt) override
     {
-
         imGuiManager.newFrame();
 
         editor.create(*this);

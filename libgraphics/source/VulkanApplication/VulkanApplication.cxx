@@ -11,8 +11,8 @@ namespace pivot::graphics
 VulkanApplication::VulkanApplication()
     : VulkanBase("Pivot Game Engine", true),
       assetStorage(*this),
-      drawResolver(*this, assetStorage),
-      pipelineStorage(*this)
+      pipelineStorage(*this),
+      drawResolver(*this, assetStorage)
 {
     DEBUG_FUNCTION;
 

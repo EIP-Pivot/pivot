@@ -130,22 +130,26 @@ void VulkanApplication::createPipeline()
         .setRenderPass(renderPass)
         .setMsaaSample(maxMsaaSample)
         .setFaceCulling(vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise)
-        .setVertexShaderPath("shaders/default.vert.spv")
-        .setFragmentShaderPath("shaders/default_lit.frag.spv");
-    pipelineStorage.newPipeline("lit", builder);
-    pipelineStorage.setDefault("lit");
+        .setVertexShaderPath("shaders/default_pbr.vert.spv")
+        .setFragmentShaderPath("shaders/default_pbr.frag.spv");
+    pipelineStorage.newGraphicsPipeline("pbr", builder);
+    pipelineStorage.setDefault("pbr");
+
+    builder.setVertexShaderPath("shaders/default.vert.spv").setFragmentShaderPath("shaders/default_lit.frag.spv");
+    pipelineStorage.newGraphicsPipeline("lit", builder);
 
     builder.setFragmentShaderPath("shaders/default_unlit.frag.spv");
-    pipelineStorage.newPipeline("unlit", builder);
+    pipelineStorage.newGraphicsPipeline("unlit", builder);
 
     builder.setPolygonMode(vk::PolygonMode::eLine);
-    pipelineStorage.newPipeline("wireframe", builder);
+    pipelineStorage.newGraphicsPipeline("wireframe", builder);
 
-    builder.setPolygonMode(vk::PolygonMode::eFill);
-    builder.setFaceCulling(vk::CullModeFlagBits::eFront, vk::FrontFace::eCounterClockwise);
-    pipelineStorage.newPipeline("skybox", builder);
+    builder.setPolygonMode(vk::PolygonMode::eFill)
+        .setFaceCulling(vk::CullModeFlagBits::eFront, vk::FrontFace::eCounterClockwise);
+    pipelineStorage.newGraphicsPipeline("skybox", builder);
 
     swapchainDeletionQueue.push([&] {
+        pipelineStorage.removePipeline("pbr");
         pipelineStorage.removePipeline("lit");
         pipelineStorage.removePipeline("unlit");
         pipelineStorage.removePipeline("wireframe");
@@ -158,7 +162,7 @@ void VulkanApplication::createCullingPipeline()
     DEBUG_FUNCTION
     pivot::graphics::ComputePipelineBuilder builder;
     builder.setPipelineLayout(cullingLayout).setComputeShaderPath("shaders/culling.comp.spv");
-    pipelineStorage.newPipeline("culling", builder);
+    pipelineStorage.newComputePipeline("culling", builder);
 }
 
 void VulkanApplication::createFramebuffers()

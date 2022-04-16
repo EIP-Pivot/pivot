@@ -69,9 +69,9 @@ public:
     /// It is safe to call if the buffer has been created with vma::AllocationCreateFlagBits::eMapped.
     void unmapMemory(AllocatedBuffer &buffer) { allocator.unmapMemory(buffer.memory); }
 
+    /// Copy the data into a buffer
     template <typename T>
     requires std::is_standard_layout_v<T>
-    /// Copy the data into a buffer
     void copyBuffer(AllocatedBuffer &buffer, const T *data, size_t size)
     {
         assert(buffer.getSize() >= size);
@@ -80,9 +80,9 @@ public:
         unmapMemory(buffer);
     }
 
+    /// Copy the vector into the buffer
     template <typename T>
     requires std::is_standard_layout_v<T>
-    /// Copy the vector into the buffer
     void copyBuffer(AllocatedBuffer &buffer, const std::span<T> &data)
     {
         copyBuffer(buffer, data.data(), sizeof(T) * data.size());

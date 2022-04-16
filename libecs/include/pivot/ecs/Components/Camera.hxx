@@ -7,11 +7,11 @@
 #include <pivot/ecs/Core/Component/description.hxx>
 
 #ifndef PIVOT_MAX_PROJECTION_LIMIT
-#define PIVOT_MAX_PROJECTION_LIMIT 10000.0f
+    #define PIVOT_MAX_PROJECTION_LIMIT 10000.0f
 #endif
 
 #ifndef PIVOT_MIN_PROJECTION_LIMIT
-#define PIVOT_MIN_PROJECTION_LIMIT 0.1f
+    #define PIVOT_MIN_PROJECTION_LIMIT 0.1f
 #endif
 
 /// @class Camera

@@ -141,30 +141,37 @@ if (NOT imguizmo_POPULATED)
     target_link_libraries(imguizmo PRIVATE imgui)
 endif()
 
+
 add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/types/Vertex.cxx
+                                   source/types/Frame.cxx
                                    source/types/UniformBufferObject.cxx
                                    source/Window.cxx
                                    source/vk_utils.cxx
                                    source/vk_init.cxx
                                    source/vk_debug.cxx
+                                   source/VulkanRenderPass.cxx
                                    source/SwapchainSupportDetails.cxx
                                    source/PipelineBuilders/GraphicsPipelineBuilder.cxx
                                    source/PipelineBuilders/ComputePipelineBuilder.cxx
                                    source/VulkanAllocator.cxx
                                    source/VulkanLoader.cxx
                                    source/VulkanSwapchain.cxx
-                                   source/AssetsStorage/AssetsStorage.cxx
-                                   source/AssetsStorage/Loaders/AssetsStorage_obj.cxx
-                                   source/AssetsStorage/Loaders/AssetsStorage_png.cxx
-                                   source/AssetsStorage/Loaders/AssetsStorage_gltf.cxx
-                                   source/AssetsStorage/Loaders/AssetsStorage_ktx.cxx
+                                   source/AssetsStorage/AssetStorage.cxx
+                                   source/AssetsStorage/AssetStorage_init.cxx
+                                   source/AssetsStorage/Loaders/AssetStorage_obj.cxx
+                                   source/AssetsStorage/Loaders/AssetStorage_png.cxx
+                                   source/AssetsStorage/Loaders/AssetStorage_jpg.cxx
+                                   source/AssetsStorage/Loaders/AssetStorage_gltf.cxx
+                                   source/AssetsStorage/Loaders/AssetStorage_ktx.cxx
                                    source/VulkanApplication/VulkanApplication.cxx
                                    source/VulkanApplication/VulkanApplication_init.cxx
-                                   source/VulkanApplication/VulkanApplication_draw.cxx
                                    source/VulkanBase/VulkanBase.cxx
                                    source/VulkanBase/VulkanBase_init.cxx
                                    source/VulkanBase/VulkanBase_static.cxx
+                                   source/Renderer/CullingRenderer.cxx
+                                   source/Renderer/GraphicsRenderer.cxx
+                                   source/Renderer/ImGuiRenderer.cxx
                                    source/abstract/AImmediateCommand.cxx
                                    source/culling.cxx
                                    source/DrawCallResolver.cxx
@@ -173,12 +180,16 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE <vulkan/vulkan.hpp> <vk_mem_alloc.hpp>)
 
+set(PIVOT_ASSET_DEFAULT_DIRECTORY "${CMAKE_SOURCE_DIR}/editor/assets/" CACHE STRING "Path to the default lookup directory for the asset loading")
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC
   VULKAN_HPP_NO_CONSTRUCTORS
   VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
   VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1
+  PIVOT_ASSET_DEFAULT_DIRECTORY="${PIVOT_ASSET_DEFAULT_DIRECTORY}"
 )
+
+
 
 add_shader(${PROJECT_NAME} default.vert)
 add_shader(${PROJECT_NAME} default_pbr.vert)
@@ -207,4 +218,5 @@ target_link_libraries(${PROJECT_NAME} PUBLIC logger
 build_tests(${PROJECT_NAME}
   tests/culling.cxx
   tests/bounding_box.cxx
-  )
+  tests/indexed_storage.cxx
+)

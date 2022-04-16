@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pivot/graphics/VulkanException.hxx"
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 #include "pivot/graphics/types/AllocatedImage.hxx"
 #include "pivot/graphics/types/common.hxx"
@@ -27,11 +28,25 @@ public:
     /// Perform an command on the GPU immediately and wait for it to complete
     void immediateCommand(std::function<void(vk::CommandBuffer &)> cmd);
 
+    template <typename T>
     /// Copy the source buffer into the destination
-    void copyBuffer(AllocatedBuffer &src, AllocatedBuffer &dst);
+    void copyBuffer(AllocatedBuffer<T> &src, AllocatedBuffer<T> &dst)
+    {
+        if (src.getSize() > dst.getAllocatedSize()) throw VulkanException("The destination buffer is too small");
+
+        immediateCommand([&](vk::CommandBuffer &cmd) {
+            vk::BufferCopy copyRegion{
+                .srcOffset = 0,
+                .dstOffset = 0,
+                .size = src.getSize(),
+            };
+            cmd.copyBuffer(src.buffer, dst.buffer, copyRegion);
+        });
+        dst.size = src.getSize();
+    }
 
     /// Copy buffer to image
-    void copyBufferToImage(const AllocatedBuffer &srdBuffer, AllocatedImage &dstImage);
+    void copyBufferToImage(const AllocatedBuffer<std::byte> &srdBuffer, AllocatedImage &dstImage);
     /// Generate mipmaps for the image
     void generateMipmaps(AllocatedImage &image, uint32_t mipLevel);
 

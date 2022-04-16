@@ -1,5 +1,6 @@
 #include "pivot/graphics/PipelineBuilders/ComputePipelineBuilder.hxx"
 
+#include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
@@ -24,6 +25,7 @@ vk::Pipeline ComputePipelineBuilder::build(vk::Device &device, vk::PipelineCache
     auto computeShaderModule = vk_utils::createShaderModule(device, computeShaderCode);
     auto computeShaderStage =
         vk_init::populateVkPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eCompute, computeShaderModule);
+    vk_debug::setObjectName(device, computeShaderModule, shaderPath);
 
     vk::ComputePipelineCreateInfo pipelineInfo{
         .stage = computeShaderStage,

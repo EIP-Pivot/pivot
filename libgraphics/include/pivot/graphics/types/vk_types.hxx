@@ -65,7 +65,4 @@ struct CameraData {
     glm::mat4 viewProjection;
 };
 
-/// Indicated the number of frame rendered in advance by the engine
-constexpr const auto MaxFrameInFlight = 3;
-
 }    // namespace pivot::graphics

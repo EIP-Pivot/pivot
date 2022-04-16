@@ -26,6 +26,10 @@
 
 #include <Logger.hpp>
 
+#include "pivot/graphics/Renderer/CullingRenderer.hxx"
+#include "pivot/graphics/Renderer/GraphicsRenderer.hxx"
+#include "pivot/graphics/Renderer/ImGuiRenderer.hxx"
+
 // #include "Scene.hxx"
 #include "Systems/PhysicsSystem.hxx"
 #include <pivot/ecs/Core/Scene.hxx>
@@ -69,6 +73,9 @@ public:
         Scene &scene = *getCurrentScene();
 
         window.captureCursor(true);
+        addRenderer<pivot::graphics::CullingRenderer>();
+        addRenderer<pivot::graphics::GraphicsRenderer>();
+        addRenderer<pivot::graphics::ImGuiRenderer>();
         window.setKeyReleaseCallback(Window::Key::LEFT_ALT, [&](Window &window, const Window::Key key) {
             window.captureCursor(!window.captureCursor());
             bFirstMouse = window.captureCursor();
@@ -118,8 +125,8 @@ public:
             pivot::builtins::systems::ControlSystem::processMouseMovement(m_camera, glm::dvec2(xoffset, yoffset));
         });
 
-        m_vulkan_application.assetStorage.loadModels("../editor/assets/cube.obj");
-        m_vulkan_application.assetStorage.loadTextures("../editor/assets/violet.png");
+        m_vulkan_application.assetStorage.loadModels("cube.obj");
+        m_vulkan_application.assetStorage.loadTextures("violet.png");
 
         editor.init(m_vulkan_application);
     }

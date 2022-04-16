@@ -13,8 +13,8 @@
 class SystemsEditor
 {
 public:
-    SystemsEditor(const pivot::ecs::systems::Index &index, pivot::ecs::SceneManager &sceneManager)
-        : m_index(index), m_sceneManager(sceneManager){};
+    SystemsEditor(const pivot::ecs::systems::Index &index, pivot::ecs::CurrentScene scene)
+        : m_index(index), m_scene(scene){};
 
     void create();
 
@@ -24,5 +24,5 @@ private:
     void createPopUp();
 
     const pivot::ecs::systems::Index &m_index;
-    pivot::ecs::SceneManager &m_sceneManager;
+    pivot::ecs::CurrentScene m_scene;
 };

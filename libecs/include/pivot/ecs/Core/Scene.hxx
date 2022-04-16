@@ -52,7 +52,7 @@ public:
     Scene(std::string sceneName = "Scene");
 
     /// Get scene name
-    std::string getName();
+    const std::string &getName() const;
 
     /// Set scene name
     void setName(std::string newName) { name = newName; }
@@ -67,7 +67,7 @@ public:
     Entity CreateEntity(std::string newName);
 
     /// Get entity list
-    std::unordered_map<Entity, Signature> getEntities();
+    std::unordered_map<Entity, Signature> getEntities() const;
 
     /// @param[in] entity  Entity to remove.
     void DestroyEntity(Entity entity);
@@ -115,7 +115,7 @@ public:
     /// Get camera list
     std::vector<Entity> &getCameras();
     /// Save scene in json file
-    void save(const std::filesystem::path &path);
+    void save(const std::filesystem::path &path) const;
 
 private:
     std::string name;

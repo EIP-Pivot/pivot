@@ -1,26 +1,34 @@
-#include "ImGuiCore/Editor.hxx"
+#include <imgui.h>
+// Must be after imgui
+#include <ImGuizmo.h>
+
 #include <glm/gtc/type_ptr.hpp>
 #include <misc/cpp/imgui_stdlib.h>
 
-void Editor::create()
+#include "ImGuiCore/Editor.hxx"
+
+using namespace pivot::ecs;
+
+void Editor::create(pivot::Engine &engine)
 {
     ImVec2 sceneSize = ImVec2(50, 15);
     ImVec2 newSceneSize = ImVec2(20, 15);
     ImGuiIO &io = ImGui::GetIO();
     ImGui::Begin("Editor");
     if (!run) {
-        createPopUp();
-        for (LevelId sceneId = 0; sceneId < m_sceneManager.getLivingScene(); sceneId++) {
-            if (ImGui::Selectable(m_sceneManager.getLevelById(sceneId).getName().c_str(),
-                                  m_sceneManager.getCurrentLevelId() == sceneId, 0, sceneSize)) {
-                m_sceneManager.setCurrentLevelId(sceneId);
+        createPopUp(engine);
+        for (SceneManager::SceneId sceneId = 0; sceneId < m_sceneManager.getLivingScene(); sceneId++) {
+            if (ImGui::Selectable(m_sceneManager.getSceneById(sceneId).getName().c_str(),
+                                  m_sceneManager.getCurrentSceneId() == sceneId, 0, sceneSize)) {
+                engine.changeCurrentScene(sceneId);
             }
             ImGui::SameLine();
         }
         if (ImGui::Selectable(" +", false, 0, newSceneSize)) { ImGui::OpenPopup("AddScene"); }
         ImGui::Separator();
         if (ImGui::Button("Save")) {
-            m_sceneManager.getCurrentLevel().save("scene/" + m_sceneManager.getCurrentLevel().getName() + ".json");
+            const auto &scene = m_sceneManager.getCurrentScene();
+            scene.save("scene/" + scene.getName() + ".json");
         }
         ImGui::Separator();
         if (ImGui::RadioButton("Translate", currentGizmoOperation == ImGuizmo::TRANSLATE))
@@ -81,25 +89,23 @@ void Editor::create()
     ImGui::End();
 }
 
-LevelId Editor::addScene()
+SceneManager::SceneId Editor::addScene(pivot::Engine &engine)
 {
-    LevelId newScene = m_sceneManager.registerLevel();
-    m_sceneManager.setCurrentLevelId(newScene);
+    SceneManager::SceneId newScene = engine.registerScene();
+    engine.changeCurrentScene(newScene);
     // m_sceneManager.getCurrentLevel().Init();
     return newScene;
 }
 
-LevelId Editor::addScene(std::string name)
+SceneManager::SceneId Editor::addScene(pivot::Engine &engine, std::string name)
 {
-    LevelId newScene = m_sceneManager.registerLevel(name);
-    m_sceneManager.setCurrentLevelId(newScene);
+    SceneManager::SceneId newScene = engine.registerScene(name);
+    engine.changeCurrentScene(newScene);
     // m_sceneManager.getCurrentLevel().Init();
     return newScene;
 }
 
 bool Editor::getRun() { return run; }
-
-Camera &Editor::getCamera() { return camera; }
 
 void Editor::setAspectRatio(float aspect) { aspectRatio = aspect; }
 
@@ -119,16 +125,16 @@ void Editor::DisplayGuizmo(Entity entity)
     //                      useSnap ? &snap[0] : NULL);
 }
 
-void Editor::createPopUp()
+void Editor::createPopUp(pivot::Engine &engine)
 {
     if (ImGui::BeginPopup("AddScene")) {
         static std::string sceneName;
         ImGui::SetKeyboardFocusHere();
         if (ImGui::InputText("##", &sceneName, ImGuiInputTextFlags_EnterReturnsTrue)) {
             if (sceneName.empty())
-                addScene();
+                addScene(engine);
             else
-                addScene(sceneName);
+                addScene(engine, sceneName);
             sceneName.clear();
             ImGui::CloseCurrentPopup();
         }

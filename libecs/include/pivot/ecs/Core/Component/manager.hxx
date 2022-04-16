@@ -61,7 +61,7 @@ private:
 
 public:
     /// Returns a range containing all components of the entity
-    auto GetAllComponents(Entity entity)
+    auto GetAllComponents(Entity entity) const
     {
         return m_componentArrays |
                std::views::filter([entity](const auto &array) { return array->entityHasValue(entity); }) |

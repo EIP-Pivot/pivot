@@ -13,7 +13,7 @@ void SystemsEditor::create()
 
 void SystemsEditor::createPopUp()
 {
-    auto &sm = m_sceneManager.getCurrentLevel().getSystemManager();
+    auto &sm = m_scene->getSystemManager();
     if (ImGui::BeginPopup("AddSystem")) {
         for (const auto &[name, description]: m_index) {
             if (!sm.hasSystem(name))
@@ -25,7 +25,7 @@ void SystemsEditor::createPopUp()
 
 void SystemsEditor::displaySystem()
 {
-    auto &sm = m_sceneManager.getCurrentLevel().getSystemManager();
+    auto &sm = m_scene->getSystemManager();
     for (const auto &[name, description]: sm) {
         if (ImGui::TreeNode(name.c_str())) ImGui::TreePop();
     }

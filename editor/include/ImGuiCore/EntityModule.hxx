@@ -12,8 +12,8 @@
 class EntityModule
 {
 public:
-    EntityModule(pivot::ecs::SceneManager &sceneManager)
-        : m_sceneManager(sceneManager), entitySelected(-1), _hasSelected(false), currentScene(-1){};
+    EntityModule(pivot::ecs::CurrentScene scene)
+        : m_scene(scene), entitySelected(-1), _hasSelected(false), currentScene(-1){};
     void create();
     Entity addEntity();
     Entity addEntity(std::string name);
@@ -24,9 +24,9 @@ public:
 private:
     void createPopUp();
 
-    pivot::ecs::SceneManager &m_sceneManager;
+    pivot::ecs::CurrentScene m_scene;
 
     Entity entitySelected;
     bool _hasSelected;
-    LevelId currentScene;
+    pivot::ecs::SceneManager::SceneId currentScene;
 };

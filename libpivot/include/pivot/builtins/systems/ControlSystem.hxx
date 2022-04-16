@@ -7,6 +7,8 @@
 
 #include <optional>
 
+namespace pivot::builtins::systems
+{
 /// @class ControlSystem
 ///
 /// @brief Control system example, to control camera movement
@@ -42,3 +44,4 @@ private:
 
     // static void processKeyboard(Camera &cam, const Camera::Movement direction, float dt) noexcept;
 };
+}    // namespace pivot::builtins::systems

@@ -73,9 +73,9 @@ public:
         Scene &scene = *getCurrentScene();
 
         window.captureCursor(true);
-        addRenderer<pivot::graphics::CullingRenderer>();
-        addRenderer<pivot::graphics::GraphicsRenderer>();
-        addRenderer<pivot::graphics::ImGuiRenderer>();
+        m_vulkan_application.addRenderer<pivot::graphics::CullingRenderer>();
+        m_vulkan_application.addRenderer<pivot::graphics::GraphicsRenderer>();
+        m_vulkan_application.addRenderer<pivot::graphics::ImGuiRenderer>();
         window.setKeyReleaseCallback(Window::Key::LEFT_ALT, [&](Window &window, const Window::Key key) {
             window.captureCursor(!window.captureCursor());
             bFirstMouse = window.captureCursor();

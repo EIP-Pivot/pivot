@@ -57,9 +57,20 @@ void Editor::create()
             case ImGuizmo::TRANSLATE: ImGui::InputFloat3("Snap", &snap[0]); break;
             case ImGuizmo::ROTATE: ImGui::InputFloat("Angle Snap", &snap[0]); break;
             case ImGuizmo::SCALE: ImGui::InputFloat("Scale Snap", &snap[0]); break;
+            default: break;
         }
         ImGui::Separator();
     }
+    ImGui::Checkbox("Should force pipeline ?", &shouldForce);
+    if (ImGui::BeginCombo("##sample_count", storage->get().getDefaultName().c_str())) {
+        for (const auto &msaa: availableModes) {
+            bool is_selected = (storage->get().getDefaultName() == msaa);
+            if (ImGui::Selectable(msaa.c_str(), is_selected)) { storage->get().setDefault(msaa, shouldForce); }
+            if (is_selected) { ImGui::SetItemDefaultFocus(); }
+        }
+        ImGui::EndCombo();
+    }
+
     ImGui::Text("X: %f Y: %f", io.MousePos.x, io.MousePos.y);
     ImGui::Text("Fps: %.1f", ImGui::GetIO().Framerate);
     ImGui::Text("ms/frame %.3f", 1000.0f / ImGui::GetIO().Framerate);

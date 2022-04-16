@@ -14,8 +14,6 @@ public:
     ComputePipelineBuilder() = default;
     ~ComputePipelineBuilder() = default;
 
-    const char *const getDebugPipelineName() const noexcept { return "Compute Pipeline"; }
-
     ComputePipelineBuilder &setPipelineLayout(vk::PipelineLayout &layout);
 
     /// Set the path of the shader to use

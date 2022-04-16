@@ -97,6 +97,8 @@ private:
 public:
     /// The application asssets storage
     AssetStorage assetStorage;
+    /// The application pipeline storage
+    PipelineStorage pipelineStorage;
 
 private:
     /// @cond
@@ -132,7 +134,6 @@ private:
     AllocatedImage depthResources = {};
     AllocatedImage colorImage = {};
 
-    PipelineStorage pipelineStorage;
     vk::PipelineLayout pipelineLayout = VK_NULL_HANDLE;
     vk::PipelineLayout cullingLayout = VK_NULL_HANDLE;
 

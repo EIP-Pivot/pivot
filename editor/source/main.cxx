@@ -198,6 +198,7 @@ public:
         Entity currentEdit = 0;
         gridSize = 100.f;
         this->VulkanApplication::init();
+        editor.init(*this);
         FrameLimiter<60> fpsLimiter;
         while (!window.shouldClose()) {
             auto startTime = std::chrono::high_resolution_clock::now();

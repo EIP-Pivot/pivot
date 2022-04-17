@@ -11,10 +11,13 @@ bool DescriptorLayoutCache::DescriptorLayoutInfo::operator==(const DescriptorLay
         for (unsigned i = 0; i < bindings.size(); i++) {
             // Can't use operator== , because some field could be pointing to different ressources, but
             // those ressource doesn't matter in this case
-            if (other.bindings.at(i).binding != bindings.at(i).binding) return false;
-            if (other.bindings.at(i).descriptorType != bindings.at(i).descriptorType) return false;
-            if (other.bindings.at(i).descriptorCount != bindings.at(i).descriptorCount) return false;
-            if (other.bindings.at(i).stageFlags != bindings.at(i).stageFlags) return false;
+            const auto &binding = bindings.at(i);
+            const auto &otherBinding = other.bindings.at(i);
+            if (std::make_tuple(binding.binding, binding.descriptorType, binding.descriptorCount, binding.stageFlags) !=
+                std::make_tuple(otherBinding.binding, otherBinding.descriptorType, otherBinding.descriptorCount,
+                                otherBinding.stageFlags)) {
+                return false;
+            }
         }
         return true;
     }

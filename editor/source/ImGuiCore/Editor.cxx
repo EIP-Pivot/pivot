@@ -137,7 +137,7 @@ void Editor::DisplayGuizmo(Entity entity, const pivot::builtins::Camera &camera)
     glm::vec3 rotation_deg;
     ImGuizmo::DecomposeMatrixToComponents(matrix_data, glm::value_ptr(ro.transform.position),
                                           glm::value_ptr(rotation_deg), glm::value_ptr(ro.transform.scale));
-    ro.transform.rotation = rotation_deg * M_PIf / 180.0f;
+    ro.transform.rotation = rotation_deg * (float)M_PI / 180.0f;
 }
 
 void Editor::createPopUp(pivot::Engine &engine)

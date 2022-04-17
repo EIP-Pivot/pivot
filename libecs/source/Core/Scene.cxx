@@ -75,6 +75,39 @@ pivot::ecs::event::Manager &Scene::getEventManager() { return mEventManager; }
 
 const pivot::ecs::event::Manager &Scene::getEventManager() const { return mEventManager; }
 
+EntityManager &Scene::getEntityManager() { return mEntityManager; }
+
+const EntityManager &Scene::getEntityManager() const { return mEntityManager; }
+
+Scene Scene::load(const nlohmann::json &obj, const pivot::ecs::component::Index &cIndex,
+                  const pivot::ecs::systems::Index &sIndex)
+{
+    Scene scene(obj["name"].get<std::string>());
+    auto &componentManager = scene.getComponentManager();
+    auto &entityManager = scene.getEntityManager();
+    auto &systemManager = scene.getSystemManager();
+
+    for (auto entities: obj["components"]) {
+        auto entity = entityManager.CreateEntity();
+        for (auto &component: entities.items()) {
+            if (!componentManager.GetComponentId(component.key())) {
+                auto description = cIndex.getDescription(component.key());
+                if (!description.has_value()) throw std::runtime_error("Unknown Component " + component.key());
+                componentManager.RegisterComponent(description.value());
+            }
+            auto componentId = componentManager.GetComponentId(component.key());
+            auto componentValue = component.value().get<pivot::ecs::data::Value>();
+            componentManager.AddComponent(entity, componentValue, componentId.value());
+        }
+    }
+    for (auto systems: obj["systems"]) {
+        auto description = sIndex.getDescription(systems.get<std::string>());
+        if (!description.has_value()) throw std::runtime_error("Unknown System " + systems.get<std::string>());
+        systemManager.useSystem(description.value());
+    }
+    return scene;
+}
+
 void Scene::save(const std::filesystem::path &path) const
 {
     // serialize scene

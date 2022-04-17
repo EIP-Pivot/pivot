@@ -20,19 +20,19 @@
 
 #include <pivot/ecs/Core/SceneManager.hxx>
 
-// TODO: Remove using namespace
-using namespace pivot::ecs::component;
-
 class ComponentEditor
 {
 public:
-    ComponentEditor(const Index &index, pivot::ecs::CurrentScene scene): m_index(index), m_scene(scene) {}
+    ComponentEditor(const pivot::ecs::component::Index &index, pivot::ecs::CurrentScene scene)
+        : m_index(index), m_scene(scene)
+    {
+    }
 
     void create(Entity entity);
     void create();
 
 private:
-    void addComponent(const Description &description);
+    void addComponent(const pivot::ecs::component::Description &description);
     void displayComponent();
     void createPopUp();
 
@@ -44,6 +44,6 @@ private:
     std::array<std::string, 8> textures = {"rouge", "vert", "bleu", "cyan", "orange", "jaune", "blanc", "violet"};
     std::array<std::string, 2> models = {"cube", "plane"};
 
-    const Index &m_index;
+    const pivot::ecs::component::Index &m_index;
     pivot::ecs::CurrentScene m_scene;
 };

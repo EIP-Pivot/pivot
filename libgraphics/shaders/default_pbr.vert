@@ -32,7 +32,7 @@ void main() {
     fragColor = inColor;
     fragTextCoords = inTextCoords;
     materialIndex = objectBuffer.objects[gl_BaseInstance].materialIndex;
-    
+
     fragPosition = vec3(objectBuffer.objects[gl_BaseInstance].modelMatrix * vec4(inPosition, 1.0));
     fragNormal = mat3(objectBuffer.objects[gl_BaseInstance].modelMatrix) * inNormal;
     gl_Position = cameraData.viewproj * vec4(fragPosition, 1.0);

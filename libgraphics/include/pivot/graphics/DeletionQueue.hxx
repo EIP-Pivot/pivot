@@ -3,6 +3,8 @@
 #include <deque>
 #include <functional>
 
+namespace pivot::graphics
+{
 /// @class DeletionQueue
 ///
 /// @brief A simple LI.LO struct
@@ -40,3 +42,4 @@ public:
 private:
     std::deque<std::function<void()>> deletor;
 };
+}    // namespace pivot::graphics

@@ -12,6 +12,7 @@ using namespace nlohmann;
 using namespace pivot::ecs::data;
 using namespace pivot::ecs::component;
 using namespace pivot::builtins::components;
+using Transform = pivot::graphics::Transform;
 
 TEST_CASE("transform adapter work", "[graphics]")
 {

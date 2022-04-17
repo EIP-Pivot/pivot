@@ -4,6 +4,7 @@
 #include <iostream>
 
 using namespace pivot::graphics::gpu_object;
+using namespace pivot::graphics;
 
 TEST_CASE("bounding box calculation works", "[bounding_box]")
 {

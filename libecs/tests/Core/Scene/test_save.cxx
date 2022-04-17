@@ -17,7 +17,7 @@ TEST_CASE("Test save scene", "[Scene][save]")
     Scene scene("test");
 
     auto &cManager = scene.getComponentManager();
-    cManager.RegisterComponent(RigidBody::description);
+    cManager.RegisterComponent(pivot::builtins::components::RigidBody::description);
     Entity e = scene.CreateEntity("test");
 
     event::Description event{

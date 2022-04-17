@@ -6,6 +6,7 @@
 #include <boost/fusion/include/adapt_struct.hpp>
 
 using namespace pivot::builtins::components;
+using Transform = pivot::graphics::Transform;
 
 BOOST_FUSION_ADAPT_STRUCT(Transform, position, rotation, scale);
 

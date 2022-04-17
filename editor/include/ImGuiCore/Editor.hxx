@@ -21,26 +21,19 @@ public:
           currentGizmoMode(ImGuizmo::LOCAL),
           useSnap(false),
           aspectRatio(0.f){};
-    void create(pivot::Engine &engine);
+    void create(pivot::Engine &engine, pivot::graphics::PipelineStorage &pipelineStorage);
     pivot::ecs::SceneManager::SceneId addScene(pivot::Engine &engine);
     pivot::ecs::SceneManager::SceneId addScene(pivot::Engine &engine, std::string name);
 
-    void init(pivot::graphics::VulkanApplication &app)
-    {
-        availableModes = app.pipelineStorage.getNames();
-        storage = app.pipelineStorage;
-    }
-
     bool getRun();
     void setAspectRatio(float aspect);
-    void DisplayGuizmo(Entity entity, const Camera &camera);
+    void DisplayGuizmo(Entity entity, const pivot::builtins::Camera &camera);
 
 private:
     void createPopUp(pivot::Engine &engine);
 
     const pivot::ecs::SceneManager &m_sceneManager;
     pivot::ecs::CurrentScene m_currentScene;
-    OptionalRef<pivot::graphics::PipelineStorage> storage;
     bool shouldForce = false;
 
     bool run;

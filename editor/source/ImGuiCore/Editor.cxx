@@ -9,7 +9,7 @@
 
 using namespace pivot::ecs;
 
-void Editor::create(pivot::Engine &engine)
+void Editor::create(pivot::Engine &engine, pivot::graphics::PipelineStorage &pipelineStorage)
 {
     ImVec2 sceneSize = ImVec2(50, 15);
     ImVec2 newSceneSize = ImVec2(20, 15);
@@ -70,10 +70,10 @@ void Editor::create(pivot::Engine &engine)
         ImGui::Separator();
     }
     ImGui::Checkbox("Should force pipeline ?", &shouldForce);
-    if (ImGui::BeginCombo("##sample_count", storage->get().getDefaultName().c_str())) {
-        for (const auto &msaa: availableModes) {
-            bool is_selected = (storage->get().getDefaultName() == msaa);
-            if (ImGui::Selectable(msaa.c_str(), is_selected)) { storage->get().setDefault(msaa, shouldForce); }
+    if (ImGui::BeginCombo("##sample_count", pipelineStorage.getDefaultName().c_str())) {
+        for (const auto &msaa: pipelineStorage.getNames()) {
+            bool is_selected = (pipelineStorage.getDefaultName() == msaa);
+            if (ImGui::Selectable(msaa.c_str(), is_selected)) { pipelineStorage.setDefault(msaa, shouldForce); }
             if (is_selected) { ImGui::SetItemDefaultFocus(); }
         }
         ImGui::EndCombo();
@@ -109,7 +109,7 @@ bool Editor::getRun() { return run; }
 
 void Editor::setAspectRatio(float aspect) { aspectRatio = aspect; }
 
-void Editor::DisplayGuizmo(Entity entity, const Camera &camera)
+void Editor::DisplayGuizmo(Entity entity, const pivot::builtins::Camera &camera)
 {
     using RenderObject = pivot::builtins::components::RenderObject;
 

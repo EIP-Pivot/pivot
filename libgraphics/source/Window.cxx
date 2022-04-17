@@ -5,6 +5,8 @@
 #include <Logger.hpp>
 #include <stdexcept>
 
+namespace pivot::graphics
+{
 Window::Window(std::string n, unsigned w, unsigned h): windowName(n) { initWindow(w, h); }
 
 Window::~Window()
@@ -112,3 +114,4 @@ void Window::keyboard_callback(GLFWwindow *win, int key, int, int action, int)
         default: break;
     }
 }
+}    // namespace pivot::graphics

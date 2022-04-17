@@ -3,8 +3,8 @@
 namespace pivot::internals
 {
 
-graphics::CameraData getGPUCameraData(Camera camera, float fFOV, float fAspectRatio, float fCloseClippingPlane,
-                                      float fFarClippingPlane)
+graphics::CameraData getGPUCameraData(builtins::Camera camera, float fFOV, float fAspectRatio,
+                                      float fCloseClippingPlane, float fFarClippingPlane)
 {
     auto projection = camera.getProjection(fFOV, fAspectRatio, fCloseClippingPlane, fFarClippingPlane);
     projection[1][1] *= -1;

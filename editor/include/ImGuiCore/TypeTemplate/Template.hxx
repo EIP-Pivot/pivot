@@ -9,10 +9,7 @@
 #include <imgui.h>
 #include <misc/cpp/imgui_stdlib.h>
 
-using namespace pivot::ecs::component;
-using namespace pivot::ecs::data;
-
-void draw(Value &value, std::string name);
+void draw(pivot::ecs::data::Value &value, std::string name);
 void draw(glm::vec3 &value, std::string name) { ImGui::InputFloat3(name.c_str(), glm::value_ptr(value)); }
 
 void draw(std::string &value, std::string name) { ImGui::InputText(name.c_str(), &value); }
@@ -32,12 +29,12 @@ void draw(double &value, std::string name)
     // ImGui::InputText("Name", &value);
 }
 
-void draw(Record &values, std::string name)
+void draw(pivot::ecs::data::Record &values, std::string name)
 {
     for (auto &[name, value]: values) draw(value, name);
 }
 
-void draw(Value &value, std::string name)
+void draw(pivot::ecs::data::Value &value, std::string name)
 {
-    std::visit([&name](auto &&arg) { draw(arg, name); }, static_cast<Value::variant &>(value));
+    std::visit([&name](auto &&arg) { draw(arg, name); }, static_cast<pivot::ecs::data::Value::variant &>(value));
 }

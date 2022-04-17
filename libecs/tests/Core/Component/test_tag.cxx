@@ -3,6 +3,7 @@
 #include <pivot/ecs/Core/Component/description_helpers.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
 
+using namespace pivot::ecs;
 using namespace pivot::ecs::component;
 using namespace pivot::ecs::data;
 using namespace pivot::ecs::component::helpers;

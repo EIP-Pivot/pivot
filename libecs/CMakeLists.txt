@@ -47,8 +47,6 @@ endif()
 
 add_library(${PROJECT_NAME} source/Core/Scene.cxx
                             source/Core/EntityManager.cxx
-                            source/Core/EventManager.cxx
-                            source/Core/SystemManager.cxx
                             source/Core/SceneManager.cxx
                             source/Core/Component/description.cxx
                             source/Core/Component/index.cxx

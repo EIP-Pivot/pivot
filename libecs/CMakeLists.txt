@@ -90,5 +90,6 @@ build_tests(${PROJECT_NAME}
   tests/Core/Systems/test_description.cxx
   tests/Core/Event/test_description.cxx
   tests/Core/Event/test_manager.cxx
+  tests/Core/Scene/test_load.cxx
   tests/Core/Scene/test_save.cxx
   )

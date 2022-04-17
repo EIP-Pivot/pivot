@@ -22,6 +22,7 @@ public:
     void changeCurrentScene(ecs::SceneManager::SceneId sceneId);
     ecs::SceneManager::SceneId registerScene();
     ecs::SceneManager::SceneId registerScene(std::string name);
+    void saveScene(ecs::SceneManager::SceneId id, const std::filesystem::path &path);
 
     static constexpr float fov = 80;
 

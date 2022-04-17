@@ -97,4 +97,9 @@ ecs::SceneManager::SceneId Engine::registerScene(std::string name)
     postSceneRegister(m_scene_manager.getSceneById(id));
     return id;
 }
+
+void Engine::saveScene(ecs::SceneManager::SceneId id, const std::filesystem::path &path)
+{
+    m_scene_manager.getSceneById(id).save(path);
+}
 }    // namespace pivot

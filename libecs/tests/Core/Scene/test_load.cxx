@@ -15,9 +15,8 @@ void test_load_scene_system(const pivot::ecs::systems::Description &, pivot::ecs
 
 TEST_CASE("Load the scene", "[Scene][Load]")
 {
-    json obj = json::parse("{\"components\": [{\"Gravity\": {\"force\": [0.0,0.0,0.0]},\"RigidBody\": "
-                           "{\"acceleration\": [0.0,0.0,0.0],\"velocity\": [0.0,0.0,0.0]},\"Tag\": {\"name\": "
-                           "\"yolo\"}}],\"name\": \"Default\",\"systems\":[\"Test Description\"]}");
+    json obj = json::parse(
+        R"({"components": [{"Gravity": {"force": [0.0,0.0,0.0]},"RigidBody": {"acceleration": [0.0,0.0,0.0],"velocity": [0.0,0.0,0.0]},"Tag": {"name": "yolo"}}, {"Gravity": {"force": [0.0,0.0,0.0]},"RigidBody": {"acceleration": [0.0,0.0,0.0],"velocity": [0.0,0.0,0.0]},"Tag": {"name": "alloy"}}],"name": "Default","systems":["Test Description"]})");
 
     pivot::ecs::component::Index cIndex;
     pivot::ecs::systems::Index sIndex;
@@ -43,7 +42,7 @@ TEST_CASE("Load the scene", "[Scene][Load]")
     sIndex.registerSystem(description);
     Scene LaS = Scene::load(obj, cIndex, sIndex);
 
-    REQUIRE(LaS.getLivingEntityCount() == 1);
+    REQUIRE(LaS.getLivingEntityCount() == 2);
 
     auto &cManager = LaS.getComponentManager();
     auto tagId = cManager.GetComponentId("Tag");

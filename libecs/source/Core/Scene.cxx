@@ -82,14 +82,14 @@ const EntityManager &Scene::getEntityManager() const { return mEntityManager; }
 Scene Scene::load(const nlohmann::json &obj, const pivot::ecs::component::Index &cIndex,
                   const pivot::ecs::systems::Index &sIndex)
 {
-    Scene scene(obj["name"].dump());
+    Scene scene(obj["name"].get<std::string>());
     auto &componentManager = scene.getComponentManager();
     auto &entityManager = scene.getEntityManager();
     auto &systemManager = scene.getSystemManager();
 
     for (auto entities: obj["components"]) {
         auto entity = entityManager.CreateEntity();
-        for (auto component = entities.begin(); component != entities.end(); ++component) {
+        for (auto &component: entities.items()) {
             if (!componentManager.GetComponentId(component.key())) {
                 auto description = cIndex.getDescription(component.key());
                 if (!description.has_value()) throw std::runtime_error("Unknown Component " + component.key());

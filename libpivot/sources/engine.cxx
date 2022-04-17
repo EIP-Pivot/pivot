@@ -14,10 +14,10 @@ using namespace pivot::ecs;
 
 namespace pivot
 {
-Engine::Engine(): m_camera(Camera(glm::vec3(0, 200, 500)))
+Engine::Engine(): m_camera(builtins::Camera(glm::vec3(0, 200, 500)))
 {
-    m_component_index.registerComponent(Gravity::description);
-    m_component_index.registerComponent(RigidBody::description);
+    m_component_index.registerComponent(builtins::components::Gravity::description);
+    m_component_index.registerComponent(builtins::components::RigidBody::description);
     m_component_index.registerComponent(builtins::components::RenderObject::description);
     m_event_index.registerEvent(builtins::events::tick);
     m_system_index.registerSystem(builtins::systems::physicSystem);

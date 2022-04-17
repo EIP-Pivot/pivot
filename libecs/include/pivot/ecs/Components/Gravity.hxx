@@ -4,6 +4,8 @@
 
 #include <pivot/ecs/Core/Component/description.hxx>
 
+namespace pivot::builtins::components
+{
 /// @struct Gravity
 ///
 /// @brief Gravity component (Example of gravity component)
@@ -14,3 +16,4 @@ struct Gravity {
     /// Component description
     static const pivot::ecs::component::Description description;
 };
+}    // namespace pivot::builtins::components

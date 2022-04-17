@@ -22,14 +22,6 @@ void PipelineStorage::destroy()
     std::ranges::for_each(computeStorage, [&](const auto &i) { base_ref.device.destroyPipeline(i.second); });
 }
 
-std::vector<std::string> PipelineStorage::getNames() const
-{
-    std::vector<std::string> names;
-    names.reserve(graphicsStorage.size());
-    for (const auto &[name, _]: graphicsStorage) { names.push_back(name); }
-    return names;
-}
-
 void PipelineStorage::newGraphicsPipeline(const std::string &name, const GraphicsPipelineBuilder &builder)
 {
     auto pipeline = builder.build(base_ref.device, pipelineCache);

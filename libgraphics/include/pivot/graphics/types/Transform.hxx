@@ -8,6 +8,8 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
 
+namespace pivot::graphics
+{
 /// @struct Transform
 ///
 /// @brief Hold the model matrix
@@ -44,3 +46,4 @@ public:
     /// Scale component
     glm::vec3 scale;
 };
+}    // namespace pivot::graphics

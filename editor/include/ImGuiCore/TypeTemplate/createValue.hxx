@@ -9,19 +9,20 @@
 #include <imgui.h>
 #include <misc/cpp/imgui_stdlib.h>
 
-using namespace pivot::ecs::component;
-using namespace pivot::ecs::data;
+pivot::ecs::data::Value createValue(const pivot::ecs::data::BasicType &type);
+pivot::ecs::data::Value createValue(const pivot::ecs::data::RecordType &types);
 
-Value createValue(const BasicType &type);
-Value createValue(const RecordType &types);
-
-Value createValue(const Type &type)
+pivot::ecs::data::Value createValue(const pivot::ecs::data::Type &type)
 {
-    return std::visit([](auto &t) { return createValue(t); }, static_cast<const Type::variant &>(type));
+    return std::visit([](auto &t) { return createValue(t); },
+                      static_cast<const pivot::ecs::data::Type::variant &>(type));
 }
 
-Value createValue(const BasicType &type)
+pivot::ecs::data::Value createValue(const pivot::ecs::data::BasicType &type)
 {
+    using BasicType = pivot::ecs::data::BasicType;
+    using Value = pivot::ecs::data::Value;
+
     switch (type) {
         case BasicType::String: return Value{""};
         case BasicType::Number: return Value{0.0};
@@ -32,9 +33,9 @@ Value createValue(const BasicType &type)
     throw std::runtime_error("Illegal BasicType value.");
 }
 
-Value createValue(const RecordType &types)
+pivot::ecs::data::Value createValue(const pivot::ecs::data::RecordType &types)
 {
-    Record record;
+    pivot::ecs::data::Record record;
     for (auto &[name, type]: types) { record.insert({name, createValue(type)}); }
     return {record};
 }

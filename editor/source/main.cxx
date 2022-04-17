@@ -13,8 +13,6 @@
 
 #include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
 
-#include <pivot/ecs/Core/Event.hxx>
-
 #include <pivot/builtins/systems/ControlSystem.hxx>
 #include <pivot/internal/camera.hxx>
 
@@ -30,8 +28,6 @@
 #include "pivot/graphics/Renderer/GraphicsRenderer.hxx"
 #include "pivot/graphics/Renderer/ImGuiRenderer.hxx"
 
-// #include "Scene.hxx"
-#include "Systems/PhysicsSystem.hxx"
 #include <pivot/ecs/Core/Scene.hxx>
 #include <pivot/ecs/Core/SceneManager.hxx>
 
@@ -47,6 +43,9 @@
 
 #include <pivot/builtins/events/tick.hxx>
 #include <pivot/engine.hxx>
+
+using namespace pivot::ecs;
+using Window = pivot::graphics::Window;
 
 class Application : public pivot::Engine
 {
@@ -127,11 +126,10 @@ public:
 
         m_vulkan_application.assetStorage.loadModels("cube.obj");
         m_vulkan_application.assetStorage.loadTextures("violet.png");
-
-        editor.init(m_vulkan_application);
     }
-    void processKeyboard(const Camera::Movement direction, float dt) noexcept
+    void processKeyboard(const pivot::builtins::Camera::Movement direction, float dt) noexcept
     {
+        using Camera = pivot::builtins::Camera;
         switch (direction) {
             case Camera::Movement::FORWARD: {
                 m_camera.position.x += m_camera.front.x * 2.5f * (dt * 500);
@@ -158,6 +156,7 @@ public:
 
     void UpdateCamera(float dt)
     {
+        using Camera = pivot::builtins::Camera;
         try {
             if (button.test(static_cast<std::size_t>(Window::Key::W)))
                 processKeyboard(Camera::FORWARD, dt);
@@ -182,7 +181,7 @@ public:
     {
         imGuiManager.newFrame();
 
-        editor.create(*this);
+        editor.create(*this, m_vulkan_application.pipelineStorage);
         m_paused = !editor.getRun();
         if (m_paused) {
             editor.setAspectRatio(m_vulkan_application.getAspectRatio());

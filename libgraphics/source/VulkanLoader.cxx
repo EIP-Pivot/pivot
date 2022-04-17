@@ -1,5 +1,7 @@
 #include "pivot/graphics/VulkanLoader.hxx"
 
+namespace pivot::graphics
+{
 VulkanLoader::VulkanLoader()
 {
     auto vkGetInstanceProcAddr = loader.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
@@ -17,3 +19,4 @@ void VulkanLoader::createLogicalDevice(vk::PhysicalDevice &gpu, vk::DeviceCreate
     device = gpu.createDevice(info);
     VULKAN_HPP_DEFAULT_DISPATCHER.init(device);
 }
+}    // namespace pivot::graphics

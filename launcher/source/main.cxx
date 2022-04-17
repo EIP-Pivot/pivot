@@ -5,6 +5,7 @@
 #include <pivot/engine.hxx>
 
 using RenderObject = pivot::builtins::components::RenderObject;
+using Transform = pivot::graphics::Transform;
 
 class Launcher : public pivot::Engine
 {

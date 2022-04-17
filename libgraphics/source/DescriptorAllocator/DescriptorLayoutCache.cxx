@@ -1,27 +1,14 @@
 #include "pivot/graphics/DescriptorAllocator/DescriptorLayoutCache.hxx"
 
-
 namespace pivot::graphics
 {
 
 bool DescriptorLayoutCache::DescriptorLayoutInfo::operator==(const DescriptorLayoutInfo &other) const
 {
-    if (other.bindings.size() != bindings.size()) {
-        return false;
-    } else {
-        for (unsigned i = 0; i < bindings.size(); i++) {
-            // Can't use operator== , because some field could be pointing to different ressources, but
-            // those ressource doesn't matter in this case
-            const auto &binding = bindings.at(i);
-            const auto &otherBinding = other.bindings.at(i);
-            if (std::make_tuple(binding.binding, binding.descriptorType, binding.descriptorCount, binding.stageFlags) !=
-                std::make_tuple(otherBinding.binding, otherBinding.descriptorType, otherBinding.descriptorCount,
-                                otherBinding.stageFlags)) {
-                return false;
-            }
-        }
-        return true;
-    }
+    auto projection = [](const auto &i) {
+        return std::make_tuple(i.binding, i.descriptorType, i.descriptorCount, i.stageFlags);
+    };
+    return std::ranges::equal(bindings, other.bindings, {}, projection, projection);
 }
 
 std::size_t DescriptorLayoutCache::DescriptorLayoutInfo::hash() const

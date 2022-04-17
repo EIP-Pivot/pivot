@@ -5,6 +5,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <misc/cpp/imgui_stdlib.h>
 
+#include <numbers>
+
 #include "ImGuiCore/Editor.hxx"
 
 using namespace pivot::ecs;

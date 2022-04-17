@@ -55,9 +55,9 @@ public:
         /// The pipeline batch
         std::vector<PipelineBatch> pipelineBatch;
         /// The current size of the buffer
-        uint32_t currentBufferSize = defaultBufferSize;
+        vk::DeviceSize currentBufferSize = defaultBufferSize;
         /// The current size of the buffer that is exposed through the descriptor set.
-        uint32_t currentDescriptorSetSize = defaultBufferSize;
+        vk::DeviceSize currentDescriptorSetSize = defaultBufferSize;
     };
 
 public:
@@ -82,8 +82,8 @@ public:
 
 private:
     void createDescriptorPool();
-    void createBuffer(const std::uint32_t bufferSize);
-    void createDescriptorSet(const std::uint32_t bufferSize);
+    void createBuffer(const vk::DeviceSize bufferSize);
+    void createDescriptorSet(const vk::DeviceSize bufferSize);
     void createDescriptorSetLayout();
 
 private:

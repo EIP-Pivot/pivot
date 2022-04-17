@@ -115,7 +115,7 @@ void DrawCallResolver::createDescriptorPool()
     vk_debug::setObjectName(base_ref->get().device, descriptorPool, "Objects DescriptorPool");
 }
 
-void DrawCallResolver::createBuffer(std::uint32_t bufferSize)
+void DrawCallResolver::createBuffer(vk::DeviceSize bufferSize)
 {
     if (frame.indirectBuffer) base_ref->get().allocator.destroyBuffer(frame.indirectBuffer);
     if (frame.objectBuffer) base_ref->get().allocator.destroyBuffer(frame.objectBuffer);
@@ -135,7 +135,7 @@ void DrawCallResolver::createBuffer(std::uint32_t bufferSize)
     frame.currentBufferSize = bufferSize;
 }
 
-void DrawCallResolver::createDescriptorSet(std::uint32_t bufferSize)
+void DrawCallResolver::createDescriptorSet(vk::DeviceSize bufferSize)
 {
     assert(bufferSize > 0);
     if (frame.objectDescriptor) base_ref->get().device.freeDescriptorSets(descriptorPool, frame.objectDescriptor);

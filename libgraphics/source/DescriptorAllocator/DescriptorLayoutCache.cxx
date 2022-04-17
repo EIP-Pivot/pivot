@@ -1,5 +1,6 @@
 #include "pivot/graphics/DescriptorAllocator/DescriptorLayoutCache.hxx"
 
+
 namespace pivot::graphics
 {
 
@@ -42,18 +43,9 @@ DescriptorLayoutCache::~DescriptorLayoutCache() {}
 vk::DescriptorSetLayout DescriptorLayoutCache::createDescriptorLayout(vk::DescriptorSetLayoutCreateInfo &info)
 {
     DescriptorLayoutInfo layoutinfo;
-    layoutinfo.bindings.reserve(info.bindingCount);
-    bool isSorted = true;
-    int32_t lastBinding = -1;
-    for (uint32_t i = 0; i < info.bindingCount; i++) {
-        layoutinfo.bindings.push_back(info.pBindings[i]);
-        if (static_cast<std::int32_t>(info.pBindings[i].binding) > lastBinding)
-            lastBinding = info.pBindings[i].binding;
-        else
-            isSorted = false;
-    }
-    if (!isSorted)
-        std::ranges::sort(layoutinfo.bindings, [](const auto &a, const auto &b) { return a.binding < b.binding; });
+    layoutinfo.bindings.resize(info.bindingCount);
+    std::memcpy(layoutinfo.bindings.data(), info.pBindings, info.bindingCount * sizeof(vk::DescriptorSetLayoutBinding));
+    std::ranges::sort(layoutinfo.bindings, {}, [](const auto &i) { return i.binding; });
 
     auto it = layoutCache.find(layoutinfo);
     if (it != layoutCache.end()) {

@@ -43,7 +43,7 @@ public:
 
     template <typename T>
     /// Create a buffer.
-    AllocatedBuffer<T> createBuffer(std::uint32_t allocSize, vk::BufferUsageFlags usage, vma::MemoryUsage memoryUsage,
+    AllocatedBuffer<T> createBuffer(vk::DeviceSize allocSize, vk::BufferUsageFlags usage, vma::MemoryUsage memoryUsage,
                                     vma::AllocationCreateFlags flags = {})
     {
         assert(allocSize != 0);

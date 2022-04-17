@@ -32,7 +32,9 @@ std::size_t DescriptorLayoutCache::DescriptorLayoutInfo::hash() const
     return result;
 }
 
-void DescriptorLayoutCache::init(vk::Device &newDevice) { device = newDevice; }
+DescriptorLayoutCache::DescriptorLayoutCache(vk::Device &device): device_ref(device) {}
+
+DescriptorLayoutCache::~DescriptorLayoutCache() {}
 
 vk::DescriptorSetLayout DescriptorLayoutCache::createDescriptorLayout(vk::DescriptorSetLayoutCreateInfo &info)
 {
@@ -54,7 +56,7 @@ vk::DescriptorSetLayout DescriptorLayoutCache::createDescriptorLayout(vk::Descri
     if (it != layoutCache.end()) {
         return it->second;
     } else {
-        vk::DescriptorSetLayout layout = device.createDescriptorSetLayout(info);
+        vk::DescriptorSetLayout layout = device_ref.createDescriptorSetLayout(info);
         layoutCache[layoutinfo] = layout;
         return layout;
     }
@@ -62,7 +64,7 @@ vk::DescriptorSetLayout DescriptorLayoutCache::createDescriptorLayout(vk::Descri
 
 void DescriptorLayoutCache::cleanup()
 {
-    for (auto pair: layoutCache) vkDestroyDescriptorSetLayout(device, pair.second, nullptr);
+    for (auto pair: layoutCache) vkDestroyDescriptorSetLayout(device_ref, pair.second, nullptr);
 }
 
 }    // namespace pivot::graphics

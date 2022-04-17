@@ -8,7 +8,12 @@
 namespace pivot::graphics
 {
 
-VulkanApplication::VulkanApplication(): VulkanBase("Pivot Game Engine"), assetStorage(*this), pipelineStorage(*this)
+VulkanApplication::VulkanApplication()
+    : VulkanBase("Pivot Game Engine"),
+      assetStorage(*this),
+      pipelineStorage(*this),
+      descriptorAllocator(device),
+      layoutCache(device)
 {
     DEBUG_FUNCTION;
 
@@ -52,8 +57,6 @@ VulkanApplication::~VulkanApplication()
 void VulkanApplication::init()
 {
     VulkanBase::init({}, deviceExtensions, validationLayers);
-    descriptorAllocator.init(device);
-    layoutCache.init(device);
     assetStorage.build(DescriptorBuilder(layoutCache, descriptorAllocator));
     initVulkanRessources();
 }

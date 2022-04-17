@@ -16,12 +16,10 @@ class DescriptorAllocator
 
 public:
     /// Ctor
-    DescriptorAllocator();
+    DescriptorAllocator(vk::Device &device);
     /// Dtor
     ~DescriptorAllocator();
 
-    /// Initialisation
-    void init(vk::Device &newDevice);
     /// Destroy all pools
     void cleanup();
 
@@ -39,7 +37,7 @@ private:
     vk::DescriptorPool grabPool();
 
 private:
-    vk::Device device;
+    vk::Device &device_ref;
     vk::DescriptorPool currentPool = VK_NULL_HANDLE;
     std::vector<vk::DescriptorPool> usedPools;
     std::vector<vk::DescriptorPool> freePools;

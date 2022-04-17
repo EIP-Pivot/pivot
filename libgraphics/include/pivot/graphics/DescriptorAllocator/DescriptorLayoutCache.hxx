@@ -22,16 +22,18 @@ private:
     };
 
 public:
-    /// Initialisation
-    void init(vk::Device &newDevice);
+    /// Constructor
+    DescriptorLayoutCache(vk::Device &device);
+    /// Destructor
+    ~DescriptorLayoutCache();
     /// Destroy Descriptor Set layout
     void cleanup();
     /// If a similar DescriptorSetLayout cannot be found in the cache, a new one will be created.
     vk::DescriptorSetLayout createDescriptorLayout(vk::DescriptorSetLayoutCreateInfo &info);
 
 private:
+    vk::Device &device_ref;
     std::unordered_map<DescriptorLayoutInfo, vk::DescriptorSetLayout, DescriptorLayoutHash> layoutCache;
-    vk::Device device;
 };
 
 }    // namespace pivot::graphics

@@ -114,7 +114,7 @@ void Editor::DisplayGuizmo(Entity entity, const pivot::builtins::Camera &camera)
     using RenderObject = pivot::builtins::components::RenderObject;
 
     const auto view = camera.getView();
-    const auto projection = camera.getProjection(80.9f, aspectRatio);
+    const auto projection = camera.getProjection(pivot::Engine::fov, aspectRatio);
 
     const float *view_ptr = glm::value_ptr(view);
     const float *projection_ptr = glm::value_ptr(projection);

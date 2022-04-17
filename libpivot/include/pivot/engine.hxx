@@ -23,6 +23,8 @@ public:
     ecs::SceneManager::SceneId registerScene();
     ecs::SceneManager::SceneId registerScene(std::string name);
 
+    static constexpr float fov = 80;
+
 protected:
     ecs::component::Index m_component_index;
     ecs::event::Index m_event_index;

@@ -36,7 +36,6 @@ void Engine::run()
         this->onTick(dt);
 
         auto aspectRatio = m_vulkan_application.getAspectRatio();
-        float fov = 80;
 
         auto data = m_current_scene_render_object.value().get().getData();
         // FIXME: Send data and existence vector directly to the graphic library
@@ -44,10 +43,10 @@ void Engine::run()
         for (const auto &ro: data) { objects.push_back(ro); }
 
         m_vulkan_application.draw(
-            objects, pivot::internals::getGPUCameraData(m_camera, fov, aspectRatio)
+            objects, pivot::internals::getGPUCameraData(m_camera, Engine::fov, aspectRatio)
 #ifdef CULLING_DEBUG
                          ,
-            std::make_optional(pivot::internals::getGPUCameraData(m_culling_camera, fov, aspectRatio))
+            std::make_optional(pivot::internals::getGPUCameraData(m_culling_camera, Engine::fov, aspectRatio))
 #endif
         );
 

@@ -11,6 +11,13 @@
 
 namespace pivot::graphics::vk_utils
 {
+
+template <typename T>
+concept wrappedVulkanType = requires
+{
+    typename T::CType;
+};
+
 /// Test if a vk::Result is considered as a success.
 constexpr void vk_try(vk::Result err)
 {

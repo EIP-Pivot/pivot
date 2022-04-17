@@ -8,6 +8,7 @@
 
 using namespace pivot::ecs::component;
 using namespace pivot::ecs::data;
+using namespace pivot::ecs;
 
 struct TestComponent {
     int data;

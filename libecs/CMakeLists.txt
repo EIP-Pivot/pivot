@@ -47,8 +47,6 @@ endif()
 
 add_library(${PROJECT_NAME} source/Core/Scene.cxx
                             source/Core/EntityManager.cxx
-                            source/Core/EventManager.cxx
-                            source/Core/SystemManager.cxx
                             source/Core/SceneManager.cxx
                             source/Core/Component/description.cxx
                             source/Core/Component/index.cxx
@@ -93,4 +91,5 @@ build_tests(${PROJECT_NAME}
   tests/Core/Event/test_description.cxx
   tests/Core/Event/test_manager.cxx
   tests/Core/Scene/test_load.cxx
+  tests/Core/Scene/test_save.cxx
   )

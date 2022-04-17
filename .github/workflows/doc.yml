@@ -19,6 +19,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install vulkan-sdk xorg-dev doxygen
 
+      - name: Dependencies version
+        run: |
+          doxygen --version
+
       - uses: actions/checkout@v2
         with:
           submodules: recursive

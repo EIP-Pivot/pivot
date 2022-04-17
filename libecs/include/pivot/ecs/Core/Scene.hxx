@@ -1,5 +1,8 @@
 #pragma once
 
+#include <filesystem>
+#include <fstream>
+
 #include <nlohmann/json.hpp>
 
 #include <pivot/ecs/Core/Data/value_serialization.hxx>
@@ -13,13 +16,14 @@
 #include "pivot/ecs/Core/Event/manager.hxx"
 
 #include "pivot/ecs/Core/EntityManager.hxx"
-#include "pivot/ecs/Core/EventManager.hxx"
-#include "pivot/ecs/Core/SystemManager.hxx"
 #include "pivot/ecs/Core/types.hxx"
 #include <memory>
 
 #include "pivot/ecs/Components/Camera.hxx"
 #include "pivot/ecs/Components/Tag.hxx"
+
+namespace pivot::ecs
+{
 
 /// @class IScene
 ///
@@ -49,7 +53,7 @@ public:
     Scene(std::string sceneName = "Scene");
 
     /// Get scene name
-    std::string getName();
+    const std::string &getName() const;
 
     /// Set scene name
     void setName(std::string newName) { name = newName; }
@@ -64,7 +68,7 @@ public:
     Entity CreateEntity(std::string newName);
 
     /// Get entity list
-    std::unordered_map<Entity, Signature> getEntities();
+    std::unordered_map<Entity, Signature> getEntities() const;
 
     /// @param[in] entity  Entity to remove.
     void DestroyEntity(Entity entity);
@@ -114,9 +118,11 @@ public:
     /// Switch camera
     void switchCamera();
     /// Get current camera
-    Camera &getCamera();
+    builtins::Camera &getCamera();
     /// Get camera list
     std::vector<Entity> &getCameras();
+    /// Save scene in json file
+    void save(const std::filesystem::path &path) const;
 
     // Load
     /// Load a scene from JSON object
@@ -129,9 +135,10 @@ private:
     EntityManager mEntityManager;
     pivot::ecs::systems::Manager mSystemManager;
     pivot::ecs::event::Manager mEventManager;
-    std::vector<std::shared_ptr<System>> mSystems;
     std::vector<Entity> mCamera;
     std::uint16_t mCurrentCamera;
     pivot::ecs::component::Manager::ComponentId mTagId;
     pivot::ecs::component::Index mComponentIndex;
 };
+
+}    // namespace pivot::ecs

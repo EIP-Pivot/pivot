@@ -1,9 +1,11 @@
 project(pivot)
 
 add_library(${PROJECT_NAME} STATIC
+  sources/engine.cxx
   sources/internal/camera.cxx
-  sources/systems/ControlSystem.cxx
-  sources/components/RenderObject.cxx
+  sources/builtins/systems/ControlSystem.cxx
+  sources/builtins/systems/PhysicSystem.cxx
+  sources/builtins/components/RenderObject.cxx
   )
 
 target_include_directories(${PROJECT_NAME} PUBLIC include/)

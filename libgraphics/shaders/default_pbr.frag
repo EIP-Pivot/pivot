@@ -25,11 +25,11 @@ struct Material {
     int emissiveTexture;
 };
 
-layout (std140, set = 1, binding = 1) readonly buffer ObjectMaterials {
+layout (std140, set = 0, binding = 1) readonly buffer ObjectMaterials {
     Material materials[];
 } objectMaterials;
 
-layout(set = 1, binding = 2) uniform sampler2D texSampler[];
+layout(set = 0, binding = 2) uniform sampler2D texSampler[];
 
 const vec3 lightDirection = vec3(0.0, 1000.0, 0.0);
 
@@ -93,7 +93,7 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 }
 
 void main()
-{		
+{
     Material material = objectMaterials.materials[materialIndex];
     vec3 diffuseColor = (material.baseColorTexture >= 0) ? (texture(texSampler[material.baseColorTexture], fragTextCoords).rgb) : (material.baseColor.rgb);
     vec3 metallicRoughness = (material.metallicRoughnessTexture >= 0) ? (texture(texSampler[material.metallicRoughnessTexture], fragTextCoords).rgb) : (vec3(1.0));
@@ -103,8 +103,8 @@ void main()
 
     vec3 N = getNormalFromMap(material);
     vec3 V = normalize(cameraData.position - fragPosition);
- 
-    vec3 F0 = vec3(0.04); 
+
+    vec3 F0 = vec3(0.04);
     F0 = mix(F0, diffuseColor, metallic);
 
     // reflectance equation
@@ -119,31 +119,31 @@ void main()
         vec3 radiance = vec3(1000000.0) * attenuation;
 
         // Cook-Torrance BRDF
-        float NDF = DistributionGGX(N, H, roughness);   
-        float G = GeometrySmith(N, V, L, roughness);      
+        float NDF = DistributionGGX(N, H, roughness);
+        float G = GeometrySmith(N, V, L, roughness);
         vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
-           
-        vec3 numerator    = NDF * G * F; 
+
+        vec3 numerator    = NDF * G * F;
         float denominator = 4 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; // + 0.0001 to prevent divide by zero
         vec3 specular = numerator / denominator;
-        
+
         vec3 kS = F;
         vec3 kD = vec3(1.0) - kS;
-        kD *= 1.0 - metallic;	  
+        kD *= 1.0 - metallic;
 
-        float NdotL = max(dot(N, L), 0.0);        
+        float NdotL = max(dot(N, L), 0.0);
 
         Lo += (kD * diffuseColor / PI + specular) * radiance * NdotL;
-    }   
-    
+    }
+
     vec3 ambient = vec3(0.03) * diffuseColor * occlusion;
-    
+
     vec3 color = ambient + Lo;
 
     // HDR tonemapping
     color = color / (color + vec3(1.0));
     // gamma correct
-    color = pow(color, vec3(1.0/2.2)); 
+    color = pow(color, vec3(1.0/2.2));
 
     outColor = vec4(color, 1.0);
 }

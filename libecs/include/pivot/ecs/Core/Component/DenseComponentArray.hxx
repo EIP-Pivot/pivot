@@ -62,7 +62,7 @@ public:
     }
 
     /// \copydoc pivot::ecs::component::IComponentArray::maxEntity()
-    Entity maxEntity() const override { return m_components.size() - 1; }
+    Entity maxEntity() const override { return m_components.size(); }
 
     /// Returns a mutable view into the components values. Some of those values can be nonsensical as the entity can
     /// miss this component.

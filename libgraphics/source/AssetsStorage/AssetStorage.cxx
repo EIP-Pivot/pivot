@@ -10,6 +10,7 @@ namespace pivot::graphics
 
 const std::unordered_map<std::string, AssetStorage::AssetHandler> AssetStorage::supportedTexture = {
     {".png", &AssetStorage::loadPngTexture},
+    {".jpg", &AssetStorage::loadJpgTexture},
     {".ktx", &AssetStorage::loadKtxImage},
 };
 
@@ -25,6 +26,7 @@ AssetStorage::~AssetStorage() {}
 void AssetStorage::build()
 {
     DEBUG_FUNCTION
+    createTextureSampler();
 
     for (const auto &[name, model]: modelStorage) {
         meshBoundingBoxStorage.add(
@@ -41,7 +43,7 @@ void AssetStorage::build()
 
     logger.info("Asset Storage") << "Pushing " << meshBoundingBoxStorage.size() << " bounding boxes onto the GPU";
     pushBoundingBoxesOnGPU();
-    vk_debug::setObjectName(base_ref->get().device, boundingboxbuffer.buffer, "BoundingBox Buffer");
+    vk_debug::setObjectName(base_ref->get().device, boundingboxBuffer.buffer, "BoundingBox Buffer");
 
     logger.info("Asset Storage") << "Pushing " << cpuStorage.textureStaging.size() << " textures onto the GPU";
     pushTexturesOnGPU();
@@ -56,6 +58,9 @@ void AssetStorage::build()
     vk_debug::setObjectName(base_ref->get().device, materialBuffer.buffer, "Material Buffer");
 
     cpuStorage = {};
+    createDescriptorSetLayout();
+    createDescriptorPool();
+    createDescriptorSet();
 }
 
 void AssetStorage::destroy()
@@ -65,13 +70,34 @@ void AssetStorage::destroy()
         base_ref->get().allocator.destroyBuffer(vertexBuffer);
         base_ref->get().allocator.destroyBuffer(indicesBuffer);
     }
-    if (boundingboxbuffer) base_ref->get().allocator.destroyBuffer(boundingboxbuffer);
+    if (boundingboxBuffer) base_ref->get().allocator.destroyBuffer(boundingboxBuffer);
     if (materialBuffer) base_ref->get().allocator.destroyBuffer(materialBuffer);
 
     for (auto &image: textureStorage.getStorage()) {
         base_ref->get().device.destroyImageView(image.imageView);
         base_ref->get().allocator.destroyImage(image);
     }
+    vulkanDeletionQueue.flush();
+}
+
+bool AssetStorage::bindForGraphics(vk::CommandBuffer &cmd, const vk::PipelineLayout &pipelineLayout,
+                                   std::uint32_t descriptorSetNb)
+{
+    if (!vertexBuffer || !indicesBuffer || !descriptorSet) return false;
+
+    vk::DeviceSize offset = 0;
+    cmd.bindVertexBuffers(0, vertexBuffer.buffer, offset);
+    cmd.bindIndexBuffer(indicesBuffer.buffer, 0, vk::IndexType::eUint32);
+    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, descriptorSetNb, descriptorSet, nullptr);
+    return true;
+}
+
+bool AssetStorage::bindForCompute(vk::CommandBuffer &cmd, const vk::PipelineLayout &pipelineLayout,
+                                  std::uint32_t descriptorSetNb)
+{
+    if (!descriptorSet) return false;
+    cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, pipelineLayout, descriptorSetNb, descriptorSet, nullptr);
+    return true;
 }
 
 bool AssetStorage::loadModel(const std::filesystem::path &path)
@@ -98,39 +124,32 @@ bool AssetStorage::loadTexture(const std::filesystem::path &path)
 }
 
 template <typename T>
-static void copy_with_staging_buffer(VulkanBase &base_ref, AllocatedBuffer &staging, AllocatedBuffer &dst,
-                                     const std::vector<T> &data)
+static AllocatedBuffer<T> copy_with_staging_buffer(VulkanBase &base_ref, vk::BufferUsageFlags flag,
+                                                   std::vector<T> &data)
 {
+    auto size = data.size() * sizeof(T);
+    auto staging =
+        base_ref.allocator.createBuffer<T>(size, vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);
+    auto ret = base_ref.allocator.createBuffer<T>(size, flag | vk::BufferUsageFlagBits::eTransferDst,
+                                                  vma::MemoryUsage::eGpuOnly);
     base_ref.allocator.copyBuffer(staging, std::span(data));
-    base_ref.copyBuffer(staging, dst);
+    base_ref.copyBuffer(staging, ret);
     base_ref.allocator.destroyBuffer(staging);
+    return ret;
 }
 
 void AssetStorage::pushModelsOnGPU()
 {
     DEBUG_FUNCTION
-
-    auto vertexSize = cpuStorage.vertexStagingBuffer.size() * sizeof(Vertex);
-
-    if (vertexSize == 0) {
+    if (cpuStorage.vertexStagingBuffer.empty()) {
         logger.warn("Asset Storage") << "No model to push";
         return;
     }
-    auto stagingVertex = base_ref->get().allocator.createBuffer(vertexSize, vk::BufferUsageFlagBits::eTransferSrc,
-                                                                vma::MemoryUsage::eCpuToGpu);
-    vertexBuffer = base_ref->get().allocator.createBuffer(
-        vertexSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
-        vma::MemoryUsage::eGpuOnly);
 
-    copy_with_staging_buffer(base_ref->get(), stagingVertex, vertexBuffer, cpuStorage.vertexStagingBuffer);
-
-    auto indexSize = cpuStorage.indexStagingBuffer.size() * sizeof(uint32_t);
-    auto stagingIndex = base_ref->get().allocator.createBuffer(indexSize, vk::BufferUsageFlagBits::eTransferSrc,
-                                                               vma::MemoryUsage::eCpuToGpu);
-    indicesBuffer = base_ref->get().allocator.createBuffer(
-        indexSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
-        vma::MemoryUsage::eGpuOnly);
-    copy_with_staging_buffer(base_ref->get(), stagingIndex, indicesBuffer, cpuStorage.indexStagingBuffer);
+    vertexBuffer = copy_with_staging_buffer(base_ref->get(), vk::BufferUsageFlagBits::eVertexBuffer,
+                                            cpuStorage.vertexStagingBuffer);
+    indicesBuffer =
+        copy_with_staging_buffer(base_ref->get(), vk::BufferUsageFlagBits::eIndexBuffer, cpuStorage.indexStagingBuffer);
 }
 
 void AssetStorage::pushTexturesOnGPU()
@@ -140,9 +159,9 @@ void AssetStorage::pushTexturesOnGPU()
         logger.warn("Asset Storage") << "No textures to push";
         return;
     }
-    for (const auto &[name, idx]: cpuStorage.textureStaging) {
-        const auto &img = cpuStorage.textureStaging.get(idx);
-        AllocatedBuffer stagingBuffer = base_ref->get().allocator.createBuffer(
+    for (auto &[name, idx]: cpuStorage.textureStaging) {
+        auto &img = cpuStorage.textureStaging.get(idx);
+        auto stagingBuffer = base_ref->get().allocator.createBuffer<std::byte>(
             img.image.size(), vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);
         base_ref->get().allocator.copyBuffer(stagingBuffer, std::span(img.image));
 
@@ -175,17 +194,10 @@ void AssetStorage::pushTexturesOnGPU()
 void AssetStorage::pushMaterialOnGPU()
 {
     DEBUG_FUNCTION
-    auto size = sizeof(gpu_object::Material) * cpuStorage.materialStaging.size();
-    if (size == 0) {
+    if (cpuStorage.materialStaging.empty()) {
         logger.warn("Asset Storage") << "No material to push";
         return;
     }
-    auto materialStaging = base_ref->get().allocator.createBuffer(
-        size, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferSrc,
-        vma::MemoryUsage::eCpuToGpu);
-    materialBuffer = base_ref->get().allocator.createBuffer(
-        size, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst,
-        vma::MemoryUsage::eGpuOnly);
 
     for (auto &[name, idx]: cpuStorage.materialStaging) {
         const auto &mat = cpuStorage.materialStaging.getStorage()[idx];
@@ -207,25 +219,19 @@ void AssetStorage::pushMaterialOnGPU()
                     (mat.emissiveTexture.empty()) ? (-1) : (textureStorage.getIndex(mat.emissiveTexture)),
             });
     }
-    copy_with_staging_buffer(base_ref->get(), materialStaging, materialBuffer, materialStorage.getStorage());
+    materialBuffer = copy_with_staging_buffer(base_ref->get(), vk::BufferUsageFlagBits::eStorageBuffer,
+                                              materialStorage.getStorage());
 }
 
 void AssetStorage::pushBoundingBoxesOnGPU()
 {
     DEBUG_FUNCTION
-    auto size = sizeof(gpu_object::MeshBoundingBox) * meshBoundingBoxStorage.size();
-    if (size == 0) {
+    if (meshBoundingBoxStorage.empty()) {
         logger.warn("Asset Storage") << "No bounding box to push";
         return;
     }
-    auto boundingboxStaging = base_ref->get().allocator.createBuffer(
-        size, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferSrc,
-        vma::MemoryUsage::eCpuToGpu);
-    boundingboxbuffer = base_ref->get().allocator.createBuffer(
-        size, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst,
-        vma::MemoryUsage::eGpuOnly);
-    copy_with_staging_buffer(base_ref->get(), boundingboxStaging, boundingboxbuffer,
-                             meshBoundingBoxStorage.getStorage());
+    boundingboxBuffer = copy_with_staging_buffer(base_ref->get(), vk::BufferUsageFlagBits::eStorageBuffer,
+                                                 meshBoundingBoxStorage.getStorage());
 }
 
 }    // namespace pivot::graphics

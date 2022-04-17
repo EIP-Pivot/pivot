@@ -1,4 +1,4 @@
-#include "pivot/systems/ControlSystem.hxx"
+#include "pivot/builtins/systems/ControlSystem.hxx"
 
 #include "pivot/ecs/Core/SceneManager.hxx"
 #include "pivot/graphics/types/Transform.hxx"
@@ -82,6 +82,8 @@
 //     }
 // }
 
+namespace pivot::builtins::systems
+{
 void ControlSystem::processMouseMovement(Camera &cam, const glm::dvec2 &offset)
 {
     cam.yaw += offset.x * SENSITIVITY;
@@ -93,3 +95,5 @@ void ControlSystem::processMouseMovement(Camera &cam, const glm::dvec2 &offset)
     }
     cam.updateCameraVectors();
 }
+
+}    // namespace pivot::builtins::systems

@@ -20,9 +20,9 @@ TEST_CASE("Load the scene", "[Scene][Load]")
 
     pivot::ecs::component::Index cIndex;
     pivot::ecs::systems::Index sIndex;
-    cIndex.registerComponent(Gravity::description);
-    cIndex.registerComponent(RigidBody::description);
-    cIndex.registerComponent(Tag::description);
+    cIndex.registerComponent(pivot::builtins::components::Gravity::description);
+    cIndex.registerComponent(pivot::builtins::components::RigidBody::description);
+    cIndex.registerComponent(pivot::ecs::Tag::description);
 
     pivot::ecs::event::Description event{
         .name = "Colid",
@@ -40,7 +40,7 @@ TEST_CASE("Load the scene", "[Scene][Load]")
         .system = &test_load_scene_system,
     };
     sIndex.registerSystem(description);
-    Scene LaS = Scene::load(obj, cIndex, sIndex);
+    pivot::ecs::Scene LaS = pivot::ecs::Scene::load(obj, cIndex, sIndex);
 
     REQUIRE(LaS.getLivingEntityCount() == 2);
 

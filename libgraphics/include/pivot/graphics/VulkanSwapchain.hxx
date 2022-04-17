@@ -6,6 +6,7 @@
 #include <vulkan/vulkan.hpp>
 
 #include "pivot/graphics/DeletionQueue.hxx"
+#include "pivot/graphics/VulkanException.hxx"
 
 namespace pivot::graphics
 {
@@ -16,6 +17,13 @@ namespace pivot::graphics
 class VulkanSwapchain
 {
 public:
+    /// @class VulkanSwapchainError
+    ///
+    /// @brief Error type for the Vulkan Swapchain
+    class VulkanSwapchainError : public VulkanException
+    {
+        using VulkanException::VulkanException;
+    };
     /// @struct SupportDetails
     ///
     /// @brief Helper class to gather all information required for swapchain creation
@@ -28,11 +36,11 @@ public:
         std::vector<vk::PresentModeKHR> presentModes;
 
         /// Choose a fitting format
-        vk::SurfaceFormatKHR chooseSwapSurfaceFormat() noexcept;
+        vk::SurfaceFormatKHR chooseSwapSurfaceFormat() const noexcept;
         /// Choose a presentation mode
-        vk::PresentModeKHR chooseSwapPresentMode() noexcept;
+        vk::PresentModeKHR chooseSwapPresentMode() const noexcept;
         /// Check if the size if supported
-        vk::Extent2D chooseSwapExtent(const vk::Extent2D &size) noexcept;
+        vk::Extent2D chooseSwapExtent(const vk::Extent2D &size) const noexcept;
         /// Gather swapchain support information
         static SupportDetails querySwapChainSupport(const vk::PhysicalDevice &device, const vk::SurfaceKHR &surface);
     };

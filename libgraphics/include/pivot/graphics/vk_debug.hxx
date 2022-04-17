@@ -2,10 +2,13 @@
 
 #include <vulkan/vulkan.hpp>
 
+#include "pivot/graphics/DebugMacros.hxx"
+#include "pivot/graphics/vk_utils.hxx"
+
 /// Debug utils for vulkan
 namespace pivot::graphics::vk_debug
 {
-template <class T>
+template <vk_utils::wrappedVulkanType T>
 /// Set the debug name of the object
 void setObjectName(vk::Device &device, const T &object, const std::string &name)
 {

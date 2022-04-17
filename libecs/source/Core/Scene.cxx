@@ -13,7 +13,7 @@ Scene::Scene(std::string sceneName)
     mTagId = mComponentManager.RegisterComponent(Tag::description);
 }
 
-std::string Scene::getName() { return name; }
+const std::string &Scene::getName() const { return name; }
 
 Entity Scene::CreateEntity()
 {
@@ -29,7 +29,7 @@ Entity Scene::CreateEntity(std::string newName)
     return newEntity;
 }
 
-std::unordered_map<Entity, Signature> Scene::getEntities() { return mEntityManager.getEntities(); }
+std::unordered_map<Entity, Signature> Scene::getEntities() const { return mEntityManager.getEntities(); }
 
 void Scene::DestroyEntity(Entity entity)
 {
@@ -53,7 +53,7 @@ void Scene::addCamera(Entity camera) { mCamera.push_back(camera); }
 
 void Scene::switchCamera() { mCurrentCamera = (mCurrentCamera + 1) % mCamera.size(); }
 
-Camera &Scene::getCamera()
+pivot::builtins::Camera &Scene::getCamera()
 {
     if (mCamera.size() == 0) throw EcsException("No camera set");
     throw std::logic_error("Unimplemented");
@@ -106,4 +106,21 @@ Scene Scene::load(const nlohmann::json &obj, const pivot::ecs::component::Index 
         systemManager.useSystem(description.value());
     }
     return scene;
+}
+
+void Scene::save(const std::filesystem::path &path) const
+{
+    // serialize scene
+    nlohmann::json output;
+    output["name"] = name;
+    for (auto &[entity, _]: mEntityManager.getEntities())
+        for (pivot::ecs::component::ComponentRef ref: mComponentManager.GetAllComponents(entity))
+            output["components"][entity][ref.description().name] = nlohmann::json(ref.get());
+    std::vector<std::string> systems;
+    for (auto &[systemName, _]: mSystemManager) { systems.push_back(systemName); }
+    output["systems"] = systems;
+    // write in file
+    std::ofstream out(path);
+    out << std::setw(4) << output << std::endl;
+    out.close();
 }

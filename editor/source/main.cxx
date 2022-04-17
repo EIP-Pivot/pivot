@@ -13,10 +13,8 @@
 
 #include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
 
-#include <pivot/ecs/Core/Event.hxx>
-
+#include <pivot/builtins/systems/ControlSystem.hxx>
 #include <pivot/internal/camera.hxx>
-#include <pivot/systems/ControlSystem.hxx>
 
 #include <pivot/ecs/Core/Systems/description.hxx>
 #include <pivot/ecs/Core/Systems/index.hxx>
@@ -26,8 +24,10 @@
 
 #include <Logger.hpp>
 
-// #include "Scene.hxx"
-#include "Systems/PhysicsSystem.hxx"
+#include "pivot/graphics/Renderer/CullingRenderer.hxx"
+#include "pivot/graphics/Renderer/GraphicsRenderer.hxx"
+#include "pivot/graphics/Renderer/ImGuiRenderer.hxx"
+
 #include <pivot/ecs/Core/Scene.hxx>
 #include <pivot/ecs/Core/SceneManager.hxx>
 
@@ -41,63 +41,47 @@
 #include "ImGuiCore/ImGuiManager.hxx"
 #include "ImGuiCore/SystemsEditor.hxx"
 
-#include "FrameLimiter.hpp"
+#include <pivot/builtins/events/tick.hxx>
+#include <pivot/engine.hxx>
 
-class Application : public pivot::graphics::VulkanApplication
+using namespace pivot::ecs;
+using Window = pivot::graphics::Window;
+
+class Application : public pivot::Engine
 {
 public:
-    static const event::Description tick;
-
     Application()
-        : VulkanApplication(),
-          editor(sceneManager),
-          entity(sceneManager),
-          camera(editor.getCamera()),
-          systemsEditor(systemIndex, sceneManager),
-          componentEditor(componentIndex, sceneManager){};
+        : Engine(),
+          editor(getSceneManager()),
+          entity(getCurrentScene()),
+          systemsEditor(m_system_index, getCurrentScene()),
+          componentEditor(m_component_index, getCurrentScene()){};
 
     void loadScene()
     {
-        LevelId defaultScene = editor.addScene("Default");
-        sceneManager.setCurrentLevelId(defaultScene);
+        SceneManager::SceneId defaultScene = registerScene("Default");
+        changeCurrentScene(defaultScene);
     }
 
     void init()
     {
-        componentIndex.registerComponent(Gravity::description);
-        componentIndex.registerComponent(RigidBody::description);
-        componentIndex.registerComponent(RenderObject::description);
-
-        eventIndex.registerEvent(tick);
-
-        pivot::ecs::systems::Description description{
-            .name = "Physics System",
-            .systemComponents =
-                {
-                    "Gravity",
-                    "RigidBody",
-                },
-            .eventListener = tick,
-            .system = &physicsSystem,
-        };
-        systemIndex.registerSystem(description);
+        auto &window = m_vulkan_application.window;
 
         loadScene();
 
-        auto &cm = sceneManager.getCurrentLevel().getComponentManager();
-        cm.RegisterComponent(Gravity::description);
-        cm.RegisterComponent(RigidBody::description);
-        cm.RegisterComponent(RenderObject::description);
+        Scene &scene = *getCurrentScene();
 
         window.captureCursor(true);
+        m_vulkan_application.addRenderer<pivot::graphics::CullingRenderer>();
+        m_vulkan_application.addRenderer<pivot::graphics::GraphicsRenderer>();
+        m_vulkan_application.addRenderer<pivot::graphics::ImGuiRenderer>();
         window.setKeyReleaseCallback(Window::Key::LEFT_ALT, [&](Window &window, const Window::Key key) {
             window.captureCursor(!window.captureCursor());
             bFirstMouse = window.captureCursor();
             button.reset();
         });
-        window.setKeyReleaseCallback(Window::Key::V, [&](Window &window, const Window::Key key) {
-            sceneManager.getCurrentLevel().switchCamera();
-        });
+        window.setKeyReleaseCallback(Window::Key::V,
+                                     [&](Window &window, const Window::Key key) { scene.switchCamera(); });
 
         auto key_lambda_press = [&](Window &window, const Window::Key key) {
             if (window.captureCursor()) button.set(static_cast<std::size_t>(key));
@@ -137,39 +121,42 @@ public:
             auto yoffset = last.y - pos.y;
 
             last = pos;
-            ControlSystem::processMouseMovement(camera, glm::dvec2(xoffset, yoffset));
+            pivot::builtins::systems::ControlSystem::processMouseMovement(m_camera, glm::dvec2(xoffset, yoffset));
         });
-        assetStorage.loadModels("../editor/assets/cube.obj");
-        assetStorage.loadTextures("../editor/assets/violet.png");
+
+        m_vulkan_application.assetStorage.loadModels("cube.obj");
+        m_vulkan_application.assetStorage.loadTextures("violet.png");
     }
-    void processKeyboard(const Camera::Movement direction, float dt) noexcept
+    void processKeyboard(const pivot::builtins::Camera::Movement direction, float dt) noexcept
     {
+        using Camera = pivot::builtins::Camera;
         switch (direction) {
             case Camera::Movement::FORWARD: {
-                camera.position.x += camera.front.x * 2.5f * (dt * 500);
-                camera.position.z += camera.front.z * 2.5f * (dt * 500);
+                m_camera.position.x += m_camera.front.x * 2.5f * (dt * 500);
+                m_camera.position.z += m_camera.front.z * 2.5f * (dt * 500);
             } break;
             case Camera::Movement::BACKWARD: {
-                camera.position.x -= camera.front.x * 2.5f * (dt * 500);
-                camera.position.z -= camera.front.z * 2.5f * (dt * 500);
+                m_camera.position.x -= m_camera.front.x * 2.5f * (dt * 500);
+                m_camera.position.z -= m_camera.front.z * 2.5f * (dt * 500);
             } break;
             case Camera::Movement::RIGHT: {
-                camera.position.x += camera.right.x * 2.5f * (dt * 500);
-                camera.position.z += camera.right.z * 2.5f * (dt * 500);
+                m_camera.position.x += m_camera.right.x * 2.5f * (dt * 500);
+                m_camera.position.z += m_camera.right.z * 2.5f * (dt * 500);
             } break;
             case Camera::Movement::LEFT: {
-                camera.position.x -= camera.right.x * 2.5f * (dt * 500);
-                camera.position.z -= camera.right.z * 2.5f * (dt * 500);
+                m_camera.position.x -= m_camera.right.x * 2.5f * (dt * 500);
+                m_camera.position.z -= m_camera.right.z * 2.5f * (dt * 500);
             } break;
             case Camera::Movement::UP: {
-                camera.position.y += 2.5f * (dt * 500);
+                m_camera.position.y += 2.5f * (dt * 500);
             } break;
-            case Camera::Movement::DOWN: camera.position.y -= 2.5f * (dt * 500); break;
+            case Camera::Movement::DOWN: m_camera.position.y -= 2.5f * (dt * 500); break;
         }
     }
 
     void UpdateCamera(float dt)
     {
+        using Camera = pivot::builtins::Camera;
         try {
             if (button.test(static_cast<std::size_t>(Window::Key::W)))
                 processKeyboard(Camera::FORWARD, dt);
@@ -190,65 +177,30 @@ public:
         }
     }
 
-    void run()
+    void onTick(float dt) override
     {
-        float dt = 0.0f;
-        float fov = 27.f;
-        bool useWindow = true;
-        Entity currentEdit = 0;
-        gridSize = 100.f;
-        this->VulkanApplication::init();
-        FrameLimiter<60> fpsLimiter;
-        while (!window.shouldClose()) {
-            auto startTime = std::chrono::high_resolution_clock::now();
-            window.pollEvent();
+        imGuiManager.newFrame();
 
-            imGuiManager.newFrame();
+        editor.create(*this, m_vulkan_application.pipelineStorage);
+        m_paused = !editor.getRun();
+        if (m_paused) {
+            editor.setAspectRatio(m_vulkan_application.getAspectRatio());
+            entity.create();
+            entity.hasSelected() ? componentEditor.create(entity.getEntitySelected()) : componentEditor.create();
+            systemsEditor.create();
 
-            editor.create();
-            if (!editor.getRun()) {
-                editor.setAspectRatio(getAspectRatio());
-                entity.create();
-                entity.hasSelected() ? componentEditor.create(entity.getEntitySelected()) : componentEditor.create();
-                systemsEditor.create();
-
-                // if (entity.hasSelected() &&
-                //     sceneManager.getCurrentLevel().hasComponent<RenderObject>(entity.getEntitySelected())) {
-                //     editor.DisplayGuizmo(entity.getEntitySelected());
-                // }
-            } else {
-                sceneManager.getCurrentLevel().getEventManager().sendEvent({tick, {}, data::Value(dt)});
-            }
-            UpdateCamera(dt);
-
-            imGuiManager.render();
-
-            auto aspectRatio = getAspectRatio();
-            float fov = 80;
-
-            auto &cm = sceneManager.getCurrentLevel().getComponentManager();
-            auto renderobject_id = cm.GetComponentId("RenderObject").value();
-            auto &array = cm.GetComponentArray(renderobject_id);
-            pivot::ecs::component::DenseTypedComponentArray<RenderObject> &dense_array =
-                dynamic_cast<pivot::ecs::component::DenseTypedComponentArray<RenderObject> &>(array);
-
-            auto data = dense_array.getData();
-            std::vector<std::reference_wrapper<const pivot::graphics::RenderObject>> objects;
-            for (const auto &ro: data) { objects.push_back(ro); }
-
-#ifdef CULLING_DEBUG
-            if (editor.cullingCameraFollowsCamera) editor.cullingCamera = camera;
-#endif
-            draw(objects, pivot::internals::getGPUCameraData(camera, fov, aspectRatio)
-#ifdef CULLING_DEBUG
-                              ,
-                 std::make_optional(pivot::internals::getGPUCameraData(editor.cullingCamera, fov, aspectRatio))
-#endif
-            );
-            fpsLimiter.sleep();
-            auto stopTime = std::chrono::high_resolution_clock::now();
-            dt = std::chrono::duration<float>(stopTime - startTime).count();
+            // if (entity.hasSelected() &&
+            //     m_scene_manager.getCurrentLevel().hasComponent<RenderObject>(entity.getEntitySelected())) {
+            //     editor.DisplayGuizmo(entity.getEntitySelected());
+            // }
         }
+        UpdateCamera(dt);
+
+#ifdef CULLING_DEBUG
+        if (editor.cullingCameraFollowsCamera) m_culling_camera = m_camera;
+#endif
+
+        imGuiManager.render();
     }
 
 public:
@@ -257,33 +209,17 @@ public:
     EntityModule entity;
     ComponentEditor componentEditor;
     SystemsEditor systemsEditor;
-    Camera &camera;
     glm::dvec2 last;
 
     bool bFirstMouse = true;
     std::bitset<UINT16_MAX> button;
-    int gridSize;
-
-    component::Index componentIndex;
-    systems::Index systemIndex;
-    event::Index eventIndex;
-    SceneManager sceneManager;
-};
-
-const event::Description Application::tick = {
-    .name = "Tick",
-    .entities = {},
-    .payload = pivot::ecs::data::BasicType::Number,
 };
 
 int main()
-try {
+{
     logger.start();
     Application app;
     app.init();
     app.run();
     return 0;
-} catch (std::exception &e) {
-    logger.err("THROW") << e.what();
-    return 1;
 }

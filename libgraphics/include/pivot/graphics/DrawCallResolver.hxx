@@ -4,6 +4,7 @@
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 #include "pivot/graphics/types/RenderObject.hxx"
+#include "pivot/graphics/types/UniformBufferObject.hxx"
 #include "pivot/graphics/types/common.hxx"
 #include "pivot/graphics/types/vk_types.hxx"
 
@@ -44,9 +45,9 @@ public:
     /// Represent a frame ressources
     struct Frame {
         /// Hold the indirect command
-        AllocatedBuffer indirectBuffer{};
+        AllocatedBuffer<vk::DrawIndexedIndirectCommand> indirectBuffer{};
         /// Hold the uniform object buffer
-        AllocatedBuffer objectBuffer{};
+        AllocatedBuffer<gpu_object::UniformBufferObject> objectBuffer{};
         /// The descriptor set holding the object buffer
         vk::DescriptorSet objectDescriptor = VK_NULL_HANDLE;
         /// The draw batches
@@ -61,35 +62,34 @@ public:
 
 public:
     /// Constructor
-    DrawCallResolver(VulkanBase &, AssetStorage &);
+    DrawCallResolver();
     /// Destructor
     ~DrawCallResolver();
 
     /// Initialize the ressources
-    void init();
+    void init(VulkanBase &, AssetStorage &);
     /// Destroy them
     void destroy();
 
     /// Build the buffer for the draw
-    void prepareForDraw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
-                        const uint32_t frameIndex);
+    void prepareForDraw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation);
 
     /// Get the frame data of a given frame
-    constexpr const Frame &getFrameData(const uint32_t frameIndex) const { return frames.at(frameIndex); }
+    constexpr const Frame &getFrameData() const { return frame; }
 
     /// @return Get the descritor set layout
     constexpr const vk::DescriptorSetLayout &getDescriptorSetLayout() const noexcept { return descriptorSetLayout; }
 
 private:
     void createDescriptorPool();
-    void createBuffers(Frame &frame, const vk::DeviceSize bufferSize);
-    void createDescriptorSets(Frame &frame, const vk::DeviceSize bufferSize);
+    void createBuffer(const std::uint32_t bufferSize);
+    void createDescriptorSet(const std::uint32_t bufferSize);
     void createDescriptorSetLayout();
 
 private:
     OptionalRef<VulkanBase> base_ref;
     OptionalRef<AssetStorage> storage_ref;
-    std::array<Frame, MaxFrameInFlight> frames;
+    Frame frame;
     vk::DescriptorPool descriptorPool = VK_NULL_HANDLE;
     vk::DescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
 };

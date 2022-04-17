@@ -115,7 +115,6 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
     DEBUG_FUNCTION
     logger.debug("Asset Storage/Gltf") << "Loading node: " << node.name;
 
-    if (node.mesh <= -1) return {};
     if (node.translation.size() == 3) {
         matrix = glm::translate(matrix, glm::vec3(glm::make_vec3(node.translation.data())));
     }
@@ -126,13 +125,14 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
     if (node.scale.size() == 3) { matrix = glm::scale(matrix, glm::vec3(glm::make_vec3(node.scale.data()))); }
     if (node.matrix.size() == 16) { matrix = glm::make_mat4x4(node.matrix.data()); }
 
-    const auto &mesh = gltfModel.meshes.at(node.mesh);
     std::vector<std::pair<std::string, AssetStorage::Model>> loaded;
     for (const auto &i: node.children) {
         auto child = loadGltfNode(gltfModel, gltfModel.nodes.at(i), vertexBuffer, indexBuffer, matrix);
         loaded.insert(loaded.end(), child.begin(), child.end());
     }
+    if (node.mesh <= -1) return loaded;
 
+    const auto &mesh = gltfModel.meshes.at(node.mesh);
     for (const tinygltf::Primitive &primitive: mesh.primitives) {
         /// TODO: support other primitive mode
         if (primitive.mode != TINYGLTF_MODE_TRIANGLES)
@@ -212,7 +212,7 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
 }
 
 static std::pair<std::string, AssetStorage::CPUMaterial>
-loadGltfMaterial(const IndexedStorage<AssetStorage::CPUTexture> &texture, const tinygltf::Model &gltfModel,
+loadGltfMaterial(const IndexedStorage<std::string, AssetStorage::CPUTexture> &texture, const tinygltf::Model &gltfModel,
                  const tinygltf::Material &mat, const unsigned offset)
 {
     DEBUG_FUNCTION
@@ -264,19 +264,26 @@ try {
     const auto offset = cpuStorage.textureStaging.size();
     for (const auto &image: gltfModel.images) {
         const auto filepath = path.parent_path() / image.uri;
-        loadTextures(filepath);
+        loadTexture(filepath);
     }
     for (const auto &material: gltfModel.materials) {
         const auto mat = loadGltfMaterial(cpuStorage.textureStaging, gltfModel, material, offset);
         cpuStorage.materialStaging.add(std::move(mat));
     }
-    for (const auto &node: gltfModel.nodes) {
+    if (gltfModel.scenes.empty()) {
+        logger.warn("Asset Storage/GLTF") << "GLTF file does not contains scene.";
+        return true;
+    }
+    const auto &scene = gltfModel.scenes[0];
+    for (const auto &idx: scene.nodes) {
+        const auto &node = gltfModel.nodes.at(idx);
         for (const auto &i: loadGltfNode(gltfModel, node, cpuStorage.vertexStagingBuffer, cpuStorage.indexStagingBuffer,
                                          glm::mat4(1.0f))) {
             prefab.modelIds.push_back(i.first);
             modelStorage.insert(i);
         }
     }
+
     prefabStorage.insert(std::make_pair(path.stem().string(), prefab));
     return true;
 } catch (const AssetStorageException &ase) {

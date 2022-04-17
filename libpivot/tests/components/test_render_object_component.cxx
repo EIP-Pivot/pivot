@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <nlohmann/json.hpp>
 
-#include <pivot/components/RenderObject.hxx>
+#include <pivot/builtins/components/RenderObject.hxx>
 #include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
 #include <pivot/ecs/Core/Component/array.hxx>
 #include <pivot/ecs/Core/Component/description_helpers.hxx>
@@ -11,6 +11,8 @@
 using namespace nlohmann;
 using namespace pivot::ecs::data;
 using namespace pivot::ecs::component;
+using namespace pivot::builtins::components;
+using Transform = pivot::graphics::Transform;
 
 TEST_CASE("transform adapter work", "[graphics]")
 {

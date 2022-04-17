@@ -38,6 +38,6 @@ Signature EntityManager::GetSignature(Entity entity)
     return mEntities[entity];
 }
 
-std::unordered_map<Entity, Signature> EntityManager::getEntities() { return mEntities; }
+std::unordered_map<Entity, Signature> EntityManager::getEntities() const { return mEntities; }
 
 uint32_t EntityManager::getLivingEntityCount() { return mLivingEntityCount; }

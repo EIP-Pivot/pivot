@@ -41,9 +41,26 @@ public:
     /// Destory the vma::Allocator object. Does not free any allocated memory
     void destroy() { allocator.destroy(); }
 
+    template <typename T>
     /// Create a buffer.
-    AllocatedBuffer createBuffer(vk::DeviceSize allocSize, vk::BufferUsageFlags usage, vma::MemoryUsage memoryUsage,
-                                 vma::AllocationCreateFlags flags = {});
+    AllocatedBuffer<T> createBuffer(std::uint32_t allocSize, vk::BufferUsageFlags usage, vma::MemoryUsage memoryUsage,
+                                    vma::AllocationCreateFlags flags = {})
+    {
+        assert(allocSize != 0);
+        vk::BufferCreateInfo bufferInfo{
+            .size = allocSize,
+            .usage = usage,
+        };
+        vma::AllocationCreateInfo vmaallocInfo;
+        vmaallocInfo.usage = memoryUsage;
+        vmaallocInfo.flags = flags;
+        AllocatedBuffer<T> buffer;
+        std::tie(buffer.buffer, buffer.memory) = allocator.createBuffer(bufferInfo, vmaallocInfo, buffer.info);
+        buffer.flags = flags;
+        buffer.size = allocSize;
+        return buffer;
+    }
+
     /// @brief Create an image.
     ///
     /// The layout is undefined
@@ -51,28 +68,32 @@ public:
 
     template <typename T>
     /// Map buffer memory to a pointer
-    T *mapMemory(AllocatedBuffer &buffer)
+    T *mapMemory(AllocatedBuffer<T> &buffer)
     {
         return static_cast<T *>(allocator.mapMemory(buffer.memory));
     }
 
     template <typename T>
     /// Map buffer memory as a read-only pointer
-    const T *const mapMemory(AllocatedBuffer &buffer) const
+    const T *const mapMemory(AllocatedBuffer<T> &buffer) const
     {
         return static_cast<const T *const>(allocator.mapMemory(buffer.memory));
     }
 
+    template <typename T>
     /// @brief Unmap buffer memory.
     ///
     /// It must be called the same number of times mapMemory() is called.
-    /// It is safe to call if the buffer has been created with vma::AllocationCreateFlagBits::eMapped.
-    void unmapMemory(AllocatedBuffer &buffer) { allocator.unmapMemory(buffer.memory); }
+    /// It is safe to call even if the buffer has been created with vma::AllocationCreateFlagBits::eMapped.
+    void unmapMemory(AllocatedBuffer<T> &buffer)
+    {
+        allocator.unmapMemory(buffer.memory);
+    }
 
     template <typename T>
-    requires std::is_standard_layout_v<T>
     /// Copy the data into a buffer
-    void copyBuffer(AllocatedBuffer &buffer, const T *data, size_t size)
+    requires std::is_standard_layout_v<T>
+    void copyBuffer(AllocatedBuffer<T> &buffer, const T *data, size_t size)
     {
         assert(buffer.getSize() >= size);
         auto *mapped = mapMemory<T>(buffer);
@@ -81,15 +102,19 @@ public:
     }
 
     template <typename T>
-    requires std::is_standard_layout_v<T>
     /// Copy the vector into the buffer
-    void copyBuffer(AllocatedBuffer &buffer, const std::span<T> &data)
+    requires std::is_standard_layout_v<T>
+    void copyBuffer(AllocatedBuffer<T> &buffer, const std::span<T> &data)
     {
-        copyBuffer(buffer, data.data(), sizeof(T) * data.size());
+        copyBuffer(buffer, data.data(), data.size_bytes());
     }
 
+    template <typename T>
     /// Destroy an allocated buffer
-    void destroyBuffer(AllocatedBuffer &buffer) { allocator.destroyBuffer(buffer.buffer, buffer.memory); }
+    void destroyBuffer(AllocatedBuffer<T> &buffer)
+    {
+        allocator.destroyBuffer(buffer.buffer, buffer.memory);
+    }
     /// Destroy an image. Does not destroy its image view
     void destroyImage(AllocatedImage &image) { allocator.destroyImage(image.image, image.memory); }
 

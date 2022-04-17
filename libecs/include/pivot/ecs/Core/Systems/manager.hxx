@@ -31,7 +31,7 @@ public:
     void execute(const event::Event &event);
 
     /// Constant iterator over every system used
-    using const_iterator = std::unordered_map<std::string, Description>::const_iterator;
+    using const_iterator = std::map<std::string, Description>::const_iterator;
     const_iterator begin() const;    ///< Begin iterator
     const_iterator end() const;      ///< End iterator
 
@@ -58,7 +58,7 @@ private:
     void executeOne(const Description &, const event::Event &);
     component::Manager &m_componentManager;
     EntityManager &m_entityManager;
-    std::unordered_map<std::string, Description> m_systems;
+    std::map<std::string, Description> m_systems;
     std::unordered_map<std::string, component::ArrayCombination> m_combinations;
 };
 

@@ -13,24 +13,6 @@ void VulkanAllocator::init(const vma::AllocatorCreateInfo &info)
     properties = info.physicalDevice.getMemoryProperties();
 }
 
-AllocatedBuffer VulkanAllocator::createBuffer(vk::DeviceSize allocSize, vk::BufferUsageFlags usage,
-                                              vma::MemoryUsage memoryUsage, vma::AllocationCreateFlags flags)
-{
-    assert(allocSize != 0);
-    vk::BufferCreateInfo bufferInfo{
-        .size = allocSize,
-        .usage = usage,
-    };
-    vma::AllocationCreateInfo vmaallocInfo;
-    vmaallocInfo.usage = memoryUsage;
-    vmaallocInfo.flags = flags;
-    AllocatedBuffer buffer;
-    std::tie(buffer.buffer, buffer.memory) = allocator.createBuffer(bufferInfo, vmaallocInfo, buffer.info);
-    buffer.flags = flags;
-    buffer.size = allocSize;
-    return buffer;
-}
-
 AllocatedImage VulkanAllocator::createImage(const vk::ImageCreateInfo &info, const vma::AllocationCreateInfo &allocInfo)
 {
     assert(info.extent.depth != 0 && info.extent.height != 0 && info.extent.width != 0);

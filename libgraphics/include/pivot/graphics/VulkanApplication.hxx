@@ -1,13 +1,21 @@
 #pragma once
 
 #include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/DeletionQueue.hxx"
-#include "pivot/graphics/DrawCallResolver.hxx"
 #include "pivot/graphics/PipelineStorage.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
+#include "pivot/graphics/VulkanRenderPass.hxx"
 #include "pivot/graphics/VulkanSwapchain.hxx"
+#include "pivot/graphics/interface/IRenderer.hxx"
+#include "pivot/graphics/pivot.hxx"
 #include "pivot/graphics/types/Frame.hxx"
 #include "pivot/graphics/types/vk_types.hxx"
+#include "pivot/graphics/vk_debug.hxx"
+
+#include "pivot/graphics/Renderer/CullingRenderer.hxx"
+#include "pivot/graphics/Renderer/GraphicsRenderer.hxx"
+#include "pivot/graphics/Renderer/ImGuiRenderer.hxx"
 
 #include <optional>
 #include <vector>
@@ -36,6 +44,15 @@ const std::vector<const char *> deviceExtensions = {
 class VulkanApplication : public VulkanBase
 {
 public:
+    /// Alias for a vector of command buffer
+    using CommandVector = std::vector<vk::CommandBuffer>;
+
+    template <typename T>
+    /// Alias for storing a Renderer and its associated command buffer
+    requires std::is_base_of_v<IRenderer, T>
+    using RendererStorage = std::vector<std::pair<std::unique_ptr<T>, CommandVector>>;
+
+public:
     /// Default constructor
     VulkanApplication();
     /// Default destructor
@@ -60,81 +77,63 @@ public:
     );
 
     /// @brief get Swapchain aspect ratio
-    float getAspectRatio() const noexcept { return swapchain.getAspectRatio(); }
+    constexpr float getAspectRatio() const noexcept { return swapchain.getAspectRatio(); }
+
+    template <validRenderer T>
+    /// Add a Renderer to the frame
+    T &addRenderer()
+    {
+        DEBUG_FUNCTION
+        auto rendy = std::make_unique<T>(pipelineStorage, assetStorage);
+        auto &ret = *rendy;
+        if constexpr (std::is_base_of_v<IGraphicsRenderer, T>) {
+            graphicsRenderer.emplace_back(std::move(rendy), CommandVector());
+        } else if constexpr (std::is_base_of_v<IComputeRenderer, T>) {
+            computeRenderer.emplace_back(std::move(rendy), CommandVector());
+        } else {
+            throw std::logic_error("Unsuported Renderer : " + rendy->getType());
+        }
+        return ret;
+    }
 
 private:
-    bool dispatchCulling(const CameraData &cameraData, const vk::CommandBufferInheritanceInfo &info,
-                         vk::CommandBuffer &cmd);
-    bool drawImGui(const CameraData &cameraData, const vk::CommandBufferInheritanceInfo &info, vk::CommandBuffer &cmd);
-    bool drawScene(const CameraData &cameraData, const vk::CommandBufferInheritanceInfo &info, vk::CommandBuffer &cmd);
-
-    void postInitialization();
+    virtual void postInitialization();
     void recreateSwapchain();
     void initVulkanRessources();
 
-    void createSyncStructure();
-
-    void createRessourcesDescriptorSetLayout();
-    void createPipelineLayout();
-    void createCullingPipelineLayout();
-
-    void createDescriptorPool();
-    void createRessourcesDescriptorSets();
     void createCommandPool();
     void createCommandBuffers();
 
-    void createPipeline();
-    void createCullingPipeline();
     void createDepthResources();
     void createColorResources();
     void createRenderPass();
-    void createTextureSampler();
     void createFramebuffers();
-
-    void createImGuiDescriptorPool();
-    void initDearImGui();
 
 public:
     /// The application asssets storage
     AssetStorage assetStorage;
+    /// The application pipeline storage
+    PipelineStorage pipelineStorage;
 
 private:
     /// @cond
-    uint32_t mipLevels = 0;
+    vk::DescriptorPool imGuiPool = VK_NULL_HANDLE;
+    vk::CommandPool commandPool = VK_NULL_HANDLE;
 
-    struct ImGuiContext {
-        vk::CommandPool cmdPool = VK_NULL_HANDLE;
-        std::vector<vk::CommandBuffer> cmdBuffer;
-        vk::DescriptorPool pool = VK_NULL_HANDLE;
-    } imguiContext;
+    RendererStorage<IGraphicsRenderer> graphicsRenderer;
+    RendererStorage<IComputeRenderer> computeRenderer;
 
     DeletionQueue mainDeletionQueue;
     DeletionQueue swapchainDeletionQueue;
     VulkanSwapchain swapchain;
 
     uint8_t currentFrame = 0;
-    pivot::graphics::DrawCallResolver drawResolver;
     std::array<Frame, MaxFrameInFlight> frames;
 
-    vk::RenderPass renderPass = VK_NULL_HANDLE;
-
-    vk::DescriptorPool descriptorPool = VK_NULL_HANDLE;
-    vk::DescriptorSetLayout ressourcesSetLayout = VK_NULL_HANDLE;
-    vk::DescriptorSet ressourceDescriptorSet = VK_NULL_HANDLE;
-
-    vk::Sampler textureSampler = VK_NULL_HANDLE;
-
-    vk::CommandPool commandPool = VK_NULL_HANDLE;
-
-    std::vector<vk::CommandBuffer> commandBuffersPrimary;
-    std::vector<vk::CommandBuffer> commandBuffersSecondary;
+    VulkanRenderPass renderPass;
 
     AllocatedImage depthResources = {};
     AllocatedImage colorImage = {};
-
-    PipelineStorage pipelineStorage;
-    vk::PipelineLayout pipelineLayout = VK_NULL_HANDLE;
-    vk::PipelineLayout cullingLayout = VK_NULL_HANDLE;
 
     std::vector<vk::Framebuffer> swapChainFramebuffers;
     /// @endcond

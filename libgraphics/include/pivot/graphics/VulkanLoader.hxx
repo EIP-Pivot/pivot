@@ -2,6 +2,8 @@
 
 #include <vulkan/vulkan.hpp>
 
+namespace pivot::graphics
+{
 /// @class VulkanLoader
 ///
 /// @brief A class to abstract dynamic lookout of Vulkan function
@@ -23,8 +25,7 @@ public:
     /// @cond
     vk::Instance instance = VK_NULL_HANDLE;
     vk::Device device = VK_NULL_HANDLE;
-
-protected:
     vk::DynamicLoader loader;
     /// @endcond
 };
+}    // namespace pivot::graphics

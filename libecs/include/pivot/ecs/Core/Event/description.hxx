@@ -19,6 +19,8 @@ struct Description {
     std::vector<std::string> entities;
     /// Value of the payload
     data::Type payload;
+    /// Event provenance
+    Provenance provenance;
 
     /// Convenience method used to check if any error exist the component's definition
     void validate() const;

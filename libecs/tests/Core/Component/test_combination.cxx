@@ -41,9 +41,10 @@ TEST_CASE("Component array combinations", "[component]")
 
 std::unique_ptr<IComponentArray> createArray(Description d) { return std::make_unique<ScriptingComponentArray>(d); }
 
-static const std::array<Description, 3> components{{{"1", BasicType::Integer, createArray},
-                                                    {"2", BasicType::Integer, createArray},
-                                                    {"3", BasicType::Integer, createArray}}};
+static const std::array<Description, 3> components{
+    {{"1", BasicType::Integer, pivot::ecs::Provenance::builtin(), createArray},
+     {"2", BasicType::Integer, pivot::ecs::Provenance::builtin(), createArray},
+     {"3", BasicType::Integer, pivot::ecs::Provenance::builtin(), createArray}}};
 
 static const std::vector<std::array<std::optional<Value>, components.size()>> entities{
     {std::nullopt, std::nullopt, std::nullopt},

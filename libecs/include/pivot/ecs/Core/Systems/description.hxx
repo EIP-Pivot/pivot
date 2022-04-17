@@ -27,6 +27,8 @@ struct Description {
     event::Description eventListener;
     /// Needed component for event
     std::vector<std::vector<std::string>> eventComponents;
+    /// Event provenance
+    Provenance provenance;
     /// System function
     std::function<void(const Description &, component::ArrayCombination &, const event::EventWithComponent &)> system;
     /// Check if all needed variable are set

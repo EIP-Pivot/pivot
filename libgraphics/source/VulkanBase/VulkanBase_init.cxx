@@ -107,7 +107,6 @@ void VulkanBase::createLogicalDevice(const std::vector<const char *> &deviceExte
     }
 
     vk::PhysicalDeviceDescriptorIndexingFeatures descriptorIndex{
-        .shaderSampledImageArrayNonUniformIndexing = VK_TRUE,
         .descriptorBindingPartiallyBound = VK_TRUE,
         .descriptorBindingVariableDescriptorCount = VK_TRUE,
         .runtimeDescriptorArray = VK_TRUE,

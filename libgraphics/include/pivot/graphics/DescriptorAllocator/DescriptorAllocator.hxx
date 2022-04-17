@@ -2,8 +2,9 @@
 
 #include <unordered_map>
 #include <vector>
-
 #include <vulkan/vulkan.hpp>
+
+#include "pivot/graphics/types/common.hxx"
 
 namespace pivot::graphics
 {
@@ -31,7 +32,8 @@ public:
     /// If the allocation fail once, a new Descriptor pool will be created and the allocation will be retried. If the
     /// allocation fail a second time, it will return false, and should be considered as a critical failure. Otherwise
     /// it will return true.
-    bool allocate(vk::DescriptorSet &set, vk::DescriptorSetLayout &layout);
+    bool allocate(vk::DescriptorSet &set, vk::DescriptorSetLayout &layout,
+                  const vk::DescriptorSetVariableDescriptorCountAllocateInfo &pExtension = {});
 
 private:
     vk::DescriptorPool grabPool();

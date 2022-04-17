@@ -52,9 +52,9 @@ VulkanApplication::~VulkanApplication()
 void VulkanApplication::init()
 {
     VulkanBase::init({}, deviceExtensions, validationLayers);
-    assetStorage.build();
     descriptorAllocator.init(device);
     layoutCache.init(device);
+    assetStorage.build(DescriptorBuilder(layoutCache, descriptorAllocator));
     initVulkanRessources();
 }
 
@@ -70,6 +70,7 @@ void VulkanApplication::initVulkanRessources()
     std::ranges::for_each(frames, [&](Frame &fr) {
         fr.initFrame(*this, DescriptorBuilder(layoutCache, descriptorAllocator), assetStorage, commandPool);
     });
+
     auto size = window.getSize();
     swapchain.create(size, physical_device, device, surface);
     createDepthResources();

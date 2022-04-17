@@ -33,9 +33,9 @@ void DrawCallResolver::init(VulkanBase &base, AssetStorage &stor, DescriptorBuil
     };
     auto success =
         builder
-            .bindBuffer(0, &bufferInfo, vk::DescriptorType::eStorageBuffer,
+            .bindBuffer(0, bufferInfo, vk::DescriptorType::eStorageBuffer,
                         vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute)
-            .bindBuffer(1, &indirectInfo, vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eCompute)
+            .bindBuffer(1, indirectInfo, vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eCompute)
             .build(base_ref->get().device, frame.objectDescriptor, descriptorSetLayout);
     assert(success);
     vk_debug::setObjectName(base_ref->get().device, frame.objectDescriptor,

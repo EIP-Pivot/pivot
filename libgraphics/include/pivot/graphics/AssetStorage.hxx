@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pivot/graphics/DeletionQueue.hxx"
+#include "pivot/graphics/DescriptorAllocator/DescriptorBuilder.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/abstract/AImmediateCommand.hxx"
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
@@ -144,7 +145,7 @@ public:
     bool loadTexture(const std::filesystem::path &path);
 
     /// Push the ressource into GPU memory
-    void build();
+    void build(DescriptorBuilder builder);
 
     /// Free GPU memory
     void destroy();
@@ -230,9 +231,7 @@ private:
 
     // Descriptor ressources
     void createTextureSampler();
-    void createDescriptorPool();
-    void createDescriptorSetLayout();
-    void createDescriptorSet();
+    void createDescriptorSet(DescriptorBuilder &builder);
 
 private:
     OptionalRef<VulkanBase> base_ref;
@@ -258,7 +257,6 @@ private:
     // Vulkan Ressouces
     DeletionQueue vulkanDeletionQueue;
     vk::Sampler textureSampler;
-    vk::DescriptorPool descriptorPool;
     vk::DescriptorSetLayout descriptorSetLayout;
     vk::DescriptorSet descriptorSet;
     AllocatedBuffer<Vertex> vertexBuffer;

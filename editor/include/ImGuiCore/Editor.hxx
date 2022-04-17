@@ -13,8 +13,9 @@
 class Editor
 {
 public:
-    Editor(const pivot::ecs::SceneManager &sceneManager)
+    Editor(const pivot::ecs::SceneManager &sceneManager, pivot::ecs::CurrentScene scene)
         : m_sceneManager(sceneManager),
+          m_currentScene(scene),
           run(false),
           currentGizmoOperation(ImGuizmo::TRANSLATE),
           currentGizmoMode(ImGuizmo::LOCAL),
@@ -32,12 +33,13 @@ public:
 
     bool getRun();
     void setAspectRatio(float aspect);
-    void DisplayGuizmo(Entity entity);
+    void DisplayGuizmo(Entity entity, const Camera &camera);
 
 private:
     void createPopUp(pivot::Engine &engine);
 
     const pivot::ecs::SceneManager &m_sceneManager;
+    pivot::ecs::CurrentScene m_currentScene;
     OptionalRef<pivot::graphics::PipelineStorage> storage;
     bool shouldForce = false;
 

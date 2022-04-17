@@ -5,6 +5,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <misc/cpp/imgui_stdlib.h>
 
+#include <numbers>
+
 #include "ImGuiCore/Editor.hxx"
 
 using namespace pivot::ecs;
@@ -109,20 +111,35 @@ bool Editor::getRun() { return run; }
 
 void Editor::setAspectRatio(float aspect) { aspectRatio = aspect; }
 
-void Editor::DisplayGuizmo(Entity entity)
+void Editor::DisplayGuizmo(Entity entity, const pivot::builtins::Camera &camera)
 {
-    // const auto view = camera.getView();
-    // const auto projection = camera.getProjection(80.9f, aspectRatio);
+    using RenderObject = pivot::builtins::components::RenderObject;
 
-    // const float *view_ptr = glm::value_ptr(view);
-    // const float *projection_ptr = glm::value_ptr(projection);
-    // float *matrix = glm::value_ptr(m_sceneManager.getCurrentLevel()
-    //                                    .GetComponent<RenderObject>(entity)
-    //                                    .objectInformation.transform.getModelMatrix());
-    // ImGuiIO &io = ImGui::GetIO();
-    // ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
-    // ImGuizmo::Manipulate(view_ptr, projection_ptr, currentGizmoOperation, currentGizmoMode, matrix, NULL,
-    //                      useSnap ? &snap[0] : NULL);
+    const auto view = camera.getView();
+    const auto projection = camera.getProjection(pivot::Engine::fov, aspectRatio);
+
+    const float *view_ptr = glm::value_ptr(view);
+    const float *projection_ptr = glm::value_ptr(projection);
+
+    // TODO: Refactor this out, to compute only when the scene changes
+    auto &cm = m_currentScene->getComponentManager();
+    auto &array = cm.GetComponentArray(cm.GetComponentId(RenderObject::description.name).value());
+    auto &ro_array = dynamic_cast<pivot::ecs::component::DenseTypedComponentArray<RenderObject> &>(array);
+    if (!ro_array.entityHasValue(entity)) return;
+    RenderObject &ro = ro_array.getData()[entity];
+    auto matrix = ro.transform.getModelMatrix();
+    float *matrix_data = glm::value_ptr(matrix);
+    ImGuiIO &io = ImGui::GetIO();
+    ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+    glm::mat4x4 delta_matrix;
+    bool changed = ImGuizmo::Manipulate(view_ptr, projection_ptr, currentGizmoOperation, currentGizmoMode, matrix_data,
+                                        glm::value_ptr(delta_matrix), useSnap ? &snap[0] : NULL);
+    if (!changed) return;
+
+    glm::vec3 rotation_deg;
+    ImGuizmo::DecomposeMatrixToComponents(matrix_data, glm::value_ptr(ro.transform.position),
+                                          glm::value_ptr(rotation_deg), glm::value_ptr(ro.transform.scale));
+    ro.transform.rotation = rotation_deg * std::numbers::pi_v<float> / 180.0f;
 }
 
 void Editor::createPopUp(pivot::Engine &engine)

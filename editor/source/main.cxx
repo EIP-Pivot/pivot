@@ -52,7 +52,7 @@ class Application : public pivot::Engine
 public:
     Application()
         : Engine(),
-          editor(getSceneManager()),
+          editor(getSceneManager(), getCurrentScene()),
           entity(getCurrentScene()),
           systemsEditor(m_system_index, getCurrentScene()),
           componentEditor(m_component_index, getCurrentScene()){};
@@ -189,10 +189,7 @@ public:
             entity.hasSelected() ? componentEditor.create(entity.getEntitySelected()) : componentEditor.create();
             systemsEditor.create();
 
-            // if (entity.hasSelected() &&
-            //     m_scene_manager.getCurrentLevel().hasComponent<RenderObject>(entity.getEntitySelected())) {
-            //     editor.DisplayGuizmo(entity.getEntitySelected());
-            // }
+            if (entity.hasSelected()) { editor.DisplayGuizmo(entity.getEntitySelected(), m_camera); }
         }
         UpdateCamera(dt);
 

@@ -1,3 +1,5 @@
+#include <set>
+
 #include "pivot/ecs/Core/Scene.hxx"
 #include <pivot/ecs/Components/Tag.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>

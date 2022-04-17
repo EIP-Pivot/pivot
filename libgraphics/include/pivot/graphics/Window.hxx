@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <vulkan/vulkan.hpp>
 
+namespace pivot::graphics
+{
 /// @class Window
 ///
 /// @brief A class allowing some abstaction over the GLFW library
@@ -201,6 +203,4 @@ private:
     std::string windowName;
     GLFWwindow *window = nullptr;
 };
-
-void cursor_callback(GLFWwindow *win, double xpos, double ypos);
-void keyboard_callback(GLFWwindow *win, int key, int, int action, int);
+}    // namespace pivot::graphics

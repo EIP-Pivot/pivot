@@ -1,5 +1,8 @@
 #include "pivot/graphics/types/Vertex.hxx"
 
+namespace pivot::graphics
+{
+
 bool Vertex::operator==(const Vertex &other) const noexcept
 {
     return pos == other.pos && color == other.color && normal == other.normal && texCoord == other.texCoord;
@@ -39,3 +42,4 @@ std::vector<vk::VertexInputAttributeDescription> Vertex::getAttributeDescriptons
     attributeDescriptions[3].offset = offsetof(Vertex, texCoord);
     return attributeDescriptions;
 }
+}    // namespace pivot::graphics

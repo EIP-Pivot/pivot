@@ -4,6 +4,7 @@
 #include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
 
+using namespace pivot::ecs;
 using namespace pivot::ecs::component;
 using namespace pivot::ecs::data;
 

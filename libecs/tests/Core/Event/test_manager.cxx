@@ -18,6 +18,7 @@
 
 using namespace pivot::ecs;
 using namespace pivot::ecs::data;
+using namespace pivot::builtins::components;
 
 void tickSystem(const systems::Description &description, component::ArrayCombination &entities,
                 const event::EventWithComponent &event)

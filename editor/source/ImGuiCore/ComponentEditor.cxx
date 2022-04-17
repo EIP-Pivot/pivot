@@ -5,6 +5,8 @@
 #include <misc/cpp/imgui_stdlib.h>
 
 using namespace pivot::ecs;
+using namespace pivot::ecs::component;
+using namespace pivot::ecs::data;
 
 void ComponentEditor::create(Entity entity)
 {

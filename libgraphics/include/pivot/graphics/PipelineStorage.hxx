@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <ranges>
 #include <string>
 #include <unordered_map>
 #include <vulkan/vulkan.hpp>
@@ -43,7 +44,10 @@ public:
     vk::Pipeline &getCompute(const std::string &id) { return computeStorage.at(id); }
 
     /// @brief get all available pipeline id
-    std::vector<std::string> getNames() const;
+    auto getNames() const
+    {
+        return this->graphicsStorage | std::views::transform([](const auto &pipeline) { return pipeline.first; });
+    }
 
     /// @brief Get the default graphics pipeline
     vk::Pipeline &getDefault() { return graphicsStorage.at(defaultPipeline); }

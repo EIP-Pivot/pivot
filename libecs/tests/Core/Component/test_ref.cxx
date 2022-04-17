@@ -4,6 +4,7 @@
 #include <pivot/ecs/Core/Component/index.hxx>
 #include <pivot/ecs/Core/Component/ref.hxx>
 
+using namespace pivot::ecs;
 using namespace pivot::ecs::data;
 using namespace pivot::ecs::component;
 

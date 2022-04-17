@@ -6,6 +6,8 @@
 #include <vector>
 #include <vulkan/vulkan.hpp>
 
+namespace pivot::graphics
+{
 /// @struct Vertex
 /// @brief Represent a vertex of the 3D model
 struct Vertex {
@@ -29,14 +31,15 @@ struct Vertex {
     /// Get the layout of the Vertex struct for Vulkan pipeline input
     static std::vector<vk::VertexInputAttributeDescription> getAttributeDescriptons() noexcept;
 };
+}    // namespace pivot::graphics
 
 namespace std
 {
 /// @brief Specialization of std::hash for the Vertex structure
 template <>
-struct hash<Vertex> {
+struct hash<pivot::graphics::Vertex> {
     /// @cond
-    size_t operator()(Vertex const &vertex) const
+    size_t operator()(pivot::graphics::Vertex const &vertex) const
     {
         return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^
                (hash<glm::vec3>()(vertex.color) ^ (hash<glm::vec2>()(vertex.texCoord) << 1));

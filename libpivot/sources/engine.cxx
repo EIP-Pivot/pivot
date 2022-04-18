@@ -106,4 +106,17 @@ void Engine::saveScene(ecs::SceneManager::SceneId id, const std::filesystem::pat
 {
     m_scene_manager.getSceneById(id).save(path);
 }
+
+ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
+{
+
+    std::ifstream scene_file{path};
+    if (!scene_file.is_open()) {
+        logger.err() << "Could not open scene file: " << strerror(errno);
+        return 1;
+    }
+    auto scene_json = nlohmann::json::parse(scene_file);
+    auto scene = Scene::load(scene_json, m_component_index, m_system_index);
+    return m_scene_manager.registerScene(std::move(scene));
+}
 }    // namespace pivot

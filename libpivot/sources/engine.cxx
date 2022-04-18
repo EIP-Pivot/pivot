@@ -84,7 +84,9 @@ namespace
 {
     void postSceneRegister(Scene &scene)
     {
-        scene.getComponentManager().RegisterComponent(builtins::components::RenderObject::description);
+        auto &cm = scene.getComponentManager();
+        if (cm.GetComponentId(builtins::components::RenderObject::description.name).has_value()) { return; }
+        cm.RegisterComponent(builtins::components::RenderObject::description);
     }
 }    // namespace
 

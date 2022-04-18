@@ -19,13 +19,34 @@ const std::unordered_map<std::string, AssetStorage::AssetHandler> AssetStorage::
     {".gltf", &AssetStorage::loadGltfModel},
 };
 
-AssetStorage::AssetStorage(VulkanBase &base): base_ref(base) { cpuStorage.materialStaging.add("white", {}); }
+AssetStorage::CPUStorage::CPUStorage()
+{
+    std::vector<std::byte> default_texture_data;
+    default_texture_data.push_back(std::byte(0x0000));
+    default_texture_data.push_back(std::byte(0xffff));
+    default_texture_data.push_back(std::byte(0xffff));
+    default_texture_data.push_back(std::byte(0x0000));
+
+    textureStaging.add(missing_texture_name, CPUTexture{
+                                                 .image = std::move(default_texture_data),
+                                                 .size = {1, 1, 1},
+                                             });
+    materialStaging.add(missing_material_name, {
+                                                   .baseColorTexture = missing_material_name,
+                                               });
+
+    materialStaging.add("white", {});
+}
+
+AssetStorage::AssetStorage(VulkanBase &base): base_ref(base) {}
 
 AssetStorage::~AssetStorage() {}
 
 void AssetStorage::build(DescriptorBuilder builder)
 {
     DEBUG_FUNCTION
+    assert(cpuStorage.materialStaging.contains(missing_material_name));
+    assert(cpuStorage.textureStaging.contains(missing_texture_name));
     createTextureSampler();
 
     for (const auto &[name, model]: modelStorage) {

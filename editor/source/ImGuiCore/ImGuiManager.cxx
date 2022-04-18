@@ -51,11 +51,8 @@ void ImGuiManager::newFrame(pivot::Engine &engine)
             try{
                 engine.loadScene(scenePath);
                 loading_result = "Scene correctly loaded";
-            } catch (const std::runtime_error& e){
+            } catch (const std::exception& e){
                 loading_result = std::string(e.what());
-                ImGui::OpenPopup("Load");
-            } catch (...){
-                loading_result = "Unknown error";
                 ImGui::OpenPopup("Load");
             }
             NFD_FreePath(scenePath);

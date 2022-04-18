@@ -3,6 +3,8 @@
 #include "pivot/graphics/AssetStorage.hxx"
 #include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/DeletionQueue.hxx"
+#include "pivot/graphics/DescriptorAllocator/DescriptorAllocator.hxx"
+#include "pivot/graphics/DescriptorAllocator/DescriptorLayoutCache.hxx"
 #include "pivot/graphics/PipelineStorage.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/VulkanRenderPass.hxx"
@@ -116,7 +118,9 @@ public:
     PipelineStorage pipelineStorage;
 
 private:
-    /// @cond
+    DescriptorAllocator descriptorAllocator;
+    DescriptorLayoutCache layoutCache;
+
     vk::DescriptorPool imGuiPool = VK_NULL_HANDLE;
     vk::CommandPool commandPool = VK_NULL_HANDLE;
 
@@ -136,7 +140,6 @@ private:
     AllocatedImage colorImage = {};
 
     std::vector<vk::Framebuffer> swapChainFramebuffers;
-    /// @endcond
 };
 
 }    // namespace pivot::graphics

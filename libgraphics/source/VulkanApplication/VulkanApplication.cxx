@@ -9,7 +9,11 @@ namespace pivot::graphics
 {
 
 VulkanApplication::VulkanApplication()
-    : VulkanBase("Pivot Game Engine", true), assetStorage(*this), pipelineStorage(*this)
+    : VulkanBase("Pivot Game Engine"),
+      assetStorage(*this),
+      pipelineStorage(*this),
+      descriptorAllocator(device),
+      layoutCache(device)
 {
     DEBUG_FUNCTION;
 
@@ -45,13 +49,15 @@ VulkanApplication::~VulkanApplication()
     swapchainDeletionQueue.flush();
     mainDeletionQueue.flush();
     pipelineStorage.destroy();
+    descriptorAllocator.cleanup();
+    layoutCache.cleanup();
     VulkanBase::destroy();
 }
 
 void VulkanApplication::init()
 {
     VulkanBase::init({}, deviceExtensions, validationLayers);
-    assetStorage.build();
+    assetStorage.build(DescriptorBuilder(layoutCache, descriptorAllocator));
     initVulkanRessources();
 }
 
@@ -64,7 +70,10 @@ void VulkanApplication::initVulkanRessources()
     }
 
     createCommandPool();
-    std::ranges::for_each(frames, [&](Frame &fr) { fr.initFrame(*this, assetStorage, commandPool); });
+    std::ranges::for_each(frames, [&](Frame &fr) {
+        fr.initFrame(*this, DescriptorBuilder(layoutCache, descriptorAllocator), assetStorage, commandPool);
+    });
+
     auto size = window.getSize();
     swapchain.create(size, physical_device, device, surface);
     createDepthResources();

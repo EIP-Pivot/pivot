@@ -23,7 +23,7 @@ AssetStorage::AssetStorage(VulkanBase &base): base_ref(base) { cpuStorage.materi
 
 AssetStorage::~AssetStorage() {}
 
-void AssetStorage::build()
+void AssetStorage::build(DescriptorBuilder builder)
 {
     DEBUG_FUNCTION
     createTextureSampler();
@@ -58,9 +58,7 @@ void AssetStorage::build()
     vk_debug::setObjectName(base_ref->get().device, materialBuffer.buffer, "Material Buffer");
 
     cpuStorage = {};
-    createDescriptorSetLayout();
-    createDescriptorPool();
-    createDescriptorSet();
+    createDescriptorSet(builder);
 }
 
 void AssetStorage::destroy()

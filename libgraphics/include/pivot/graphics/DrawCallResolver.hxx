@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/DescriptorAllocator/DescriptorBuilder.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 #include "pivot/graphics/types/RenderObject.hxx"
@@ -67,7 +68,7 @@ public:
     ~DrawCallResolver();
 
     /// Initialize the ressources
-    void init(VulkanBase &, AssetStorage &);
+    void init(VulkanBase &, AssetStorage &, DescriptorBuilder &);
     /// Destroy them
     void destroy();
 
@@ -81,16 +82,13 @@ public:
     constexpr const vk::DescriptorSetLayout &getDescriptorSetLayout() const noexcept { return descriptorSetLayout; }
 
 private:
-    void createDescriptorPool();
     void createBuffer(const vk::DeviceSize bufferSize);
-    void createDescriptorSet(const vk::DeviceSize bufferSize);
-    void createDescriptorSetLayout();
+    void updateDescriptorSet(const vk::DeviceSize bufferSize);
 
 private:
     OptionalRef<VulkanBase> base_ref;
     OptionalRef<AssetStorage> storage_ref;
     Frame frame;
-    vk::DescriptorPool descriptorPool = VK_NULL_HANDLE;
     vk::DescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
 };
 

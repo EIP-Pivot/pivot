@@ -1,11 +1,10 @@
 #include "pivot/graphics/types/Frame.hxx"
-
 #include "pivot/graphics/DebugMacros.hxx"
 
 namespace pivot::graphics
 {
 
-void Frame::initFrame(VulkanBase &base, AssetStorage &stor, vk::CommandPool &pool)
+void Frame::initFrame(VulkanBase &base, DescriptorBuilder build, AssetStorage &stor, vk::CommandPool &pool)
 {
     DEBUG_FUNCTION
     vk::SemaphoreCreateInfo semaphoreInfo{};
@@ -23,7 +22,7 @@ void Frame::initFrame(VulkanBase &base, AssetStorage &stor, vk::CommandPool &poo
     };
     cmdBuffer = base.device.allocateCommandBuffers(allocInfo).front();
 
-    drawResolver.init(base, stor);
+    drawResolver.init(base, stor, build);
 }
 
 void Frame::destroy(VulkanBase &base, vk::CommandPool &pool)

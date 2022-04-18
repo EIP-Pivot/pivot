@@ -1,12 +1,11 @@
 #include "ImGuiCore/ImGuiManager.hxx"
-#include <pivot/ecs/Core/SceneManager.hxx>
 
 #include <nfd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <Logger.hpp>
 
-void ImGuiManager::newFrame()
+void ImGuiManager::newFrame(pivot::Engine &engine)
 {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -45,8 +44,7 @@ void ImGuiManager::newFrame()
         if (resultLoadSce == NFD_OKAY){
             logger.info("File Dialog") << scenePath;
             try{
-                auto newScene = pivot::ecs::Scene::load(nlohmann::json::parse(scenePath), Cindex, Sindex);
-                m_sceneManager.registerScene(std::move(newScene));
+                engine.loadScene(scenePath);
                 if (ImGui::BeginPopupModal("Load")){
                     ImGui::Text("Scene correctly loaded");
                     ImGui::EndPopup();

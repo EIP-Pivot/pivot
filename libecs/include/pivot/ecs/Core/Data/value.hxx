@@ -31,8 +31,9 @@ struct Record : public std::map<std::string, Value> {
  * - String (std::string)
  * - Record
  * - Vec3 (glm::vec3)
+ * - Asset (name and path)
  */
-struct Value : public std::variant<std::string, double, int, bool, glm::vec3, Record> {
+struct Value : public std::variant<std::string, double, int, bool, glm::vec3, Record, Asset> {
     using variant::variant;
 
     /// Returns the Type corresponding to this Value

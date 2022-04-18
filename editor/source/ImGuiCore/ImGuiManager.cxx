@@ -23,16 +23,20 @@ void ImGuiManager::newFrame(pivot::Engine &engine)
         if (resultSave == NFD_OKAY) {
             logger.info("File Dialog") << savePath;
             m_sceneManager.getCurrentScene().save(savePath);
-            if (ImGui::BeginPopupModal("Save")){
-                ImGui::Text("Scene correctly saved");
-                ImGui::EndPopup();
-            }
+            ImGui::OpenPopup("Save");
         } else if (resultSave != NFD_CANCEL){
             logger.err("File Dialog") << NFD_GetError();
         }
 
         NFD_Quit();
-        }
+    }
+
+    if (ImGui::BeginPopupModal("Save", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("Scene correctly saved");
+        if (ImGui::Button("OK", ImVec2(120,0))) { ImGui::CloseCurrentPopup(); }
+        ImGui::EndPopup();
+    }
 
     if (ImGui::Button("Load Scene")){
         NFD_Init();
@@ -43,24 +47,30 @@ void ImGuiManager::newFrame(pivot::Engine &engine)
 
         if (resultLoadSce == NFD_OKAY){
             logger.info("File Dialog") << scenePath;
+            ImGui::OpenPopup("Load");
             try{
                 engine.loadScene(scenePath);
-                if (ImGui::BeginPopupModal("Load")){
-                    ImGui::Text("Scene correctly loaded");
-                    ImGui::EndPopup();
-                }
+                loading_result = "Scene correctly loaded";
             } catch (const std::runtime_error& e){
-                if (ImGui::BeginPopupModal("Load")){
-                    ImGui::Text(e.what());
-                    ImGui::EndPopup();
-                }
+                loading_result = std::string(e.what());
+                ImGui::OpenPopup("Load");
+            } catch (...){
+                loading_result = "Unknown error";
+                ImGui::OpenPopup("Load");
             }
             NFD_FreePath(scenePath);
         } else if (resultLoadSce != NFD_CANCEL){
             logger.err("File Dialog") << NFD_GetError();
         }
 
+
         NFD_Quit();
+    }
+    if (ImGui::BeginPopupModal("Load", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("%s", loading_result.c_str());
+        if (ImGui::Button("OK", ImVec2(120,0))) { ImGui::CloseCurrentPopup(); }
+        ImGui::EndPopup();
     }
 }
 

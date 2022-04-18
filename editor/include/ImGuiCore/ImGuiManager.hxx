@@ -20,4 +20,5 @@ public:
     void render();
 private:
     const pivot::ecs::SceneManager &m_sceneManager;
+    std::string loading_result;
 };

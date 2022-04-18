@@ -2,12 +2,18 @@
 
 namespace pivot::ecs
 {
-SceneManager::SceneId SceneManager::registerScene(std::string name)
+SceneManager::SceneId SceneManager::registerScene(std::unique_ptr<Scene> scene)
 {
-    m_scenes.push_back(std::make_unique<Scene>(name));
+    auto name = scene->getName();
+    m_scenes.push_back(std::move(scene));
     SceneId id = SceneId(m_scenes.size() - 1);
     m_sceneNameToLevel[name] = id;
     return (id);
+}
+
+SceneManager::SceneId SceneManager::registerScene(std::string name)
+{
+    return this->registerScene(std::make_unique<Scene>(name));
 }
 
 SceneManager::SceneId SceneManager::registerScene()

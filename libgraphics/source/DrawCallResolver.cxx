@@ -26,6 +26,10 @@ void DrawCallResolver::init(VulkanBase &base, AssetStorage &stor, DescriptorBuil
                                    vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute)
                        .bindBuffer(1, frame.indirectBuffer.getBufferInfo(), vk::DescriptorType::eStorageBuffer,
                                    vk::ShaderStageFlagBits::eCompute)
+                       .bindBuffer(2, frame.omniLightBuffer.getBufferInfo(), vk::DescriptorType::eStorageBuffer,
+                                   vk::ShaderStageFlagBits::eFragment)
+                       .bindBuffer(3, frame.directLightBuffer.getBufferInfo(), vk::DescriptorType::eStorageBuffer,
+                                   vk::ShaderStageFlagBits::eFragment)
                        .build(base_ref->get().device, frame.objectDescriptor, descriptorSetLayout);
     assert(success);
     vk_debug::setObjectName(base_ref->get().device, frame.objectDescriptor,
@@ -38,6 +42,8 @@ void DrawCallResolver::destroy()
     DEBUG_FUNCTION
     if (frame.indirectBuffer) base_ref->get().allocator.destroyBuffer(frame.indirectBuffer);
     if (frame.objectBuffer) base_ref->get().allocator.destroyBuffer(frame.objectBuffer);
+    if (frame.omniLightBuffer) base_ref->get().allocator.destroyBuffer(frame.omniLightBuffer);
+    if (frame.directLightBuffer) base_ref->get().allocator.destroyBuffer(frame.directLightBuffer);
 }
 
 void DrawCallResolver::prepareForDraw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation)
@@ -89,6 +95,12 @@ void DrawCallResolver::prepareForDraw(std::vector<std::reference_wrapper<const R
     assert(frame.currentBufferSize > 0);
     base_ref->get().allocator.copyBuffer(frame.objectBuffer, std::span(objectGPUData));
 
+    auto lightData = frame.omniLightBuffer.getMappedSpan();
+    lightData[0] = gpu_object::PointLight{
+        .position = glm::vec4(0, 1000, 0, 1),
+        .intensity = 1000000,
+    };
+
     auto sceneData = frame.indirectBuffer.getMappedSpan();
     for (uint32_t i = 0; i < frame.packedDraws.size(); i++) {
         const auto &mesh = storage_ref->get().get<AssetStorage::Mesh>(frame.packedDraws.at(i).meshId);
@@ -103,14 +115,24 @@ void DrawCallResolver::prepareForDraw(std::vector<std::reference_wrapper<const R
 
 void DrawCallResolver::createBuffer(vk::DeviceSize bufferSize)
 {
-    if (frame.indirectBuffer) base_ref->get().allocator.destroyBuffer(frame.indirectBuffer);
-    if (frame.objectBuffer) base_ref->get().allocator.destroyBuffer(frame.objectBuffer);
+    destroy();
 
     frame.indirectBuffer = base_ref->get().allocator.createBuffer<vk::DrawIndexedIndirectCommand>(
         bufferSize, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer,
         vma::MemoryUsage::eCpuToGpu, vma::AllocationCreateFlagBits::eMapped);
     vk_debug::setObjectName(base_ref->get().device, frame.indirectBuffer.buffer,
                             "Indirect Command Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
+    frame.omniLightBuffer = base_ref->get().allocator.createBuffer<gpu_object::PointLight>(
+        bufferSize, vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu,
+        vma::AllocationCreateFlagBits::eMapped);
+    vk_debug::setObjectName(base_ref->get().device, frame.omniLightBuffer.buffer,
+                            "Point light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
+
+    frame.directLightBuffer = base_ref->get().allocator.createBuffer<gpu_object::DirectionalLight>(
+        bufferSize, vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu,
+        vma::AllocationCreateFlagBits::eMapped);
+    vk_debug::setObjectName(base_ref->get().device, frame.directLightBuffer.buffer,
+                            "Directional light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
 
     frame.objectBuffer = base_ref->get().allocator.createBuffer<gpu_object::UniformBufferObject>(
         bufferSize, vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
@@ -124,6 +146,8 @@ void DrawCallResolver::updateDescriptorSet(vk::DeviceSize bufferSize)
     assert(bufferSize > 0);
     auto bufferInfo = frame.objectBuffer.getBufferInfo();
     auto indirectInfo = frame.indirectBuffer.getBufferInfo();
+    auto omniLightInfo = frame.omniLightBuffer.getBufferInfo();
+    auto directLightInfo = frame.directLightBuffer.getBufferInfo();
     std::vector<vk::WriteDescriptorSet> descriptorWrites{
         {
             .dstSet = frame.objectDescriptor,
@@ -140,6 +164,22 @@ void DrawCallResolver::updateDescriptorSet(vk::DeviceSize bufferSize)
             .descriptorCount = 1,
             .descriptorType = vk::DescriptorType::eStorageBuffer,
             .pBufferInfo = &indirectInfo,
+        },
+        {
+            .dstSet = frame.objectDescriptor,
+            .dstBinding = 2,
+            .dstArrayElement = 0,
+            .descriptorCount = 1,
+            .descriptorType = vk::DescriptorType::eStorageBuffer,
+            .pBufferInfo = &omniLightInfo,
+        },
+        {
+            .dstSet = frame.objectDescriptor,
+            .dstBinding = 3,
+            .dstArrayElement = 0,
+            .descriptorCount = 1,
+            .descriptorType = vk::DescriptorType::eStorageBuffer,
+            .pBufferInfo = &directLightInfo,
         },
     };
     base_ref->get().device.updateDescriptorSets(descriptorWrites, 0);

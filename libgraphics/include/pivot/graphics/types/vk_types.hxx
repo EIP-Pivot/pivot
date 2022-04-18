@@ -29,11 +29,13 @@ namespace gpu_object
 
     /// The push constant data for the fragment shader
     struct FragmentPushConstant {
+        /// The number of point light
+        alignas(4) std::uint32_t nbOfLight;
         /// The position of the camera
         alignas(16) glm::vec3 position;
     };
     static_assert(sizeof(FragmentPushConstant) % 4 == 0);
-    static_assert(sizeof(FragmentPushConstant) == sizeof(float) * 4);
+    static_assert(sizeof(FragmentPushConstant) == (sizeof(float) * 3) + (sizeof(std::uint32_t)) + 16);
 
     /// The push constant data for the culling shader
     struct CullingPushConstant {

@@ -2,17 +2,21 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_EXT_nonuniform_qualifier : enable
 
-layout(location = 0) in vec3 fragPosition;
-layout(location = 1) in vec3 fragNormal;
-layout(location = 2) in vec3 fragColor;
-layout(location = 3) in vec2 fragTextCoords;
-layout(location = 4) in flat uint materialIndex;
+struct PointLight {
+    vec4 position;
+    vec4 color;
+    float intensity;
+    float minRadius;
+    float radius;
+    float falloff;
+};
 
-layout(location = 0) out vec4 outColor;
-
-layout (push_constant) uniform readonly constants {
-    layout(offset = 64) vec3 position;
-} cameraData;
+struct DirectionalLight {
+    vec3 position;
+    vec3 color;
+    float intensity;
+    float radius;
+};
 
 struct Material {
     vec4 baseColor;
@@ -25,13 +29,36 @@ struct Material {
     int emissiveTexture;
 };
 
+struct pushConstantStruct {
+    uint pointLightCount;
+    vec3 position;
+};
+
+layout(location = 0) in vec3 fragPosition;
+layout(location = 1) in vec3 fragNormal;
+layout(location = 2) in vec3 fragColor;
+layout(location = 3) in vec2 fragTextCoords;
+layout(location = 4) in flat uint materialIndex;
+
+layout(location = 0) out vec4 outColor;
+
+layout (push_constant) uniform readonly constants {
+    layout(offset = 64) pushConstantStruct push;
+} cameraData;
+
 layout (std140, set = 0, binding = 1) readonly buffer ObjectMaterials {
     Material materials[];
 } objectMaterials;
 
 layout(set = 0, binding = 2) uniform sampler2D texSampler[];
 
-const vec3 lightDirection = vec3(0.0, 1000.0, 0.0);
+layout(std140, set = 1, binding = 2) readonly buffer LightBuffer {
+    PointLight pointLightArray[];
+}  omniLight;
+
+layout(std140, set = 1, binding = 3) readonly buffer DirectLight {
+    DirectionalLight pointLightArray[];
+}  directLight;
 
 #define PI 3.1415926535897932384626433832795
 
@@ -102,21 +129,21 @@ void main()
     float occlusion = (material.occlusionTexture >= 0) ? (texture(texSampler[material.occlusionTexture], fragTextCoords).r) : (1.0);
 
     vec3 N = getNormalFromMap(material);
-    vec3 V = normalize(cameraData.position - fragPosition);
+    vec3 V = normalize(cameraData.push.position - fragPosition);
 
     vec3 F0 = vec3(0.04);
     F0 = mix(F0, diffuseColor, metallic);
 
     // reflectance equation
     vec3 Lo = vec3(0.0);
-    // Loop this for multiple light
-    {
-        vec3 L = normalize(lightDirection - fragPosition);
+    for (uint i = 0; i < cameraData.push.pointLightCount; i++) {
+        PointLight light = omniLight.pointLightArray[i];
+        vec3 L = normalize(light.position.xyz - fragPosition);
         vec3 H = normalize(V + L);
-        float distance = length(lightDirection - fragPosition);
+        float distance = length(light.position.xyz - fragPosition);
         float attenuation = 1.0 / (distance * distance);
         /// Replace the value with the color of the light
-        vec3 radiance = vec3(1000000.0) * attenuation;
+        vec3 radiance = light.color.rgb * light.intensity * attenuation;
 
         // Cook-Torrance BRDF
         float NDF = DistributionGGX(N, H, roughness);

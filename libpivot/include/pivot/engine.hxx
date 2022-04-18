@@ -44,5 +44,7 @@ private:
     ecs::SceneManager m_scene_manager;
     OptionalRef<ecs::component::DenseTypedComponentArray<builtins::components::RenderObject>>
         m_current_scene_render_object;
+
+    void loadSceneAssets(ecs::SceneManager::SceneId id, std::filesystem::path basePath);
 };
 }    // namespace pivot

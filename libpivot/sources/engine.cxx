@@ -5,6 +5,7 @@
 
 #include <pivot/ecs/Components/Gravity.hxx>
 #include <pivot/ecs/Components/RigidBody.hxx>
+#include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
 
 #include <pivot/builtins/events/tick.hxx>
 #include <pivot/builtins/systems/PhysicSystem.hxx>
@@ -114,7 +115,7 @@ void Engine::saveScene(ecs::SceneManager::SceneId id, const std::filesystem::pat
 
 ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
 {
-
+    logger.info() << "Loading scene " << path;
     std::ifstream scene_file{path};
     if (!scene_file.is_open()) {
         logger.err() << "Could not open scene file: " << strerror(errno);
@@ -122,6 +123,22 @@ ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
     }
     auto scene_json = nlohmann::json::parse(scene_file);
     auto scene = Scene::load(scene_json, m_component_index, m_system_index);
-    return this->registerScene(std::move(scene));
+    auto sceneId = this->registerScene(std::move(scene));
+    this->loadSceneAssets(sceneId, path.parent_path() / "assets" / "sponza");
+    return sceneId;
+}
+
+void Engine::loadSceneAssets(ecs::SceneManager::SceneId id, std::filesystem::path basePath)
+{
+    auto &cm = m_scene_manager.getSceneById(id).getComponentManager();
+    auto renderObjectId = cm.GetComponentId(pivot::builtins::components::RenderObject::description.name).value();
+    auto renderObjectArray =
+        dynamic_cast<pivot::ecs::component::DenseTypedComponentArray<pivot::builtins::components::RenderObject> &>(
+            cm.GetComponentArray(renderObjectId));
+    for (const auto &renderObject: renderObjectArray.getData()) {
+        auto path = basePath / (renderObject.meshID + ".gltf");
+        logger.info() << "Loading scene asset " << path;
+        m_vulkan_application.assetStorage.loadModel(path);
+    }
 }
 }    // namespace pivot

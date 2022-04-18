@@ -46,7 +46,7 @@ void ImGuiManager::newFrame()
             logger.info("File Dialog") << scenePath;
             try{
                 auto newScene = pivot::ecs::Scene::load(nlohmann::json::parse(scenePath), Cindex, Sindex);
-                m_sceneManager.registerScene(newScene);
+                m_sceneManager.registerScene(std::move(newScene));
                 if (ImGui::BeginPopupModal("Load")){
                     ImGui::Text("Scene correctly loaded");
                     ImGui::EndPopup();

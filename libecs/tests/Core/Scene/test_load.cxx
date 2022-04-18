@@ -40,11 +40,11 @@ TEST_CASE("Load the scene", "[Scene][Load]")
         .system = &test_load_scene_system,
     };
     sIndex.registerSystem(description);
-    pivot::ecs::Scene LaS = pivot::ecs::Scene::load(obj, cIndex, sIndex);
+    std::unique_ptr<pivot::ecs::Scene> LaS = pivot::ecs::Scene::load(obj, cIndex, sIndex);
 
-    REQUIRE(LaS.getLivingEntityCount() == 2);
+    REQUIRE(LaS->getLivingEntityCount() == 2);
 
-    auto &cManager = LaS.getComponentManager();
+    auto &cManager = LaS->getComponentManager();
     auto tagId = cManager.GetComponentId("Tag");
     auto GravityId = cManager.GetComponentId("Gravity");
     auto RigidBodyId = cManager.GetComponentId("RigidBody");
@@ -53,6 +53,6 @@ TEST_CASE("Load the scene", "[Scene][Load]")
     REQUIRE(cManager.GetComponent(0, GravityId.value()).has_value());
     REQUIRE(cManager.GetComponent(0, RigidBodyId.value()).has_value());
 
-    auto &sManager = LaS.getSystemManager();
+    auto &sManager = LaS->getSystemManager();
     for (auto [name, _]: sManager) { REQUIRE(name == "Test Description"); }
 }

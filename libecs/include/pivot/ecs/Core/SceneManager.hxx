@@ -21,6 +21,8 @@ public:
     /// Id of a scene
     using SceneId = scene_storage::size_type;
 
+    /// Registers existing scene
+    SceneId registerScene(std::unique_ptr<Scene> scene);
     /// Create new scene with scene name
     SceneId registerScene(std::string name);
     /// Create new scene with default name (ex: Scene 1)

@@ -19,18 +19,36 @@ const std::unordered_map<std::string, AssetStorage::AssetHandler> AssetStorage::
     {".gltf", &AssetStorage::loadGltfModel},
 };
 
+static const AssetStorage::CPUTexture default_texture_data{
+
+    .image =
+        {
+            std::byte(0x00),
+            std::byte(0x00),
+            std::byte(0x00),
+            std::byte(0xff),
+
+            std::byte(0xff),
+            std::byte(0xff),
+            std::byte(0xff),
+            std::byte(0xff),
+
+            std::byte(0xff),
+            std::byte(0xff),
+            std::byte(0xff),
+            std::byte(0xff),
+
+            std::byte(0x00),
+            std::byte(0x00),
+            std::byte(0x00),
+            std::byte(0xff),
+        },
+    .size = {2, 2, 1},
+};
+
 AssetStorage::CPUStorage::CPUStorage()
 {
-    std::vector<std::byte> default_texture_data;
-    default_texture_data.push_back(std::byte(0x0000));
-    default_texture_data.push_back(std::byte(0xffff));
-    default_texture_data.push_back(std::byte(0xffff));
-    default_texture_data.push_back(std::byte(0x0000));
-
-    textureStaging.add(missing_texture_name, CPUTexture{
-                                                 .image = std::move(default_texture_data),
-                                                 .size = {1, 1, 1},
-                                             });
+    textureStaging.add(missing_texture_name, default_texture_data);
     materialStaging.add(missing_material_name, {
                                                    .baseColorTexture = missing_material_name,
                                                });

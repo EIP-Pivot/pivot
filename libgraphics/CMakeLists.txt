@@ -54,18 +54,18 @@ endif()
 
 FetchContent_Declare(
     vma
-    GIT_REPOSITORY https://github.com/EIP-Pivot/VulkanMemoryAllocator-Hpp.git
-    GIT_TAG afce2cb1a2e75b35b1c8bef230029cb032b8a2c4
+    GIT_REPOSITORY https://github.com/YaaZ/VulkanMemoryAllocator-Hpp.git
+    GIT_TAG 05d9e5419a78cd178a4f3cfd54475b556d9e50df
 )
 if (NOT vma_POPULATED)
     message(STATUS "Populating vma")
     FetchContent_Populate(vma)
-    add_library(VulkanMemoryAllocator STATIC ${vma_SOURCE_DIR}/vk_mem_alloc.h)
+    add_library(VulkanMemoryAllocator STATIC ${vma_SOURCE_DIR}/include/vk_mem_alloc.h)
     set_source_files_properties(
-        ${vma_SOURCE_DIR}/vk_mem_alloc.h PROPERTIES
+        ${vma_SOURCE_DIR}/include/vk_mem_alloc.h PROPERTIES
         LANGUAGE CXX
     )
-    target_include_directories(VulkanMemoryAllocator SYSTEM PUBLIC ${vma_SOURCE_DIR})
+    target_include_directories(VulkanMemoryAllocator SYSTEM PUBLIC ${vma_SOURCE_DIR}/include/)
     target_compile_definitions(VulkanMemoryAllocator PRIVATE VMA_IMPLEMENTATION)
     set_target_properties(VulkanMemoryAllocator PROPERTIES LINKER_LANGUAGE CXX)
     target_link_libraries(VulkanMemoryAllocator PUBLIC Vulkan::Vulkan)

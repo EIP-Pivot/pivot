@@ -81,13 +81,13 @@ EntityManager &Scene::getEntityManager() { return mEntityManager; }
 
 const EntityManager &Scene::getEntityManager() const { return mEntityManager; }
 
-Scene Scene::load(const nlohmann::json &obj, const pivot::ecs::component::Index &cIndex,
-                  const pivot::ecs::systems::Index &sIndex)
+std::unique_ptr<Scene> Scene::load(const nlohmann::json &obj, const pivot::ecs::component::Index &cIndex,
+                                   const pivot::ecs::systems::Index &sIndex)
 {
-    Scene scene(obj["name"].get<std::string>());
-    auto &componentManager = scene.getComponentManager();
-    auto &entityManager = scene.getEntityManager();
-    auto &systemManager = scene.getSystemManager();
+    auto scene = std::make_unique<Scene>(obj["name"].get<std::string>());
+    auto &componentManager = scene->getComponentManager();
+    auto &entityManager = scene->getEntityManager();
+    auto &systemManager = scene->getSystemManager();
 
     for (auto entities: obj["components"]) {
         auto entity = entityManager.CreateEntity();

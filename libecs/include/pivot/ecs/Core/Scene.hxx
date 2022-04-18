@@ -126,8 +126,8 @@ public:
 
     // Load
     /// Load a scene from JSON object
-    static Scene load(const nlohmann::json &obj, const pivot::ecs::component::Index &cIndex,
-                      const pivot::ecs::systems::Index &sIndex);
+    static std::unique_ptr<Scene> load(const nlohmann::json &obj, const pivot::ecs::component::Index &cIndex,
+                                       const pivot::ecs::systems::Index &sIndex);
 
 private:
     std::string name;

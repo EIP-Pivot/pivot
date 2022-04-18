@@ -21,6 +21,10 @@ Engine::Engine(): m_camera(builtins::Camera(glm::vec3(0, 200, 500)))
     m_component_index.registerComponent(builtins::components::RenderObject::description);
     m_event_index.registerEvent(builtins::events::tick);
     m_system_index.registerSystem(builtins::systems::physicSystem);
+
+    m_vulkan_application.addRenderer<pivot::graphics::CullingRenderer>();
+    m_vulkan_application.addRenderer<pivot::graphics::GraphicsRenderer>();
+    m_vulkan_application.addRenderer<pivot::graphics::ImGuiRenderer>();
 }
 
 void Engine::run()

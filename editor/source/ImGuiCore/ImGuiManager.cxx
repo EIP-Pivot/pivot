@@ -16,7 +16,7 @@ void ImGuiManager::newFrame(pivot::Engine &engine)
         NFD_Init();
 
         nfdchar_t* savePath;
-        nfdfilteritem_t filterItemSave[1] = {{"Scene", ".json"}};
+        nfdfilteritem_t filterItemSave[1] = {{"Scene", "json"}};
         std::string filename = m_sceneManager.getCurrentScene().getName() + ".json";
         nfdresult_t resultSave = NFD_SaveDialog(&savePath, filterItemSave, 1, NULL, filename.data());
 
@@ -38,7 +38,7 @@ void ImGuiManager::newFrame(pivot::Engine &engine)
         NFD_Init();
 
         nfdchar_t *scenePath;
-        nfdfilteritem_t filterItemLoadSce[1] = {{ "Scene", ".json" }};
+        nfdfilteritem_t filterItemLoadSce[1] = {{ "Scene", "json" }};
         nfdresult_t resultLoadSce = NFD_OpenDialog(&scenePath, filterItemLoadSce, 1, NULL);
 
         if (resultLoadSce == NFD_OKAY){

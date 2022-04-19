@@ -50,6 +50,11 @@ public:
     using AssetHandler = bool (AssetStorage::*)(const std::filesystem::path &);
 
 public:
+    /// name of the fallback texture if missing
+    static constexpr auto missing_texture_name = "internal/missing_texture";
+    /// name of the default material if missing
+    static constexpr auto missing_material_name = "internal/missing_material";
+
     /// List of supported texture extensions
     static const std::unordered_map<std::string, AssetHandler> supportedTexture;
 
@@ -106,6 +111,15 @@ public:
 
     /// Alias for AllocatedImage
     using Texture = AllocatedImage;
+
+private:
+    struct CPUStorage {
+        CPUStorage();
+        std::vector<Vertex> vertexStagingBuffer;
+        std::vector<std::uint32_t> indexStagingBuffer;
+        IndexedStorage<std::string, CPUTexture> textureStaging;
+        IndexedStorage<std::string, CPUMaterial> materialStaging;
+    };
 
 public:
     /// Constructor
@@ -247,12 +261,7 @@ private:
     IndexedStorage<std::string, gpu_object::Material> materialStorage;
 
     // CPU-side storage
-    struct CPUStorage {
-        std::vector<Vertex> vertexStagingBuffer;
-        std::vector<std::uint32_t> indexStagingBuffer;
-        IndexedStorage<std::string, CPUTexture> textureStaging;
-        IndexedStorage<std::string, CPUMaterial> materialStaging;
-    } cpuStorage = {};
+    CPUStorage cpuStorage = {};
 
     // Vulkan Ressouces
     DeletionQueue vulkanDeletionQueue;
@@ -317,14 +326,18 @@ template <>
 /// @copydoc AssetStorage::get
 inline std::int32_t AssetStorage::getIndex<AssetStorage::Texture>(const std::string &i) const
 {
-    return textureStorage.getIndex(i);
+    auto idx = textureStorage.getIndex(i);
+    if (idx == -1) return getIndex<Texture>(missing_texture_name);
+    return idx;
 }
 
 template <>
 /// @copydoc AssetStorage::get
 inline std::int32_t AssetStorage::getIndex<gpu_object::Material>(const std::string &i) const
 {
-    return materialStorage.getIndex(i);
+    auto idx = materialStorage.getIndex(i);
+    if (idx == -1) return getIndex<gpu_object::Material>(missing_material_name);
+    return idx;
 }
 
 #endif

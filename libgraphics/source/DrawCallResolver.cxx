@@ -98,8 +98,7 @@ void DrawCallResolver::prepareForDraw(std::vector<std::reference_wrapper<const R
     if (frame.currentBufferSize > 0) {
         base_ref->get().allocator.copyBuffer(frame.objectBuffer, std::span(objectGPUData));
 
-        auto *sceneData = frame.indirectBuffer.getMappedPointer();
-        assert(sceneData);
+        auto sceneData = frame.indirectBuffer.getMappedSpan();
         for (uint32_t i = 0; i < frame.packedDraws.size(); i++) {
             const auto &mesh = storage_ref->get().get<AssetStorage::Mesh>(frame.packedDraws.at(i).meshId);
 

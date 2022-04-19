@@ -19,13 +19,52 @@ const std::unordered_map<std::string, AssetStorage::AssetHandler> AssetStorage::
     {".gltf", &AssetStorage::loadGltfModel},
 };
 
-AssetStorage::AssetStorage(VulkanBase &base): base_ref(base) { cpuStorage.materialStaging.add("white", {}); }
+static const AssetStorage::CPUTexture default_texture_data{
+
+    .image =
+        {
+            std::byte(0x00),
+            std::byte(0x00),
+            std::byte(0x00),
+            std::byte(0xff),
+
+            std::byte(0xff),
+            std::byte(0xff),
+            std::byte(0xff),
+            std::byte(0xff),
+
+            std::byte(0xff),
+            std::byte(0xff),
+            std::byte(0xff),
+            std::byte(0xff),
+
+            std::byte(0x00),
+            std::byte(0x00),
+            std::byte(0x00),
+            std::byte(0xff),
+        },
+    .size = {2, 2, 1},
+};
+
+AssetStorage::CPUStorage::CPUStorage()
+{
+    textureStaging.add(missing_texture_name, default_texture_data);
+    materialStaging.add(missing_material_name, {
+                                                   .baseColorTexture = missing_material_name,
+                                               });
+
+    materialStaging.add("white", {});
+}
+
+AssetStorage::AssetStorage(VulkanBase &base): base_ref(base) {}
 
 AssetStorage::~AssetStorage() {}
 
 void AssetStorage::build(DescriptorBuilder builder)
 {
     DEBUG_FUNCTION
+    assert(cpuStorage.materialStaging.contains(missing_material_name));
+    assert(cpuStorage.textureStaging.contains(missing_texture_name));
     createTextureSampler();
 
     for (const auto &[name, model]: modelStorage) {

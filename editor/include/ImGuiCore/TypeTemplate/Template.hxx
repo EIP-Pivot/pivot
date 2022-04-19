@@ -9,32 +9,23 @@
 #include <imgui.h>
 #include <misc/cpp/imgui_stdlib.h>
 
-void draw(pivot::ecs::data::Value &value, std::string name);
-void draw(glm::vec3 &value, std::string name) { ImGui::InputFloat3(name.c_str(), glm::value_ptr(value)); }
+void draw(glm::vec3 &value, const std::string &name) { ImGui::InputFloat3(name.c_str(), glm::value_ptr(value)); }
 
-void draw(std::string &value, std::string name) { ImGui::InputText(name.c_str(), &value); }
+void draw(std::string &value, const std::string &name) { ImGui::InputText(name.c_str(), &value); }
 
-void draw(int &value, std::string name)
-{
-    // ImGui::InputText("Name", &value);
-}
+void draw(int &value, const std::string &name) { ImGui::InputInt(name.c_str(), &value); }
 
-void draw(bool &value, std::string name)
-{
-    // ImGui::InputText("Name", &value);
-}
+void draw(bool &value, const std::string &name) { ImGui::Checkbox(name.c_str(), &value); }
 
-void draw(double &value, std::string name)
-{
-    // ImGui::InputText("Name", &value);
-}
+void draw(double &value, const std::string &name) { ImGui::InputDouble(name.c_str(), &value); }
 
-void draw(pivot::ecs::data::Record &values, std::string name)
+void draw(pivot::ecs::data::Value &value, const std::string &name);
+void draw(pivot::ecs::data::Record &values, const std::string &name)
 {
     for (auto &[name, value]: values) draw(value, name);
 }
 
-void draw(pivot::ecs::data::Value &value, std::string name)
+void draw(pivot::ecs::data::Value &value, const std::string &name)
 {
     std::visit([&name](auto &&arg) { draw(arg, name); }, static_cast<pivot::ecs::data::Value::variant &>(value));
 }

@@ -144,8 +144,6 @@ void VulkanBase::createAllocator()
     allocatorInfo.physicalDevice = physical_device;
     allocatorInfo.device = device;
     allocatorInfo.instance = instance;
-    allocatorInfo.vulkanApiVersion = 0;
-    allocatorInfo.frameInUseCount = MaxFrameInFlight;
 
     allocator.init(allocatorInfo);
     baseDeletionQueue.push([&] { allocator.destroy(); });

@@ -44,6 +44,6 @@ public:
     glm::vec3 rotation;
 
     /// Scale component
-    glm::vec3 scale;
+    glm::vec3 scale = {1, 1, 1};
 };
 }    // namespace pivot::graphics

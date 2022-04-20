@@ -44,4 +44,12 @@ TEST_CASE("RenderObject component works", "[graphics][component]")
     };
     const RenderObject &renderObject = dynamic_cast<DenseTypedComponentArray<RenderObject> &>(*array).getData().front();
     REQUIRE(renderObject == expected);
+
+    REQUIRE(description.defaultValue ==
+            Value{Record{{"meshID", Value{"cube"}},
+                         {"pipelineID", Value{""}},
+                         {"materialIndex", Value{"white"}},
+                         {"transform", Value{Record{{"position", Value{glm::vec3{0, 0, 0}}},
+                                                    {"rotation", Value{glm::vec3{0, 0, 0}}},
+                                                    {"scale", Value{glm::vec3{1, 1, 1}}}}}}}});
 }

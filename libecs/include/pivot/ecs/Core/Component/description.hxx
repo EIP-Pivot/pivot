@@ -49,7 +49,7 @@ struct Description {
     Provenance provenance;
 
     /// Default value
-    // data::Value defaultValue;
+    data::Value defaultValue;
 
     /** \brief Type of the factory of the IComponentArray of the component
      *

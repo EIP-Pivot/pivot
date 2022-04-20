@@ -1,4 +1,5 @@
 #include "pivot/ecs/Core/Scripting/Interpreter.hxx"
+#include "Logger.hpp"
 #include <unordered_map>
 
 
@@ -35,7 +36,8 @@ const std::map<std::string, data::BasicType> gVariableTypes {
 std::vector<systems::Description> registerDeclarations(const Node &file, component::Index &componentIndex) {
 	std::vector<systems::Description> result;
 	if (file.type != NodeType::File) {
-		std::cerr << std::format("registerDeclarations(const Node &file): can't interpret node {} (not a file)", gNodeTypeStrings.at(file.type)) << std::endl;
+		// std::cerr << std::format("registerDeclarations(const Node &file): can't interpret node {} (not a file)", gNodeTypeStrings.at(file.type)) << std::endl; // format not available in c++20 gcc yet
+		logger.warn("registerDeclarations(const Node &file): can't interpret node ") << gNodeTypeStrings.at(file.type) << " (not a file)";
 		return result;
 	}
 try { // handle exceptions from register functions
@@ -46,20 +48,26 @@ try { // handle exceptions from register functions
 		} else if (node.type == NodeType::SystemDeclaration) { // store system declaration for return
 			systems::Description r = registerSystemDeclaration(node, file.value);
 			if (r.name == "Error 1") {
-				std::cerr << std::format("registerDeclarations(const Node &file): failed to interpret sub node {}", gNodeTypeStrings.at(node.type)) << std::endl;
+				// std::cerr << std::format("registerDeclarations(const Node &file): failed to interpret sub node {}", gNodeTypeStrings.at(node.type)) << std::endl; // format not available in c++20 gcc yet
+				logger.err("registerDeclarations(const Node &file): failed to register declarations for sub node ") << gNodeTypeStrings.at(node.type);
 				return result;
 			}
 			result.push_back(r);
 		} else { // ??
-			std::cerr << std::format("registerDeclarations(const Node &file): can't interpret sub node {} (not a component nor a system)", gNodeTypeStrings.at(node.type)) << std::endl;
+			// std::cerr << std::format("registerDeclarations(const Node &file): can't interpret sub node {} (not a component nor a system)", gNodeTypeStrings.at(node.type)) << std::endl; // format not available in c++20 gcc yet
+			logger.err("registerDeclarations(const Node &file): can't register declarations for sub node ") << gNodeTypeStrings.at(node.type) << " (not a component nor a system)";
 			return result;
 		}
 	}
 } catch (TokenException e) {
-	std::cerr << std::format("\nInterpreter {} {}:\t{}\n\tline {} char {}:\t{}\n{}",
-		e.what(), e.get_exctype(), file.value, e.get_line_nb(), e.get_char_nb(), e.get_token(), e.get_info()) << std::endl;
+	// std::cerr << std::format("\nInterpreter {} {}:\t{}\n\tline {} char {}:\t{}\n{}",
+	// 	e.what(), e.get_exctype(), file.value, e.get_line_nb(), e.get_char_nb(), e.get_token(), e.get_info()) << std::endl; // format not available in c++20 gcc yet
+	logger.err("\nInterpreter ") << e.what() << " " << e.get_exctype() << ":\t" << file.value <<
+		"\n\tline " << e.get_line_nb() << " char " << e.get_char_nb() << ":\t" << e.get_token() <<
+		"\n" << e.get_info();
 } catch(std::exception e) {
-	std::cerr << std::format("Unhandled exception in file {}: {}", file.value, e.what()) << std::endl;
+	// std::cerr << std::format("Unhandled exception in file {}: {}", file.value, e.what()) << std::endl; // format not available in c++20 gcc yet
+	logger.err("Unhandled exception in file ") << file.value << ": " << e.what();
 }
 	return result;
 }

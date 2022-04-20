@@ -85,14 +85,20 @@ try {
 	if (verbose)
 		printFileNode(result);
 } catch (MixedIndentException e) {
-	std::cerr << std::format("\nParser {} {}:\t{}\n\tline {}:\t{}\n{}",
-		e.what(), "IndentException", filename, e.get_line_nb(), e.get_line(), e.get_info()) << std::endl;
+	// std::cerr << std::format("\nParser {} {}:\t{}\n\tline {}:\t{}\n{}",
+	// 	e.what(), "IndentException" , filename, e.get_line_nb(), e.get_line(), e.get_info()) << std::endl; // format not available in c++20 gcc yet
+	logger.err("\nParser ") << e.what() << " IndentException " << ":\t" << filename <<
+		"\n\tline " << e.get_line_nb() << ":\t" << e.get_line() << "\n" << e.get_info();
+
 } catch (TokenException e) {
-	// logger.err("Parser ") << e.what() << " " << e.get_exctype() << ":\t" << filename << 
-	std::cerr << std::format("\nParser {} {}:\t{}\n\tline {} char {}:\t{}\n{}",
-		e.what(), e.get_exctype(), filename, e.get_line_nb(), e.get_char_nb(), e.get_token(), e.get_info()) << std::endl;
+	// std::cerr << std::format("\nParser {} {}:\t{}\n\tline {} char {}:\t{}\n{}",
+	// 	e.what(), e.get_exctype(), filename, e.get_line_nb(), e.get_char_nb(), e.get_token(), e.get_info()) << std::endl; // format not available in c++20 gcc yet
+	logger.err("\nParser ") << e.what() << " " << e.get_exctype()  << ":\t" << filename <<
+		"\n\tline " << e.get_line_nb() << " char " << e.get_char_nb() << ":\t" << e.get_token() <<
+		"\n" << e.get_info();
 } catch (std::exception e) {
-	std::cerr << std::format("\nParser !Unhandled Exception!: {}", e.what()) << std::flush;
+	// std::cerr << std::format("\nParser !Unhandled Exception!: {}", e.what()) << std::flush; // format not available in c++20 gcc yet
+	logger.err("\nParser !Unhandled Exception!: ") << e.what();
 }
 	return result;
 }
@@ -403,7 +409,9 @@ std::vector<Token> tokens_from_file(const std::string &filename, bool verbose) {
 	IndentType indentType = indent_type_of(text);
 	size_t indentSize = indent_size_of(text);
 	if (verbose)
-		std::cout << std::format("Indent for {}: {} {}", filename, indentSize, gIndentTypeStrings.at(indentType)) << std::endl;
+		logger.info("Indent for ") << filename << ": " << indentSize << " " << gIndentTypeStrings.at(indentType);
+		// std::cout << std::format("Indent for {}: {} {}", filename, indentSize, gIndentTypeStrings.at(indentType)) << std::endl; // format not available in c++20 gcc yet
+
 	// Result and indices for navigating file string
 	std::vector<Token> result;
 	size_t lineNb = 1;
@@ -469,7 +477,8 @@ std::vector<Token> tokens_from_file(const std::string &filename, bool verbose) {
 				} catch ( std::invalid_argument e ) { // token is not a number
 					result.push_back(Token{.type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
 				} catch ( std::out_of_range e) { // token is invalid number
-					std::cerr << std::format("Token {} is too big to go into a double. Will be stored as literal string.", tokenStr) << std::endl;
+					// std::cerr << std::format("Token {} is too big to go into a double. Will be stored as literal string.", tokenStr) << std::endl;
+					logger.warn("Token ") << tokenStr << " is too big to go into a double. Will be stored as literal string."; // format not available in c++20 gcc yet
 					result.push_back(Token{.type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
 				}
 				// if (line.at(rcursor) != ' ' && line.at(rcursor) != '\t' && line.at(rcursor) != '\n' && line.at(rcursor) != '\r')
@@ -479,7 +488,7 @@ std::vector<Token> tokens_from_file(const std::string &filename, bool verbose) {
 				rcursor = line.find_first_of(gKnownSymbols, lcursor);
 			}
 		}
-		if (lcursor < line.size()) { // last token of line
+		if (lcursor < line.size()) { // TODO : handle last token more elegantly ?
 			std::string tokenStr = line.substr(lcursor, line.size() - lcursor);
 			try { // if token is a literal number, store it as that
 				std::stod(tokenStr);
@@ -487,7 +496,8 @@ std::vector<Token> tokens_from_file(const std::string &filename, bool verbose) {
 			} catch ( std::invalid_argument e ) { // token is not a number
 				result.push_back(Token{.type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
 			} catch ( std::out_of_range e) { // token is invalid number
-				std::cerr << std::format("Token {} is too big to go into a double. Will be stored as literal string.", tokenStr) << std::endl;
+				// std::cerr << std::format("Token {} is too big to go into a double. Will be stored as literal string.", tokenStr) << std::endl;
+				logger.warn("Token ") << tokenStr << " is too big to go into a double. Will be stored as literal string."; // format not available in c++20 gcc yet
 				result.push_back(Token{.type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
 			}
 		}
@@ -595,25 +605,32 @@ IndentType indent_type_of_char(char c) { // for a single char
 
 void printFileNode(const Node &file) { // Display a file tree in a readable way
 	if (file.type != NodeType::File) {
-		std::cerr << std::format("printFileNode(const Node &file): can't print node {} (not a file)", gNodeTypeStrings.at(file.type)) << std::endl;
+		// std::cerr << std::format("printFileNode(const Node &file): can't print node {} (not a file)", gNodeTypeStrings.at(file.type)) << std::endl; // format not available in c++20 gcc yet
+		logger.warn("printFileNode(const Node &file): can't print node ") << gNodeTypeStrings.at(file.type) << " (not a file)";
 		return;
 	}
-	std::cout << std::format("file {}\n", file.value);
+	// std::cout << std::format("file {}\n", file.value); // format not available in c++20 gcc yet
+	std::cout << "file " << file.value << "\n";
 	for (const Node &child: file.children)
-		std::cout << std::format("\t{} {}", gNodeTypeStrings.at(child.type), child.value) << std::endl;
+		// std::cout << std::format("\t{} {}", gNodeTypeStrings.at(child.type), child.value) << std::endl; // format not available in c++20 gcc yet
+		std::cout << "\t" << gNodeTypeStrings.at(child.type) << " " << child.value << std::endl;
 }
 void printComponentNode(const Node &component) { // Display a component declaration in a readable way
 	if (component.type != NodeType::ComponentDeclaration) {
-		std::cerr << std::format("printComponentNode(const Node &component): can't print node {} (not a component)", gNodeTypeStrings.at(component.type)) << std::endl;
+		// std::cerr << std::format("printComponentNode(const Node &component): can't print node {} (not a component)", gNodeTypeStrings.at(component.type)) << std::endl; // format not available in c++20 gcc yet
+		logger.warn("printComponentNode(const Node &component): can't print node ") << gNodeTypeStrings.at(component.type) << " (not a component)";
 		return;
 	}
-	std::cout << std::format("Component {}", component.value);
+	// std::cout << std::format("Component {}", component.value); // format not available in c++20 gcc yet
+	std::cout << "Component " << component.value;
 	if (component.children.at(0).value == "=") // Single line component
-		std::cout << std::format(" = {}", component.children.at(1).value) << std::endl;
+		// std::cout << std::format(" = {}", component.children.at(1).value) << std::endl; // format not available in c++20 gcc yet
+		std::cout << " = " << component.children.at(1).value << std::endl;
 	else {
 		std::cout << "\n";
 		for (size_t i = 0; i < component.children.size() - 2; i+=2)
-			std::cout << std::format("\t{} {}", component.children.at(i).value, component.children.at(i + 1).value) << std::endl;
+			// std::cout << std::format("\t{} {}", component.children.at(i).value, component.children.at(i + 1).value) << std::endl; // format not available in c++20 gcc yet
+			std::cout << "\t" << component.children.at(i).value << " " << component.children.at(i + 1).value << std::endl;
 	}
 }
 std::string remove_comments(const std::string &line) { // Return comment-free version of input

@@ -1,3 +1,4 @@
+#include "Logger.hpp"
 #include "pivot/ecs/Core/Scripting/Engine.hxx"
 
 namespace pivot::ecs::script {
@@ -29,7 +30,8 @@ std::string Engine::loadFile(const std::string &fileName) { // Load a file to re
 
 void Engine::systemCallback(const systems::Description &system, component::ArrayCombination &entities, const event::EventWithComponent &trigger) {
 	if (!_systems.contains(system.name)) {
-		std::cerr << std::format("Unregistered system '{}'", system.name) << std::endl;
+		// std::cerr << std::format("Unregistered system '{}'", system.name) << std::endl; // format not available in c++20 gcc yet
+		logger.err("Unregistered system '") << system.name << "'";
 		return ;
 	}
 
@@ -44,7 +46,7 @@ Node Engine::getEntryPointFor(const std::string &systemName, const Node &file) {
 			for (const Node &child : declaration.children)
 				if (child.type == NodeType::SystemEntryPoint)
 					return child;
-	throw(std::exception(std::format("No entry point found for {}", systemName).c_str()));
+	throw(std::exception(std::format("No entry point found for {}", systemName).c_str())); // format not available in c++20 gcc yet
 }
 
 

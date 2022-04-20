@@ -2,8 +2,8 @@
 
 #include <string>
 #include <vector>
-#include <format> // TODO : remove, not in C++20 gcc yet
 #include <exception>
+// #include <format> // format not available in c++20 gcc yet
 
 #include "pivot/ecs/Core/Data/value.hxx"
 
@@ -73,7 +73,8 @@ public:
 	size_t line_nb;
 	size_t char_nb;
 
-	inline std::string toString() const { return std::format("value='{}' line {} char {}", value, line_nb, char_nb); }
+	// inline std::string toString() const { return std::format("value='{}' line {} char {}", value, line_nb, char_nb); } // format not available in c++20 gcc yet
+	inline std::string toString() const { return "value='" + value + "' line " + std::to_string(line_nb) + " char " + std::to_string(line_nb); }
 	inline bool operator==(Token rhs) const { return tied() == rhs.tied(); }
 };
 

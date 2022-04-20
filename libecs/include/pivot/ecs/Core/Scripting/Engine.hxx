@@ -29,7 +29,7 @@ private:
 
 	std::map<std::string, Node> _systems;
 
-	Node getEntryPointFor(const std::string &systemName, const Node &file);
+	Node getEntryPointFor(const std::string &systemName, const Node &file); // find entry point (TODO: make system decl into a node to avoid searching)
 };
 
 

@@ -4,17 +4,8 @@
 
 namespace pivot::ecs::script::interpreter {
 
-
-// TODO : fix disgusting globals with good code
-static std::string gKnownSymbols = "+-/*%=!()<>,.# \t\r\n";
-static std::string gWhitespace = " \t\r\n";
-static std::map<IndentType, std::string> gIndentTypeStrings = {
-	{	IndentType::Tabs,	"Tabs"	},
-	{	IndentType::Spaces,	"Spaces"	},
-	{	IndentType::NoIndent,	"NoIndent"	},
-	{	IndentType::Invalid,	"Invalid"	}
-};
-static std::map<NodeType, std::string> gNodeTypeStrings = {
+// TODO: consider using magicenum
+const std::map<NodeType, std::string> gNodeTypeStrings = {
 	{	NodeType::File,	"File"	},
 	{	NodeType::ComponentDeclaration,	"ComponentDeclaration"	},
 	{	NodeType::SystemDeclaration,	"SystemDeclaration"	},
@@ -30,13 +21,7 @@ static std::map<NodeType, std::string> gNodeTypeStrings = {
 	{	NodeType::EntityParameterComponent,	"EntityParameterComponent"	},
 	{	NodeType::Symbol,	"Symbol"	}
 };
-static std::map<TokenType, std::string> gTokenTypeStrings = {
-	{	TokenType::Identifier,	"Identifier"	},
-	{	TokenType::Indent,	"Indent"	},
-	{	TokenType::Dedent,	"Dedent"	},
-	{	TokenType::Symbol,	"Symbol"	}
-};
-static std::map<std::string, data::BasicType> gVariableTypes {
+const std::map<std::string, data::BasicType> gVariableTypes {
 	{"Vector3", data::BasicType::Vec3},
 	{"Number", data::BasicType::Number},
 	{"Boolean", data::BasicType::Boolean},
@@ -44,12 +29,13 @@ static std::map<std::string, data::BasicType> gVariableTypes {
 	{"String", data::BasicType::String}
 };
 
-// This will go through a file's tree and register all component/system declarations
-// into the global index
+// Public functions ( can be called anywhere )
+
+// This will go through a file's tree and register all component/system declarations into the global index
 std::vector<systems::Description> registerDeclarations(const Node &file, component::Index &componentIndex) {
 	std::vector<systems::Description> result;
 	if (file.type != NodeType::File) {
-		std::cerr << std::format("registerDeclarations(const Node &file): can't interpret node {} (not a file)", gNodeTypeStrings[file.type]) << std::endl;
+		std::cerr << std::format("registerDeclarations(const Node &file): can't interpret node {} (not a file)", gNodeTypeStrings.at(file.type)) << std::endl;
 		return result;
 	}
 try { // handle exceptions from register functions
@@ -60,12 +46,12 @@ try { // handle exceptions from register functions
 		} else if (node.type == NodeType::SystemDeclaration) { // store system declaration for return
 			systems::Description r = registerSystemDeclaration(node, file.value);
 			if (r.name == "Error 1") {
-				std::cerr << std::format("registerDeclarations(const Node &file): failed to interpret sub node {}", gNodeTypeStrings[node.type]) << std::endl;
+				std::cerr << std::format("registerDeclarations(const Node &file): failed to interpret sub node {}", gNodeTypeStrings.at(node.type)) << std::endl;
 				return result;
 			}
 			result.push_back(r);
 		} else { // ??
-			std::cerr << std::format("registerDeclarations(const Node &file): can't interpret sub node {} (not a component nor a system)", gNodeTypeStrings[node.type]) << std::endl;
+			std::cerr << std::format("registerDeclarations(const Node &file): can't interpret sub node {} (not a component nor a system)", gNodeTypeStrings.at(node.type)) << std::endl;
 			return result;
 		}
 	}
@@ -77,6 +63,9 @@ try { // handle exceptions from register functions
 }
 	return result;
 }
+
+
+// Private functions (never called elsewhere than this file and tests)
 
 // Register a component declaration node
 void registerComponentDeclaration(const Node &component, component::Index &componentIndex, const std::string &fileName) {
@@ -177,6 +166,7 @@ systems::Description registerSystemDeclaration(const Node &system, const std::st
 	return sysDesc;
 }
 
+// Consume a node for system description
 void consumeNode(const std::vector<Node> &children, size_t &childIndex, systems::Description &sysDesc, event::Description &evtDesc, NodeType expectedType) {
 	if (childIndex >= children.size())
 		throw TokenException("ERROR", children.at(childIndex - 1).value, children.at(childIndex - 1).line_nb, children.at(childIndex - 1).char_nb, "Unexpected_EndOfFile", "Expected token " + gNodeTypeStrings.at(expectedType));
@@ -213,7 +203,7 @@ void consumeNode(const std::vector<Node> &children, size_t &childIndex, systems:
 	}
 	childIndex++;
 }
-
+// Throw if the type or value of the targeted node isn't equal to the expected type and value
 void expectNodeTypeValue(const std::vector<Node> &children, size_t &childIndex, NodeType expectedType, const std::string &expectedValue, bool consume) {
 	if (childIndex == children.size())
 		throw TokenException("ERROR", children.at(childIndex - 1).value, children.at(childIndex - 1).line_nb, children.at(childIndex - 1).char_nb, "Unexpected_EndOfFile", "Expected token " + gNodeTypeStrings.at(expectedType));
@@ -225,7 +215,7 @@ void expectNodeTypeValue(const std::vector<Node> &children, size_t &childIndex, 
 	if (consume)
 		childIndex++;
 }
-
+// Callback to create a container for components
 std::unique_ptr<pivot::ecs::component::IComponentArray> arrayFunctor(pivot::ecs::component::Description description) {
 	return std::make_unique<component::ScriptingComponentArray>(description);
 }

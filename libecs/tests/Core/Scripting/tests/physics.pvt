@@ -1,0 +1,33 @@
+
+# component Size : Number
+
+# struct Size
+# 	Number x
+# 	Number y
+	 	 	 	 
+component Mdr = Number
+
+component Position
+	Number pos_x
+	Number pos_y
+	Number pos_z
+
+component Velocity
+	Number vel_x
+	Number vel_y
+	Number vel_z
+
+system	onTickPhysics( anyEntity<	Position, Velocity> ) event Tick(mdr<Position, Velocity>,lol<Velocity>, Number deltaTime )
+	if anyEntity.Position.pos_x > 10
+		anyEntity.Position.pos_x = 0
+		anyEntity.Position.pos_x = 0
+		anyEntity.Position.pos_x = 0
+	Input.isPressed("w")
+	while anyEntity.Position.pos_y > 0
+		anyEntity.Position.pos_y = anyEntity.Position.pos_y - 1
+	Number gravity = 9.98
+	appel(gravity, anyEntity.Position.pos_x)
+	anyEntity.Position = anyEntity.Velocity
+	anyEntity.Position.pos_x=anyEntity.Position.pos_x+anyEntity.Velocity.vel_x# * deltaTime
+	anyEntity.Position.pos_y = anyEntity.Position.pos_y + anyEntity.Velocity.vel_y# * deltaTime
+	anyEntity.Position.pos_z = anyEntity.Position.pos_z + anyEntity.Velocity.vel_z# * deltaTime

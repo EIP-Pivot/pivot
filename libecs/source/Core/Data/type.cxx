@@ -2,6 +2,7 @@
 #include <sstream>
 
 #include <pivot/ecs/Core/Data/type.hxx>
+#include <pivot/ecs/Core/Data/value.hxx>
 
 namespace pivot::ecs::data
 {
@@ -36,5 +37,27 @@ std::string Type::toString() const
     std::ostringstream oss;
     oss << *this;
     return oss.str();
+}
+
+data::Value Type::defaultValue() const
+{
+    return std::visit(
+        [](const auto &type) {
+            using type_type = std::decay_t<decltype(type)>;
+            if constexpr (std::is_same_v<type_type, BasicType>) {
+                switch (type) {
+                    case BasicType::String: return Value{""};
+                    case BasicType::Number: return Value{0.0};
+                    case BasicType::Integer: return Value{0};
+                    case BasicType::Boolean: return Value{false};
+                    case BasicType::Vec3: return Value{glm::vec3{0, 0, 0}};
+                }
+            } else {
+                Record record;
+                for (auto &[key, subtype]: type) { record.insert({key, subtype.defaultValue()}); }
+                return Value{record};
+            }
+        },
+        static_cast<const Type::variant &>(*this));
 }
 }    // namespace pivot::ecs::data

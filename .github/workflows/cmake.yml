@@ -18,7 +18,7 @@ jobs:
             extra_cmake: ' -A "x64" -D CMAKE_CXX_COMPILER=cl'
           - os: ubuntu-20.04
             working_directory: /build/
-            extra_cmake: "-D CMAKE_CXX_COMPILER=g++-10"
+            extra_cmake: "-D CMAKE_CXX_COMPILER=g++-11"
         build_type: [Debug, Release]
 
     runs-on: ${{matrix.config.os}}
@@ -30,7 +30,8 @@ jobs:
           wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
           sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.3.204-focal.list https://packages.lunarg.com/vulkan/1.3.204/lunarg-vulkan-1.3.204-focal.list
           sudo apt update
-          sudo apt install vulkan-sdk xorg-dev
+          sudo apt install -y g++-11 vulkan-sdk xorg-dev
+
       - name: Install dependencies - Windows
         if: runner.os == 'Windows'
         run: |

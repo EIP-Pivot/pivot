@@ -60,6 +60,6 @@ void ComponentEditor::addComponent(const Description &description)
 {
     auto &cm = m_scene->getComponentManager();
     auto id = cm.GetComponentId(description.name).value();
-    Value newComponent = description.type.defaultValue();
+    Value newComponent = description.defaultValue;
     cm.AddComponent(currentEntity, newComponent, id);
 }

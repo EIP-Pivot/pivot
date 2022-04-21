@@ -190,6 +190,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
   VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
   VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1
   PIVOT_ASSET_DEFAULT_DIRECTORY="${PIVOT_ASSET_DEFAULT_DIRECTORY}"
+  PIVOT_WINDOW_ICON_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../assets"
 )
 
 
@@ -199,7 +200,6 @@ add_shader(${PROJECT_NAME} default_pbr.vert)
 add_shader(${PROJECT_NAME} default_lit.frag)
 add_shader(${PROJECT_NAME} default_unlit.frag)
 add_shader(${PROJECT_NAME} default_pbr.frag)
-
 add_shader(${PROJECT_NAME} culling.comp)
 
 target_include_directories(${PROJECT_NAME} PUBLIC include/)

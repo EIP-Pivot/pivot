@@ -5,6 +5,7 @@
 #include "pivot/graphics/types/AllocatedImage.hxx"
 #include "pivot/graphics/types/common.hxx"
 
+#include <source_location>
 #include <vulkan/vulkan.hpp>
 
 namespace pivot::graphics::abstract
@@ -26,7 +27,8 @@ public:
     void destroy();
 
     /// Perform an command on the GPU immediately and wait for it to complete
-    void immediateCommand(std::function<void(vk::CommandBuffer &)> cmd);
+    void immediateCommand(std::function<void(vk::CommandBuffer &)> cmd,
+                          const std::source_location &location = std::source_location::current());
 
     template <typename T>
     /// Copy the source buffer into the destination

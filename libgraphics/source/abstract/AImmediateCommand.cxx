@@ -1,5 +1,6 @@
 #include "pivot/graphics/abstract/AImmediateCommand.hxx"
 
+#include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
 namespace pivot::graphics::abstract
@@ -26,7 +27,8 @@ void AImmediateCommand::destroy()
     device_ref = std::nullopt;
 }
 
-void AImmediateCommand::immediateCommand(std::function<void(vk::CommandBuffer &)> function)
+void AImmediateCommand::immediateCommand(std::function<void(vk::CommandBuffer &)> function,
+                                         const std::source_location &location)
 {
     assert(immediateCommandPool && immediateFence && immediateQueue);
     vk::CommandBufferAllocateInfo cmdAllocInfo{
@@ -35,6 +37,7 @@ void AImmediateCommand::immediateCommand(std::function<void(vk::CommandBuffer &)
         .commandBufferCount = 1,
     };
     vk::CommandBuffer cmd = device_ref->get().allocateCommandBuffers(cmdAllocInfo)[0];
+    vk_debug::setObjectName(device_ref->get(), cmd, location.function_name());
 
     vk::CommandBufferBeginInfo cmdBeginInfo{
         .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit,

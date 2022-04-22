@@ -32,13 +32,13 @@ public:
     /// Copy the source buffer into the destination
     void copyBuffer(AllocatedBuffer<T> &src, AllocatedBuffer<T> &dst)
     {
-        if (src.getSize() > dst.getAllocatedSize()) throw VulkanException("The destination buffer is too small");
+        if (src.getBytesSize() > dst.getAllocatedSize()) throw VulkanException("The destination buffer is too small");
 
         immediateCommand([&](vk::CommandBuffer &cmd) {
             vk::BufferCopy copyRegion{
                 .srcOffset = 0,
                 .dstOffset = 0,
-                .size = src.getSize(),
+                .size = src.getBytesSize(),
             };
             cmd.copyBuffer(src.buffer, dst.buffer, copyRegion);
         });

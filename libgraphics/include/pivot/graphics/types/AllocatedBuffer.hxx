@@ -29,6 +29,17 @@ public:
     /// get the byte size
     auto getBytesSize() const noexcept { return getSize() * sizeof(T); }
 
+    /// return the info struct used when creating a descriptor set
+    /// @see DescriptorBuilder::bindBuffer
+    vk::DescriptorBufferInfo getBufferInfo(vk::DeviceSize offset = 0) const noexcept
+    {
+        return {
+            .buffer = buffer,
+            .offset = offset,
+            .range = getBytesSize(),
+        };
+    }
+
     /// @brief return the mapped pointer
     ///
     /// If the buffer was created with the flag vma::AllocationCreateFlagBits::eMapped, return the mapped pointer

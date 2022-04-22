@@ -4,6 +4,8 @@
 #include "pivot/graphics/types/vk_types.hxx"
 #include "pivot/graphics/vk_debug.hxx"
 
+#include <ranges>
+
 namespace pivot::graphics
 {
 
@@ -38,26 +40,14 @@ void AssetStorage::createDescriptorSet(DescriptorBuilder &builder)
 {
     DEBUG_FUNCTION
     std::vector<vk::DescriptorImageInfo> imagesInfos;
-    for (auto &t: textureStorage.getStorage()) {
-        imagesInfos.push_back({
-            .sampler = textureSampler,
-            .imageView = t.imageView,
-            .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
-        });
-    }
-    vk::DescriptorBufferInfo materialInfo{
-        .buffer = materialBuffer.buffer,
-        .offset = 0,
-        .range = materialBuffer.getSize(),
-    };
-    vk::DescriptorBufferInfo boundingBoxInfo{
-        .buffer = boundingboxBuffer.buffer,
-        .offset = 0,
-        .range = boundingboxBuffer.getSize(),
-    };
-
-    builder.bindBuffer(0, boundingBoxInfo, vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eCompute)
-        .bindBuffer(1, materialInfo, vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eFragment)
+    imagesInfos.reserve(textureStorage.size());
+    std::ranges::transform(textureStorage.getStorage(), std::back_inserter(imagesInfos),
+                           [this](const auto &i) { return i.getImageInfo(textureSampler); });
+    builder
+        .bindBuffer(0, boundingboxBuffer.getBufferInfo(), vk::DescriptorType::eStorageBuffer,
+                    vk::ShaderStageFlagBits::eCompute)
+        .bindBuffer(1, materialBuffer.getBufferInfo(), vk::DescriptorType::eStorageBuffer,
+                    vk::ShaderStageFlagBits::eFragment)
         .bindImages(2, imagesInfos, vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment)
         .build(base_ref->get().device, descriptorSet, descriptorSetLayout);
 }

@@ -114,14 +114,14 @@ void AImmediateCommand::generateMipmaps(AllocatedImage &image, uint32_t mipLevel
             barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
             barrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
 
-            cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer,
-                                vk::DependencyFlags{}, nullptr, nullptr, barrier);
+            cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer, {}, {}, {},
+                                barrier);
 
             vk::ImageBlit blit{};
             blit.srcOffsets[0] = vk::Offset3D{0, 0, 0};
             blit.srcOffsets[1] = vk::Offset3D{
-                .x = static_cast<int32_t>(mipWidth),
-                .y = static_cast<int32_t>(mipHeight),
+                .x = mipWidth,
+                .y = mipHeight,
                 .z = 1,
             };
             blit.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
@@ -129,22 +129,26 @@ void AImmediateCommand::generateMipmaps(AllocatedImage &image, uint32_t mipLevel
             blit.srcSubresource.baseArrayLayer = 0;
             blit.srcSubresource.layerCount = 1;
             blit.dstOffsets[0] = vk::Offset3D{0, 0, 0};
-            blit.dstOffsets[1] = vk::Offset3D{mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1};
+            blit.dstOffsets[1] = vk::Offset3D{
+                .x = std::max(1, mipWidth / 2),
+                .y = std::max(1, mipHeight / 2),
+                .z = 1,
+            };
             blit.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
             blit.dstSubresource.mipLevel = i;
             blit.dstSubresource.baseArrayLayer = 0;
             blit.dstSubresource.layerCount = 1;
 
             cmd.blitImage(image.image, vk::ImageLayout::eTransferSrcOptimal, image.image,
-                          vk::ImageLayout::eTransferDstOptimal, 1, &blit, vk::Filter::eLinear);
+                          vk::ImageLayout::eTransferDstOptimal, blit, vk::Filter::eLinear);
 
             barrier.oldLayout = vk::ImageLayout::eTransferSrcOptimal;
             barrier.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
             barrier.srcAccessMask = vk::AccessFlagBits::eTransferRead;
             barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
 
-            cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader,
-                                vk::DependencyFlags{}, nullptr, nullptr, barrier);
+            cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, {},
+                                {}, {}, barrier);
 
             if (mipWidth > 1) mipWidth /= 2;
             if (mipHeight > 1) mipHeight /= 2;
@@ -156,9 +160,10 @@ void AImmediateCommand::generateMipmaps(AllocatedImage &image, uint32_t mipLevel
         barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
         barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
 
-        cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader,
-                            vk::DependencyFlags{}, nullptr, nullptr, barrier);
+        cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, {}, {},
+                            {}, barrier);
     });
+    image.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
     image.mipLevels = mipLevel;
 }
 
@@ -222,9 +227,8 @@ void AImmediateCommand::transitionLayout(AllocatedImage &image, vk::ImageLayout 
                               vk::to_string(layout));
     }
 
-    immediateCommand([&](vk::CommandBuffer &cmd) {
-        cmd.pipelineBarrier(sourceStage, destinationStage, {}, nullptr, nullptr, barrier);
-    });
+    immediateCommand(
+        [&](vk::CommandBuffer &cmd) { cmd.pipelineBarrier(sourceStage, destinationStage, {}, {}, {}, barrier); });
     image.imageLayout = layout;
 }
 

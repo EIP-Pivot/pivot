@@ -21,22 +21,12 @@ void DrawCallResolver::init(VulkanBase &base, AssetStorage &stor, DescriptorBuil
     storage_ref = stor;
     createBuffer(defaultBufferSize);
 
-    vk::DescriptorBufferInfo bufferInfo{
-        .buffer = frame.objectBuffer.buffer,
-        .offset = 0,
-        .range = sizeof(gpu_object::UniformBufferObject) * defaultBufferSize,
-    };
-    vk::DescriptorBufferInfo indirectInfo{
-        .buffer = frame.indirectBuffer.buffer,
-        .offset = 0,
-        .range = sizeof(vk::DrawIndexedIndirectCommand) * defaultBufferSize,
-    };
-    auto success =
-        builder
-            .bindBuffer(0, bufferInfo, vk::DescriptorType::eStorageBuffer,
-                        vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute)
-            .bindBuffer(1, indirectInfo, vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eCompute)
-            .build(base_ref->get().device, frame.objectDescriptor, descriptorSetLayout);
+    auto success = builder
+                       .bindBuffer(0, frame.objectBuffer.getBufferInfo(), vk::DescriptorType::eStorageBuffer,
+                                   vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute)
+                       .bindBuffer(1, frame.indirectBuffer.getBufferInfo(), vk::DescriptorType::eStorageBuffer,
+                                   vk::ShaderStageFlagBits::eCompute)
+                       .build(base_ref->get().device, frame.objectDescriptor, descriptorSetLayout);
     assert(success);
     vk_debug::setObjectName(base_ref->get().device, frame.objectDescriptor,
                             "Object Descriptor Set " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
@@ -132,16 +122,8 @@ void DrawCallResolver::createBuffer(vk::DeviceSize bufferSize)
 void DrawCallResolver::updateDescriptorSet(vk::DeviceSize bufferSize)
 {
     assert(bufferSize > 0);
-    vk::DescriptorBufferInfo bufferInfo{
-        .buffer = frame.objectBuffer.buffer,
-        .offset = 0,
-        .range = sizeof(gpu_object::UniformBufferObject) * bufferSize,
-    };
-    vk::DescriptorBufferInfo indirectInfo{
-        .buffer = frame.indirectBuffer.buffer,
-        .offset = 0,
-        .range = sizeof(vk::DrawIndexedIndirectCommand) * bufferSize,
-    };
+    auto bufferInfo = frame.objectBuffer.getBufferInfo();
+    auto indirectInfo = frame.indirectBuffer.getBufferInfo();
     std::vector<vk::WriteDescriptorSet> descriptorWrites{
         {
             .dstSet = frame.objectDescriptor,
@@ -163,4 +145,5 @@ void DrawCallResolver::updateDescriptorSet(vk::DeviceSize bufferSize)
     base_ref->get().device.updateDescriptorSets(descriptorWrites, 0);
     frame.currentDescriptorSetSize = bufferSize;
 }
+
 }    // namespace pivot::graphics

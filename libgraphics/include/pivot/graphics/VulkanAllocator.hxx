@@ -100,6 +100,7 @@ public:
     void copyBuffer(AllocatedBuffer<T> &buffer, const T *data, size_t size)
     {
         assert(buffer);
+        assert(data);
         assert(buffer.getBytesSize() >= size);
         if (size == 0) return;
         auto *mapped = mapMemory<T>(buffer);

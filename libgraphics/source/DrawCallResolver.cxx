@@ -77,27 +77,27 @@ void DrawCallResolver::prepareForDraw(std::vector<std::reference_wrapper<const R
 
     auto bufferCmp = objectGPUData.size() <=> frame.currentBufferSize;
     auto descriptorCmp = objectGPUData.size() <=> frame.currentDescriptorSetSize;
-    if (std::is_gt(bufferCmp)) {
+    if (objectGPUData.size() == 0) {
+        return;
+    } else if (std::is_gt(bufferCmp)) {
         createBuffer(objectGPUData.size());
         updateDescriptorSet(objectGPUData.size());
-    }
-    if (objectGPUData.size() > 0 && (std::is_lt(bufferCmp) || std::is_gt(descriptorCmp))) {
+    } else if (objectGPUData.size() > 0 && (std::is_lt(bufferCmp) || std::is_gt(descriptorCmp))) {
         updateDescriptorSet(objectGPUData.size());
     }
 
-    if (frame.currentBufferSize > 0) {
-        base_ref->get().allocator.copyBuffer(frame.objectBuffer, std::span(objectGPUData));
+    assert(frame.currentBufferSize > 0);
+    base_ref->get().allocator.copyBuffer(frame.objectBuffer, std::span(objectGPUData));
 
-        auto sceneData = frame.indirectBuffer.getMappedSpan();
-        for (uint32_t i = 0; i < frame.packedDraws.size(); i++) {
-            const auto &mesh = storage_ref->get().get<AssetStorage::Mesh>(frame.packedDraws.at(i).meshId);
+    auto sceneData = frame.indirectBuffer.getMappedSpan();
+    for (uint32_t i = 0; i < frame.packedDraws.size(); i++) {
+        const auto &mesh = storage_ref->get().get<AssetStorage::Mesh>(frame.packedDraws.at(i).meshId);
 
-            sceneData[i].firstIndex = mesh.indicesOffset;
-            sceneData[i].indexCount = mesh.indicesSize;
-            sceneData[i].vertexOffset = mesh.vertexOffset;
-            sceneData[i].instanceCount = 0;
-            sceneData[i].firstInstance = i;
-        }
+        sceneData[i].firstIndex = mesh.indicesOffset;
+        sceneData[i].indexCount = mesh.indicesSize;
+        sceneData[i].vertexOffset = mesh.vertexOffset;
+        sceneData[i].instanceCount = 0;
+        sceneData[i].firstInstance = i;
     }
 }
 

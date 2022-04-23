@@ -16,13 +16,6 @@ namespace pivot::graphics
 class Transform
 {
 public:
-    /// Constructor from vector
-    Transform(const glm::vec3 &translation = {}, const glm::vec3 &rotation = {},
-              const glm::vec3 &scale = glm::vec3(1.0f))
-        : position(translation), rotation(rotation), scale(scale)
-    {
-    }
-
     /// Get the model matrix
     glm::mat4 getModelMatrix() const noexcept { return recomposeMatrix(*this); }
 
@@ -38,12 +31,12 @@ private:
 
 public:
     /// Translation or position component
-    glm::vec3 position;
+    glm::vec3 position = glm::vec3(0.0f);
 
     /// Rotation component
-    glm::vec3 rotation;
+    glm::vec3 rotation = glm::vec3(0.0f);
 
     /// Scale component
-    glm::vec3 scale = {1, 1, 1};
+    glm::vec3 scale = glm::vec3(1.0f);
 };
 }    // namespace pivot::graphics

@@ -16,7 +16,7 @@ struct RenderObject {
     /// Id of the pipeline to use
     std::string pipelineID = "";
     /// The name of the material to use on the object
-    std::string materialIndex = "white";
+    std::string materialIndex = "";
     /// The object transform
     Transform transform;
 

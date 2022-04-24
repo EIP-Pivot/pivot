@@ -22,11 +22,12 @@ system	onTickPhysics( anyEntity<	Position, Velocity> ) event Tick(mdr<Position, 
 		anyEntity.Position.pos_x = 0
 		anyEntity.Position.pos_x = 0
 		anyEntity.Position.pos_x = 0
-	Input.isPressed("w")
+	isPressed("w")
+	print("Franchement")
 	while anyEntity.Position.pos_y > 0
 		anyEntity.Position.pos_y = anyEntity.Position.pos_y - 1
 	Number gravity = 9.98
-	appel(gravity, anyEntity.Position.pos_x)
+	# appel(gravity, anyEntity.Position.pos_x)
 	anyEntity.Position = anyEntity.Velocity
 	anyEntity.Position.pos_x=anyEntity.Position.pos_x+anyEntity.Velocity.vel_x# * deltaTime
 	anyEntity.Position.pos_y = anyEntity.Position.pos_y + anyEntity.Velocity.vel_y# * deltaTime

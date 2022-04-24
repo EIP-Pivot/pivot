@@ -1,4 +1,4 @@
-#include "pivot/ecs/Core/Scripting/Engine.hxx"
+#include "pivot/script/Engine.hxx"
 // #include "pivot/ecs/Core/Scripting/Parser.hxx"
 // #include "pivot/ecs/Core/Scripting/Interpreter.hxx"
 // #include "pivot/ecs/Core/Scripting/ScriptEngine.hxx"
@@ -160,7 +160,7 @@ TEST_CASE("Scripting-Refacto-Lexer") {
 	// std::vector<Token> script::parser::tokens_from_file(const std::string &fileName)
 	// Mapping file names (containing PivotScript) to the expected list of tokens the lexer should extract
 	std::map<std::string, std::vector<script::Token>> _expectedTokenlists = {
-		{ "C:/Users/jonme/eip/pivot/libecs/tests/Core/Scripting/tests/lexer/OneLineComponent.pvt",
+		{ "C:/Users/jonme/eip/pivot/libscript/tests/tests/lexer/OneLineComponent.pvt",
 			{	script::Token{.type=script::TokenType::Identifier,.value="component",.line_nb=1,.char_nb=1},
 				script::Token{.type=script::TokenType::Identifier,.value="Test",.line_nb=1,.char_nb=11},
 				script::Token{.type=script::TokenType::Symbol,.value="=",.line_nb=1,.char_nb=16},
@@ -176,14 +176,71 @@ TEST_CASE("Scripting-Refacto-Lexer") {
 	}
 }
 
+TEST_CASE("Scripting-Refacto-Stack") {
+	std::cout << "------Stack------start" << std::endl;
+	script::interpreter::Stack stack;
+
+	std::cout << "------Stack------end" << std::endl;
+}
+
 TEST_CASE("Scripting-Refacto-Engine") {
 	std::cout << "------Engine------start" << std::endl;
 
-	std::string file = "C:/Users/jonme/eip/pivot/libecs/tests/Core/Scripting/tests/physics.pvt";
+	std::string file = "C:/Users/jonme/eip/pivot/libscript/tests/tests/physics.pvt";
 	component::Index cind;
 	systems::Index sind;
 	script::Engine engine(sind, cind);
 	engine.loadFile(file);
+
+	REQUIRE(sind.getDescription("onTickPhysics").has_value());
+	REQUIRE(cind.getDescription("Mdr").has_value());
+	REQUIRE(cind.getDescription("Position").has_value());
+	REQUIRE(cind.getDescription("Velocity").has_value());
+	
+	auto velCdescription = cind.getDescription("Velocity").value();
+	auto posCdescription = cind.getDescription("Position").value();
+	auto sysdescription = sind.getDescription("onTickPhysics").value();
+	auto array1 = posCdescription.createContainer(posCdescription);
+	auto array2 = velCdescription.createContainer(velCdescription);
+	std::vector<std::vector<data::Value>> entities = {
+		{ // entity id 0 = entity1
+			data::Record{ {"pos_x", 5.0},{"pos_y", 5.0},{"pos_z", 5.0}},
+			data::Record{ {"vel_x", 1.0},{"vel_y", -1.0},{"vel_z", 0.0}}
+		},
+		{ // entity id 1 = mdr
+			data::Record{ {"pos_x", 5.0},{"pos_y", 5.0},{"pos_z", 5.0}},
+			data::Record{ {"vel_x", 1.0},{"vel_y", -1.0},{"vel_z", 0.0}}
+		},
+		{ // entity id 2 = lol
+			data::Record{ {"vel_x", 1.0},{"vel_y", -1.0},{"vel_z", 0.0}}
+		}
+	};
+	size_t eId = 0;
+	for (auto entity : entities) {
+		array1->setValueForEntity(eId, entity.at(0));
+		if (entity.size() > 1)
+			array2->setValueForEntity(eId, entity.at(1));
+		eId++;
+	}
+	component::ArrayCombination combinations{{std::ref(*array1), std::ref(*array2)}};
+	event::EventWithComponent evt =  {
+		.event = event::Event{
+			.description = sysdescription.eventListener,
+			.entities = {1, 2},
+			.payload = 0.12
+		},
+		.components = {
+			{ // mdr<Position, Velocity> event parameter
+				component::ComponentRef(*array1, 1),
+				component::ComponentRef(*array2, 1)
+			},
+			{ // lol<Velocity> event parameter
+				component::ComponentRef(*array2, 2)
+			}
+		}
+	};
+
+	sysdescription.system(sysdescription, combinations, evt);
 
 	std::cout << "------Engine------end" << std::endl;
 }

@@ -1,19 +1,24 @@
 #include "Logger.hpp"
-#include "pivot/ecs/Core/Scripting/Engine.hxx"
+#include "pivot/script/Engine.hxx"
+#include "pivot/script/Exceptions.hxx"
 
 namespace pivot::ecs::script {
+
 
 Engine::Engine(systems::Index &systemIndex, component::Index &componentIndex)
 :	_systemIndex(systemIndex), _componentIndex(componentIndex)
 {
 }
 
-std::string Engine::loadFile(const std::string &fileName) { // Load a file to register all descriptions in the file, as well as store the trees for the system entry points
-
-	std::cout << "Loading file " << fileName << std::endl; // debug
+std::string Engine::loadFile(const std::string &fileName, bool verbose) { // Load a file to register all descriptions in the file, as well as store the trees for the system entry points
+	if (verbose)
+		std::cout << "Loading file " << fileName << std::endl;
+	// TODO: return string with error on top of the node
 	Node file = parser::ast_from_file(fileName, false); // generate abstract syntax tree from file
-	parser::printFileNode(file); // debug
+	if (verbose)
+		parser::printFileNode(file);
 
+	// TODO: return string with error on top of the node
 	std::vector<systems::Description> sysDescs = interpreter::registerDeclarations(file, _componentIndex); // register component descriptions, and retrieve system descriptions
 	for (systems::Description &desc: sysDescs) {
 		desc.system = std::bind(&Engine::systemCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3); // add the callback to the descriptions
@@ -22,10 +27,10 @@ std::string Engine::loadFile(const std::string &fileName) { // Load a file to re
 			Node systemEntry = getEntryPointFor(desc.name, file);  // only store the entry point for the system, the rest is in the description
 			_systems.insert({desc.name, systemEntry});
 		} catch (std::exception e) {
-			std::cerr << e.what() << std::endl;
+			return e.what(); // shouldn't happen
 		}
 	}
-	return ""; // no errors
+	return (fileName + " parsed succesfully."); // no errors
 }
 
 void Engine::systemCallback(const systems::Description &system, component::ArrayCombination &entities, const event::EventWithComponent &trigger) {
@@ -34,9 +39,17 @@ void Engine::systemCallback(const systems::Description &system, component::Array
 		logger.err("Unregistered system '") << system.name << "'";
 		return ;
 	}
-
+	const Node &systemEntry = _systems.at(system.name); // Avoid looking up for every entity
+	for (auto entity : entities) { // For every entity, execute the system with it as parameter
+		try {
+			interpreter::executeSystem(systemEntry, entity, trigger, _stack);
+		} catch (InvalidException e) {
+			logger.warn(e.getExceptionType()) << " '" << e.getFaulter() << "' => " << e.getError();
+		} catch (std::exception e) {
+			logger.err("Unhandled std exception: ") << e.what();
+		}
+	}
 }
-
 
 // Private functions
 
@@ -46,7 +59,8 @@ Node Engine::getEntryPointFor(const std::string &systemName, const Node &file) {
 			for (const Node &child : declaration.children)
 				if (child.type == NodeType::SystemEntryPoint)
 					return child;
-	throw(std::exception(std::format("No entry point found for {}", systemName).c_str())); // format not available in c++20 gcc yet
+	// throw(std::exception(std::format("No entry point found for {}", systemName).c_str())); // format not available in c++20 gcc yet
+	throw(std::exception(("No entry point found for " + systemName).c_str()));
 }
 
 

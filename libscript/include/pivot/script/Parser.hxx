@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pivot/ecs/Core/Scripting/DataStructures.hxx"
+#include "pivot/script/DataStructures.hxx"
 
 #include <stack>
 

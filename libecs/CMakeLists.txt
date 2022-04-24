@@ -67,9 +67,6 @@ add_library(${PROJECT_NAME} source/Core/Scene.cxx
                             source/Components/Tag.cxx
                             source/Components/RigidBody.cxx
                             source/Components/Gravity.cxx
-                            source/Core/Scripting/Parser.cxx
-                            source/Core/Scripting/Interpreter.cxx
-                            source/Core/Scripting/Engine.cxx
 )
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 
@@ -95,6 +92,4 @@ build_tests(${PROJECT_NAME}
   tests/Core/Event/test_manager.cxx
   tests/Core/Scene/test_load.cxx
   tests/Core/Scene/test_save.cxx
-  tests/Core/Scripting/test_parser.cxx
-  tests/Core/Scripting/test_interpreter.cxx
-  )
+)

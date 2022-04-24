@@ -4,12 +4,13 @@
 #include <algorithm>
 #include <unordered_map>
 
-#include "pivot/ecs/Core/Scripting/Parser.hxx"
+#include "pivot/script/Parser.hxx"
+#include "pivot/script/Exceptions.hxx"
 #include "Logger.hpp"
 
 namespace pivot::ecs::script::parser {
 
-const std::string gKnownSymbols = "+-/*%=!()<>,.# \t\r\n";
+const std::string gKnownSymbols = "+-/*%=!()<>,.#\" \t\r\n";
 const std::string gWhitespace = " \t\r\n";
 const std::vector<std::string> gBlockops = {
 	"if",
@@ -292,6 +293,11 @@ void consumeSystemVariable(std::vector<Token> &tokens, Node &result, Token &last
 		variableResult.value = token.value; // store the value directly
 		lastToken = tokens.at(0);
 		tokens.erase(tokens.begin());
+	} else if (token.type == TokenType::DoubleQuotedString) { // "string"
+		variableResult.type = NodeType::DoubleQuotedStringVariable;
+		variableResult.value = token.value;
+		lastToken = tokens.at(0);
+		tokens.erase(tokens.begin());
 	} else if (gVariableTypes.contains(token.value)) { // variable declaration
 		variableResult.type = NodeType::NewVariable;
 		variableResult.children.push_back(Node {.type=NodeType::Type, .value=token.value, .line_nb=token.line_nb, .char_nb=token.char_nb}); // type node
@@ -315,6 +321,8 @@ void consumeSystemVariable(std::vector<Token> &tokens, Node &result, Token &last
 			lastToken = tokens.at(0);
 			tokens.erase(tokens.begin()); // delete token
 		}
+		if (variableResult.children.size() == 1 && variableResult.children.at(0).type == NodeType::Name)
+			variableResult.value = variableResult.children.at(0).value;
 	}
 	result.children.push_back(variableResult);
 }
@@ -348,9 +356,7 @@ void consumeSystemFuncParams(std::vector<Token> &tokens, Node &result, Token &la
 		.line_nb = tokens.at(0).line_nb,
 		.char_nb = tokens.at(0).char_nb
 	};
-	expectSystemTokenValue(tokens, "(", lastToken, false);
-	lastToken = tokens.at(0);
-	tokens.erase(tokens.begin()); // delete '(' token
+	expectSystemTokenValue(tokens, "(", lastToken, true);
 	// Function parameters is either nothing, or a list of expressions, separated by commas, until a ')' symbol
 	// TODO : handle parentheses '(' ')'
 	while (tokens.size() > 0 && tokens.at(0).value != ")") { // an expression runs until a ')' symbol
@@ -359,7 +365,7 @@ void consumeSystemFuncParams(std::vector<Token> &tokens, Node &result, Token &la
 			break;
 		if (tokens.at(0).value != ",") // token is not an comma
 			throw TokenException("ERROR", tokens.at(0).value, tokens.at(0).line_nb, tokens.at(0).char_nb, "Unexpected_EndOfFile", "Expected comma");
-		paramsResult.children.push_back(Node {.type=NodeType::Symbol, .value=tokens.at(0).value, .line_nb=tokens.at(0).line_nb, .char_nb=tokens.at(0).char_nb});
+		// paramsResult.children.push_back(Node {.type=NodeType::Symbol, .value=tokens.at(0).value, .line_nb=tokens.at(0).line_nb, .char_nb=tokens.at(0).char_nb});
 		lastToken = tokens.at(0);
 		tokens.erase(tokens.begin()); // delete ',' token
 	}
@@ -393,7 +399,7 @@ void expectSystemTokenValue(std::vector<Token> &tokens, const std::string &expec
 	This will return the the list of all tokens in the file, in the order they appear
 	A token is defined as any string of characters which are either
 		Whitespace:		space, tab, \r or \n
-		Known symbols:	+ - * / % = ! ( ) < > . #
+		Known symbols:	+ - * / % = ! ( ) < > . # "
 		Neither of the two above
 */
 std::vector<Token> tokens_from_file(const std::string &filename, bool verbose) {
@@ -464,7 +470,23 @@ std::vector<Token> tokens_from_file(const std::string &filename, bool verbose) {
 		size_t rcursor = line.find_first_of(gKnownSymbols, lcursor);
 		while (rcursor != std::string::npos) { // Find every known symbol, and add either it or the string up until it to the tokens
 			if (rcursor == lcursor && !isdigit(line.at(lcursor))) { // token is the found symbol
-				// if (line.at(rcursor) != ' ' && line.at(rcursor) != '\t' && line.at(rcursor) != '\n' && line.at(rcursor) != '\r')
+
+				if (line.at(lcursor) == '"') { // double quoted string start
+					rcursor = line.find('"', lcursor + 1); // find the end to the double quote string
+					if (rcursor == std::string::npos) { // no more '"' on the line, multi-line quoted strings unsupported yet.
+						// pretend the string ends at the end of the line
+						result.push_back(Token{.type = TokenType::DoubleQuotedString, .value = line.substr(lcursor), .line_nb = lineNb, .char_nb = lcursor + 1});
+						lcursor = line.size(); // end of line
+						continue; // no more tokens on the line, and rcursor == std::string::npos, go to next line
+					} else { // the quote ends on the same line
+						// save raw value without the '"'
+						result.push_back(Token{.type = TokenType::DoubleQuotedString, .value = line.substr(lcursor + 1, rcursor - lcursor - 1), .line_nb = lineNb, .char_nb = lcursor + 1});
+						lcursor = rcursor + 1;
+						rcursor = line.find_first_of(gKnownSymbols, lcursor); // TODO: better logic than continue
+						continue;
+					}
+				} // all branches led to continue
+
 				if (gWhitespace.find(line.at(rcursor)) == std::string::npos)
 					result.push_back(Token{.type = TokenType::Symbol, .value = line.substr(lcursor, 1), .line_nb = lineNb, .char_nb = lcursor + 1});
 				lcursor = rcursor + 1;

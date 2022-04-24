@@ -1,4 +1,6 @@
-#include "pivot/ecs/Core/Scripting/Interpreter.hxx"
+#include "pivot/script/Interpreter.hxx"
+#include "pivot/script/Exceptions.hxx"
+#include "pivot/script/Builtins.hxx"
 #include "Logger.hpp"
 #include <unordered_map>
 
@@ -29,6 +31,19 @@ const std::map<std::string, data::BasicType> gVariableTypes {
 	{"Color", data::BasicType::Number},
 	{"String", data::BasicType::String}
 };
+
+// Map built-in function strings, to their callback and parameters (number and types)
+const std::unordered_map<
+	std::string, std::pair<
+		std::function<
+			data::Value(const std::vector<data::Value> &)
+		>, std::pair<size_t, std::vector<data::Type>>
+	>
+> gBuiltinsCallbacks = {
+	{	"isPressed", {interpreter::builtins::builtin_isPressed, { 1, {data::BasicType::String }}}},
+	{	"print", {interpreter::builtins::builtin_print, { 1, {data::BasicType::String }}}}
+};
+
 
 // Public functions ( can be called anywhere )
 
@@ -72,8 +87,58 @@ try { // handle exceptions from register functions
 	return result;
 }
 
+// This will execute a SystemEntryPoint node by executing all of its statements
+void executeSystem(const Node &systemEntry, component::ArrayCombination::ComponentCombination &entity, const event::EventWithComponent &trigger, Stack &stack) {
+	std::cout << "Executing block " << systemEntry.value << std::endl;
+	for (const Node &statement : systemEntry.children) { // execute all statements
+		if (statement.value == "functionCall") {
+			if (statement.children.size() != 2) // should be [Variable, FunctionParams]
+				throw InvalidException("InvalidFunctionStatement", statement.value, "Expected callee and params children node.");
+			const Node &callee = statement.children.at(0);
+			if (callee.children.size() != 1 || !gBuiltinsCallbacks.contains(callee.value)) // Only support builtin functions for now
+				throw InvalidException("UnknownFunction", callee.value, "Pivotscript only supports built-in functions for now.");
+			std::vector<data::Value> parameters;
+			for (const Node &param : statement.children.at(1).children) { // get all the parameters for the callback
+				if (param.type == NodeType::ExistingVariable) { // Named variable
+					const Variable &v = stack.find(param.value); // find it in the stack 
+					if (!v.hasValue)
+						throw InvalidException("InvalidVariable", v.name, "Variable has no value (not been initialized, or has members).");
+					parameters.push_back(v.value); // and add it to the parameters
+				} else if (param.type == NodeType::LiteralNumberVariable) // double
+					parameters.push_back(data::Value(std::stod(param.value))); // if type is LiteralNumber, script::parser caught std::stod exceptions
+				else if (param.type == NodeType::DoubleQuotedStringVariable) // "string"
+					parameters.push_back(data::Value(param.value));
+				else
+					throw InvalidException("UnsupportedFeature", param.value, "This type of variable is not supported yet.");
+			}
+			// validate the parameters and call the callback for the built-in function
+			validateParams(parameters, gBuiltinsCallbacks.at(callee.value).second.first, gBuiltinsCallbacks.at(callee.value).second.second, callee.value); // pair is <size_t numberOfParams, vector<data::Type> types>
+			gBuiltinsCallbacks.at(callee.value).first(parameters);
+
+		} else if (statement.value == "if") {
+		} else if (statement.value == "while") {
+		} else if (statement.value == "assign") {
+		} else { // unsupported yet
+			throw InvalidException("InvalidStatement", statement.value, "Unsupported statement.");
+		}
+	}
+}
+
 
 // Private functions (never called elsewhere than this file and tests)
+
+// Validate the parameters for a builtin
+void validateParams(const std::vector<data::Value> &toValidate, size_t expectedSize, const std::vector<data::Type> &expectedTypes, const std::string &name) {
+	// check expected size
+	if (toValidate.size() != expectedSize)
+		throw InvalidException("BadNumberOfParameters", name,
+			"Wrong number of parameters " + std::to_string(toValidate.size()) + " (expected " + std::to_string(expectedSize) + ")");
+	// check expected types (assume expectedTypes is of right size)
+	for (size_t i = 0; i < expectedSize; i++)
+		if (toValidate.at(i).type() != expectedTypes.at(i))
+			throw InvalidException("BadParameter", name,
+				"Bad parameter type " + toValidate.at(i).type().toString() + " (expected " + expectedTypes.at(i).toString() + ")");
+}
 
 // Register a component declaration node
 void registerComponentDeclaration(const Node &component, component::Index &componentIndex, const std::string &fileName) {
@@ -107,7 +172,6 @@ void registerComponentDeclaration(const Node &component, component::Index &compo
 	r.provenance = Provenance::externalRessource(fileName);
 	componentIndex.registerComponent(r);
 }
-
 // Register a system declaration node
 systems::Description registerSystemDeclaration(const Node &system, const std::string &fileName) {
 	pivot::ecs::systems::Description sysDesc = {
@@ -214,7 +278,7 @@ void consumeNode(const std::vector<Node> &children, size_t &childIndex, systems:
 // Throw if the type or value of the targeted node isn't equal to the expected type and value
 void expectNodeTypeValue(const std::vector<Node> &children, size_t &childIndex, NodeType expectedType, const std::string &expectedValue, bool consume) {
 	if (childIndex == children.size())
-		throw TokenException("ERROR", children.at(childIndex - 1).value, children.at(childIndex - 1).line_nb, children.at(childIndex - 1).char_nb, "Unexpected_EndOfFile", "Expected token " + gNodeTypeStrings.at(expectedType));
+		throw TokenException("ERROR", children.at(childIndex - 1).value, children.at(childIndex - 1).line_nb, children.at(childIndex - 1).char_nb, "Unexpected_EndOfFile", "Expected token of type " + gNodeTypeStrings.at(expectedType));
 	const Node &node = children.at(childIndex);
 	if (node.type != expectedType)
 		throw TokenException("ERROR", node.value, node.line_nb, node.char_nb, "UnexpectedNodeType", "Expected type " + gNodeTypeStrings.at(expectedType));
@@ -223,6 +287,27 @@ void expectNodeTypeValue(const std::vector<Node> &children, size_t &childIndex, 
 	if (consume)
 		childIndex++;
 }
+// Throw if the type of the targeted node isn't equal to the expected type
+void expectNodeType(const std::vector<Node> &children, size_t &childIndex, NodeType expectedType, bool consume) {
+	if (childIndex == children.size())
+		throw TokenException("ERROR", children.at(childIndex - 1).value, children.at(childIndex - 1).line_nb, children.at(childIndex - 1).char_nb, "Unexpected_EndOfFile", "Expected token of type " + gNodeTypeStrings.at(expectedType));
+	const Node &node = children.at(childIndex);
+	if (node.type != expectedType)
+		throw TokenException("ERROR", node.value, node.line_nb, node.char_nb, "UnexpectedNodeType", "Expected type " + gNodeTypeStrings.at(expectedType));
+	if (consume)
+		childIndex++;
+}
+// Throw if the value of the targeted node isn't equal to the expected value
+void expectNodeValue(const std::vector<Node> &children, size_t &childIndex, const std::string &expectedValue, bool consume) {
+	if (childIndex == children.size())
+		throw TokenException("ERROR", children.at(childIndex - 1).value, children.at(childIndex - 1).line_nb, children.at(childIndex - 1).char_nb, "UnexpectedNodeValue", "Expected value " + expectedValue);
+	const Node &node = children.at(childIndex);
+	if (node.value != expectedValue)
+		throw TokenException("ERROR", node.value, node.line_nb, node.char_nb, "UnexpectedNodeValue", "Expected value " + expectedValue);
+	if (consume)
+		childIndex++;
+}
+
 // Callback to create a container for components
 std::unique_ptr<pivot::ecs::component::IComponentArray> arrayFunctor(pivot::ecs::component::Description description) {
 	return std::make_unique<component::ScriptingComponentArray>(description);

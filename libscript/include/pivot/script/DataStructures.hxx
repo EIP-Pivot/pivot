@@ -2,7 +2,6 @@
 
 #include <string>
 #include <vector>
-#include <exception>
 // #include <format> // format not available in c++20 gcc yet
 
 #include "pivot/ecs/Core/Data/value.hxx"
@@ -40,6 +39,7 @@ enum class NodeType {
 	NewVariable,
 	ExistingVariable,
 	LiteralNumberVariable,
+	DoubleQuotedStringVariable,
 	FunctionParams,
 	Operator,
 	Type,
@@ -52,6 +52,7 @@ enum class TokenType {
 	LiteralNumber,
 	Symbol,
 	Indent,
+	DoubleQuotedString,
 	Dedent
 };
 
@@ -78,39 +79,6 @@ public:
 	inline bool operator==(Token rhs) const { return tied() == rhs.tied(); }
 };
 
-
-class MixedIndentException : public std::exception {
-	size_t linenb;
-	const std::string line;
-	const std::string info;
-	public:
-		MixedIndentException(const char* msg, const std::string &line_,  size_t linenb_, const std::string &info_) : std::exception(msg),
-			line (line_), linenb (linenb_), info (info_) {}
-		size_t get_line_nb() const { return linenb; }
-		const std::string &get_line() const { return line; }
-		const std::string &get_info() const { return info; }
-};
-
-// exceptionType :		WARNING	or	ERROR
-// 			WARNING does not interrupt parsing/interpreting but ERROR does
-// linenb charnb :		Position of where the error occured
-// info	:				Specification to the error
-
-class TokenException : public std::exception {
-	const std::string token;
-	size_t linenb;
-	size_t charnb;
-	const std::string exctype;
-	const std::string info;
-	public:
-		TokenException(const char* exceptionType, const std::string &token_, size_t linenb_, size_t charnb_, const std::string &exctype_, const std::string &info_) : std::exception(exceptionType),
-			token(token_), linenb (linenb_), charnb(charnb_), exctype(exctype_), info (info_) {}
-		const std::string &get_token() const { return token; }
-		size_t get_line_nb() const { return linenb; }
-		size_t get_char_nb() const { return charnb; }
-		const std::string &get_exctype() const { return exctype; }
-		const std::string &get_info() const { return info; }
-};
 
 } // end of namespace pivot::ecs::script
 

@@ -1,9 +1,14 @@
 #include "ImGuiCore/ImGuiManager.hxx"
 
-#include <nfd.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <imgui.h>
+
+// Must be after imgui
+#include <ImGuizmo.h>
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_vulkan.h>
+
 #include <Logger.hpp>
+#include <nfd.h>
 
 void ImGuiManager::newFrame(pivot::Engine &engine)
 {
@@ -12,61 +17,78 @@ void ImGuiManager::newFrame(pivot::Engine &engine)
     ImGui::NewFrame();
     ImGuizmo::BeginFrame();
 
-    if (ImGui::Button("Save Scene")){
+    ImGui::Begin("Load/Save");
+    saveScene(engine);
+    loadScene(engine);
+    ImGui::End();
+}
+
+void ImGuiManager::saveScene(pivot::Engine &engine)
+{
+    if (ImGui::Button("Save Scene")) {
         NFD_Init();
 
-        nfdchar_t* savePath;
-        nfdfilteritem_t filterItemSave[1] = {{"Scene", "json"}};
-        std::string filename = m_sceneManager.getCurrentScene().getName() + ".json";
-        nfdresult_t resultSave = NFD_SaveDialog(&savePath, filterItemSave, 1, NULL, filename.data());
+        nfdchar_t *savePath = nullptr;
+        nfdfilteritem_t filterItemSave[] = {{"Scene", "json"}};
+        auto filename = m_sceneManager.getCurrentScene().getName() + ".json";
+        auto resultSave = NFD_SaveDialog(&savePath, filterItemSave, 1, NULL, filename.data());
 
-        if (resultSave == NFD_OKAY) {
-            logger.info("File Dialog") << savePath;
-            m_sceneManager.getCurrentScene().save(savePath);
-            ImGui::OpenPopup("Save");
-        } else if (resultSave != NFD_CANCEL){
-            logger.err("File Dialog") << NFD_GetError();
+        switch (resultSave) {
+            case NFD_OKAY: {
+                logger.info("Save Scene") << savePath;
+                m_sceneManager.getCurrentScene().save(savePath);
+                ImGui::OpenPopup("Save");
+            } break;
+            case NFD_ERROR: {
+                logger.err("File Dialog") << NFD_GetError();
+            } break;
+            case NFD_CANCEL: break;
         }
-
         NFD_Quit();
     }
 
-    if (ImGui::BeginPopupModal("Save", NULL, ImGuiWindowFlags_AlwaysAutoResize))
-    {
+    if (ImGui::BeginPopupModal("Save", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Text("Scene correctly saved");
-        if (ImGui::Button("OK", ImVec2(120,0))) { ImGui::CloseCurrentPopup(); }
+        if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
         ImGui::EndPopup();
     }
+}
 
-    if (ImGui::Button("Load Scene")){
+void ImGuiManager::loadScene(pivot::Engine &engine)
+{
+    static std::string loading_result;
+    if (ImGui::Button("Load Scene")) {
         NFD_Init();
 
-        nfdchar_t *scenePath;
-        nfdfilteritem_t filterItemLoadSce[1] = {{ "Scene", "json" }};
-        nfdresult_t resultLoadSce = NFD_OpenDialog(&scenePath, filterItemLoadSce, 1, NULL);
+        nfdchar_t *scenePath = nullptr;
+        nfdfilteritem_t filterItemLoadSce[1] = {{"Scene", "json"}};
+        auto resultLoadSce = NFD_OpenDialog(&scenePath, filterItemLoadSce, 1, NULL);
+        loading_result.clear();
 
-        if (resultLoadSce == NFD_OKAY){
-            logger.info("File Dialog") << scenePath;
-            ImGui::OpenPopup("Load");
-            try{
-                engine.loadScene(scenePath);
-                loading_result = "Scene correctly loaded";
-            } catch (const std::exception& e){
-                loading_result = std::string(e.what());
+        switch (resultLoadSce) {
+            case NFD_OKAY: {
+                logger.info("Load Scene") << scenePath;
                 ImGui::OpenPopup("Load");
-            }
-            NFD_FreePath(scenePath);
-        } else if (resultLoadSce != NFD_CANCEL){
-            logger.err("File Dialog") << NFD_GetError();
+                try {
+                    engine.loadScene(scenePath);
+                    loading_result = "Scene correctly loaded";
+                } catch (const std::exception &e) {
+                    logger.err() << e.what();
+                    loading_result = e.what();
+                    ImGui::OpenPopup("Load");
+                }
+                NFD_FreePath(scenePath);
+            } break;
+            case NFD_ERROR: {
+                logger.err("File Dialog") << NFD_GetError();
+            } break;
+            case NFD_CANCEL: break;
         }
-
-
         NFD_Quit();
     }
-    if (ImGui::BeginPopupModal("Load", NULL, ImGuiWindowFlags_AlwaysAutoResize))
-    {
-        ImGui::Text("%s", loading_result.c_str());
-        if (ImGui::Button("OK", ImVec2(120,0))) { ImGui::CloseCurrentPopup(); }
+    if (ImGui::BeginPopupModal("Load", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::TextWrapped("%s", loading_result.c_str());
+        if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
         ImGui::EndPopup();
     }
 }

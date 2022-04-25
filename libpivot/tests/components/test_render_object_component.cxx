@@ -48,7 +48,7 @@ TEST_CASE("RenderObject component works", "[graphics][component]")
     REQUIRE(description.defaultValue ==
             Value{Record{{"meshID", Value{"cube"}},
                          {"pipelineID", Value{""}},
-                         {"materialIndex", Value{"white"}},
+                         {"materialIndex", Value{""}},
                          {"transform", Value{Record{{"position", Value{glm::vec3{0, 0, 0}}},
                                                     {"rotation", Value{glm::vec3{0, 0, 0}}},
                                                     {"scale", Value{glm::vec3{1, 1, 1}}}}}}}});

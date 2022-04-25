@@ -47,6 +47,16 @@ enum class NodeType {
 	Symbol
 };
 
+enum class Precedence {
+	LogicalAnd = 0,
+	LogicalOr = 1,
+	Equality = 2,
+	Relational = 3,
+	Additive = 4,
+	Multiplicative = 5,
+	Parens = 6
+};
+
 enum class TokenType {
 	Identifier,
 	LiteralNumber,

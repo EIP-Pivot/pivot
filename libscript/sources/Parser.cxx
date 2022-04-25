@@ -3,6 +3,7 @@
 #include <iterator>
 #include <algorithm>
 #include <unordered_map>
+#include <stack>
 
 #include "pivot/script/Parser.hxx"
 #include "pivot/script/Exceptions.hxx"
@@ -10,8 +11,25 @@
 
 namespace pivot::ecs::script::parser {
 
-const std::string gKnownSymbols = "+-/*%=!()<>,.#\" \t\r\n";
+const std::string gKnownSymbols = "+-/*%=!()<>,.#&|\" \t\r\n";
 const std::string gWhitespace = " \t\r\n";
+const std::unordered_map<std::string, Precedence> gOneCharOps = {
+	{ "/", Precedence::Multiplicative },
+	{ "*", Precedence::Multiplicative },
+	{ "%", Precedence::Multiplicative },
+	{ "+", Precedence::Additive },
+	{ "-", Precedence::Additive },
+	{ "<", Precedence::Relational },
+	{ ">", Precedence::Relational }
+};
+const std::unordered_map<std::string, Precedence> gTwoCharOps = {
+	{ ">=", Precedence::Relational },
+	{ "<=", Precedence::Relational },
+	{ "==", Precedence::Equality },
+	{ "!=", Precedence::Equality },
+	{ "&&", Precedence::LogicalAnd },
+	{ "||", Precedence::LogicalOr }
+};
 const std::vector<std::string> gBlockops = {
 	"if",
 	"while"
@@ -307,7 +325,7 @@ void consumeSystemVariable(std::vector<Token> &tokens, Node &result, Token &last
 		variableResult.children.push_back(Node {.type=NodeType::Name, .value=tokens.at(0).value, .line_nb=tokens.at(0).line_nb, .char_nb=tokens.at(0).char_nb});
 		lastToken = tokens.at(0);
 		tokens.erase(tokens.begin()); // remove the name token
-	} else { // variable assign
+	} else { // variable
 		variableResult.type = NodeType::ExistingVariable;
 		// Take into account all identifiers and symbols which are "."
 		while (tokens.size() > 0) {
@@ -320,6 +338,8 @@ void consumeSystemVariable(std::vector<Token> &tokens, Node &result, Token &last
 				break;
 			lastToken = tokens.at(0);
 			tokens.erase(tokens.begin()); // delete token
+			if (tokens.size() > 0 && tokens.at(0).line_nb != lastToken.line_nb)
+				break;
 		}
 		if (variableResult.children.size() == 1 && variableResult.children.at(0).type == NodeType::Name)
 			variableResult.value = variableResult.children.at(0).value;
@@ -334,17 +354,51 @@ void consumeSystemExpression(std::vector<Token> &tokens, Node &result, Token &la
 		.line_nb = tokens.at(0).line_nb,
 		.char_nb = tokens.at(0).char_nb
 	};
-	// An expression is a construct of Variable Operator Variable...etc that can be resolved to a single variable
-	// TODO : handle parentheses '(' ')'
+	// An expression is a construct of Operand Operator Operand...etc that can be solved to a single operand
+	// An expression ends with a newline or until a stopping symbol ','
+	// We will single-traverse the expression, and translate it to a postfix architecture
+	// This takes care of precedence of operation and eases the work of the interpreter
+	// The postfix result is represented as the expressionResult's children
+	std::stack<Token> _stack; // storage for operators during postfix
 	while (tokens.size() > 0 && tokens.at(0).line_nb == expressionResult.line_nb && tokens.at(0).value != ",") { // an expression runs until the next line, or until stopping symbol
-		consumeSystemVariable(tokens, expressionResult, lastToken); // consume variable
-		if (tokens.size() == 0 || tokens.at(0).line_nb != expressionResult.line_nb) // no more tokens/operators, end of expression
+		if (tokens.at(0).type != TokenType::Symbol)
+			consumeSystemVariable(tokens, expressionResult, lastToken); // consume operand as variable into postfix result
+		if (tokens.size() == 0 || tokens.at(0).line_nb != expressionResult.line_nb || tokens.at(0).value == ",") { // no more tokens/operators, end of expression
+			while (!_stack.empty()) { // At the end of infix expression, we push all stack operators into postfix result
+				expressionResult.children.push_back(Node {.type=NodeType::Operator, .value=_stack.top().value, .line_nb=_stack.top().line_nb, .char_nb=_stack.top().char_nb});
+				_stack.pop();
+			}
 			break;
+		}
 		if (tokens.at(0).type != TokenType::Symbol && tokens.at(0).type != TokenType::Dedent) // token is not an operator or dedent
+			throw TokenException("ERROR", tokens.at(0).value, tokens.at(0).line_nb, tokens.at(0).char_nb, "UnexpectedToken", "Expected operator symbol or end of expression");
+		if (tokens.at(0).value == "(") { // opening parentheses
+			_stack.push(tokens.at(0));
+			lastToken = tokens.at(0);
+			tokens.erase(tokens.begin()); // delete parentheses token
+		} else if (tokens.at(0).value == ")") { // closing parentheses
+			while (!_stack.empty() && _stack.top().value != "(") { // pop all operators to postfix result until innermost opening parentheses
+				expressionResult.children.push_back(Node {.type=NodeType::Operator, .value=_stack.top().value, .line_nb=_stack.top().line_nb, .char_nb=_stack.top().char_nb});
+				_stack.pop();
+			}
+			_stack.pop(); // pop '('
+			lastToken = tokens.at(0);
+			tokens.erase(tokens.begin());
+		} else if (gOneCharOps.contains(tokens.at(0).value) || gTwoCharOps.contains(tokens.at(0).value) ) { // normal operator
+			while (!_stack.empty() && _stack.top().value != "(" && hasHigherPrecedence(_stack.top().value, tokens.at(0).value)) { // pop all operators from stack with high precedence of operation
+				expressionResult.children.push_back(Node {.type=NodeType::Operator, .value=_stack.top().value, .line_nb=_stack.top().line_nb, .char_nb=_stack.top().char_nb});
+				_stack.pop();
+			}
+			_stack.push(tokens.at(0));
+			lastToken = tokens.at(0);
+			tokens.erase(tokens.begin()); // delete operator token
+		} else {
 			throw TokenException("ERROR", tokens.at(0).value, tokens.at(0).line_nb, tokens.at(0).char_nb, "UnexpectedToken", "Expected operator symbol");
-		expressionResult.children.push_back(Node {.type=NodeType::Operator, .value=tokens.at(0).value, .line_nb=tokens.at(0).line_nb, .char_nb=tokens.at(0).char_nb});
-		lastToken = tokens.at(0);
-		tokens.erase(tokens.begin()); // delete operator token
+		}
+	}
+	while (!_stack.empty()) { // pop all operators to postfix result
+		expressionResult.children.push_back(Node {.type=NodeType::Operator, .value=_stack.top().value, .line_nb=_stack.top().line_nb, .char_nb=_stack.top().char_nb});
+		_stack.pop();
 	}
 	result.children.push_back(expressionResult);
 }
@@ -487,15 +541,34 @@ std::vector<Token> tokens_from_file(const std::string &filename, bool verbose) {
 					}
 				} // all branches led to continue
 
-				if (gWhitespace.find(line.at(rcursor)) == std::string::npos)
-					result.push_back(Token{.type = TokenType::Symbol, .value = line.substr(lcursor, 1), .line_nb = lineNb, .char_nb = lcursor + 1});
-				lcursor = rcursor + 1;
-				rcursor = line.find_first_of(gKnownSymbols, lcursor);
+				if (gWhitespace.find(line.at(rcursor)) == std::string::npos) { // token is not whitespace
+					if (gTwoCharOps.contains(line.substr(lcursor, 2))) { // token is logical / relational operator ( 2 char wide)
+						result.push_back(Token{.type = TokenType::Symbol, .value = line.substr(lcursor, 2), .line_nb = lineNb, .char_nb = lcursor});
+						lcursor = rcursor + 2;
+						rcursor = line.find_first_of(gKnownSymbols, lcursor);
+					} else { // token is just a symbol
+						result.push_back(Token{.type = TokenType::Symbol, .value = line.substr(lcursor, 1), .line_nb = lineNb, .char_nb = lcursor + 1});
+						lcursor = rcursor + 1;
+						rcursor = line.find_first_of(gKnownSymbols, lcursor);
+					}
+				} else { // token is whitespace
+					lcursor = rcursor + 1;
+					rcursor = line.find_first_of(gKnownSymbols, lcursor);
+				}
+
 			} else { // tokens are the string up until the symbol, and the symbol itself
 				std::string tokenStr = line.substr(lcursor, rcursor - lcursor);
+				bool isLiteral = false;
 				try { // if token is a literal number, store it as that
-					std::stod(tokenStr);
+					std::stod(tokenStr); // check integral part is a number
+					if (line.at(rcursor) == '.') { // handle decimal literals
+						rcursor = line.find_first_of(gKnownSymbols, rcursor + 1);
+						rcursor = ((rcursor == std::string::npos) ? line.size() - 1 : rcursor);
+						tokenStr = line.substr(lcursor, rcursor - lcursor + 1);
+						std::stod(tokenStr); // check full decimal number
+					}
 					result.push_back(Token{.type = TokenType::LiteralNumber, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
+					isLiteral = true;
 				} catch ( std::invalid_argument e ) { // token is not a number
 					result.push_back(Token{.type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
 				} catch ( std::out_of_range e) { // token is invalid number
@@ -503,8 +576,7 @@ std::vector<Token> tokens_from_file(const std::string &filename, bool verbose) {
 					logger.warn("Token ") << tokenStr << " is too big to go into a double. Will be stored as literal string."; // format not available in c++20 gcc yet
 					result.push_back(Token{.type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
 				}
-				// if (line.at(rcursor) != ' ' && line.at(rcursor) != '\t' && line.at(rcursor) != '\n' && line.at(rcursor) != '\r')
-				if (gWhitespace.find(line.at(rcursor)) == std::string::npos)
+				if (!isLiteral && gWhitespace.find(line.at(rcursor)) == std::string::npos)
 					result.push_back(Token{.type = TokenType::Symbol, .value = line.substr(rcursor, 1), .line_nb = lineNb, .char_nb = rcursor + 1});
 				lcursor = rcursor + 1;
 				rcursor = line.find_first_of(gKnownSymbols, lcursor);
@@ -539,6 +611,17 @@ bool isDeclarationOver(const std::vector<Token> &tokens) { // Is there no more t
 	return false;
 }
 
+bool hasHigherPrecedence(const std::string &op, const std::string &compareTo) { // Does the op have higher precedence ( or priority ) than compareTo
+	return precedenceOf(op) > precedenceOf(compareTo);
+}
+Precedence precedenceOf(const std::string &op) { // Get a number representing the priority of op
+	if (gOneCharOps.contains(op))
+		return gOneCharOps.at(op);
+	if (gTwoCharOps.contains(op))
+		return gTwoCharOps.at(op);
+	// unlikely (impossible?)
+	throw TokenException("ERROR", op, 0, 0, "UnexpectedToken", "Expected operator symbol in precendenceOf()");
+}
 
 size_t indent_size_of(const std::string &fileString) { // Detect indent size of file content
 	size_t lineStart = 0;

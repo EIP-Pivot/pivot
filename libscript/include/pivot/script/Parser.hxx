@@ -30,6 +30,10 @@ void expectSystemToken(std::vector<Token> &tokens, TokenType expectedType, Token
 void expectSystemTokenValue(std::vector<Token> &tokens, const std::string &expectedValue, Token &lastToken, bool consume); // check that token exists, and is of correct value (and potentially consume it from tokens)
 bool isDeclarationOver(const std::vector<Token> &tokens); // Check for end of system/component declaration
 
+// Precedence of operators
+bool hasHigherPrecedence(const std::string &op, const std::string &compareTo); // compare op to compareTo
+Precedence precedenceOf(const std::string &op); // number representing the priority of op
+
 // Detect indent size of file content
 size_t indent_size_of(const std::string &fileString);
 size_t indent_size_of_line(const std::string &fileLine);

@@ -18,13 +18,13 @@ component Velocity
 	Number vel_z
 
 system	onTickPhysics( anyEntity<	Position, Velocity> ) event Tick(mdr<Position, Velocity>,lol<Velocity>, Number deltaTime )
-	if anyEntity.Position.pos_x > 10
-		anyEntity.Position.pos_x = 0
+	if anyEntity.Position.pos_x == 10
+		anyEntity.Position.pos_x = x + 5 * ( 2 - 3 )
 		anyEntity.Position.pos_x = 0
 		anyEntity.Position.pos_x = 0
 	isPressed("w")
 	print("Franchement")
-	while anyEntity.Position.pos_y > 0
+	while anyEntity.Position.pos_y >= 0
 		anyEntity.Position.pos_y = anyEntity.Position.pos_y - 1
 	Number gravity = 9.98
 	# appel(gravity, anyEntity.Position.pos_x)

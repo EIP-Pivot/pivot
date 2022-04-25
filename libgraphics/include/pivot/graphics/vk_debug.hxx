@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string_view>
+#include <string>
 #include <vulkan/vulkan.hpp>
 
 #include "pivot/graphics/DebugMacros.hxx"
@@ -11,13 +11,13 @@ namespace pivot::graphics::vk_debug
 {
 template <vk_utils::wrappedVulkanType T>
 /// Set the debug name of the object
-void setObjectName(vk::Device &device, const T &object, const std::string_view &name)
+void setObjectName(vk::Device &device, const T &object, const std::string &name)
 {
 #ifndef NDEBUG
     vk::DebugUtilsObjectNameInfoEXT nameInfo{
         .objectType = object.objectType,
         .objectHandle = (uint64_t)(typename T::CType)object,
-        .pObjectName = name.data(),
+        .pObjectName = name.c_str(),
     };
     device.setDebugUtilsObjectNameEXT(nameInfo);
 #endif

@@ -5,6 +5,16 @@
 
 #include <Logger.hpp>
 
+#ifndef PIVOT_WINDOW_ICON_PATH
+const std::vector<std::string> iconFilepath;
+#else
+const std::vector<std::string> iconFilepath = {
+    PIVOT_WINDOW_ICON_PATH "/icon_large.png",
+    PIVOT_WINDOW_ICON_PATH "/icon_medium.png",
+    PIVOT_WINDOW_ICON_PATH "/icon_small.png",
+};
+#endif
+
 namespace pivot::graphics
 {
 
@@ -25,6 +35,7 @@ VulkanApplication::VulkanApplication()
         logger.warn("Vulkan Instance") << "Validation layers requested, but not available!";
         bEnableValidationLayers = false;
     }
+    window.setIcon(iconFilepath);
     window.setKeyPressCallback(Window::Key::ESCAPE,
                                [](Window &window, const Window::Key) { window.shouldClose(true); });
 }

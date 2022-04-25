@@ -3,10 +3,12 @@
 #include "pivot/graphics/DebugMacros.hxx"
 
 #include <Logger.hpp>
+#include <stb_image.h>
 #include <stdexcept>
 
 namespace pivot::graphics
 {
+
 Window::Window(std::string n, unsigned w, unsigned h): windowName(n) { initWindow(w, h); }
 
 Window::~Window()
@@ -33,6 +35,28 @@ void Window::setTitle(const std::string &t) noexcept
 {
     windowName = t;
     glfwSetWindowTitle(window, windowName.c_str());
+}
+
+void Window::setIcon(const std::span<GLFWimage> &images) noexcept
+{
+    glfwSetWindowIcon(window, images.size(), images.data());
+}
+
+void Window::setIcon(const std::vector<std::string> &windowIcons)
+{
+    std::vector<GLFWimage> images;
+    for (const auto &icon: windowIcons) {
+        int texWidth, texHeight, texChannels;
+        stbi_uc *pixels = stbi_load(icon.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+        if (!pixels) throw std::runtime_error("Failed to load icon at path: " + icon);
+        images.push_back({
+            .width = texWidth,
+            .height = texHeight,
+            .pixels = pixels,
+        });
+    }
+    setIcon(images);
+    for (const auto &i: images) { stbi_image_free(i.pixels); }
 }
 
 vk::Extent2D Window::getSize() const noexcept
@@ -71,14 +95,15 @@ void Window::setErrorCallback(GLFWerrorfun &&f) noexcept { glfwSetErrorCallback(
 
 void Window::setUserPointer(void *ptr) noexcept { glfwSetWindowUserPointer(window, ptr); }
 
-void Window::initWindow(const unsigned width, const unsigned height) noexcept
+void Window::initWindow(const unsigned width, const unsigned height)
 {
     glfwInit();
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-
     this->setErrorCallback(error_callback);
+
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     window = glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);
+    if (!window) throw WindowError("Failed to create a GLFW window !");
+
     this->setUserPointer(this);
     this->setKeyCallback(keyboard_callback);
     this->setCursorPosCallback(cursor_callback);

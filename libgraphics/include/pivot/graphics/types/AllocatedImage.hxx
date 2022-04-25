@@ -25,6 +25,17 @@ public:
         imageView = device.createImageView(info);
     }
 
+    /// return the info struct used when creating a descriptor set
+    /// @see DescriptorBuilder::bindBuffer
+    vk::DescriptorImageInfo getImageInfo(vk::Sampler &sampler) const
+    {
+        return {
+            .sampler = sampler,
+            .imageView = imageView,
+            .imageLayout = imageLayout,
+        };
+    }
+
 public:
     //// @cond
     vk::Image image = VK_NULL_HANDLE;

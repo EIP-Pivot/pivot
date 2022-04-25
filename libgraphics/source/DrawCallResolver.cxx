@@ -21,22 +21,12 @@ void DrawCallResolver::init(VulkanBase &base, AssetStorage &stor, DescriptorBuil
     storage_ref = stor;
     createBuffer(defaultBufferSize);
 
-    vk::DescriptorBufferInfo bufferInfo{
-        .buffer = frame.objectBuffer.buffer,
-        .offset = 0,
-        .range = sizeof(gpu_object::UniformBufferObject) * defaultBufferSize,
-    };
-    vk::DescriptorBufferInfo indirectInfo{
-        .buffer = frame.indirectBuffer.buffer,
-        .offset = 0,
-        .range = sizeof(vk::DrawIndexedIndirectCommand) * defaultBufferSize,
-    };
-    auto success =
-        builder
-            .bindBuffer(0, bufferInfo, vk::DescriptorType::eStorageBuffer,
-                        vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute)
-            .bindBuffer(1, indirectInfo, vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eCompute)
-            .build(base_ref->get().device, frame.objectDescriptor, descriptorSetLayout);
+    auto success = builder
+                       .bindBuffer(0, frame.objectBuffer.getBufferInfo(), vk::DescriptorType::eStorageBuffer,
+                                   vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute)
+                       .bindBuffer(1, frame.indirectBuffer.getBufferInfo(), vk::DescriptorType::eStorageBuffer,
+                                   vk::ShaderStageFlagBits::eCompute)
+                       .build(base_ref->get().device, frame.objectDescriptor, descriptorSetLayout);
     assert(success);
     vk_debug::setObjectName(base_ref->get().device, frame.objectDescriptor,
                             "Object Descriptor Set " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
@@ -87,27 +77,27 @@ void DrawCallResolver::prepareForDraw(std::vector<std::reference_wrapper<const R
 
     auto bufferCmp = objectGPUData.size() <=> frame.currentBufferSize;
     auto descriptorCmp = objectGPUData.size() <=> frame.currentDescriptorSetSize;
-    if (std::is_gt(bufferCmp)) {
+    if (objectGPUData.size() == 0) {
+        return;
+    } else if (std::is_gt(bufferCmp)) {
         createBuffer(objectGPUData.size());
         updateDescriptorSet(objectGPUData.size());
-    }
-    if (objectGPUData.size() > 0 && (std::is_lt(bufferCmp) || std::is_gt(descriptorCmp))) {
+    } else if (objectGPUData.size() > 0 && (std::is_lt(bufferCmp) || std::is_gt(descriptorCmp))) {
         updateDescriptorSet(objectGPUData.size());
     }
 
-    if (frame.currentBufferSize > 0) {
-        base_ref->get().allocator.copyBuffer(frame.objectBuffer, std::span(objectGPUData));
+    assert(frame.currentBufferSize > 0);
+    base_ref->get().allocator.copyBuffer(frame.objectBuffer, std::span(objectGPUData));
 
-        auto sceneData = frame.indirectBuffer.getMappedSpan();
-        for (uint32_t i = 0; i < frame.packedDraws.size(); i++) {
-            const auto &mesh = storage_ref->get().get<AssetStorage::Mesh>(frame.packedDraws.at(i).meshId);
+    auto sceneData = frame.indirectBuffer.getMappedSpan();
+    for (uint32_t i = 0; i < frame.packedDraws.size(); i++) {
+        const auto &mesh = storage_ref->get().get<AssetStorage::Mesh>(frame.packedDraws.at(i).meshId);
 
-            sceneData[i].firstIndex = mesh.indicesOffset;
-            sceneData[i].indexCount = mesh.indicesSize;
-            sceneData[i].vertexOffset = mesh.vertexOffset;
-            sceneData[i].instanceCount = 0;
-            sceneData[i].firstInstance = i;
-        }
+        sceneData[i].firstIndex = mesh.indicesOffset;
+        sceneData[i].indexCount = mesh.indicesSize;
+        sceneData[i].vertexOffset = mesh.vertexOffset;
+        sceneData[i].instanceCount = 0;
+        sceneData[i].firstInstance = i;
     }
 }
 
@@ -117,15 +107,13 @@ void DrawCallResolver::createBuffer(vk::DeviceSize bufferSize)
     if (frame.objectBuffer) base_ref->get().allocator.destroyBuffer(frame.objectBuffer);
 
     frame.indirectBuffer = base_ref->get().allocator.createBuffer<vk::DrawIndexedIndirectCommand>(
-        sizeof(vk::DrawIndexedIndirectCommand) * bufferSize,
-        vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer, vma::MemoryUsage::eCpuToGpu,
-        vma::AllocationCreateFlagBits::eMapped);
+        bufferSize, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer,
+        vma::MemoryUsage::eCpuToGpu, vma::AllocationCreateFlagBits::eMapped);
     vk_debug::setObjectName(base_ref->get().device, frame.indirectBuffer.buffer,
                             "Indirect Command Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
 
     frame.objectBuffer = base_ref->get().allocator.createBuffer<gpu_object::UniformBufferObject>(
-        sizeof(gpu_object::UniformBufferObject) * bufferSize, vk::BufferUsageFlagBits::eStorageBuffer,
-        vma::MemoryUsage::eCpuToGpu);
+        bufferSize, vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu);
     vk_debug::setObjectName(base_ref->get().device, frame.objectBuffer.buffer,
                             "Object Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
     frame.currentBufferSize = bufferSize;
@@ -134,16 +122,8 @@ void DrawCallResolver::createBuffer(vk::DeviceSize bufferSize)
 void DrawCallResolver::updateDescriptorSet(vk::DeviceSize bufferSize)
 {
     assert(bufferSize > 0);
-    vk::DescriptorBufferInfo bufferInfo{
-        .buffer = frame.objectBuffer.buffer,
-        .offset = 0,
-        .range = sizeof(gpu_object::UniformBufferObject) * bufferSize,
-    };
-    vk::DescriptorBufferInfo indirectInfo{
-        .buffer = frame.indirectBuffer.buffer,
-        .offset = 0,
-        .range = sizeof(vk::DrawIndexedIndirectCommand) * bufferSize,
-    };
+    auto bufferInfo = frame.objectBuffer.getBufferInfo();
+    auto indirectInfo = frame.indirectBuffer.getBufferInfo();
     std::vector<vk::WriteDescriptorSet> descriptorWrites{
         {
             .dstSet = frame.objectDescriptor,
@@ -165,4 +145,5 @@ void DrawCallResolver::updateDescriptorSet(vk::DeviceSize bufferSize)
     base_ref->get().device.updateDescriptorSets(descriptorWrites, 0);
     frame.currentDescriptorSetSize = bufferSize;
 }
+
 }    // namespace pivot::graphics

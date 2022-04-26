@@ -327,13 +327,16 @@ void consumeSystemVariable(std::vector<Token> &tokens, Node &result, Token &last
 		tokens.erase(tokens.begin()); // remove the name token
 	} else { // variable
 		variableResult.type = NodeType::ExistingVariable;
+		variableResult.value = "";
 		// Take into account all identifiers and symbols which are "."
 		while (tokens.size() > 0) {
 			Token &varToken = tokens.at(0);
 			if (varToken.type == TokenType::Identifier)
-				variableResult.children.push_back(Node {.type=NodeType::Name, .value=varToken.value, .line_nb=varToken.line_nb, .char_nb=varToken.char_nb});
+				variableResult.value += varToken.value;
+				// variableResult.children.push_back(Node {.type=NodeType::Name, .value=varToken.value, .line_nb=varToken.line_nb, .char_nb=varToken.char_nb});
 			else if (varToken.type == TokenType::Symbol && varToken.value == ".")
-				variableResult.children.push_back(Node {.type=NodeType::Symbol, .value=varToken.value, .line_nb=varToken.line_nb, .char_nb=varToken.char_nb});
+				variableResult.value += varToken.value;
+				// variableResult.children.push_back(Node {.type=NodeType::Symbol, .value=varToken.value, .line_nb=varToken.line_nb, .char_nb=varToken.char_nb});
 			else
 				break;
 			lastToken = tokens.at(0);
@@ -341,31 +344,27 @@ void consumeSystemVariable(std::vector<Token> &tokens, Node &result, Token &last
 			if (tokens.size() > 0 && tokens.at(0).line_nb != lastToken.line_nb)
 				break;
 		}
-		if (variableResult.children.size() == 1 && variableResult.children.at(0).type == NodeType::Name)
-			variableResult.value = variableResult.children.at(0).value;
+		// if (variableResult.children.size() == 1 && variableResult.children.at(0).type == NodeType::Name)
+		// 	variableResult.value = variableResult.children.at(0).value;
 	}
 	result.children.push_back(variableResult);
 }
 void consumeSystemExpression(std::vector<Token> &tokens, Node &result, Token &lastToken) { // consume an expression and append it to children node
 	if (tokens.size() == 0)
 		throw TokenException("ERROR", lastToken.value, lastToken.line_nb, lastToken.char_nb, "Unexpected_EndOfFile", "Expected expression");
-	Node expressionResult = {
-		.type = NodeType::Expression,
-		.line_nb = tokens.at(0).line_nb,
-		.char_nb = tokens.at(0).char_nb
-	};
+
 	// An expression is a construct of Operand Operator Operand...etc that can be solved to a single operand
 	// An expression ends with a newline or until a stopping symbol ','
 	// We will single-traverse the expression, and translate it to a postfix architecture
 	// This takes care of precedence of operation and eases the work of the interpreter
-	// The postfix result is represented as the expressionResult's children
+	// The postfix result is represented as the result's children
 	std::stack<Token> _stack; // storage for operators during postfix
-	while (tokens.size() > 0 && tokens.at(0).line_nb == expressionResult.line_nb && tokens.at(0).value != ",") { // an expression runs until the next line, or until stopping symbol
+	while (tokens.size() > 0 && tokens.at(0).line_nb == result.line_nb && tokens.at(0).value != ",") { // an expression runs until the next line, or until stopping symbol
 		if (tokens.at(0).type != TokenType::Symbol)
-			consumeSystemVariable(tokens, expressionResult, lastToken); // consume operand as variable into postfix result
-		if (tokens.size() == 0 || tokens.at(0).line_nb != expressionResult.line_nb || tokens.at(0).value == ",") { // no more tokens/operators, end of expression
+			consumeSystemVariable(tokens, result, lastToken); // consume operand as variable into postfix result
+		if (tokens.size() == 0 || tokens.at(0).line_nb != result.line_nb || tokens.at(0).value == ",") { // no more tokens/operators, end of expression
 			while (!_stack.empty()) { // At the end of infix expression, we push all stack operators into postfix result
-				expressionResult.children.push_back(Node {.type=NodeType::Operator, .value=_stack.top().value, .line_nb=_stack.top().line_nb, .char_nb=_stack.top().char_nb});
+				result.children.push_back(Node {.type=NodeType::Operator, .value=_stack.top().value, .line_nb=_stack.top().line_nb, .char_nb=_stack.top().char_nb});
 				_stack.pop();
 			}
 			break;
@@ -378,7 +377,7 @@ void consumeSystemExpression(std::vector<Token> &tokens, Node &result, Token &la
 			tokens.erase(tokens.begin()); // delete parentheses token
 		} else if (tokens.at(0).value == ")") { // closing parentheses
 			while (!_stack.empty() && _stack.top().value != "(") { // pop all operators to postfix result until innermost opening parentheses
-				expressionResult.children.push_back(Node {.type=NodeType::Operator, .value=_stack.top().value, .line_nb=_stack.top().line_nb, .char_nb=_stack.top().char_nb});
+				result.children.push_back(Node {.type=NodeType::Operator, .value=_stack.top().value, .line_nb=_stack.top().line_nb, .char_nb=_stack.top().char_nb});
 				_stack.pop();
 			}
 			_stack.pop(); // pop '('
@@ -386,7 +385,7 @@ void consumeSystemExpression(std::vector<Token> &tokens, Node &result, Token &la
 			tokens.erase(tokens.begin());
 		} else if (gOneCharOps.contains(tokens.at(0).value) || gTwoCharOps.contains(tokens.at(0).value) ) { // normal operator
 			while (!_stack.empty() && _stack.top().value != "(" && hasHigherPrecedence(_stack.top().value, tokens.at(0).value)) { // pop all operators from stack with high precedence of operation
-				expressionResult.children.push_back(Node {.type=NodeType::Operator, .value=_stack.top().value, .line_nb=_stack.top().line_nb, .char_nb=_stack.top().char_nb});
+				result.children.push_back(Node {.type=NodeType::Operator, .value=_stack.top().value, .line_nb=_stack.top().line_nb, .char_nb=_stack.top().char_nb});
 				_stack.pop();
 			}
 			_stack.push(tokens.at(0));
@@ -397,10 +396,9 @@ void consumeSystemExpression(std::vector<Token> &tokens, Node &result, Token &la
 		}
 	}
 	while (!_stack.empty()) { // pop all operators to postfix result
-		expressionResult.children.push_back(Node {.type=NodeType::Operator, .value=_stack.top().value, .line_nb=_stack.top().line_nb, .char_nb=_stack.top().char_nb});
+		result.children.push_back(Node {.type=NodeType::Operator, .value=_stack.top().value, .line_nb=_stack.top().line_nb, .char_nb=_stack.top().char_nb});
 		_stack.pop();
 	}
-	result.children.push_back(expressionResult);
 }
 void consumeSystemFuncParams(std::vector<Token> &tokens, Node &result, Token &lastToken) { // consume function parameters and append them to children node
 	if (tokens.size() == 0)

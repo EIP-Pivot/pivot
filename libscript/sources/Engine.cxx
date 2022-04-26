@@ -42,7 +42,8 @@ void Engine::systemCallback(const systems::Description &system, component::Array
 	const Node &systemEntry = _systems.at(system.name); // Avoid looking up for every entity
 	for (auto entity : entities) { // For every entity, execute the system with it as parameter
 		try {
-			interpreter::executeSystem(systemEntry, entity, trigger, _stack);
+			_stack.clear();
+			interpreter::executeSystem(systemEntry, system, entity, trigger, _stack);
 		} catch (InvalidException e) {
 			logger.warn(e.getExceptionType()) << " '" << e.getFaulter() << "' => " << e.getError();
 		} catch (std::exception e) {

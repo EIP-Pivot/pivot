@@ -19,6 +19,8 @@ struct Description {
     std::vector<std::string> entities;
     /// Value of the payload
     data::Type payload;
+	/// Name of the payload
+	std::string payloadName;
     /// Event provenance
     Provenance provenance;
 

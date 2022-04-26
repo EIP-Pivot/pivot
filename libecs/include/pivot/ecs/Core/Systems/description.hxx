@@ -21,6 +21,8 @@ struct Description {
 
     /// system name
     std::string name;
+	/// entity name
+	std::string entityName;
     /// list of systeme component
     std::vector<std::string> systemComponents;
     /// When event is emit, the system manager will search all system listening to this event

@@ -66,6 +66,12 @@ enum class TokenType {
 	Dedent
 };
 
+struct ExpressionOp {
+	bool isOperator;
+	data::Value operand;
+	std::string operatorStr;
+};
+
 struct Node {
 	NodeType type;
 	std::string value;

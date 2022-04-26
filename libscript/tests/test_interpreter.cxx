@@ -204,11 +204,11 @@ TEST_CASE("Scripting-Refacto-Engine") {
 	auto array2 = velCdescription.createContainer(velCdescription);
 	std::vector<std::vector<data::Value>> entities = {
 		{ // entity id 0 = entity1
-			data::Record{ {"pos_x", 5.0},{"pos_y", 5.0},{"pos_z", 5.0}},
+			data::Record{ {"pos_x", 0.0},{"pos_y", 0.0},{"pos_z", 0.0}},
 			data::Record{ {"vel_x", 1.0},{"vel_y", -1.0},{"vel_z", 0.0}}
 		},
 		{ // entity id 1 = mdr
-			data::Record{ {"pos_x", 5.0},{"pos_y", 5.0},{"pos_z", 5.0}},
+			data::Record{ {"pos_x", 100.0},{"pos_y", 100.0},{"pos_z", 100.0}},
 			data::Record{ {"vel_x", 1.0},{"vel_y", -1.0},{"vel_z", 0.0}}
 		},
 		{ // entity id 2 = lol

@@ -31,7 +31,22 @@ const std::map<std::string, data::BasicType> gVariableTypes {
 	{"Color", data::BasicType::Number},
 	{"String", data::BasicType::String}
 };
-
+// Map builtin binary (two operands) operators, to their callback
+const std::map<std::string, std::function<data::Value(const data::Value &,const data::Value &)>> gOperatorCallbacks = {
+	{	"*", interpreter::builtins::builtin_operatorMul },
+	{	"/", interpreter::builtins::builtin_operatorDiv },
+	{	"%", interpreter::builtins::builtin_operatorMod },
+	{	"+", interpreter::builtins::builtin_operatorAdd },
+	{	"-", interpreter::builtins::builtin_operatorSub },
+	{	"<", interpreter::builtins::builtin_operatorLt },
+	{	"<=", interpreter::builtins::builtin_operatorLtEq },
+	{	">", interpreter::builtins::builtin_operatorGt },
+	{	">=", interpreter::builtins::builtin_operatorGtEq },
+	{	"==", interpreter::builtins::builtin_operatorEq },
+	{	"!=", interpreter::builtins::builtin_operatorNEq },
+	{	"&&", interpreter::builtins::builtin_operatorAnd },
+	{	"||", interpreter::builtins::builtin_operatorOr }
+};
 // Map built-in function strings, to their callback and parameters (number and types)
 const std::unordered_map<
 	std::string, std::pair<
@@ -88,36 +103,58 @@ try { // handle exceptions from register functions
 }
 
 // This will execute a SystemEntryPoint node by executing all of its statements
-void executeSystem(const Node &systemEntry, component::ArrayCombination::ComponentCombination &entity, const event::EventWithComponent &trigger, Stack &stack) {
+void executeSystem(const Node &systemEntry, const systems::Description &desc, component::ArrayCombination::ComponentCombination &entity, const event::EventWithComponent &trigger, Stack &stack) {
 	std::cout << "Executing block " << systemEntry.value << std::endl;
+	// Push input entity to stack
+	Variable inputEntity = {
+		.name = desc.entityName,
+		.hasValue = false
+	};
+	// systemComponents : [ "Position", "Velocity" ]
+	// entity : [ PositionRecord, VelocityRecord ]
+	size_t componentIndex = 0;
+	for (const std::string &componentString : desc.systemComponents) {
+		// get the component from the ArrayCombination using a size_t index
+		data::Record componentRecord = std::get<data::Record>(entity[componentIndex].get());
+		data::RecordType componentRecordType = componentRecord.type();
+		Variable componentVar = {
+			.name = componentString,
+			.hasValue = false
+		};
+
+		for (const auto &[memberName, memberType] : componentRecordType) // insert all members of input entity as members of the variable inputEntity
+			componentVar.members.insert_or_assign(memberName, Variable {
+				.name = memberName,
+				.hasValue = true,
+				.value = componentRecord.at(memberName)
+			});
+		inputEntity.members.insert_or_assign(componentString, componentVar);
+		componentIndex++; // go to next component
+	}
+	stack.push(inputEntity);
+
 	for (const Node &statement : systemEntry.children) { // execute all statements
 		if (statement.value == "functionCall") {
 			if (statement.children.size() != 2) // should be [Variable, FunctionParams]
 				throw InvalidException("InvalidFunctionStatement", statement.value, "Expected callee and params children node.");
 			const Node &callee = statement.children.at(0);
-			if (callee.children.size() != 1 || !gBuiltinsCallbacks.contains(callee.value)) // Only support builtin functions for now
+			if (!gBuiltinsCallbacks.contains(callee.value)) // Only support builtin functions for now
 				throw InvalidException("UnknownFunction", callee.value, "Pivotscript only supports built-in functions for now.");
 			std::vector<data::Value> parameters;
-			for (const Node &param : statement.children.at(1).children) { // get all the parameters for the callback
-				if (param.type == NodeType::ExistingVariable) { // Named variable
-					const Variable &v = stack.find(param.value); // find it in the stack 
-					if (!v.hasValue)
-						throw InvalidException("InvalidVariable", v.name, "Variable has no value (not been initialized, or has members).");
-					parameters.push_back(v.value); // and add it to the parameters
-				} else if (param.type == NodeType::LiteralNumberVariable) // double
-					parameters.push_back(data::Value(std::stod(param.value))); // if type is LiteralNumber, script::parser caught std::stod exceptions
-				else if (param.type == NodeType::DoubleQuotedStringVariable) // "string"
-					parameters.push_back(data::Value(param.value));
-				else
-					throw InvalidException("UnsupportedFeature", param.value, "This type of variable is not supported yet.");
-			}
+			for (const Node &param : statement.children.at(1).children) // get all the parameters for the callback
+				parameters.push_back(valueOf(param, stack));
 			// validate the parameters and call the callback for the built-in function
 			validateParams(parameters, gBuiltinsCallbacks.at(callee.value).second.first, gBuiltinsCallbacks.at(callee.value).second.second, callee.value); // pair is <size_t numberOfParams, vector<data::Type> types>
 			gBuiltinsCallbacks.at(callee.value).first(parameters);
-
 		} else if (statement.value == "if") {
+			if (statement.children.size() < 2 || statement.children.at(0).type != NodeType::Expression)
+				throw InvalidException("InvalidIfStatement", statement.value, "Expected if condition expression.");
+			data::Value exprResult = evaluateExpression(statement.children.at(0), stack);
+			std::cout << "IF:  " << exprResult.type() << std::endl;
 		} else if (statement.value == "while") {
 		} else if (statement.value == "assign") {
+			// data::Value exprResult = evaluateExpression(statement.children.at(0), stack);
+			std::cout << "ASSIGN:  " << "" << std::endl;
 		} else { // unsupported yet
 			throw InvalidException("InvalidStatement", statement.value, "Unsupported statement.");
 		}
@@ -249,6 +286,7 @@ void consumeNode(const std::vector<Node> &children, size_t &childIndex, systems:
 	{
 	case NodeType::EntityParameterName:
 		// TODO : keep record of entity parameter names for execution later
+		sysDesc.entityName = node.value;
 		break;
 	case NodeType::EntityParameterComponent :
 		sysDesc.systemComponents.push_back(node.value);
@@ -263,7 +301,8 @@ void consumeNode(const std::vector<Node> &children, size_t &childIndex, systems:
 		sysDesc.eventComponents.back().push_back(node.value);
 		break;
 	case NodeType::EventPayloadName:
-		// TODO : ask maxence to put payload name back in description
+		// TODO : put payload name back in description
+		evtDesc.payloadName = node.value;
 		break;
 	case NodeType::EventPayloadType:
 		if (!gVariableTypes.contains(node.value)) // Not a known pivotscript type
@@ -275,6 +314,56 @@ void consumeNode(const std::vector<Node> &children, size_t &childIndex, systems:
 	}
 	childIndex++;
 }
+
+data::Value valueOf(const Node &var, const Stack &stack) { // get the data::Value version of a variable
+	if (var.type == NodeType::LiteralNumberVariable)
+		return data::Value(std::stod(var.value));
+	else if (var.type == NodeType::DoubleQuotedStringVariable)
+		return data::Value(var.value);
+	else if (var.type == NodeType::ExistingVariable) { // Named variable
+		const Variable &v = stack.find(var.value); // find it in the stack 
+		if (!v.hasValue)
+			throw InvalidException("VariableHasNoValue", v.name, "This variable has not been initialized or only has members.");
+		return v.value;
+	} else
+		throw InvalidException("UnsupportedFeature", var.value, "This type of variable is not supported yet.");
+}
+// Only binary operators are supported (which take 2 operands exactly)
+data::Value evaluateFactor(const data::Value &left, const data::Value &right, const std::string &op) { // Return the result of the operation op on left and right
+	if (!gOperatorCallbacks.contains(op))
+		throw InvalidException("UnsupportedFeature", op, "This type of operator is not supported yet.");
+	return gOperatorCallbacks.at(op)(left, right);
+}
+data::Value evaluateExpression(const Node &expr, const Stack &stack) { // evaluate a postfix expression
+	// assume expr.type is NodeType::Expression
+	if (expr.children.size() == 1) // only one variable in the expression, no operators
+		return valueOf(expr.children.at(0), stack);
+	// Expression has operators, evaluate the postfix expression
+	
+	// vector to hold operands/operators during evaluation
+	std::vector<ExpressionOp> ops;
+	for (const Node &n : expr.children) { // fill the vector
+		if (n.type == NodeType::Operator)
+			ops.push_back(ExpressionOp {.isOperator = true, .operatorStr = n.value});
+		else
+			ops.push_back(ExpressionOp {.isOperator=false, .operand = valueOf(n, stack)});
+	}
+	// evalute the postfix expression by evaluating first occurence of -- operand operand operator --
+	while (ops.size() != 1) { // run until only one value is left
+		for (size_t i = 0; i < ops.size() - 2; i++) { // find first occurence of -- operand operand operator --
+			if (!ops.at(i).isOperator && !ops.at(i + 1).isOperator && ops.at(i + 2).isOperator) {
+				// put the result into the i index op
+				ops.at(i) = ExpressionOp {.isOperator = false, .operand = evaluateFactor(ops.at(i).operand, ops.at(i + 1).operand, ops.at(i + 2).operatorStr)};
+				// remove the other two indices
+				ops.erase(std::next(ops.begin(), i + 1), std::next(ops.begin(), i + 3));
+				break;
+			}
+		}
+	}
+	std::cout << "done ?" << std::endl;
+	return ops.at(0).operand;
+}
+
 // Throw if the type or value of the targeted node isn't equal to the expected type and value
 void expectNodeTypeValue(const std::vector<Node> &children, size_t &childIndex, NodeType expectedType, const std::string &expectedValue, bool consume) {
 	if (childIndex == children.size())

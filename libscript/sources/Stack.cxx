@@ -26,7 +26,7 @@ const Variable &Stack::find(const std::string &name, const std::unordered_map<st
 	}
 	if (!where.contains(name.substr(0, dot)))
 		throw InvalidException("UnknownVariable", name, "Unknown variable.");
-	return find(name.substr(dot), where.at(name.substr(0, dot)).members);
+	return find(name.substr(dot + 1), where.at(name.substr(0, dot)).members);
 }
 
 

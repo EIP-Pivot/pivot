@@ -24,7 +24,7 @@ namespace pivot::ecs::script::interpreter {
 std::vector<systems::Description> registerDeclarations(const Node &file, component::Index &componentIndex);
 
 // Execute a SystemEntryPoint node by executing all of its statements
-void executeSystem(const Node &systemEntry, component::ArrayCombination::ComponentCombination &entity, const event::EventWithComponent &trigger, Stack &stack);
+void executeSystem(const Node &systemEntry, const systems::Description &desc, component::ArrayCombination::ComponentCombination &entity, const event::EventWithComponent &trigger, Stack &stack);
 
 
 // Private functions
@@ -38,6 +38,11 @@ systems::Description registerSystemDeclaration(const Node &system, const std::st
 
 // Consume a child node from a declaration
 void consumeNode(const std::vector<Node> &children, size_t &childIndex, systems::Description &sysDesc, event::Description &evtDesc, NodeType expectedType);
+
+// Node utils, and evaluation of expressions
+data::Value valueOf(const Node &var, const Stack &stack); // get value of variable
+data::Value evaluateFactor(const data::Value &left, const data::Value &right, const std::string &op); // Return the result of the operation op on left and right
+data::Value evaluateExpression(const Node &expr, const Stack &stack); // evaluate a postfix expression
 
 // Expect node to have a certain type, value or both (throw if not)
 void expectNodeTypeValue(const std::vector<Node> &children, size_t &childIndex, NodeType expectedType, const std::string &expectedValue, bool consume);

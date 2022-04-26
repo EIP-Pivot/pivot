@@ -134,35 +134,49 @@ void executeSystem(const Node &systemEntry, const systems::Description &desc, co
 	stack.push(inputEntity);
 
 	for (const Node &statement : systemEntry.children) { // execute all statements
-		if (statement.value == "functionCall") {
-			if (statement.children.size() != 2) // should be [Variable, FunctionParams]
-				throw InvalidException("InvalidFunctionStatement", statement.value, "Expected callee and params children node.");
-			const Node &callee = statement.children.at(0);
-			if (!gBuiltinsCallbacks.contains(callee.value)) // Only support builtin functions for now
-				throw InvalidException("UnknownFunction", callee.value, "Pivotscript only supports built-in functions for now.");
-			std::vector<data::Value> parameters;
-			for (const Node &param : statement.children.at(1).children) // get all the parameters for the callback
-				parameters.push_back(valueOf(param, stack));
-			// validate the parameters and call the callback for the built-in function
-			validateParams(parameters, gBuiltinsCallbacks.at(callee.value).second.first, gBuiltinsCallbacks.at(callee.value).second.second, callee.value); // pair is <size_t numberOfParams, vector<data::Type> types>
-			gBuiltinsCallbacks.at(callee.value).first(parameters);
-		} else if (statement.value == "if") {
-			if (statement.children.size() < 2 || statement.children.at(0).type != NodeType::Expression)
-				throw InvalidException("InvalidIfStatement", statement.value, "Expected if condition expression.");
-			data::Value exprResult = evaluateExpression(statement.children.at(0), stack);
-			std::cout << "IF:  " << exprResult.type() << std::endl;
-		} else if (statement.value == "while") {
-		} else if (statement.value == "assign") {
-			// data::Value exprResult = evaluateExpression(statement.children.at(0), stack);
-			std::cout << "ASSIGN:  " << "" << std::endl;
-		} else { // unsupported yet
-			throw InvalidException("InvalidStatement", statement.value, "Unsupported statement.");
-		}
+		executeStatement(statement, stack);
 	}
 }
 
 
 // Private functions (never called elsewhere than this file and tests)
+
+// Execute a statement (used for recursion for blocks)
+void executeStatement(const Node &statement, Stack &stack) {
+	if (statement.value == "functionCall") {
+		if (statement.children.size() != 2) // should be [Variable, FunctionParams]
+			throw InvalidException("InvalidFunctionStatement", statement.value, "Expected callee and params children node.");
+		const Node &callee = statement.children.at(0);
+		if (!gBuiltinsCallbacks.contains(callee.value)) // Only support builtin functions for now
+			throw InvalidException("UnknownFunction", callee.value, "Pivotscript only supports built-in functions for now.");
+		std::vector<data::Value> parameters;
+		for (const Node &param : statement.children.at(1).children) // get all the parameters for the callback
+			parameters.push_back(valueOf(param, stack));
+		// validate the parameters and call the callback for the built-in function
+		validateParams(parameters, gBuiltinsCallbacks.at(callee.value).second.first, gBuiltinsCallbacks.at(callee.value).second.second, callee.value); // pair is <size_t numberOfParams, vector<data::Type> types>
+		gBuiltinsCallbacks.at(callee.value).first(parameters);
+	} else if (statement.value == "if") {
+		if (statement.children.size() < 2 || statement.children.at(0).type != NodeType::Expression)
+			throw InvalidException("InvalidIfStatement", statement.value, "Expected if condition expression.");
+		data::Value exprResult = evaluateExpression(statement.children.at(0), stack);
+		try { // check that expression resulted in data::BasicType::Boolean specifically
+			if (std::get<data::BasicType>(exprResult.type()) != data::BasicType::Boolean)
+				throw InvalidException("InvalidIfCondition", exprResult.type().toString(), "If condition should result in data::BasicType::Boolean instead.");
+			if (std::get<bool>(exprResult)) { // if the condition is true, execute the block statements
+				for (size_t statementIndex = 1; statementIndex < statement.children.size(); statementIndex++)
+					executeStatement(statement.children.at(statementIndex), stack);
+			} // else ignore the block
+		} catch (std::bad_variant_access e) {
+			throw InvalidException("InvalidIfCondition", exprResult.type().toString(), "If condition should result in data::BasicType instead.");
+		}
+	} else if (statement.value == "while") {
+	} else if (statement.value == "assign") {
+		// data::Value exprResult = evaluateExpression(statement.children.at(0), stack);
+		std::cout << "ASSIGN:  " << statement.children.at(2).value << std::endl;
+	} else { // unsupported yet
+		throw InvalidException("InvalidStatement", statement.value, "Unsupported statement.");
+	}
+}
 
 // Validate the parameters for a builtin
 void validateParams(const std::vector<data::Value> &toValidate, size_t expectedSize, const std::vector<data::Type> &expectedTypes, const std::string &name) {

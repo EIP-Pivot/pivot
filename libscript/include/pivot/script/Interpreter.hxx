@@ -29,6 +29,9 @@ void executeSystem(const Node &systemEntry, const systems::Description &desc, co
 
 // Private functions
 
+// Execute a statement (used for recursion for blocks)
+void executeStatement(const Node &statement, Stack &stack);
+
 // Validate the parameters for a builtin
 void validateParams(const std::vector<data::Value> &toValidate, size_t expectedSize, const std::vector<data::Type> &expectedTypes, const std::string &name);
 

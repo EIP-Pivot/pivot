@@ -52,11 +52,11 @@ const std::unordered_map<
 	std::string, std::pair<
 		std::function<
 			data::Value(const std::vector<data::Value> &)
-		>, std::pair<size_t, std::vector<data::Type>>
+		>, std::pair<size_t, std::vector<std::vector<data::Type>>>
 	>
 > gBuiltinsCallbacks = {
-	{	"isPressed", {interpreter::builtins::builtin_isPressed, { 1, {data::BasicType::String }}}},
-	{	"print", {interpreter::builtins::builtin_print, { 1, {data::BasicType::String }}}}
+	{	"isPressed", {interpreter::builtins::builtin_isPressed, { 1, {{data::BasicType::String} }}}},
+	{	"print", {interpreter::builtins::builtin_print, { 1, {{data::BasicType::String, data::BasicType::Number} }}}}
 };
 
 
@@ -189,6 +189,31 @@ void executeStatement(const Node &statement, Stack &stack) {
 			throw InvalidException("InvalidWhileCondition", exprResult.type().toString(), "While condition should result in data::BasicType instead.");
 		}
 	} else if (statement.value == "assign") {
+
+		if (statement.children.size() != 2 || statement.children.at(1).type != NodeType::Expression)
+			throw InvalidException("InvalidAssignStatement", statement.children.at(1).value, "Expected assign expression.");
+
+		if (statement.children.at(0).type == NodeType::NewVariable) { // assign to a new variable
+			const std::string &newVarType = statement.children.at(0).children.at(0).value; // validated by script::parser
+			const std::string &newVarName = statement.children.at(0).children.at(1).value;
+			data::Value exprResult = evaluateExpression(statement.children.at(1), stack);
+
+			if (std::get<data::BasicType>(exprResult.type()) != gVariableTypes.at(newVarType)) // Expression result not of same type as declared variable
+				throw InvalidException("InvalidAssign", newVarType + " = " + exprResult.type().toString(), "Cannot convert expression type to variable type.");
+			
+			stack.push(Variable {.name = newVarName, .hasValue = true, .value = exprResult}); // assign is valid, push it on the stack
+
+		} else if (statement.children.at(0).type == NodeType::ExistingVariable) { // assign to an existing variable
+			const Variable &existingVar = stack.find(statement.children.at(0).value);
+			data::Value exprResult = evaluateExpression(statement.children.at(1), stack);
+
+			if (std::get<data::BasicType>(exprResult.type()) != std::get<data::BasicType>(existingVar.value.type())) // Expression result not of same type as declared variable
+				throw InvalidException("InvalidAssign", existingVar.value.type().toString() + " = " + exprResult.type().toString(), "Cannot convert expression type to variable type.");
+
+			stack.setValue(statement.children.at(0).value, exprResult);
+		} else
+			throw InvalidException("InvalidAssignStatement", statement.children.at(1).value, "Expected variable term as left-hand of assign statement.");
+
 		// data::Value exprResult = evaluateExpression(statement.children.at(0), stack);
 		// std::cout << "ASSIGN:  " << statement.children.at(2).value << std::endl;
 	} else { // unsupported yet
@@ -197,16 +222,16 @@ void executeStatement(const Node &statement, Stack &stack) {
 }
 
 // Validate the parameters for a builtin
-void validateParams(const std::vector<data::Value> &toValidate, size_t expectedSize, const std::vector<data::Type> &expectedTypes, const std::string &name) {
+void validateParams(const std::vector<data::Value> &toValidate, size_t expectedSize, const std::vector<std::vector<data::Type>> &expectedTypes, const std::string &name) {
 	// check expected size
 	if (toValidate.size() != expectedSize)
 		throw InvalidException("BadNumberOfParameters", name,
 			"Wrong number of parameters " + std::to_string(toValidate.size()) + " (expected " + std::to_string(expectedSize) + ")");
 	// check expected types (assume expectedTypes is of right size)
 	for (size_t i = 0; i < expectedSize; i++)
-		if (toValidate.at(i).type() != expectedTypes.at(i))
+		if (std::find(expectedTypes.at(i).begin(), expectedTypes.at(i).end(), toValidate.at(i).type()) == expectedTypes.at(i).end())
 			throw InvalidException("BadParameter", name,
-				"Bad parameter type " + toValidate.at(i).type().toString() + " (expected " + expectedTypes.at(i).toString() + ")");
+				"Bad parameter type " + toValidate.at(i).type().toString() + " (expected one of " + stringifyVectorType(expectedTypes.at(i)) + ")");
 }
 
 // Register a component declaration node
@@ -426,6 +451,15 @@ void expectNodeValue(const std::vector<Node> &children, size_t &childIndex, cons
 		throw TokenException("ERROR", node.value, node.line_nb, node.char_nb, "UnexpectedNodeValue", "Expected value " + expectedValue);
 	if (consume)
 		childIndex++;
+}
+
+// Stringify a vector of data::Type types
+std::string stringifyVectorType(const std::vector<data::Type> &types) {
+	std::string r = "[ ";
+	for (data::Type type: types)
+		r += type.toString() + (type == types.at(types.size()-1) ? " , " : "");
+	r += " ]";
+	return r;
 }
 
 // Callback to create a container for components

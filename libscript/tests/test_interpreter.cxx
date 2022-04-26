@@ -240,6 +240,7 @@ TEST_CASE("Scripting-Refacto-Engine") {
 		}
 	};
 
+	// for (size_t i = 0 ; i < 100; i++)
 	sysdescription.system(sysdescription, combinations, evt);
 
 	std::cout << "------Engine------end" << std::endl;

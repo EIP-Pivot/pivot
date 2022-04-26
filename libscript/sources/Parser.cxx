@@ -266,11 +266,16 @@ void consumeSystemStatement(std::vector<Token> &tokens, Node &result, Token &las
 		consumeSystemVariable(tokens, statementResult, lastToken); // line starts with variable
 		if (tokens.at(0).value == "=") { // assign expression to variable
 			statementResult.value = "assign"; // store the type of statement for the interpreter
-			statementResult.children.push_back(Node {.type=NodeType::Symbol, .value=tokens.at(0).value, .line_nb=tokens.at(0).line_nb, .char_nb=tokens.at(0).char_nb});
+			// statementResult.children.push_back(Node {.type=NodeType::Symbol, .value=tokens.at(0).value, .line_nb=tokens.at(0).line_nb, .char_nb=tokens.at(0).char_nb});
+			Node expressionNode = {
+				.type = NodeType::Expression,
+				.line_nb = tokens.at(0).line_nb,
+				.char_nb = tokens.at(0).char_nb
+			};
 			lastToken = tokens.at(0);
 			tokens.erase(tokens.begin()); // delete '=' token
-			consumeSystemExpression(tokens, statementResult, lastToken); // consume the expression to assign to variable
-
+			consumeSystemExpression(tokens, expressionNode, lastToken); // consume the expression to assign to variable
+			statementResult.children.push_back(expressionNode);
 		} else if (tokens.at(0).value == "(") { // variable calls a function
 			statementResult.value = "functionCall"; // store the type of statement for the interpreter
 			consumeSystemFuncParams(tokens, statementResult, lastToken);

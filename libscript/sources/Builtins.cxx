@@ -19,7 +19,13 @@ data::Value builtin_isPressed(const std::vector<data::Value> &params) {
 //		print the string
 data::Value builtin_print(const std::vector<data::Value> &params) {
 	// std::cout << "print(" << std::get<std::string>(params.at(0)) << ")" << std::endl; // debug
-	std::cout << std::get<std::string>(params.at(0)) << std::endl;
+	data::BasicType varType = std::get<data::BasicType>(params.at(0).type());
+	if (varType == data::BasicType::Number)
+		std::cout << std::get<double>(params.at(0)) << "\n";
+	else if (varType == data::BasicType::String)
+		std::cout << std::get<std::string>(params.at(0)) << "\n";
+	else if (varType == data::BasicType::Boolean)
+		std::cout << (std::get<bool>(params.at(0)) ? "true" : "false") << "\n";
 	return data::Value();
 }
 

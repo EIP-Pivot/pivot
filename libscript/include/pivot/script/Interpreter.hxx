@@ -33,7 +33,7 @@ void executeSystem(const Node &systemEntry, const systems::Description &desc, co
 void executeStatement(const Node &statement, Stack &stack);
 
 // Validate the parameters for a builtin
-void validateParams(const std::vector<data::Value> &toValidate, size_t expectedSize, const std::vector<data::Type> &expectedTypes, const std::string &name);
+void validateParams(const std::vector<data::Value> &toValidate, size_t expectedSize, const std::vector<std::vector<data::Type>> &expectedTypes, const std::string &name);
 
 // Register description from a declaration
 void registerComponentDeclaration(const Node &component, component::Index &componentIndex, const std::string &fileName);
@@ -51,6 +51,9 @@ data::Value evaluateExpression(const Node &expr, const Stack &stack); // evaluat
 void expectNodeTypeValue(const std::vector<Node> &children, size_t &childIndex, NodeType expectedType, const std::string &expectedValue, bool consume);
 void expectNodeType(const std::vector<Node> &children, size_t &childIndex, NodeType expectedType, bool consume);
 void expectNodeValue(const std::vector<Node> &children, size_t &childIndex, const std::string &expectedValue, bool consume);
+
+// Stringify a vector of data::Type types
+std::string stringifyVectorType(const std::vector<data::Type> &types);
 
 // createContainer
 std::unique_ptr<pivot::ecs::component::IComponentArray> arrayFunctor(pivot::ecs::component::Description description);

@@ -31,12 +31,16 @@ public:
 
 	void push(const Variable &var);
 	const Variable &find(const std::string &name) const;
-	const Variable &find(const std::string &name, const std::unordered_map<std::string, Variable> &where) const;
+	void setValue(const std::string &name, const data::Value &newVal);
 
 	inline void clear() noexcept { _stack.clear(); }
 
 private:
 	std::unordered_map<std::string, Variable> _stack; /// name to variable
+
+	Variable &findMut(const std::string &name, std::unordered_map<std::string, Variable> &where);
+	const Variable &find(const std::string &name, const std::unordered_map<std::string, Variable> &where) const;
+
 };
 
 } // end of namespace pivot::ecs::script::interpreter

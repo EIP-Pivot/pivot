@@ -18,7 +18,7 @@ component Velocity
 	Number vel_z
 
 system	onTickPhysics( anyEntity<	Position, Velocity> ) event Tick(mdr<Position, Velocity>,lol<Velocity>, Number deltaTime )
-	if anyEntity.Position.pos_x == 10
+	if anyEntity.Position.pos_x == 0
 		anyEntity.Position.pos_x = x + 5 * ( 2 - 3 )
 		anyEntity.Position.pos_x = 0
 		anyEntity.Position.pos_x = 0

@@ -170,9 +170,27 @@ void executeStatement(const Node &statement, Stack &stack) {
 			throw InvalidException("InvalidIfCondition", exprResult.type().toString(), "If condition should result in data::BasicType instead.");
 		}
 	} else if (statement.value == "while") {
+		if (statement.children.size() < 2 || statement.children.at(0).type != NodeType::Expression)
+			throw InvalidException("InvalidWhileStatement", statement.value, "Expected while condition expression.");
+		data::Value exprResult = evaluateExpression(statement.children.at(0), stack);
+		try { // check that expression resulted in data::BasicType::Boolean specifically
+			if (std::get<data::BasicType>(exprResult.type()) != data::BasicType::Boolean)
+				throw InvalidException("InvalidWhileCondition", exprResult.type().toString(), "While condition should result in data::BasicType::Boolean instead.");
+			size_t infinitePrevent = 0;
+			while (std::get<bool>(exprResult) && infinitePrevent < 1000) { // while the condition is true, execute the block statements
+				for (size_t statementIndex = 1; statementIndex < statement.children.size(); statementIndex++) // execute all statements
+					executeStatement(statement.children.at(statementIndex), stack);
+				exprResult = evaluateExpression(statement.children.at(0), stack); // re-check while condition
+				infinitePrevent++;
+			} // when the condition is not true anymore, leave the block
+			if (infinitePrevent == 1000)
+				logger.warn("InfiniteLoop") << "while loop ran for more than 1000 times. This may be the result of an infinite loop.";
+		} catch (std::bad_variant_access e) {
+			throw InvalidException("InvalidWhileCondition", exprResult.type().toString(), "While condition should result in data::BasicType instead.");
+		}
 	} else if (statement.value == "assign") {
 		// data::Value exprResult = evaluateExpression(statement.children.at(0), stack);
-		std::cout << "ASSIGN:  " << statement.children.at(2).value << std::endl;
+		// std::cout << "ASSIGN:  " << statement.children.at(2).value << std::endl;
 	} else { // unsupported yet
 		throw InvalidException("InvalidStatement", statement.value, "Unsupported statement.");
 	}
@@ -374,7 +392,6 @@ data::Value evaluateExpression(const Node &expr, const Stack &stack) { // evalua
 			}
 		}
 	}
-	std::cout << "done ?" << std::endl;
 	return ops.at(0).operand;
 }
 

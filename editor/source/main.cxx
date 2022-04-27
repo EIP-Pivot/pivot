@@ -52,6 +52,7 @@ class Application : public pivot::Engine
 public:
     Application()
         : Engine(),
+          imGuiManager(getSceneManager()),
           editor(getSceneManager(), getCurrentScene()),
           entity(getCurrentScene()),
           systemsEditor(m_system_index, getCurrentScene()),
@@ -176,7 +177,7 @@ public:
 
     void onTick(float dt) override
     {
-        imGuiManager.newFrame();
+        imGuiManager.newFrame(*this);
 
         editor.create(*this, m_vulkan_application.pipelineStorage);
         m_paused = !editor.getRun();

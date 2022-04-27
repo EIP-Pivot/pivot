@@ -28,11 +28,6 @@ void Editor::create(pivot::Engine &engine, pivot::graphics::PipelineStorage &pip
         }
         if (ImGui::Selectable(" +", false, 0, newSceneSize)) { ImGui::OpenPopup("AddScene"); }
         ImGui::Separator();
-        if (ImGui::Button("Save")) {
-            // TODO: Use file dialog to select path
-            engine.saveScene(m_sceneManager.getCurrentSceneId(), "scene.json");
-        }
-        ImGui::Separator();
         if (ImGui::RadioButton("Translate", currentGizmoOperation == ImGuizmo::TRANSLATE))
             currentGizmoOperation = ImGuizmo::TRANSLATE;
         ImGui::SameLine();

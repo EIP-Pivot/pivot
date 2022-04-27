@@ -12,6 +12,7 @@ if (NOT nativefiledialog_POPULATED)
     message(STATUS "Populating nativefiledialog")
     FetchContent_Populate(nativefiledialog)
     add_subdirectory(${nativefiledialog_SOURCE_DIR} ${nativefiledialog_BINARY_DIR})
+    target_compile_definitions(nfd PUBLIC NFD_THROWS_EXCEPTIONS)
 endif()
 
 add_executable(${PROJECT_NAME} source/main.cxx

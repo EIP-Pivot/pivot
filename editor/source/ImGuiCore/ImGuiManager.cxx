@@ -8,7 +8,7 @@
 #include <backends/imgui_impl_vulkan.h>
 
 #include <Logger.hpp>
-#include <nfd.h>
+#include <nfd.hpp>
 
 void ImGuiManager::newFrame(pivot::Engine &engine)
 {
@@ -26,25 +26,24 @@ void ImGuiManager::newFrame(pivot::Engine &engine)
 void ImGuiManager::saveScene(pivot::Engine &engine)
 {
     if (ImGui::Button("Save Scene")) {
-        NFD_Init();
-
-        nfdchar_t *savePath = nullptr;
+        NFD::Guard nfd_guard;
+        NFD::UniquePath savePath;
         nfdfilteritem_t filterItemSave[] = {{"Scene", "json"}};
         auto filename = m_sceneManager.getCurrentScene().getName() + ".json";
-        auto resultSave = NFD_SaveDialog(&savePath, filterItemSave, 1, NULL, filename.data());
+        auto resultSave = NFD::SaveDialog(savePath, filterItemSave, 1, nullptr, filename.c_str());
 
         switch (resultSave) {
             case NFD_OKAY: {
                 logger.info("Save Scene") << savePath;
-                m_sceneManager.getCurrentScene().save(savePath);
+                engine.saveScene(m_sceneManager.getCurrentSceneId(), savePath.get());
                 ImGui::OpenPopup("Save");
             } break;
             case NFD_ERROR: {
-                logger.err("File Dialog") << NFD_GetError();
+                logger.err("File Dialog") << NFD::GetError();
+                NFD::ClearError();
             } break;
             case NFD_CANCEL: break;
         }
-        NFD_Quit();
     }
 
     if (ImGui::BeginPopupModal("Save", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
@@ -58,33 +57,32 @@ void ImGuiManager::loadScene(pivot::Engine &engine)
 {
     static std::string loading_result;
     if (ImGui::Button("Load Scene")) {
-        NFD_Init();
+        NFD::Guard nfd_guard;
+        NFD::UniquePath scenePath;
+        nfdfilteritem_t filterItemSave[] = {{"Scene", "json"}};
+        auto filename = m_sceneManager.getCurrentScene().getName() + ".json";
+        auto resultSave = NFD::OpenDialog(scenePath, filterItemSave, 1);
 
-        nfdchar_t *scenePath = nullptr;
-        nfdfilteritem_t filterItemLoadSce[1] = {{"Scene", "json"}};
-        auto resultLoadSce = NFD_OpenDialog(&scenePath, filterItemLoadSce, 1, NULL);
         loading_result.clear();
-
-        switch (resultLoadSce) {
+        switch (resultSave) {
             case NFD_OKAY: {
                 logger.info("Load Scene") << scenePath;
                 ImGui::OpenPopup("Load");
                 try {
-                    engine.loadScene(scenePath);
+                    engine.loadScene(scenePath.get());
                     loading_result = "Scene correctly loaded";
                 } catch (const std::exception &e) {
                     logger.err() << e.what();
                     loading_result = e.what();
                     ImGui::OpenPopup("Load");
                 }
-                NFD_FreePath(scenePath);
             } break;
             case NFD_ERROR: {
-                logger.err("File Dialog") << NFD_GetError();
+                logger.err("File Dialog") << NFD::GetError();
+                NFD::ClearError();
             } break;
             case NFD_CANCEL: break;
         }
-        NFD_Quit();
     }
     if (ImGui::BeginPopupModal("Load", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::TextWrapped("%s", loading_result.c_str());

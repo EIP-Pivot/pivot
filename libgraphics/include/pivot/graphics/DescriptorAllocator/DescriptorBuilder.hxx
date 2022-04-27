@@ -20,14 +20,14 @@ public:
     ~DescriptorBuilder();
 
     /// Add a buffer to the layout.
-    DescriptorBuilder &bindBuffer(uint32_t binding, vk::DescriptorBufferInfo &bufferInfo, vk::DescriptorType type,
+    DescriptorBuilder &bindBuffer(uint32_t binding, const vk::DescriptorBufferInfo &bufferInfo, vk::DescriptorType type,
                                   vk::ShaderStageFlags stageFlags);
     /// Add an image to the layout
-    DescriptorBuilder &bindImage(uint32_t binding, vk::DescriptorImageInfo &imageInfo, vk::DescriptorType type,
+    DescriptorBuilder &bindImage(uint32_t binding, const vk::DescriptorImageInfo &imageInfo, vk::DescriptorType type,
                                  vk::ShaderStageFlags stageFlags);
 
     /// @copydoc bindImage
-    DescriptorBuilder &bindImages(uint32_t binding, std::vector<vk::DescriptorImageInfo> &imageInfo,
+    DescriptorBuilder &bindImages(uint32_t binding, const std::vector<vk::DescriptorImageInfo> &imageInfo,
                                   vk::DescriptorType type, vk::ShaderStageFlags stageFlags);
 
     /// Build the descriptor set. Return true on success.

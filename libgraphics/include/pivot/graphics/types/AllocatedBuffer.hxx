@@ -29,6 +29,17 @@ public:
     /// get the byte size
     auto getBytesSize() const noexcept { return getSize() * sizeof(T); }
 
+    /// return the info struct used when creating a descriptor set
+    /// @see DescriptorBuilder::bindBuffer
+    vk::DescriptorBufferInfo getBufferInfo(vk::DeviceSize offset = 0) const noexcept
+    {
+        return {
+            .buffer = buffer,
+            .offset = offset,
+            .range = getBytesSize(),
+        };
+    }
+
     /// @brief return the mapped pointer
     ///
     /// If the buffer was created with the flag vma::AllocationCreateFlagBits::eMapped, return the mapped pointer
@@ -42,7 +53,7 @@ public:
     ///
     /// If the buffer was created with the flag vma::AllocationCreateFlagBits::eMapped, return the mapped pointer,
     /// wrapped into a span
-    std::span<T> getMappedSpan() const noexcept { return std::span(getMappedPointer(), getSize()); }
+    std::span<T> getMappedSpan() const noexcept { return std::span(getMappedPointer(), getBytesSize()); }
 
     /// Test if the Vulkan buffer is created
     operator bool() const noexcept { return buffer && memory && size > 0; }
@@ -51,9 +62,9 @@ public:
     //// @cond
     vk::Buffer buffer = VK_NULL_HANDLE;
     vma::Allocation memory = VK_NULL_HANDLE;
-    vk::DeviceSize size = 0;
-    vma::AllocationInfo info;
-    vma::AllocationCreateFlags flags;
+    std::size_t size = 0;
+    vma::AllocationInfo info = {};
+    vma::AllocationCreateFlags flags = {};
     //// @endcond
 };
 

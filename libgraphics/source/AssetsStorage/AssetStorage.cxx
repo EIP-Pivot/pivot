@@ -164,10 +164,9 @@ template <typename T>
 static AllocatedBuffer<T> copy_with_staging_buffer(VulkanBase &base_ref, vk::BufferUsageFlags flag,
                                                    std::vector<T> &data)
 {
-    auto size = data.size() * sizeof(T);
-    auto staging =
-        base_ref.allocator.createBuffer<T>(size, vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);
-    auto ret = base_ref.allocator.createBuffer<T>(size, flag | vk::BufferUsageFlagBits::eTransferDst,
+    auto staging = base_ref.allocator.createBuffer<T>(data.size(), vk::BufferUsageFlagBits::eTransferSrc,
+                                                      vma::MemoryUsage::eCpuToGpu);
+    auto ret = base_ref.allocator.createBuffer<T>(data.size(), flag | vk::BufferUsageFlagBits::eTransferDst,
                                                   vma::MemoryUsage::eGpuOnly);
     base_ref.allocator.copyBuffer(staging, std::span(data));
     base_ref.copyBuffer(staging, ret);

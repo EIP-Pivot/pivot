@@ -16,6 +16,7 @@ template <typename T>
 concept wrappedVulkanType = requires
 {
     typename T::CType;
+    requires requires(T a) { a.objectType; };
 };
 
 /// Test if a vk::Result is considered as a success.

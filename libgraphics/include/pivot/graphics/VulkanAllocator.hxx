@@ -43,21 +43,22 @@ public:
 
     template <typename T>
     /// Create a buffer.
-    AllocatedBuffer<T> createBuffer(vk::DeviceSize allocSize, vk::BufferUsageFlags usage, vma::MemoryUsage memoryUsage,
+    AllocatedBuffer<T> createBuffer(std::size_t size, vk::BufferUsageFlags usage, vma::MemoryUsage memoryUsage,
                                     vma::AllocationCreateFlags flags = {})
     {
-        assert(allocSize != 0);
+        assert(size != 0);
+        AllocatedBuffer<T> buffer{
+            .size = size,
+            .flags = flags,
+        };
         vk::BufferCreateInfo bufferInfo{
-            .size = allocSize,
+            .size = buffer.getBytesSize(),
             .usage = usage,
         };
         vma::AllocationCreateInfo vmaallocInfo;
         vmaallocInfo.usage = memoryUsage;
         vmaallocInfo.flags = flags;
-        AllocatedBuffer<T> buffer;
         std::tie(buffer.buffer, buffer.memory) = allocator.createBuffer(bufferInfo, vmaallocInfo, buffer.info);
-        buffer.flags = flags;
-        buffer.size = allocSize;
         return buffer;
     }
 
@@ -70,6 +71,7 @@ public:
     /// Map buffer memory to a pointer
     T *mapMemory(AllocatedBuffer<T> &buffer)
     {
+        assert(buffer);
         return static_cast<T *>(allocator.mapMemory(buffer.memory));
     }
 
@@ -77,6 +79,7 @@ public:
     /// Map buffer memory as a read-only pointer
     const T *const mapMemory(AllocatedBuffer<T> &buffer) const
     {
+        assert(buffer);
         return static_cast<const T *const>(allocator.mapMemory(buffer.memory));
     }
 
@@ -87,6 +90,7 @@ public:
     /// It is safe to call even if the buffer has been created with vma::AllocationCreateFlagBits::eMapped.
     void unmapMemory(AllocatedBuffer<T> &buffer)
     {
+        assert(buffer);
         allocator.unmapMemory(buffer.memory);
     }
 
@@ -95,9 +99,12 @@ public:
     requires std::is_standard_layout_v<T>
     void copyBuffer(AllocatedBuffer<T> &buffer, const T *data, size_t size)
     {
-        assert(buffer.getSize() >= size);
+        assert(buffer);
+        assert(data);
+        assert(buffer.getBytesSize() >= size);
+        if (size == 0) return;
         auto *mapped = mapMemory<T>(buffer);
-        std::memcpy(mapped, data, size);
+        std::memcpy(mapped, data, buffer.getBytesSize());
         unmapMemory(buffer);
     }
 
@@ -106,7 +113,7 @@ public:
     requires std::is_standard_layout_v<T>
     void copyBuffer(AllocatedBuffer<T> &buffer, const std::span<T> &data)
     {
-        copyBuffer(buffer, data.data(), data.size_bytes());
+        return copyBuffer(buffer, data.data(), data.size_bytes());
     }
 
     template <typename T>

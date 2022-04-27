@@ -22,6 +22,7 @@ public:
     void changeCurrentScene(ecs::SceneManager::SceneId sceneId);
     ecs::SceneManager::SceneId registerScene();
     ecs::SceneManager::SceneId registerScene(std::string name);
+    ecs::SceneManager::SceneId registerScene(std::unique_ptr<ecs::Scene> scene);
     void saveScene(ecs::SceneManager::SceneId id, const std::filesystem::path &path);
     ecs::SceneManager::SceneId loadScene(const std::filesystem::path &path);
 

@@ -8,6 +8,8 @@
 #include <unordered_map>
 #include <vulkan/vulkan.hpp>
 
+#include "pivot/graphics/VulkanException.hxx"
+
 namespace pivot::graphics
 {
 /// @class Window
@@ -84,10 +86,8 @@ public:
     /// Mouse movement event callback signature
     using MouseEvent = std::function<void(Window &window, const glm::dvec2 pos)>;
 
-    class WindowError : public std::runtime_error
-    {
-        using std::runtime_error::runtime_error;
-    };
+    /// Error type for Window
+    RUNTIME_EXCEPTION(Window);
 
 public:
     /// Create a new Window

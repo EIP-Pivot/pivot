@@ -16,6 +16,10 @@ namespace pivot::graphics::abstract
 class AImmediateCommand
 {
 public:
+    /// Immediate Command error
+    RUNTIME_EXCEPTION(ImmediateCommand);
+
+public:
     /// Default ctor
     AImmediateCommand();
     /// Default dtor
@@ -34,7 +38,8 @@ public:
     /// Copy the source buffer into the destination
     void copyBuffer(AllocatedBuffer<T> &src, AllocatedBuffer<T> &dst)
     {
-        if (src.getBytesSize() > dst.getAllocatedSize()) throw VulkanException("The destination buffer is too small");
+        if (src.getBytesSize() > dst.getAllocatedSize())
+            throw ImmediateCommandError("The destination buffer is too small");
 
         immediateCommand([&](vk::CommandBuffer &cmd) {
             vk::BufferCopy copyRegion{

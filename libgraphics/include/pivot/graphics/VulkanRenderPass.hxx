@@ -13,10 +13,7 @@ class VulkanRenderPass
 {
 public:
     /// Exception of VulkanRenderPass
-    class RenderPassError : public std::logic_error
-    {
-        using std::logic_error::logic_error;
-    };
+    LOGIC_EXCEPTION(RenderPass);
 
     /// Stage of VulkanRenderPass Attachment
     enum Attachment {

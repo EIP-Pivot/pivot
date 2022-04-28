@@ -81,7 +81,7 @@ void VulkanBase::selectPhysicalDevice(const std::vector<const char *> &deviceExt
         physical_device = ratedGpus.rbegin()->second;
         maxMsaaSample = pivot::graphics::vk_utils::getMaxUsableSampleCount(physical_device);
     } else {
-        throw VulkanException("failed to find a suitable GPU!");
+        throw VulkanBaseError("failed to find a suitable GPU!");
     }
 
     logger.info("Physical Device") << "Device extensions: " << deviceExtensions;

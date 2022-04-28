@@ -223,8 +223,8 @@ void AImmediateCommand::transitionLayout(AllocatedImage &image, vk::ImageLayout 
         sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
         destinationStage = vk::PipelineStageFlagBits::eEarlyFragmentTests;
     } else {
-        throw VulkanException("Unsupported layout transition! From " + vk::to_string(image.imageLayout) + " to " +
-                              vk::to_string(layout));
+        throw ImmediateCommandError("Unsupported layout transition! From " + vk::to_string(image.imageLayout) + " to " +
+                                    vk::to_string(layout));
     }
 
     immediateCommand(

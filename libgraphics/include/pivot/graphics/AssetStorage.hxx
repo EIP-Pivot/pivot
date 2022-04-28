@@ -40,11 +40,8 @@ concept is_valid_path = requires
 class AssetStorage
 {
 public:
-    /// @struct AssetStorageException
-    /// @brief Exception type for the AssetStorage
-    struct AssetStorageException : public std::out_of_range {
-        using std::out_of_range::out_of_range;
-    };
+    /// Error type for the AssetStorage
+    LOGIC_EXCEPTION(AssetStorage);
 
     /// @brief The function signature of an asset handler
     using AssetHandler = bool (AssetStorage::*)(const std::filesystem::path &);
@@ -138,7 +135,7 @@ public:
     {
         unsigned i = ((loadModel(asset_dir / p)) + ...);
         if (i < sizeof...(Path)) {
-            throw AssetStorageException("A model file failed to load. See above for further errors");
+            throw AssetStorageError("A model file failed to load. See above for further errors");
         }
     }
     /// Load a single model file
@@ -152,7 +149,7 @@ public:
     {
         unsigned i = ((loadTexture(asset_dir / p)) + ...);
         if (i < sizeof...(Path)) {
-            throw AssetStorageException("A texture file failed to load. See above for further errors");
+            throw AssetStorageError("A texture file failed to load. See above for further errors");
         }
     }
     /// Load a single texture
@@ -278,7 +275,7 @@ private:
     #define PIVOT_ASSETSTORAGE_TEMPLATE_INITIALIZED
 
     #define PIVOT_TEST_CONTAINS(stor, key) \
-        if (!stor.contains(key)) throw AssetStorage::AssetStorageException("Missing " + key + " in " #stor);
+        if (!stor.contains(key)) throw AssetStorage::AssetStorageError("Missing " + key + " in " #stor);
 
 template <>
 /// @copydoc AssetStorage::get

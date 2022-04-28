@@ -1,20 +1,26 @@
 #pragma once
 
 #include <stdexcept>
-#include <vulkan/vulkan.hpp>
 
-namespace pivot::graphics
+namespace pivot::graphics::internal
 {
-
-/// @class VulkanException
-/// @brief A custom exception throw when a error occurred in the graphical engine
-///
-/// @see OutOfDateSwapchainError
-/// @see TooManyObjectInSceneError
-struct VulkanException : public std::runtime_error {
-    using std::runtime_error::runtime_error;
-    /// Constructor converting a vk::Result into a string and use it as error message
-    VulkanException(const vk::Result &er): VulkanException(vk::to_string(er)){};
+/// Base class for pivot exceptions
+class PivotException : public std::exception
+{
+public:
+    /// return the scope of the exception
+    virtual const char *const getScope() const noexcept = 0;
 };
+}    // namespace pivot::graphics::internal
 
-}    // namespace pivot::graphics
+#define RUNTIME_EXCEPTION(name)                                                                          \
+    struct name##Error : public std::runtime_error, public ::pivot::graphics::internal::PivotException { \
+        using std::runtime_error::runtime_error;                                                         \
+        const char *const getScope() const noexcept override { return #name; }                           \
+    };
+
+#define LOGIC_EXCEPTION(name)                                                                          \
+    struct name##Error : public std::logic_error, public ::pivot::graphics::internal::PivotException { \
+        using std::logic_error::logic_error;                                                           \
+        const char *const getScope() const noexcept override { return #name; }                         \
+    }

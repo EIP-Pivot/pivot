@@ -22,7 +22,7 @@ concept wrappedVulkanType = requires
 /// Test if a vk::Result is considered as a success.
 constexpr void vk_try(vk::Result err)
 {
-    if (err < vk::Result::eSuccess) throw VulkanException(err);
+    if (err < vk::Result::eSuccess) throw std::runtime_error(vk::to_string(err));
 }
 
 /// @copydoc vk_try

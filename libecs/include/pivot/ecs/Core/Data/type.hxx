@@ -29,6 +29,7 @@ enum class BasicType {
 };
 
 struct Type;
+struct Value;
 
 /// The record type specifies the property names and types of a record
 using RecordType = std::map<std::string, Type>;
@@ -39,6 +40,9 @@ struct Type : public std::variant<BasicType, RecordType> {
 
     /// Converts to a human readable text representation of the type
     std::string toString() const;
+
+    /// Creates a default value corresponding to this type
+    data::Value defaultValue() const;
 };
 
 std::ostream &operator<<(std::ostream &stream, const BasicType &type);

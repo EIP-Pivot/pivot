@@ -96,7 +96,8 @@ std::unique_ptr<IComponentArray> createContainer(Description description)
 template <typename T, typename A>
 Description build_component_description(const char *name)
 {
-    Description description{name, helpers::Helpers<T>::getType(), Provenance::builtin(), helpers::createContainer<A>};
+    Description description{name, helpers::Helpers<T>::getType(), Provenance::builtin(),
+                            helpers::Helpers<T>::createValueFromType(T{}), helpers::createContainer<A>};
     return description;
 }
 }    // namespace pivot::ecs::component::helpers

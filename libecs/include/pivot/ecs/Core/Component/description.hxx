@@ -12,6 +12,7 @@
 #include <glm/vec3.hpp>
 
 #include <pivot/ecs/Core/Data/type.hxx>
+#include <pivot/ecs/Core/Data/value.hxx>
 #include <pivot/ecs/Core/Provenance.hxx>
 
 /** \brief Contains everything related to components creation and usage
@@ -46,6 +47,9 @@ struct Description {
 
     /// Provenance of the component
     Provenance provenance;
+
+    /// Default value
+    data::Value defaultValue;
 
     /** \brief Type of the factory of the IComponentArray of the component
      *

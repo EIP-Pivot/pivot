@@ -1,6 +1,5 @@
 #include "ImGuiCore/ComponentEditor.hxx"
 #include "ImGuiCore/TypeTemplate/Template.hxx"
-#include "ImGuiCore/TypeTemplate/createValue.hxx"
 #include <magic_enum.hpp>
 #include <misc/cpp/imgui_stdlib.h>
 
@@ -61,6 +60,6 @@ void ComponentEditor::addComponent(const Description &description)
 {
     auto &cm = m_scene->getComponentManager();
     auto id = cm.GetComponentId(description.name).value();
-    Value newComponent = createValue(description.type);
+    Value newComponent = description.defaultValue;
     cm.AddComponent(currentEntity, newComponent, id);
 }

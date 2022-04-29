@@ -286,7 +286,7 @@ try {
 
     prefabStorage.insert(std::make_pair(path.stem().string(), prefab));
     return true;
-} catch (const internal::PivotException &ase) {
+} catch (const PivotException &ase) {
     logger.err(ase.getScope()) << "Error while loaded GLTF file : " << ase.what();
     return false;
 } catch (const std::logic_error &le) {

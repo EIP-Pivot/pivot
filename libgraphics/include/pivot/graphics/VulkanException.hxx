@@ -2,19 +2,21 @@
 
 #include <stdexcept>
 
-namespace pivot::graphics::internal
+namespace pivot
 {
 /// Base class for pivot exceptions
 class PivotException : public std::exception
 {
 public:
     PivotException() = delete;
+    /// dtor
+    virtual ~PivotException(){};
     /// main ctor
     PivotException(const std::string &msg): msg(msg) {}
     /// return the scope of the exception
-    virtual const char *const getScope() const noexcept = 0;
+    virtual const std::string_view getScope() const noexcept = 0;
     /// return the kind of the exception
-    virtual const char *const getKind() const noexcept = 0;
+    virtual const std::string_view getKind() const noexcept = 0;
     /// return both of the above
 
     /// return the error message
@@ -24,26 +26,28 @@ private:
     const std::string msg;
 };
 
-class PivotLogicError : public PivotException
+/// Pivot Logic Error
+class LogicError : public PivotException
 {
     using PivotException::PivotException;
-    const char *const getKind() const noexcept final { return "Logic"; };
+    const std::string_view getKind() const noexcept final { return "Logic"; };
 };
 
-class PivotRuntimeError : public PivotException
+/// Pivot Runtime Error
+class RuntimeError : public PivotException
 {
     using PivotException::PivotException;
-    const char *const getKind() const noexcept final { return "Logic"; };
+    const std::string_view getKind() const noexcept final { return "Logic"; };
 };
 
-}    // namespace pivot::graphics::internal
+}    // namespace pivot
 
-#define PIVOT_EXCEPTION(kind, name)                                            \
-    struct name##Error : public ::pivot::graphics::internal::kind {            \
-        using kind::kind;                                                      \
-        const char *const getScope() const noexcept override { return #name; } \
+#define PIVOT_EXCEPTION(kind, name)                                                 \
+    struct name##Error : public ::pivot::kind {                                     \
+        using kind::kind;                                                           \
+        const std::string_view getScope() const noexcept override { return #name; } \
     };
 
-#define RUNTIME_EXCEPTION(name) PIVOT_EXCEPTION(PivotRuntimeError, name)
+#define RUNTIME_EXCEPTION(name) PIVOT_EXCEPTION(RuntimeError, name)
 
-#define LOGIC_EXCEPTION(name) PIVOT_EXCEPTION(PivotLogicError, name)
+#define LOGIC_EXCEPTION(name) PIVOT_EXCEPTION(LogicError, name)

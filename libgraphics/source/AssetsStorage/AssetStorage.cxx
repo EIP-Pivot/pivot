@@ -60,7 +60,7 @@ AssetStorage::AssetStorage(VulkanBase &base): base_ref(base) {}
 
 AssetStorage::~AssetStorage() {}
 
-void AssetStorage::build(DescriptorBuilder builder)
+void AssetStorage::build(DescriptorBuilder builder, CpuKeepFlags cpuKeep)
 {
     DEBUG_FUNCTION
     assert(cpuStorage.materialStaging.contains(missing_material_name));
@@ -96,8 +96,24 @@ void AssetStorage::build(DescriptorBuilder builder)
     pushMaterialOnGPU();
     vk_debug::setObjectName(base_ref->get().device, materialBuffer.buffer, "Material Buffer");
 
-    cpuStorage = {};
     createDescriptorSet(builder);
+
+    CPUStorage newStorage;
+    if (cpuKeep & CpuKeepFlagBits::eAll) {
+        newStorage = std::move(cpuStorage);
+    } else {
+        if (cpuKeep & CpuKeepFlagBits::eTexture) { newStorage.textureStaging = std::move(cpuStorage.textureStaging); }
+        if (cpuKeep & CpuKeepFlagBits::eMaterial) {
+            newStorage.materialStaging = std::move(cpuStorage.materialStaging);
+        }
+        if (cpuKeep & CpuKeepFlagBits::eVertex) {
+            newStorage.vertexStagingBuffer = std::move(cpuStorage.vertexStagingBuffer);
+        }
+        if (cpuKeep & CpuKeepFlagBits::eIndice) {
+            newStorage.indexStagingBuffer = std::move(cpuStorage.indexStagingBuffer);
+        }
+    }
+    cpuStorage = std::move(newStorage);
 }
 
 void AssetStorage::destroy()

@@ -2,6 +2,7 @@
 
 #include "pivot/graphics/DeletionQueue.hxx"
 #include "pivot/graphics/DescriptorAllocator/DescriptorBuilder.hxx"
+#include "pivot/graphics/PivotFlags.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/abstract/AImmediateCommand.hxx"
 #include "pivot/graphics/types/AABB.hxx"
@@ -110,6 +111,16 @@ public:
     /// Alias for AllocatedImage
     using Texture = AllocatedImage;
 
+    enum class CpuKeepFlagBits : FlagsType {
+        eNone = 0x00000000,
+        eTexture = 0x00000001,
+        eMaterial = 0x00000002,
+        eVertex = 0x00000004,
+        eIndice = 0x0000008,
+        eAll = 0x00000016,
+    };
+    using CpuKeepFlags = Flags<CpuKeepFlagBits>;
+
 private:
     struct CPUStorage {
         CPUStorage();
@@ -171,7 +182,7 @@ public:
     bool loadTexture(const std::filesystem::path &path);
 
     /// Push the ressource into GPU memory
-    void build(DescriptorBuilder builder);
+    void build(DescriptorBuilder builder, CpuKeepFlags cpuKeep = CpuKeepFlagBits::eNone);
 
     /// Free GPU memory
     void destroy();

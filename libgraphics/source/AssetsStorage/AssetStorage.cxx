@@ -145,7 +145,9 @@ bool AssetStorage::loadModel(const std::filesystem::path &path)
         return false;
     }
     logger.info("Asset Storage") << "Loading model at : " << path;
-    return std::apply(iter->second, std::make_tuple(this, path));
+    auto ret = std::apply(iter->second, std::make_tuple(this, path));
+    if (ret) modelPaths.push_back(path);
+    return ret;
 }
 
 bool AssetStorage::loadTexture(const std::filesystem::path &path)
@@ -157,7 +159,9 @@ bool AssetStorage::loadTexture(const std::filesystem::path &path)
         return false;
     }
     logger.info("Asset Storage") << "Loading texture at : " << path;
-    return std::apply(iter->second, std::make_tuple(this, path));
+    auto ret = std::apply(iter->second, std::make_tuple(this, path));
+    if (ret) texturePaths.push_back(path);
+    return ret;
 }
 
 template <typename T>

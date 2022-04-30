@@ -212,6 +212,11 @@ public:
     bool bindForCompute(vk::CommandBuffer &cmd, const vk::PipelineLayout &pipelineLayout,
                         std::uint32_t descriptorSet = 0);
 
+    /// Return the path of all the models currently loaded in the CPU Storage
+    constexpr auto &getModelPaths() const noexcept { return modelPaths; }
+    /// Return the path of all the models currently loaded in the CPU Storage
+    constexpr auto &getTexturePaths() const noexcept { return texturePaths; }
+
     template <typename T>
     /// Get an asset of type T named name
     inline const T &get(const std::string &name) const;
@@ -259,6 +264,8 @@ private:
 
     // CPU-side storage
     CPUStorage cpuStorage = {};
+    std::vector<std::filesystem::path> modelPaths;
+    std::vector<std::filesystem::path> texturePaths;
 
     // Vulkan Ressouces
     DeletionQueue vulkanDeletionQueue;

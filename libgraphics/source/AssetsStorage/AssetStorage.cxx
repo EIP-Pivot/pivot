@@ -68,11 +68,11 @@ void AssetStorage::build(DescriptorBuilder builder)
     createTextureSampler();
 
     for (const auto &[name, model]: modelStorage) {
-        meshBoundingBoxStorage.add(
-            name, gpu_object::MeshBoundingBox(std::span(
-                      cpuStorage.vertexStagingBuffer.begin() + model.mesh.vertexOffset, model.mesh.vertexSize)));
+        meshAABBStorage.add(name,
+                            gpu_object::AABB(std::span(cpuStorage.vertexStagingBuffer.begin() + model.mesh.vertexOffset,
+                                                       model.mesh.vertexSize)));
     }
-    assert(modelStorage.size() == meshBoundingBoxStorage.size());
+    assert(modelStorage.size() == meshAABBStorage.size());
 
     logger.info("Asset Storage") << prefabStorage.size() << " prefab loaded";
     logger.info("Asset Storage") << "Pushing " << modelStorage.size() << " models onto the GPU";
@@ -80,9 +80,9 @@ void AssetStorage::build(DescriptorBuilder builder)
     vk_debug::setObjectName(base_ref->get().device, vertexBuffer.buffer, "Vertex Buffer");
     vk_debug::setObjectName(base_ref->get().device, indicesBuffer.buffer, "Indices Buffer");
 
-    logger.info("Asset Storage") << "Pushing " << meshBoundingBoxStorage.size() << " bounding boxes onto the GPU";
-    pushBoundingBoxesOnGPU();
-    vk_debug::setObjectName(base_ref->get().device, boundingboxBuffer.buffer, "BoundingBox Buffer");
+    logger.info("Asset Storage") << "Pushing " << meshAABBStorage.size() << " AABB onto the GPU";
+    pushAABBOnGPU();
+    vk_debug::setObjectName(base_ref->get().device, AABBBuffer.buffer, "AABB Buffer");
 
     logger.info("Asset Storage") << "Pushing " << cpuStorage.textureStaging.size() << " textures onto the GPU";
     pushTexturesOnGPU();
@@ -107,7 +107,7 @@ void AssetStorage::destroy()
         base_ref->get().allocator.destroyBuffer(vertexBuffer);
         base_ref->get().allocator.destroyBuffer(indicesBuffer);
     }
-    if (boundingboxBuffer) base_ref->get().allocator.destroyBuffer(boundingboxBuffer);
+    if (AABBBuffer) base_ref->get().allocator.destroyBuffer(AABBBuffer);
     if (materialBuffer) base_ref->get().allocator.destroyBuffer(materialBuffer);
 
     for (auto &image: textureStorage.getStorage()) {
@@ -259,15 +259,15 @@ void AssetStorage::pushMaterialOnGPU()
                                               materialStorage.getStorage());
 }
 
-void AssetStorage::pushBoundingBoxesOnGPU()
+void AssetStorage::pushAABBOnGPU()
 {
     DEBUG_FUNCTION
-    if (meshBoundingBoxStorage.empty()) {
-        logger.warn("Asset Storage") << "No bounding box to push";
+    if (meshAABBStorage.empty()) {
+        logger.warn("Asset Storage") << "No AABB to push";
         return;
     }
-    boundingboxBuffer = copy_with_staging_buffer(base_ref->get(), vk::BufferUsageFlagBits::eStorageBuffer,
-                                                 meshBoundingBoxStorage.getStorage());
+    AABBBuffer = copy_with_staging_buffer(base_ref->get(), vk::BufferUsageFlagBits::eStorageBuffer,
+                                          meshAABBStorage.getStorage());
 }
 
 }    // namespace pivot::graphics

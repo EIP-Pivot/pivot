@@ -76,7 +76,7 @@ bool VulkanBase::isDeviceSuitable(const vk::PhysicalDevice &gpu, const vk::Surfa
 {
     DEBUG_FUNCTION
 #define IS_VALID(var, message) \
-    isValid |= (var);          \
+    isValid |= bool(var);      \
     if (!isValid) logger.debug("VulkanBase::isDeviceSuitable") << message;
 
     auto indices = QueueFamilyIndices::findQueueFamilies(gpu, surface);

@@ -76,8 +76,7 @@ DescriptorBuilder &DescriptorBuilder::bindImages(uint32_t binding,
     };
     writes.push_back(newWrite);
     variableDescriptorCount.push_back(imageInfo.size());
-    descriptorBindingFlags.push_back(vk::DescriptorBindingFlagBits::eVariableDescriptorCount |
-                                     vk::DescriptorBindingFlagBits::ePartiallyBound);
+    descriptorBindingFlags.push_back(vk::DescriptorBindingFlagBits::eVariableDescriptorCount);
     return *this;
 }
 

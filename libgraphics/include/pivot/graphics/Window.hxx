@@ -87,7 +87,7 @@ public:
     using MouseEvent = std::function<void(Window &window, const glm::dvec2 pos)>;
 
     /// Error type for Window
-    RUNTIME_EXCEPTION(Window);
+    RUNTIME_ERROR(Window);
 
 public:
     /// Create a new Window

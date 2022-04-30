@@ -41,7 +41,7 @@ class AssetStorage
 {
 public:
     /// Error type for the AssetStorage
-    LOGIC_EXCEPTION(AssetStorage);
+    LOGIC_ERROR(AssetStorage);
 
     /// @brief The function signature of an asset handler
     using AssetHandler = bool (AssetStorage::*)(const std::filesystem::path &);

@@ -31,7 +31,7 @@ class RuntimeError : public PivotException
 
 }    // namespace pivot
 
-#define PIVOT_EXCEPTION(kind, name)                                                 \
+#define PIVOT_ERROR(kind, name)                                                     \
     struct name##Error : public ::pivot::kind {                                     \
         using kind::kind;                                                           \
         const std::string_view getScope() const noexcept override { return #name; } \
@@ -39,6 +39,6 @@ class RuntimeError : public PivotException
     static_assert(std::is_nothrow_copy_constructible_v<name##Error>);               \
     static_assert(std::is_nothrow_copy_assignable_v<name##Error>);
 
-#define RUNTIME_EXCEPTION(name) PIVOT_EXCEPTION(RuntimeError, name)
+#define RUNTIME_ERROR(name) PIVOT_ERROR(RuntimeError, name)
 
-#define LOGIC_EXCEPTION(name) PIVOT_EXCEPTION(LogicError, name)
+#define LOGIC_ERROR(name) PIVOT_ERROR(LogicError, name)

@@ -18,7 +18,7 @@ class VulkanBase : public VulkanLoader, public abstract::AImmediateCommand
 {
 public:
     /// Exception type for Vulkan base
-    RUNTIME_EXCEPTION(VulkanBase);
+    RUNTIME_ERROR(VulkanBase);
 
 protected:
     /// Default ctor

@@ -17,7 +17,7 @@ class AImmediateCommand
 {
 public:
     /// Immediate Command error
-    RUNTIME_EXCEPTION(ImmediateCommand);
+    RUNTIME_ERROR(ImmediateCommand);
 
 public:
     /// Default ctor

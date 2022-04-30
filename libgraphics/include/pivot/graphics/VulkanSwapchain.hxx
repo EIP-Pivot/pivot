@@ -18,7 +18,7 @@ class VulkanSwapchain
 {
 public:
     /// Error type for the Vulkan Swapchain
-    RUNTIME_EXCEPTION(VulkanSwapchain);
+    RUNTIME_ERROR(VulkanSwapchain);
 
     /// @struct SupportDetails
     ///

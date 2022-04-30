@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pivot/graphics/VulkanException.hxx"
+#include "pivot/graphics/PivotException.hxx"
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 #include "pivot/graphics/types/AllocatedImage.hxx"
 #include "pivot/graphics/types/common.hxx"
@@ -15,6 +15,10 @@ namespace pivot::graphics::abstract
 /// Used to easly add immediateCommand functionality to an herited class
 class AImmediateCommand
 {
+public:
+    /// Immediate Command error
+    RUNTIME_ERROR(ImmediateCommand);
+
 public:
     /// Default ctor
     AImmediateCommand();
@@ -34,7 +38,8 @@ public:
     /// Copy the source buffer into the destination
     void copyBuffer(AllocatedBuffer<T> &src, AllocatedBuffer<T> &dst)
     {
-        if (src.getBytesSize() > dst.getAllocatedSize()) throw VulkanException("The destination buffer is too small");
+        if (src.getBytesSize() > dst.getAllocatedSize())
+            throw ImmediateCommandError("The destination buffer is too small");
 
         immediateCommand([&](vk::CommandBuffer &cmd) {
             vk::BufferCopy copyRegion{

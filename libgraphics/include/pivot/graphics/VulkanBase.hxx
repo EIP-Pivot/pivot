@@ -16,6 +16,10 @@ namespace pivot::graphics
 /// @brief Handle the bare minimum of Vulkan ressources to perform GPU manipulation
 class VulkanBase : public VulkanLoader, public abstract::AImmediateCommand
 {
+public:
+    /// Exception type for Vulkan base
+    RUNTIME_ERROR(VulkanBase);
+
 protected:
     /// Default ctor
     VulkanBase(const std::string &windowName = "VulkanBase", const bool bForceValidation = false);

@@ -11,7 +11,11 @@ bool AssetStorage::loadKtxImage(const std::filesystem::path &path)
     ktxTexture *ktxTexture = nullptr;
     auto result =
         ktxTexture_CreateFromNamedFile(path.string().c_str(), KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &ktxTexture);
-    if (result != KTX_SUCCESS) throw AssetStorage::AssetStorageException("Failed to load ktx texture");
+
+    if (result != KTX_SUCCESS) {
+        logger.err("AssetStorage/KTX") << ktxErrorString(result);
+        return false;
+    }
     ktx_uint8_t *ktxTextureData = ktxTexture_GetData(ktxTexture);
     ktx_size_t ktxTextureSize = ktxTexture_GetDataSize(ktxTexture);
     texture.image.resize(ktxTextureSize);

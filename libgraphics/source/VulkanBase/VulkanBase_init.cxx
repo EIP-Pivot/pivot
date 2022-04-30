@@ -1,7 +1,7 @@
 #include "pivot/graphics/VulkanBase.hxx"
 
 #include "pivot/graphics/DebugMacros.hxx"
-#include "pivot/graphics/VulkanException.hxx"
+#include "pivot/graphics/PivotException.hxx"
 #include "pivot/graphics/Window.hxx"
 #include "pivot/graphics/pivot.hxx"
 #include "pivot/graphics/types/vk_types.hxx"

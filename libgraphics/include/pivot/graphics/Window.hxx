@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <vulkan/vulkan.hpp>
 
-#include "pivot/graphics/VulkanException.hxx"
+#include "pivot/graphics/PivotException.hxx"
 
 namespace pivot::graphics
 {

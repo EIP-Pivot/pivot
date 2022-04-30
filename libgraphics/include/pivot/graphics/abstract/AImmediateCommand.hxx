@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pivot/graphics/VulkanException.hxx"
+#include "pivot/graphics/PivotException.hxx"
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 #include "pivot/graphics/types/AllocatedImage.hxx"
 #include "pivot/graphics/types/common.hxx"

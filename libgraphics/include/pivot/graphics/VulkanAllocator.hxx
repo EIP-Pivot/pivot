@@ -120,7 +120,7 @@ public:
     /// Destroy an allocated buffer
     void destroyBuffer(AllocatedBuffer<T> &buffer)
     {
-        allocator.destroyBuffer(buffer.buffer, buffer.memory);
+        if (buffer) allocator.destroyBuffer(buffer.buffer, buffer.memory);
     }
     /// Destroy an image. Does not destroy its image view
     void destroyImage(AllocatedImage &image) { allocator.destroyImage(image.image, image.memory); }

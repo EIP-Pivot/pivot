@@ -36,7 +36,8 @@ public:
 
     template <typename T>
     /// Copy the source buffer into the destination
-    void copyBuffer(AllocatedBuffer<T> &src, AllocatedBuffer<T> &dst)
+    void copyBuffer(AllocatedBuffer<T> &src, AllocatedBuffer<T> &dst, vk::DeviceSize srcOffset = 0,
+                    vk::DeviceSize dstOffset = 0)
     {
         if (src.getBytesSize() > dst.getAllocatedSize())
             throw ImmediateCommandError("The destination buffer is too small");

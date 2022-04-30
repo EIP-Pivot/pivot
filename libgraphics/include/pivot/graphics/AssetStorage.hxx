@@ -121,6 +121,13 @@ public:
     };
     using CpuKeepFlags = Flags<CpuKeepFlagBits>;
 
+    enum class GpuRessourceFlagBits : FlagsType {
+        eClear = 0x00000000,
+        eAfter = 0x00000001,
+        eBefore = 0x00000002,
+    };
+    using GpuRessourceFlags = Flags<GpuRessourceFlagBits>;
+
 private:
     struct CPUStorage {
         CPUStorage();
@@ -182,7 +189,8 @@ public:
     bool loadTexture(const std::filesystem::path &path);
 
     /// Push the ressource into GPU memory
-    void build(DescriptorBuilder builder, CpuKeepFlags cpuKeep = CpuKeepFlagBits::eNone);
+    void build(DescriptorBuilder builder, CpuKeepFlags cpuKeep = CpuKeepFlagBits::eNone,
+               GpuRessourceFlags gpuFlag = GpuRessourceFlagBits::eClear);
 
     /// Free GPU memory
     void destroy();
@@ -286,10 +294,10 @@ private:
     bool loadKtxImage(const std::filesystem::path &path);
 
     // Push to gpu
-    void pushModelsOnGPU();
-    void pushAABBOnGPU();
-    void pushTexturesOnGPU();
-    void pushMaterialOnGPU();
+    void pushModelsOnGPU(GpuRessourceFlags gpuFlag);
+    void pushAABBOnGPU(GpuRessourceFlags gpuFlag);
+    void pushTexturesOnGPU(GpuRessourceFlags gpuFlag);
+    void pushMaterialOnGPU(GpuRessourceFlags gpuFlag);
 
     // Descriptor ressources
     void createTextureSampler();

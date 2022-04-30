@@ -44,7 +44,7 @@ void AssetStorage::createDescriptorSet(DescriptorBuilder &builder)
     std::ranges::transform(textureStorage.getStorage(), std::back_inserter(imagesInfos),
                            [this](const auto &i) { return i.getImageInfo(textureSampler); });
     builder
-        .bindBuffer(0, boundingboxBuffer.getBufferInfo(), vk::DescriptorType::eStorageBuffer,
+        .bindBuffer(0, AABBBuffer.getBufferInfo(), vk::DescriptorType::eStorageBuffer,
                     vk::ShaderStageFlagBits::eCompute)
         .bindBuffer(1, materialBuffer.getBufferInfo(), vk::DescriptorType::eStorageBuffer,
                     vk::ShaderStageFlagBits::eFragment)

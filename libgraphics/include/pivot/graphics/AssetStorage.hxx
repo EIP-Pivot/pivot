@@ -4,11 +4,11 @@
 #include "pivot/graphics/DescriptorAllocator/DescriptorBuilder.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/abstract/AImmediateCommand.hxx"
+#include "pivot/graphics/types/AABB.hxx"
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 #include "pivot/graphics/types/AllocatedImage.hxx"
 #include "pivot/graphics/types/IndexedStorage.hxx"
 #include "pivot/graphics/types/Material.hxx"
-#include "pivot/graphics/types/MeshBoundingBox.hxx"
 #include "pivot/graphics/types/Vertex.hxx"
 #include "pivot/graphics/types/common.hxx"
 
@@ -165,7 +165,7 @@ public:
     ///
     /// This is the corresponding code in glsl code
     /// @code{.glsl}
-    /// struct BoundingBox {
+    /// struct AABB {
     ///     vec3 low;
     ///     vec3 high;
     /// };
@@ -180,9 +180,9 @@ public:
     ///     int emissiveTexture;
     /// };
     ///
-    /// layout(set = 0, binding = 0) readonly buffer ObjectBoundingBoxes{
-    ///     BoundingBox boundingBoxes[];
-    /// } objectBoundingBoxes;
+    /// layout(set = 0, binding = 0) readonly buffer ObjectAABB{
+    ///     AABB boundingBoxes[];
+    /// } objectAABB;
     ///
     /// layout (std140, set = 0, binding = 1) readonly buffer ObjectMaterials {
     ///     Material materials[];
@@ -236,7 +236,7 @@ private:
 
     // Push to gpu
     void pushModelsOnGPU();
-    void pushBoundingBoxesOnGPU();
+    void pushAABBOnGPU();
     void pushTexturesOnGPU();
     void pushMaterialOnGPU();
 
@@ -253,7 +253,7 @@ private:
     std::unordered_map<std::string, Prefab> prefabStorage;
 
     // Buffers
-    IndexedStorage<std::string, gpu_object::MeshBoundingBox> meshBoundingBoxStorage;
+    IndexedStorage<std::string, gpu_object::AABB> meshAABBStorage;
     IndexedStorage<std::string, Texture> textureStorage;
     IndexedStorage<std::string, gpu_object::Material> materialStorage;
 
@@ -267,7 +267,7 @@ private:
     vk::DescriptorSet descriptorSet;
     AllocatedBuffer<Vertex> vertexBuffer;
     AllocatedBuffer<std::uint32_t> indicesBuffer;
-    AllocatedBuffer<gpu_object::MeshBoundingBox> boundingboxBuffer;
+    AllocatedBuffer<gpu_object::AABB> AABBBuffer;
     AllocatedBuffer<gpu_object::Material> materialBuffer;
 };
 
@@ -314,9 +314,9 @@ inline const AssetStorage::Mesh &AssetStorage::get(const std::string &p) const
 // Get Index of asset in the buffers
 template <>
 /// @copydoc AssetStorage::get
-inline std::int32_t AssetStorage::getIndex<gpu_object::MeshBoundingBox>(const std::string &i) const
+inline std::int32_t AssetStorage::getIndex<gpu_object::AABB>(const std::string &i) const
 {
-    return meshBoundingBoxStorage.getIndex(i);
+    return meshAABBStorage.getIndex(i);
 }
 
 template <>

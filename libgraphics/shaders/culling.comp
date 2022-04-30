@@ -24,14 +24,14 @@ layout (set = 1, binding = 1) buffer DrawIndexedIndirectBuffer {
     DrawIndexedIndirect drawIndexedIndirect[];
 } drawIndexedIndirectBuffer;
 
-struct BoundingBox {
+struct AABB {
     vec3 low;
     vec3 high;
 };
 
-layout (set = 0, binding = 0) readonly buffer ObjectBoundingBoxes {
-    BoundingBox boundingBoxes[];
-} objectBoundingBoxes;
+layout (set = 0, binding = 0) readonly buffer ObjectAABB {
+    AABB boundingBoxes[];
+} objectAABB;
 
 layout (push_constant) uniform readonly constants {
 	mat4 viewproj;
@@ -47,7 +47,7 @@ const vec4 planes[6] = vec4[](
     vec4(0, 0, 1, 0)
 );
 
-void generateAllBoundingBoxPoints(in BoundingBox box, inout vec3 points[8]) {
+void generateAllAABBPoints(in AABB box, inout vec3 points[8]) {
     points[0] = box.low;
     points[1] = vec3(box.high.x, box.low.yz);
     points[2] = vec3(box.low.x, box.high.y, box.low.z);
@@ -63,12 +63,12 @@ void main() {
 
     if (gID < cameraData.drawCount) {
         uint boundingBoxIndex = objectBuffer.objects[gID].boundingBoxIndex;
-        BoundingBox boundingBox = objectBoundingBoxes.boundingBoxes[boundingBoxIndex];
+        AABB boundingBox = objectAABB.boundingBoxes[boundingBoxIndex];
 
         mat4 vpm = cameraData.viewproj * objectBuffer.objects[gID].modelMatrix;
         vec4 boundingBoxProjection[8];
         vec3 points[8];
-        generateAllBoundingBoxPoints(boundingBox, points);
+        generateAllAABBPoints(boundingBox, points);
         for (uint i = 0; i < 8; i++) {
             boundingBoxProjection[i] = vpm * vec4(points[i], 1.0);
         }

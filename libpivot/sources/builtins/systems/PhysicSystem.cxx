@@ -1,36 +1,28 @@
 #include <pivot/builtins/events/tick.hxx>
 #include <pivot/builtins/systems/PhysicSystem.hxx>
-#include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
-
-#include <pivot/builtins/components/RenderObject.hxx>
-#include <pivot/ecs/Components/Gravity.hxx>
-#include <pivot/ecs/Components/RigidBody.hxx>
 
 using namespace pivot::ecs;
-using namespace pivot::builtins::components;
-
 namespace
 {
-void physicsSystemImpl(const systems::Description &systemDescription, component::ArrayCombination &cmb,
+void physicsSystemImpl(const systems::Description &systemDescription, component::ArrayCombination &entities,
                        const event::EventWithComponent &event)
 {
     auto dt = (float)std::get<double>(event.event.payload);
+    for (auto combination: entities) {
+        auto gravity = combination[0].get();
+        auto rigidBody = combination[1].get();
+        auto renderObject = combination[2].get();
 
-    auto gravityArray = dynamic_cast<component::DenseTypedComponentArray<Gravity> &>(cmb.arrays()[0].get()).getData();
-    auto rigidBodyArray =
-        dynamic_cast<component::DenseTypedComponentArray<RigidBody> &>(cmb.arrays()[1].get()).getData();
-    auto renderObjectArray =
-        dynamic_cast<component::DenseTypedComponentArray<RenderObject> &>(cmb.arrays()[2].get()).getData();
+        auto &position = std::get<glm::vec3>(
+            std::get<data::Record>(std::get<data::Record>(renderObject).at("transform")).at("position"));
+        auto &velocity = std::get<glm::vec3>(std::get<data::Record>(rigidBody).at("velocity"));
+        auto &force = std::get<glm::vec3>(std::get<data::Record>(gravity).at("force"));
 
-    auto maxEntity = std::min({gravityArray.size(), rigidBodyArray.size(), renderObjectArray.size()});
-    for (std::size_t entity = 0; entity <= maxEntity; entity++) {
-        auto &gravity = gravityArray[entity];
-        auto &rigidBody = rigidBodyArray[entity];
-        auto &renderObject = renderObjectArray[entity];
+        position += velocity * dt;
+        velocity += force * dt;
 
-        if (gravity.force != glm::vec3(0)) { rigidBody.acceleration = gravity.force; }
-        rigidBody.velocity += rigidBody.acceleration * dt;
-        renderObject.transform.position += rigidBody.velocity * dt;
+        combination[1].set(rigidBody);
+        combination[2].set(renderObject);
     }
 }
 }    // namespace
@@ -43,9 +35,10 @@ const pivot::ecs::systems::Description physicSystem{
         {
             "Gravity",
             "RigidBody",
-            "RenderObject",
+            "RenderObject"
         },
     .eventListener = events::tick,
     .system = &physicsSystemImpl,
 };
+
 }

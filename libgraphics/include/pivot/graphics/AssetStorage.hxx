@@ -129,6 +129,20 @@ public:
     void setAssetDirectory(const std::filesystem::path &path) noexcept { asset_dir = path; }
 
     template <is_valid_path... Path>
+    /// @brief load the assets into CPU memory
+    ///
+    /// @arg the path for all individual file to load
+    void loadAssets(Path... p)
+    {
+        unsigned i = ((loadAsset(asset_dir / p)) + ...);
+        if (i < sizeof...(Path)) {
+            throw AssetStorageError("An asset file failed to load. See above for further errors");
+        }
+    }
+    /// Load a single assets file
+    bool loadAsset(const std::filesystem::path &path);
+
+    template <is_valid_path... Path>
     /// @brief load the 3D models into CPU memory
     ///
     /// @arg the path for all individual file to load

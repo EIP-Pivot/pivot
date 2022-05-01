@@ -130,6 +130,12 @@ ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
     }
     auto scene_json = nlohmann::json::parse(scene_file);
     auto scene = Scene::load(scene_json, m_component_index, m_system_index);
+    for (auto &asset: scene_json["assets"]) {
+        auto assetPath = path.parent_path() / asset.get<std::string>();
+        if (!m_vulkan_application.assetStorage.loadModel(assetPath)) {
+            m_vulkan_application.assetStorage.loadTexture(assetPath);
+        }
+    }
     return this->registerScene(std::move(scene));
 }
 }    // namespace pivot

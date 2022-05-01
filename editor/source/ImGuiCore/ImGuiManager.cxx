@@ -36,18 +36,24 @@ void ImGuiManager::saveScene(pivot::Engine &engine)
             case NFD_OKAY: {
                 logger.info("Save Scene") << savePath;
                 engine.saveScene(m_sceneManager.getCurrentSceneId(), savePath.get());
-                ImGui::OpenPopup("Save");
+                ImGui::OpenPopup("SaveOk");
             } break;
             case NFD_ERROR: {
                 logger.err("File Dialog") << NFD::GetError();
                 NFD::ClearError();
+                ImGui::OpenPopup("SaveFail");
             } break;
             case NFD_CANCEL: break;
         }
     }
 
-    if (ImGui::BeginPopupModal("Save", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Scene correctly saved");
+    if (ImGui::BeginPopupModal("SaveOk", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Scene correctly saved.");
+        if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+        ImGui::EndPopup();
+    }
+    if (ImGui::BeginPopupModal("SaveFail", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Failed to save the scene, please check the log.");
         if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
         ImGui::EndPopup();
     }
@@ -55,7 +61,6 @@ void ImGuiManager::saveScene(pivot::Engine &engine)
 
 void ImGuiManager::loadScene(pivot::Engine &engine)
 {
-    static std::string loading_result;
     if (ImGui::Button("Load Scene")) {
         NFD::Guard nfd_guard;
         NFD::UniquePath scenePath;
@@ -63,29 +68,32 @@ void ImGuiManager::loadScene(pivot::Engine &engine)
         auto filename = m_sceneManager.getCurrentScene().getName() + ".json";
         auto resultSave = NFD::OpenDialog(scenePath, filterItemSave, 1);
 
-        loading_result.clear();
         switch (resultSave) {
             case NFD_OKAY: {
                 logger.info("Load Scene") << scenePath;
-                ImGui::OpenPopup("Load");
+                ImGui::OpenPopup("LoadOk");
                 try {
                     engine.loadScene(scenePath.get());
-                    loading_result = "Scene correctly loaded";
                 } catch (const std::exception &e) {
                     logger.err() << e.what();
-                    loading_result = e.what();
-                    ImGui::OpenPopup("Load");
+                    ImGui::OpenPopup("LoadFail");
                 }
             } break;
             case NFD_ERROR: {
                 logger.err("File Dialog") << NFD::GetError();
                 NFD::ClearError();
+                ImGui::OpenPopup("LoadFail");
             } break;
             case NFD_CANCEL: break;
         }
     }
-    if (ImGui::BeginPopupModal("Load", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::TextWrapped("%s", loading_result.c_str());
+    if (ImGui::BeginPopupModal("LoadOk", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Scene loaded succefully !");
+        if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+        ImGui::EndPopup();
+    }
+    if (ImGui::BeginPopupModal("LoadFail", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Scene loading failed, please look at the logs.");
         if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
         ImGui::EndPopup();
     }

@@ -126,6 +126,7 @@ if (BUILD_DOCUMENTATION)
         doxygen_add_docs(doc
             libgraphics/include
             libecs/include
+            libscript/include
             README.md)
     else()
         message(SEND_ERROR "Doxygen needs to be installed to build the documentation")

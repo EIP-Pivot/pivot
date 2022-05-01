@@ -27,21 +27,26 @@ AllocatedImage VulkanAllocator::createImage(const vk::ImageCreateInfo &info, con
 
 void VulkanAllocator::dumpStats()
 {
-    const auto budgets = allocator.getBudget();
+    const auto budgets = allocator.getHeapBudgets();
     logger.info("Vulkan Allocator") << "-----------------------------------";
     for (const auto &b: budgets) {
-        logger.info("Vulkan Allocator") << "VmaBudget.allocationBytes = "
-                                        << vk_utils::tools::bytesToString(b.allocationBytes);
-        logger.info("Vulkan Allocator") << "VmaBudget.blockBytes = " << vk_utils::tools::bytesToString(b.blockBytes);
         logger.info("Vulkan Allocator") << "VmaBudget.usage = " << vk_utils::tools::bytesToString(b.usage);
         logger.info("Vulkan Allocator") << "VmaBudget.budget = " << vk_utils::tools::bytesToString(b.budget);
+        logger.info("Vulkan Allocator/Statistics")
+            << "VmaBudget.allocationBytes = " << vk_utils::tools::bytesToString(b.statistics.allocationBytes);
+        logger.info("Vulkan Allocator/Statistics")
+            << "VmaBudget.allocationCount = " << vk_utils::tools::bytesToString(b.statistics.allocationCount);
+        logger.info("Vulkan Allocator/Statistics")
+            << "VmaBudget.blockBytes = " << vk_utils::tools::bytesToString(b.statistics.blockBytes);
+        logger.info("Vulkan Allocator/Statistics")
+            << "VmaBudget.blockCount = " << vk_utils::tools::bytesToString(b.statistics.blockCount);
     }
     logger.info("Vulkan Allocator") << "-----------------------------------";
 }
 
 VulkanAllocator::GPUMemoryStats VulkanAllocator::getStats()
 {
-    const auto budgets = allocator.getBudget();
+    const auto budgets = allocator.getHeapBudgets();
     uint64_t usage = 0;
     uint64_t budget = 0;
 

@@ -90,6 +90,7 @@ void ImGuiRenderer::createDescriptorPool(vk::Device &device)
 void ImGuiRenderer::createImGuiContext(VulkanBase &base_ref, vk::RenderPass &pass)
 {
     ImGui::CreateContext();
+    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     ImGui_ImplGlfw_InitForVulkan(base_ref.window.getWindow(), true);
 
     ImGui_ImplVulkan_InitInfo init_info{};

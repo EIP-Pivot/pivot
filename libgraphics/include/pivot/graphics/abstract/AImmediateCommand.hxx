@@ -1,10 +1,11 @@
 #pragma once
 
-#include "pivot/graphics/VulkanException.hxx"
+#include "pivot/graphics/PivotException.hxx"
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 #include "pivot/graphics/types/AllocatedImage.hxx"
 #include "pivot/graphics/types/common.hxx"
 
+#include <source_location>
 #include <vulkan/vulkan.hpp>
 
 namespace pivot::graphics::abstract
@@ -14,6 +15,10 @@ namespace pivot::graphics::abstract
 /// Used to easly add immediateCommand functionality to an herited class
 class AImmediateCommand
 {
+public:
+    /// Immediate Command error
+    RUNTIME_ERROR(ImmediateCommand);
+
 public:
     /// Default ctor
     AImmediateCommand();
@@ -26,19 +31,21 @@ public:
     void destroy();
 
     /// Perform an command on the GPU immediately and wait for it to complete
-    void immediateCommand(std::function<void(vk::CommandBuffer &)> cmd);
+    void immediateCommand(std::function<void(vk::CommandBuffer &)> cmd,
+                          const std::source_location &location = std::source_location::current());
 
     template <typename T>
     /// Copy the source buffer into the destination
     void copyBuffer(AllocatedBuffer<T> &src, AllocatedBuffer<T> &dst)
     {
-        if (src.getSize() > dst.getAllocatedSize()) throw VulkanException("The destination buffer is too small");
+        if (src.getBytesSize() > dst.getAllocatedSize())
+            throw ImmediateCommandError("The destination buffer is too small");
 
         immediateCommand([&](vk::CommandBuffer &cmd) {
             vk::BufferCopy copyRegion{
                 .srcOffset = 0,
                 .dstOffset = 0,
-                .size = src.getSize(),
+                .size = src.getBytesSize(),
             };
             cmd.copyBuffer(src.buffer, dst.buffer, copyRegion);
         });

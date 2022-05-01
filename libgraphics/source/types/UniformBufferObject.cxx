@@ -1,35 +1,24 @@
 #include "pivot/graphics/types/UniformBufferObject.hxx"
+#include "pivot/graphics/types/AABB.hxx"
 #include "pivot/graphics/types/Material.hxx"
-#include "pivot/graphics/types/MeshBoundingBox.hxx"
-
-template <class T>
-static inline std::optional<std::uint32_t> getDefault(const pivot::graphics::AssetStorage &stor,
-                                                      const std::optional<std::string> &value,
-                                                      const std::optional<std::string> &defaultValue)
-{
-    if (value && !value->empty())
-        return stor.getIndex<T>(value.value());
-    else if (defaultValue && !defaultValue->empty())
-        return stor.getIndex<T>(defaultValue.value());
-    else
-        return std::nullopt;
-}
 
 namespace pivot::graphics::gpu_object
 {
+
 UniformBufferObject::UniformBufferObject(const RenderObject &obj, const AssetStorage &assetStorage)
     : modelMatrix(obj.transform.getModelMatrix())
 
 {
     const auto &model = assetStorage.get<AssetStorage::Model>(obj.meshID);
 
-    auto tmpIndex = getDefault<Material>(assetStorage, obj.materialIndex, model.default_material);
-    if (!tmpIndex || tmpIndex.value() == std::uint32_t(-1))
-        throw AssetStorage::AssetStorageException("Missing material for "
-                                                  "obj " +
-                                                  obj.meshID);
-    materialIndex = tmpIndex.value();
-    boundingBoxIndex = assetStorage.getIndex<MeshBoundingBox>(obj.meshID);
+    if (!obj.materialIndex.empty()) {
+        materialIndex = assetStorage.getIndex<Material>(obj.materialIndex);
+    } else if (model.default_material) {
+        materialIndex = assetStorage.getIndex<Material>(model.default_material.value());
+    } else {
+        materialIndex = assetStorage.getIndex<Material>(AssetStorage::missing_material_name);
+    }
+    boundingBoxIndex = assetStorage.getIndex<AABB>(obj.meshID);
 }
 
 }    // namespace pivot::graphics::gpu_object

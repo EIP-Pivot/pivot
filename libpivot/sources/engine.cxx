@@ -84,7 +84,9 @@ namespace
 {
     void postSceneRegister(Scene &scene)
     {
-        scene.getComponentManager().RegisterComponent(builtins::components::RenderObject::description);
+        auto &cm = scene.getComponentManager();
+        if (cm.GetComponentId(builtins::components::RenderObject::description.name).has_value()) { return; }
+        cm.RegisterComponent(builtins::components::RenderObject::description);
     }
 }    // namespace
 
@@ -94,10 +96,18 @@ ecs::SceneManager::SceneId Engine::registerScene()
     postSceneRegister(m_scene_manager.getSceneById(id));
     return id;
 }
+
 ecs::SceneManager::SceneId Engine::registerScene(std::string name)
 {
 
     auto id = m_scene_manager.registerScene(name);
+    postSceneRegister(m_scene_manager.getSceneById(id));
+    return id;
+}
+
+ecs::SceneManager::SceneId Engine::registerScene(std::unique_ptr<ecs::Scene> scene)
+{
+    auto id = m_scene_manager.registerScene(std::move(scene));
     postSceneRegister(m_scene_manager.getSceneById(id));
     return id;
 }
@@ -117,6 +127,6 @@ ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
     }
     auto scene_json = nlohmann::json::parse(scene_file);
     auto scene = Scene::load(scene_json, m_component_index, m_system_index);
-    return m_scene_manager.registerScene(std::move(scene));
+    return this->registerScene(std::move(scene));
 }
 }    // namespace pivot

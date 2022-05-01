@@ -6,7 +6,7 @@
 #include <vulkan/vulkan.hpp>
 
 #include "pivot/graphics/DeletionQueue.hxx"
-#include "pivot/graphics/VulkanException.hxx"
+#include "pivot/graphics/PivotException.hxx"
 
 namespace pivot::graphics
 {
@@ -17,13 +17,9 @@ namespace pivot::graphics
 class VulkanSwapchain
 {
 public:
-    /// @class VulkanSwapchainError
-    ///
-    /// @brief Error type for the Vulkan Swapchain
-    class VulkanSwapchainError : public VulkanException
-    {
-        using VulkanException::VulkanException;
-    };
+    /// Error type for the Vulkan Swapchain
+    RUNTIME_ERROR(VulkanSwapchain);
+
     /// @struct SupportDetails
     ///
     /// @brief Helper class to gather all information required for swapchain creation

@@ -1,7 +1,7 @@
 #include "pivot/graphics/VulkanBase.hxx"
 
 #include "pivot/graphics/DebugMacros.hxx"
-#include "pivot/graphics/VulkanException.hxx"
+#include "pivot/graphics/PivotException.hxx"
 #include "pivot/graphics/Window.hxx"
 #include "pivot/graphics/pivot.hxx"
 #include "pivot/graphics/types/vk_types.hxx"
@@ -81,7 +81,7 @@ void VulkanBase::selectPhysicalDevice(const std::vector<const char *> &deviceExt
         physical_device = ratedGpus.rbegin()->second;
         maxMsaaSample = pivot::graphics::vk_utils::getMaxUsableSampleCount(physical_device);
     } else {
-        throw VulkanException("failed to find a suitable GPU!");
+        throw VulkanBaseError("failed to find a suitable GPU!");
     }
 
     logger.info("Physical Device") << "Device extensions: " << deviceExtensions;
@@ -107,7 +107,6 @@ void VulkanBase::createLogicalDevice(const std::vector<const char *> &deviceExte
     }
 
     vk::PhysicalDeviceDescriptorIndexingFeatures descriptorIndex{
-        .descriptorBindingPartiallyBound = VK_TRUE,
         .descriptorBindingVariableDescriptorCount = VK_TRUE,
         .runtimeDescriptorArray = VK_TRUE,
     };
@@ -144,8 +143,6 @@ void VulkanBase::createAllocator()
     allocatorInfo.physicalDevice = physical_device;
     allocatorInfo.device = device;
     allocatorInfo.instance = instance;
-    allocatorInfo.vulkanApiVersion = 0;
-    allocatorInfo.frameInUseCount = MaxFrameInFlight;
 
     allocator.init(allocatorInfo);
     baseDeletionQueue.push([&] { allocator.destroy(); });

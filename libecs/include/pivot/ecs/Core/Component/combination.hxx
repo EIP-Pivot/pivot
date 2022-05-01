@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <span>
 
 #include <pivot/ecs/Core/Component/ref.hxx>
 
@@ -103,6 +104,11 @@ public:
     iterator begin() { return iterator(*this); }
     /// End iterator
     iterator end() { return iterator(*this, true); }
+
+    /// Access the arrays
+    std::span<std::reference_wrapper<IComponentArray>> arrays() { return m_arrays; }
+    /// Access the arrays (const)
+    std::span<const std::reference_wrapper<IComponentArray>> arrays() const { return m_arrays; }
 
 private:
     Entity maxEntity() const;

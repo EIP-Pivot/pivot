@@ -38,7 +38,12 @@ public:
     vk::Pipeline &getGraphics(const std::string &id)
     {
         if (id.empty() || bForceDefault) return getDefault();
-        return graphicsStorage.at(id);
+        auto iter = graphicsStorage.find(id);
+        if (iter == graphicsStorage.end()) {
+            logger.warn("Pipeline Storage") << "Pipeline not found, using default one :" << getDefaultName();
+            return getDefault();
+        }
+        return iter->second;
     }
     /// @brief Recovery a Compute pipeline with id
     vk::Pipeline &getCompute(const std::string &id) { return computeStorage.at(id); }
@@ -50,10 +55,10 @@ public:
     }
 
     /// @brief Get the default graphics pipeline
-    vk::Pipeline &getDefault() { return graphicsStorage.at(defaultPipeline); }
+    vk::Pipeline &getDefault() { return graphicsStorage.at(getDefaultName()); }
 
     /// @brief Get the default pipeline name
-    const std::string &getDefaultName() const noexcept { return defaultPipeline; }
+    constexpr const std::string &getDefaultName() const noexcept { return defaultPipeline; }
 
     /// @brief Set the name of the default pipeline
     void setDefault(const std::string &id, bool bForce = false) noexcept

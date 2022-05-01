@@ -9,25 +9,25 @@
 
 namespace pivot::graphics::gpu_object
 {
-/// @struct MeshBoundingBox
+/// @struct AABB
 ///
 /// @brief Represents the cubic bounding box of a mesh
-struct MeshBoundingBox {
-    MeshBoundingBox() = delete;
+struct AABB {
+    AABB() = delete;
 
     /// Construct a Bounding box using a complete mesh
-    explicit constexpr MeshBoundingBox(const std::span<const Vertex> &mesh)
+    explicit constexpr AABB(const std::span<const Vertex> &mesh)
     {
-        if (mesh.empty()) throw std::runtime_error("Can't build a MeshBoundingBox without Vertices");
+        if (mesh.empty()) throw std::runtime_error("Can't build a AABB without Vertices");
         low = mesh.front().pos;
         high = low;
         for (const auto &point: mesh) addPoint(point.pos);
     };
 
     /// New bounding box for a model with only one point
-    explicit constexpr MeshBoundingBox(glm::vec3 initialPoint): low(initialPoint), high(initialPoint){};
+    explicit constexpr AABB(glm::vec3 initialPoint): low(initialPoint), high(initialPoint){};
     /// New bounding box with explicitely set low and high point
-    explicit constexpr MeshBoundingBox(glm::vec3 low, glm::vec3 high): low(low), high(high){};
+    explicit constexpr AABB(glm::vec3 low, glm::vec3 high): low(low), high(high){};
 
     /// Lowest point of the bouding box
     alignas(16) glm::vec3 low;
@@ -62,7 +62,7 @@ struct MeshBoundingBox {
     }
 };
 
-static_assert(sizeof(MeshBoundingBox) % 4 == 0);
-static_assert(sizeof(MeshBoundingBox) == sizeof(float) * 4 * 2);
+static_assert(sizeof(AABB) % 4 == 0);
+static_assert(sizeof(AABB) == sizeof(float) * 4 * 2);
 
 }    // namespace pivot::graphics::gpu_object

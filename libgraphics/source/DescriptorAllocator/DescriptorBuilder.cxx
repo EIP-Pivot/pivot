@@ -12,7 +12,7 @@ DescriptorBuilder::DescriptorBuilder(DescriptorLayoutCache &layoutCache, Descrip
 
 DescriptorBuilder::~DescriptorBuilder() {}
 
-DescriptorBuilder &DescriptorBuilder::bindBuffer(uint32_t binding, vk::DescriptorBufferInfo &bufferInfo,
+DescriptorBuilder &DescriptorBuilder::bindBuffer(uint32_t binding, const vk::DescriptorBufferInfo &bufferInfo,
                                                  vk::DescriptorType type, vk::ShaderStageFlags stageFlags)
 {
     vk::DescriptorSetLayoutBinding newBinding{
@@ -34,7 +34,7 @@ DescriptorBuilder &DescriptorBuilder::bindBuffer(uint32_t binding, vk::Descripto
     return *this;
 }
 
-DescriptorBuilder &DescriptorBuilder::bindImage(uint32_t binding, vk::DescriptorImageInfo &imageInfo,
+DescriptorBuilder &DescriptorBuilder::bindImage(uint32_t binding, const vk::DescriptorImageInfo &imageInfo,
                                                 vk::DescriptorType type, vk::ShaderStageFlags stageFlags)
 {
     vk::DescriptorSetLayoutBinding newBinding{
@@ -56,7 +56,8 @@ DescriptorBuilder &DescriptorBuilder::bindImage(uint32_t binding, vk::Descriptor
     return *this;
 }
 
-DescriptorBuilder &DescriptorBuilder::bindImages(uint32_t binding, std::vector<vk::DescriptorImageInfo> &imageInfo,
+DescriptorBuilder &DescriptorBuilder::bindImages(uint32_t binding,
+                                                 const std::vector<vk::DescriptorImageInfo> &imageInfo,
                                                  vk::DescriptorType type, vk::ShaderStageFlags stageFlags)
 {
     vk::DescriptorSetLayoutBinding newBinding{
@@ -75,8 +76,7 @@ DescriptorBuilder &DescriptorBuilder::bindImages(uint32_t binding, std::vector<v
     };
     writes.push_back(newWrite);
     variableDescriptorCount.push_back(imageInfo.size());
-    descriptorBindingFlags.push_back(vk::DescriptorBindingFlagBits::eVariableDescriptorCount |
-                                     vk::DescriptorBindingFlagBits::ePartiallyBound);
+    descriptorBindingFlags.push_back(vk::DescriptorBindingFlagBits::eVariableDescriptorCount);
     return *this;
 }
 

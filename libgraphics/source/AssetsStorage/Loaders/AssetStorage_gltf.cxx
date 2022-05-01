@@ -136,7 +136,7 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
     for (const tinygltf::Primitive &primitive: mesh.primitives) {
         /// TODO: support other primitive mode
         if (primitive.mode != TINYGLTF_MODE_TRIANGLES)
-            throw AssetStorage::AssetStorageException("Primitive mode not supported !");
+            throw AssetStorage::AssetStorageError("Primitive mode not supported !");
 
         AssetStorage::Model model{
             .mesh =
@@ -158,7 +158,7 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
 
             if (positionBuffer.empty()) throw std::logic_error("No verticies found in a mesh node");
             if (!colorBuffer.empty() && colorAccessor.type != TINYGLTF_PARAMETER_TYPE_FLOAT_VEC3)
-                throw AssetStorage::AssetStorageException("Unsupported color type");
+                throw AssetStorage::AssetStorageError("Unsupported color type");
             if ((!normalsBuffer.empty() && positionBuffer.size() != normalsBuffer.size()) ||
                 (!texCoordsBuffer.empty() && positionBuffer.size() != texCoordsBuffer.size()) ||
                 (!colorBuffer.empty() && colorBuffer.size() != texCoordsBuffer.size())) {
@@ -197,7 +197,7 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
                 case TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE:
                     fillIndexBuffer<std::uint8_t>(buffer, accessor, bufferView, indexBuffer);
                     break;
-                default: throw AssetStorage::AssetStorageException("Index component type not supported!"); break;
+                default: throw AssetStorage::AssetStorageError("Index component type not supported!"); break;
             }
         }
         /// End of Indices
@@ -286,8 +286,8 @@ try {
 
     prefabStorage.insert(std::make_pair(path.stem().string(), prefab));
     return true;
-} catch (const AssetStorageException &ase) {
-    logger.err("THROW/Asset Storage/GLTF") << "Error while loaded GLTF file : " << ase.what();
+} catch (const PivotException &ase) {
+    logger.err(ase.getScope()) << "Error while loaded GLTF file : " << ase.what();
     return false;
 } catch (const std::logic_error &le) {
     logger.err("THROW/Asset Storage/Invalid GLTF file") << "The GLTF file is malformed. Reason :" << le.what();

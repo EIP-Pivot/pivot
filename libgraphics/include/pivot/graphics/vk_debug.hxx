@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <vulkan/vulkan.hpp>
 
 #include "pivot/graphics/DebugMacros.hxx"
@@ -21,6 +22,22 @@ void setObjectName(vk::Device &device, const T &object, const std::string &name)
     device.setDebugUtilsObjectNameEXT(nameInfo);
 #endif
 }
+
+template <vk_utils::wrappedVulkanType T, typename D>
+/// Set the debug tag of the object
+void setObjectTag(vk::Device &device, const T &object, const std::span<D> &tag)
+{
+#ifndef NDEBUG
+    vk::DebugUtilsObjectTagInfoEXT tagInfo{
+        .objectType = object.objectType,
+        .objectHandle = (uint64_t)(typename T::CType)object,
+        .tagSize = tag.size_bytes(),
+        .pTag = tag.data(),
+    };
+    device.setDebugUtilsObjectTagEXT(tagInfo);
+#endif
+}
+
 /// Begin a new debug region
 void beginRegion(vk::CommandBuffer &cmdbuffer, const char *pMarkerName, const std::array<float, 4> color);
 /// End a debug region

@@ -6,7 +6,7 @@
 #include <vector>
 #include <vulkan/vulkan.hpp>
 
-#include "pivot/graphics/VulkanException.hxx"
+#include "pivot/graphics/PivotException.hxx"
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 
 namespace pivot::graphics::vk_utils
@@ -16,12 +16,13 @@ template <typename T>
 concept wrappedVulkanType = requires
 {
     typename T::CType;
+    requires requires(T a) { a.objectType; };
 };
 
 /// Test if a vk::Result is considered as a success.
 constexpr void vk_try(vk::Result err)
 {
-    if (err < vk::Result::eSuccess) throw VulkanException(err);
+    if (err < vk::Result::eSuccess) throw std::runtime_error(vk::to_string(err));
 }
 
 /// @copydoc vk_try

@@ -3,9 +3,12 @@
 #include <GLFW/glfw3.h>
 #include <glm/vec2.hpp>
 #include <optional>
+#include <span>
 #include <string>
 #include <unordered_map>
 #include <vulkan/vulkan.hpp>
+
+#include "pivot/graphics/PivotException.hxx"
 
 namespace pivot::graphics
 {
@@ -83,6 +86,9 @@ public:
     /// Mouse movement event callback signature
     using MouseEvent = std::function<void(Window &window, const glm::dvec2 pos)>;
 
+    /// Error type for Window
+    RUNTIME_ERROR(Window);
+
 public:
     /// Create a new Window
     ///
@@ -154,6 +160,11 @@ public:
     /// @param title New title for the window
     void setTitle(const std::string &title) noexcept;
 
+    /// Set the icon of the window
+    void setIcon(const std::span<GLFWimage> &) noexcept;
+    /// Set the icon of the window
+    void setIcon(const std::vector<std::string> &);
+
     /// Get the title of the window
     /// @return The title of the window
     constexpr const std::string &getTitle() const noexcept { return windowName; }
@@ -188,7 +199,7 @@ private:
     void setErrorCallback(GLFWerrorfun &&f) noexcept;
 
     void setUserPointer(void *ptr) noexcept;
-    void initWindow(const unsigned width, const unsigned height) noexcept;
+    void initWindow(const unsigned width, const unsigned height);
     glm::ivec2 updateSize() const noexcept;
 
     static void error_callback(int code, const char *msg) noexcept;

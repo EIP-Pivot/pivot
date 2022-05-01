@@ -123,7 +123,7 @@ public:
     std::vector<Entity> &getCameras();
 
     /// Function used to retrieve the real path of an asset if possible
-    using AssetTranslator = std::function<std::string(const std::string &)>;
+    using AssetTranslator = std::function<std::optional<std::string>(const std::string &)>;
     /// Save scene in json file
     void save(const std::filesystem::path &path, std::optional<AssetTranslator> assetTranslator = std::nullopt) const;
 

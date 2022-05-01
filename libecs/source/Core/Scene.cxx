@@ -119,7 +119,8 @@ void extract_assets(const data::Value &value, std::set<std::string> &assets,
         using type = std::decay_t<decltype(data)>;
         if constexpr (std::is_same_v<type, data::Asset>) {
             if (assetTranslator) {
-                assets.insert(assetTranslator.value()(data.name));
+                auto assetPath = assetTranslator.value()(data.name);
+                if (assetPath.has_value()) { assets.insert(assetPath.value()); }
             } else {
                 assets.insert(data.name);
             }

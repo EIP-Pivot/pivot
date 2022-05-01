@@ -110,9 +110,13 @@ ecs::SceneManager::SceneId Engine::registerScene(std::unique_ptr<ecs::Scene> sce
 void Engine::saveScene(ecs::SceneManager::SceneId id, const std::filesystem::path &path)
 {
     m_scene_manager.getSceneById(id).save(
-        path, std::make_optional(std::function([this](const std::string &asset) -> std::string {
-            // TODO: get the asset
-            return std::string();
+        path, std::make_optional(std::function([this, &path](const std::string &asset) -> std::optional<std::string> {
+            auto &assetStorage = m_vulkan_application.assetStorage;
+            auto texturePath = assetStorage.getTexturePath(asset);
+            auto modelPath = assetStorage.getModelPath(asset);
+            if (!texturePath.has_value() && !modelPath.has_value()) return std::nullopt;
+            std::filesystem::path assetPath = texturePath.value_or(modelPath.value());
+            return assetPath.lexically_relative(path.parent_path());
         })));
 }
 

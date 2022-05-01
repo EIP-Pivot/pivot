@@ -49,7 +49,7 @@ void DrawCallResolver::destroy()
     if (frame.spotLightBuffer) base_ref->get().allocator.destroyBuffer(frame.spotLightBuffer);
 }
 
-void DrawCallResolver::prepareForDraw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation)
+void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sceneInformation)
 {
     frame.packedDraws.clear();
     frame.pipelineBatch.clear();

@@ -79,8 +79,16 @@ public:
     /// Destroy them
     void destroy();
 
+    /// Informations needed to draw a scene. Including all objects and al lights
+    struct DrawSceneInformation {
+        std::span<const RenderObject> renderObjects;
+        const std::vector<bool> &renderObjectExist;
+        std::span<const Transform> transforms;
+        const std::vector<bool> &transformExist;
+    };
+
     /// Build the buffer for the draw
-    void prepareForDraw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation);
+    void prepareForDraw(DrawSceneInformation sceneInformation);
 
     /// Get the frame data of a given frame
     constexpr const Frame &getFrameData() const { return frame; }

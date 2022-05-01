@@ -52,33 +52,36 @@ void DrawCallResolver::destroy()
 void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sceneInformation)
 {
     frame.packedDraws.clear();
+    frame.packedDraws.resize(sceneInformation.renderObjects.size());
     frame.pipelineBatch.clear();
+    frame.pipelineBatch.resize(sceneInformation.renderObjects.size());
     std::vector<gpu_object::UniformBufferObject> objectGPUData;
     std::uint32_t drawCount = 0;
 
-    std::ranges::sort(sceneInformation, {},
-                      [](const auto &info) { return std::make_tuple(info.get().pipelineID, info.get().meshID); });
+    // std::ranges::sort(sceneInformation, {},
+    //                   [](const auto &info) { return std::make_tuple(info.get().pipelineID, info.get().meshID); });
 
-    for (const auto &object: sceneInformation) {
-        if (frame.pipelineBatch.empty() || frame.pipelineBatch.back().pipelineID != object.get().pipelineID) {
-            frame.pipelineBatch.push_back({
-                .pipelineID = object.get().pipelineID,
-                .first = drawCount,
-                .size = 0,
-            });
-        }
-        auto prefab = storage_ref->get().get_optional<AssetStorage::Prefab>(object.get().meshID);
+    assert(sceneInformation.renderObjects.size() == sceneInformation.renderObjectExist.size());
+    assert(sceneInformation.transforms.size() == sceneInformation.transformExist.size());
+    assert(sceneInformation.renderObjects.size() == sceneInformation.transforms.size());
+    for (unsigned i = 0; i < sceneInformation.renderObjects.size(); i++) {
+        if (!sceneInformation.renderObjectExist[i] || !sceneInformation.transformExist[i]) continue;
+        const auto &object = sceneInformation.renderObjects[i];
+        const auto &transform = sceneInformation.transforms[i];
+
+        // TODO: Pipeline batch
+        auto prefab = storage_ref->get().get_optional<AssetStorage::Prefab>(object.meshID);
         if (prefab.has_value()) {
             for (const auto &model: prefab->get().modelIds) {
-                frame.pipelineBatch.back().size += 1;
+                // frame.pipelineBatch.back().size += 1;
                 frame.packedDraws.push_back({
                     .meshId = model,
                     .first = drawCount++,
                     .count = 1,
                 });
-                auto obj = object.get();
+                auto obj = object;
                 obj.meshID = model;
-                objectGPUData.push_back(gpu_object::UniformBufferObject(obj, *storage_ref));
+                objectGPUData.emplace_back(transform, obj, storage_ref->get());
             }
         }
     }

@@ -5,8 +5,9 @@
 namespace pivot::graphics::gpu_object
 {
 
-UniformBufferObject::UniformBufferObject(const RenderObject &obj, const AssetStorage &assetStorage)
-    : modelMatrix(obj.transform.getModelMatrix())
+UniformBufferObject::UniformBufferObject(const Transform &transform, const RenderObject &obj,
+                                         const AssetStorage &assetStorage)
+    : modelMatrix(transform.getModelMatrix())
 
 {
     const auto &model = assetStorage.get<AssetStorage::Model>(obj.meshID);

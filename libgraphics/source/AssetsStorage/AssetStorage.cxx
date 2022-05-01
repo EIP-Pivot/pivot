@@ -137,6 +137,18 @@ bool AssetStorage::bindForCompute(vk::CommandBuffer &cmd, const vk::PipelineLayo
     return true;
 }
 
+bool AssetStorage::loadAsset(const std::filesystem::path &path)
+{
+    auto iterModel = supportedObject.find(path.extension().string());
+    if (iterModel != supportedObject.end()) { return loadModel(path); }
+
+    auto iterTexture = supportedTexture.find(path.extension().string());
+    if (iterTexture != supportedTexture.end()) { return loadTexture(path); }
+
+    logger.err("LOAD ASSET") << "Not supported asset extension: " << path.extension();
+    return false;
+}
+
 bool AssetStorage::loadModel(const std::filesystem::path &path)
 {
     auto iter = supportedObject.find(path.extension().string());

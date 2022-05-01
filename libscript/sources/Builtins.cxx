@@ -57,12 +57,12 @@ data::Value builtin_operatorEq(const data::Value &left, const data::Value &right
                  std::get<data::BasicType>(right.type()) == data::BasicType::Vec3)
             return data::Value(std::get<glm::vec3>(left) == std::get<glm::vec3>(right));    // let glm do the comparison
         else                                                                                // unsupported
-            throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+            throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                    "Invalid equal to '==' operator between these types.");
     } catch (InvalidException e) {
         throw e;
     } catch (std::bad_variant_access e) {
-        throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+        throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                "Invalid equal to '==' operator between these types.");
     }
 }
@@ -83,12 +83,12 @@ data::Value builtin_operatorNEq(const data::Value &left, const data::Value &righ
                  std::get<data::BasicType>(right.type()) == data::BasicType::Vec3)
             return data::Value(std::get<glm::vec3>(left) != std::get<glm::vec3>(right));    // let glm do the comparison
         else                                                                                // unsupported
-            throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+            throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                    "Invalid not equal to '!=' operator between these types.");
     } catch (InvalidException e) {
         throw e;
     } catch (std::bad_variant_access e) {
-        throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+        throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                "Invalid not equal to '!=' operator between these types.");
     }
 }
@@ -103,12 +103,12 @@ data::Value builtin_operatorGt(const data::Value &left, const data::Value &right
             return data::Value(std::get<std::string>(left) >
                                std::get<std::string>(right));    // perform alphabetical comparison
         else                                                     // unsupported
-            throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+            throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                    "Invalid greater than '>' operator between these types.");
     } catch (InvalidException e) {
         throw e;
     } catch (std::bad_variant_access e) {
-        throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+        throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                "Invalid greater than '>' operator between these types.");
     }
 }
@@ -123,12 +123,12 @@ data::Value builtin_operatorGtEq(const data::Value &left, const data::Value &rig
             return data::Value(std::get<std::string>(left) >=
                                std::get<std::string>(right));    // perform alphabetical comparison
         else                                                     // unsupported
-            throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+            throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                    "Invalid greater than or equal to '>=' operator between these types.");
     } catch (InvalidException e) {
         throw e;
     } catch (std::bad_variant_access e) {
-        throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+        throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                "Invalid greater than or equal to '>=' operator between these types.");
     }
 }
@@ -143,12 +143,12 @@ data::Value builtin_operatorLt(const data::Value &left, const data::Value &right
             return data::Value(std::get<std::string>(left) <
                                std::get<std::string>(right));    // perform alphabetical comparison
         else                                                     // unsupported
-            throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+            throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                    "Invalid lower than '<' operator between these types.");
     } catch (InvalidException e) {
         throw e;
     } catch (std::bad_variant_access e) {
-        throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+        throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                "Invalid lower than '<' operator between these types.");
     }
 }
@@ -163,12 +163,12 @@ data::Value builtin_operatorLtEq(const data::Value &left, const data::Value &rig
             return data::Value(std::get<std::string>(left) <=
                                std::get<std::string>(right));    // perform alphabetical comparison
         else                                                     // unsupported
-            throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+            throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                    "Invalid lower than or equal to '<=' operator between these types.");
     } catch (InvalidException e) {
         throw e;
     } catch (std::bad_variant_access e) {
-        throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+        throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                "Invalid lower than or equal to '<=' operator between these types.");
     }
 }
@@ -190,12 +190,12 @@ data::Value builtin_operatorAdd(const data::Value &left, const data::Value &righ
                  std::get<data::BasicType>(right.type()) == data::BasicType::Vec3)
             return data::Value(std::get<glm::vec3>(left) + std::get<glm::vec3>(right));    // let glm add the vectors
         else                                                                               // unsupported
-            throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+            throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                    "Invalid addition '+' operator between these types.");
     } catch (InvalidException e) {
         throw e;
     } catch (std::bad_variant_access e) {
-        throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+        throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                "Invalid addition '+' operator between these types.");
     }
 }
@@ -210,12 +210,12 @@ data::Value builtin_operatorSub(const data::Value &left, const data::Value &righ
             return data::Value(std::get<glm::vec3>(left) -
                                std::get<glm::vec3>(right));    // let glm substract the vectors
         else                                                   // unsupported
-            throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+            throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                    "Invalid substraction '-' operator between these types.");
     } catch (InvalidException e) {
         throw e;
     } catch (std::bad_variant_access e) {
-        throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+        throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                "Invalid substraction '-' operator between these types.");
     }
 }
@@ -231,12 +231,12 @@ data::Value builtin_operatorMul(const data::Value &left, const data::Value &righ
             return data::Value(std::get<glm::vec3>(left) *
                                std::get<glm::vec3>(right));    // let glm multiply the vectors
         else                                                   // unsupported
-            throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+            throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                    "Invalid multiplication '*' operator between these types.");
     } catch (InvalidException e) {
         throw e;
     } catch (std::bad_variant_access e) {
-        throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+        throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                "Invalid multiplication '*' operator between these types.");
     }
 }
@@ -246,7 +246,7 @@ data::Value builtin_operatorDiv(const data::Value &left, const data::Value &righ
         if (std::get<data::BasicType>(left.type()) == data::BasicType::Number &&
             std::get<data::BasicType>(right.type()) == data::BasicType::Number) {
             if (std::get<double>(right) == 0.0)    // handle div by zero
-                throw InvalidException("DivByZero", std::to_string(std::get<double>(left)) + " / 0",
+                throw InvalidException("DivByZero", (std::to_string(std::get<double>(left)) + " / 0").c_str(),
                                        "Cannot divide by zero.");
             return data::Value(std::get<double>(left) / std::get<double>(right));    // perform arithmetic division
         } else if (std::get<data::BasicType>(left.type()) == data::BasicType::Vec3 &&
@@ -255,12 +255,12 @@ data::Value builtin_operatorDiv(const data::Value &left, const data::Value &righ
                 std::get<glm::vec3>(left) /
                 std::get<glm::vec3>(right));    // let glm divide the vectors TODO: check it throws on div by zero
         else                                    // unsupported
-            throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+            throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                    "Invalid division '-' operator between these types.");
     } catch (InvalidException e) {
         throw e;
     } catch (std::bad_variant_access e) {
-        throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+        throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                "Invalid division '-' operator between these types.");
     }
 }
@@ -270,16 +270,16 @@ data::Value builtin_operatorMod(const data::Value &left, const data::Value &righ
         if (std::get<data::BasicType>(left.type()) == data::BasicType::Integer &&
             std::get<data::BasicType>(right.type()) == data::BasicType::Integer) {
             if (std::get<int>(right) == 0)    // handle modulo by zero
-                throw InvalidException("DivByZero", std::to_string(std::get<int>(left)) + " / 0",
+                throw InvalidException("DivByZero", (std::to_string(std::get<int>(left)) + " / 0").c_str(),
                                        "Cannot modulo by zero.");
             return data::Value(std::get<int>(left) % std::get<int>(right));    // perform arithmetic modulo
         } else                                                                 // unsupported
-            throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+            throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                    "Invalid modulo '%' operator between these types.");
     } catch (InvalidException e) {
         throw e;
     } catch (std::bad_variant_access e) {
-        throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+        throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                "Invalid modulo '%' operator between these types.");
     }
 }
@@ -295,12 +295,12 @@ data::Value builtin_operatorAnd(const data::Value &left, const data::Value &righ
             std::get<data::BasicType>(right.type()) == data::BasicType::Boolean)
             return data::Value(std::get<bool>(left) && std::get<bool>(right));    // perform logical AND
         else                                                                      // unsupported
-            throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+            throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                    "Invalid Logical AND '&&' operator between these types.");
     } catch (InvalidException e) {
         throw e;
     } catch (std::bad_variant_access e) {
-        throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+        throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                "Invalid Logical AND '&&' operator between these types.");
     }
 }
@@ -311,12 +311,12 @@ data::Value builtin_operatorOr(const data::Value &left, const data::Value &right
             std::get<data::BasicType>(right.type()) == data::BasicType::Boolean)
             return data::Value(std::get<bool>(left) || std::get<bool>(right));    // perform logical OR
         else                                                                      // unsupported
-            throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+            throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                    "Invalid Logical '||' operator between these types.");
     } catch (InvalidException e) {
         throw e;
     } catch (std::bad_variant_access e) {
-        throw InvalidException("InvalidOperation", left.type().toString() + "," + right.type().toString(),
+        throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                "Invalid Logical '||' operator between these types.");
     }
 }

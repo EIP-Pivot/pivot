@@ -18,18 +18,24 @@ component Velocity
 	Number vel_z
 
 system	onTickPhysics( anyEntity<	Position, Velocity> ) event Tick(mdr<Position, Velocity>,lol<Velocity>, Number deltaTime )
-	if anyEntity.Position.pos_x == 0
-		print(anyEntity.Position.pos_x)
-		anyEntity.Position.pos_x = 5 + 5 * ( 2 - 3 )
-		print(anyEntity.Position.pos_x)
-		anyEntity.Position.pos_x = 0
-		anyEntity.Position.pos_x = 0
-	isPressed("w")
-	print("Franchement")
-	while anyEntity.Position.pos_y >= 0
-		anyEntity.Position.pos_y = anyEntity.Position.pos_y - 1
-	Number gravity = 9.98
-	# appel(gravity, anyEntity.Position.pos_x)
-	anyEntity.Position.pos_x=anyEntity.Position.pos_x+anyEntity.Velocity.vel_x# * deltaTime
-	anyEntity.Position.pos_y = anyEntity.Position.pos_y + anyEntity.Velocity.vel_y# * deltaTime
-	anyEntity.Position.pos_z = anyEntity.Position.pos_z + anyEntity.Velocity.vel_z# * deltaTime
+	# if anyEntity.Position.pos_x == 0
+	# 	print(anyEntity.Position.pos_x)
+	# 	anyEntity.Position.pos_x = 17 * 23.13 / 15 - 37.8
+	# 	print(anyEntity.Position.pos_x)
+	# 	anyEntity.Position.pos_x = 0
+	# 	anyEntity.Position.pos_x = 0
+	# isPressed("w")
+	# print("Franchement")
+	# print(anyEntity.Position.pos_x)
+	while anyEntity.Position.pos_x >= 0
+		print( "During", anyEntity.Position.pos_x )
+		anyEntity.Position.pos_x = anyEntity.Position.pos_x - 1
+	print("Done")
+	# print(anyEntity.Position.pos_x)
+	# while anyEntity.Position.pos_y >= 0
+	# 	anyEntity.Position.pos_y = anyEntity.Position.pos_y - 1
+	# Number gravity = 9.98
+	# # appel(gravity, anyEntity.Position.pos_x)
+	# anyEntity.Position.pos_x=anyEntity.Position.pos_x+anyEntity.Velocity.vel_x# * deltaTime
+	# anyEntity.Position.pos_y = anyEntity.Position.pos_y + anyEntity.Velocity.vel_y# * deltaTime
+	# anyEntity.Position.pos_z = anyEntity.Position.pos_z + anyEntity.Velocity.vel_z# * deltaTime

@@ -3,6 +3,7 @@
 #include "pivot/script/Builtins.hxx"
 #include "Logger.hpp"
 #include <unordered_map>
+#include <limits>
 
 
 namespace pivot::ecs::script::interpreter {
@@ -48,15 +49,15 @@ const std::map<std::string, std::function<data::Value(const data::Value &,const 
 	{	"||", interpreter::builtins::builtin_operatorOr }
 };
 // Map built-in function strings, to their callback and parameters (number and types)
-const std::unordered_map<
-	std::string, std::pair<
-		std::function<
+const std::unordered_map< // map
+	std::string, std::pair< // function string name, to a pair
+		std::function< // first : callback
 			data::Value(const std::vector<data::Value> &)
-		>, std::pair<size_t, std::vector<std::vector<data::Type>>>
+		>, std::pair<size_t, std::vector<std::vector<data::Type>>> // second: pair; first: number of params, second: types of params
 	>
 > gBuiltinsCallbacks = {
 	{	"isPressed", {interpreter::builtins::builtin_isPressed, { 1, {{data::BasicType::String} }}}},
-	{	"print", {interpreter::builtins::builtin_print, { 1, {{data::BasicType::String, data::BasicType::Number} }}}}
+	{	"print", {interpreter::builtins::builtin_print, { std::numeric_limits<size_t>::max(), {{data::BasicType::String, data::BasicType::Number, data::BasicType::Boolean} }}}}
 };
 
 
@@ -223,15 +224,24 @@ void executeStatement(const Node &statement, Stack &stack) {
 
 // Validate the parameters for a builtin
 void validateParams(const std::vector<data::Value> &toValidate, size_t expectedSize, const std::vector<std::vector<data::Type>> &expectedTypes, const std::string &name) {
-	// check expected size
-	if (toValidate.size() != expectedSize)
-		throw InvalidException("BadNumberOfParameters", name,
-			"Wrong number of parameters " + std::to_string(toValidate.size()) + " (expected " + std::to_string(expectedSize) + ")");
-	// check expected types (assume expectedTypes is of right size)
-	for (size_t i = 0; i < expectedSize; i++)
-		if (std::find(expectedTypes.at(i).begin(), expectedTypes.at(i).end(), toValidate.at(i).type()) == expectedTypes.at(i).end())
-			throw InvalidException("BadParameter", name,
-				"Bad parameter type " + toValidate.at(i).type().toString() + " (expected one of " + stringifyVectorType(expectedTypes.at(i)) + ")");
+	if (expectedSize != std::numeric_limits<size_t>::max()) { // limited number of parameters
+		// check expected size
+		if (toValidate.size() != expectedSize)
+			throw InvalidException("BadNumberOfParameters", name,
+				"Wrong number of parameters " + std::to_string(toValidate.size()) + " (expected " + std::to_string(expectedSize) + ")");
+		// check expected types (assume expectedTypes is of right size)
+		for (size_t i = 0; i < expectedSize; i++)
+			if (std::find(expectedTypes.at(i).begin(), expectedTypes.at(i).end(), toValidate.at(i).type()) == expectedTypes.at(i).end())
+				throw InvalidException("BadParameter", name,
+					"Bad parameter type " + toValidate.at(i).type().toString() + " (expected one of " + stringifyVectorType(expectedTypes.at(i)) + ")");
+	} else { // unlimited number of parameters (only one type of expected types)
+		const std::vector<data::Type> &validTypes = expectedTypes.at(0); // assumes the vector is correctly initialized
+
+		for (const data::Value &valueToValidate : toValidate) // iterate over every parameter value
+			if (std::find(validTypes.begin(), validTypes.end(), valueToValidate.type()) == validTypes.end()) // check it has correct type
+				throw InvalidException("BadParameter", name,
+					"Bad parameter type " + valueToValidate.type().toString() + " (expected one of " + stringifyVectorType(validTypes) + ")");
+	}
 }
 
 // Register a component declaration node

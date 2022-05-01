@@ -1,5 +1,6 @@
 #include "pivot/script/Exceptions.hxx"
 #include "pivot/script/Builtins.hxx"
+#include "Logger.hpp"
 
 #include <iostream>
 
@@ -11,21 +12,23 @@ namespace pivot::ecs::script::interpreter::builtins {
 // Boolean	isPressed(String key)
 //		Returns whether or not the keyboard key is pressed
 data::Value builtin_isPressed(const std::vector<data::Value> &params) {
-	// std::cout << "isPressed(" << std::get<std::string>(params.at(0)) << ")" << std::endl; // debug
+	// TODO : find a way to pass Window * as parameter
 	return data::Value(true);
 }
 
-// void	print(String str)
-//		print the string
+// void	print(String/Number/Boolean param1, ...)
+//		print the parameters on a single line, ending with a newline
 data::Value builtin_print(const std::vector<data::Value> &params) {
-	// std::cout << "print(" << std::get<std::string>(params.at(0)) << ")" << std::endl; // debug
-	data::BasicType varType = std::get<data::BasicType>(params.at(0).type());
-	if (varType == data::BasicType::Number)
-		std::cout << std::get<double>(params.at(0)) << "\n";
-	else if (varType == data::BasicType::String)
-		std::cout << std::get<std::string>(params.at(0)) << "\n";
-	else if (varType == data::BasicType::Boolean)
-		std::cout << (std::get<bool>(params.at(0)) ? "true" : "false") << "\n";
+	for (const data::Value &param : params) { // print has unlimited number of parameters
+		data::BasicType varType = std::get<data::BasicType>(param.type());
+		if (varType == data::BasicType::Number)
+			std::cout << std::get<double>(param) << " ";
+		else if (varType == data::BasicType::String)
+			std::cout << std::get<std::string>(param) << " ";
+		else if (varType == data::BasicType::Boolean)
+			std::cout << (std::get<bool>(param) ? "true" : "false") << " ";
+	}
+	std::cout << "\n";
 	return data::Value();
 }
 

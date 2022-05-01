@@ -109,7 +109,11 @@ ecs::SceneManager::SceneId Engine::registerScene(std::unique_ptr<ecs::Scene> sce
 
 void Engine::saveScene(ecs::SceneManager::SceneId id, const std::filesystem::path &path)
 {
-    m_scene_manager.getSceneById(id).save(path);
+    m_scene_manager.getSceneById(id).save(
+        path, std::make_optional(std::function([this](const std::string &asset) -> std::string {
+            // TODO: get the asset
+            return std::string();
+        })));
 }
 
 ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)

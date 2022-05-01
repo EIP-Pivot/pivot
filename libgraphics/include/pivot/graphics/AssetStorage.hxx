@@ -233,14 +233,24 @@ public:
         return this->modelPaths | std::views::transform([](const auto &i) { return i.second; });
     }
     /// Return the path of the model given in argument
-    const std::filesystem::path &getModelPath(const std::string &name) const { return modelPaths.at(name); }
+    const std::optional<std::filesystem::path> getModelPath(const std::string &name) const
+    {
+        auto it = modelPaths.find(name);
+        if (it == modelPaths.end()) { return std::nullopt; }
+        return {it->second};
+    }
     /// Return the path of all the models currently loaded in the CPU Storage
     auto getTexturePaths() const
     {
         return this->texturePaths | std::views::transform([](const auto &i) { return i.second; });
     }
     /// Return the path of the texture given in argument
-    const std::filesystem::path &getTexturePath(const std::string &name) const { return texturePaths.at(name); }
+    const std::optional<std::filesystem::path> getTexturePath(const std::string &name) const
+    {
+        auto it = texturePaths.find(name);
+        if (it == texturePaths.end()) { return std::nullopt; }
+        return {it->second};
+    }
 
     template <typename T>
     /// Get an asset of type T named name

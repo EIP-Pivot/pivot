@@ -121,8 +121,11 @@ public:
     builtins::Camera &getCamera();
     /// Get camera list
     std::vector<Entity> &getCameras();
+
+    /// Function used to retrieve the real path of an asset if possible
+    using AssetTranslator = std::function<std::string(const std::string &)>;
     /// Save scene in json file
-    void save(const std::filesystem::path &path) const;
+    void save(const std::filesystem::path &path, std::optional<AssetTranslator> assetTranslator = std::nullopt) const;
 
     // Load
     /// Load a scene from JSON object

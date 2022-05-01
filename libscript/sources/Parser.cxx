@@ -60,11 +60,11 @@ const std::unordered_map<std::string, data::BasicType> gVariableTypes{{"Vector3"
                 File:						Top node containing children nodes
                 Component Declaration:		A node containing the declaration of a component
                 System Declaration:		A node containing the declaration of a System */
-Node ast_from_file(const std::string &filename, bool verbose)
+Node ast_from_file(const std::string &file, bool isContent, bool verbose)
 {
-    Node result = {.type = NodeType::File, .value = filename};
+    Node result = {.type = NodeType::File, .value = file};
     try {
-        std::vector<Token> tokens = tokens_from_file(filename, verbose);
+        std::vector<Token> tokens = tokens_from_file(file, isContent, verbose);
         // Consume all tokens
         while (!tokens.empty()) {
             // Here we expect a list of component or system declarations, and nothing else
@@ -85,18 +85,18 @@ Node ast_from_file(const std::string &filename, bool verbose)
         if (verbose) printFileNode(result);
     } catch (MixedIndentException e) {
         // std::cerr << std::format("\nParser {} {}:\t{}\n\tline {}:\t{}\n{}",
-        // 	e.what(), "IndentException" , filename, e.get_line_nb(), e.get_line(), e.get_info()) << std::endl; //
+        // 	e.what(), "IndentException" , file, e.get_line_nb(), e.get_line(), e.get_info()) << std::endl; //
         // format not available in c++20 gcc yet
         logger.err("\nParser ") << e.what() << " IndentException "
-                                << ":\t" << filename << "\n\tline " << e.get_line_nb() << ":\t" << e.get_line() << "\n"
+                                << ":\t" << file << "\n\tline " << e.get_line_nb() << ":\t" << e.get_line() << "\n"
                                 << e.get_info();
 
     } catch (TokenException e) {
         // std::cerr << std::format("\nParser {} {}:\t{}\n\tline {} char {}:\t{}\n{}",
-        // 	e.what(), e.get_exctype(), filename, e.get_line_nb(), e.get_char_nb(), e.get_token(), e.get_info()) <<
+        // 	e.what(), e.get_exctype(), file, e.get_line_nb(), e.get_char_nb(), e.get_token(), e.get_info()) <<
         // std::endl; // format not available in c++20 gcc yet
-        logger.err("\nParser ") << e.what() << " " << e.get_exctype() << ":\t" << filename << "\n\tline "
-                                << e.get_line_nb() << " char " << e.get_char_nb() << ":\t" << e.get_token() << "\n"
+        logger.err("\nParser ") << e.what() << " " << e.get_exctype() << ":\t" << file << "\n\tline " << e.get_line_nb()
+                                << " char " << e.get_char_nb() << ":\t" << e.get_token() << "\n"
                                 << e.get_info();
     } catch (std::exception e) {
         // std::cerr << std::format("\nParser !Unhandled Exception!: {}", e.what()) << std::flush; // format not
@@ -520,22 +520,27 @@ void expectSystemTokenValue(std::vector<Token> &tokens, const std::string &expec
                 Known symbols:	+ - * / % = ! ( ) < > . # "
                 Neither of the two above
 */
-std::vector<Token> tokens_from_file(const std::string &filename, bool verbose)
+std::vector<Token> tokens_from_file(const std::string &file, bool isContent, bool verbose)
 {
-    // Read file
-    std::ifstream ifs(filename);
-    if (!ifs.is_open()) {
-        std::cerr << "FileSystemError : couldn't open file " << filename << std::endl;
-        return {};
+	std::string text = "";
+    if (isContent) {
+		text = file;
+    } else {
+        // Read file
+        std::ifstream ifs(file);
+        if (!ifs.is_open()) {
+            std::cerr << "FileSystemError : couldn't open file " << file << std::endl;
+            return {};
+        }
+        text = std::string(std::istreambuf_iterator<char>{ifs}, {});
     }
-    std::string text(std::istreambuf_iterator<char>{ifs}, {});
 
     // Detect indent type of file (to then insert Indent and Dedent tokens and ignore all whitespace afterthat)
     IndentType indentType = indent_type_of(text);
     size_t indentSize = indent_size_of(text);
     if (verbose)
-        logger.info("Indent for ") << filename << ": " << indentSize << " " << gIndentTypeStrings.at(indentType);
-    // std::cout << std::format("Indent for {}: {} {}", filename, indentSize, gIndentTypeStrings.at(indentType)) <<
+        logger.info("Indent for ") << file << ": " << indentSize << " " << gIndentTypeStrings.at(indentType);
+    // std::cout << std::format("Indent for {}: {} {}", file, indentSize, gIndentTypeStrings.at(indentType)) <<
     // std::endl; // format not available in c++20 gcc yet
 
     // Result and indices for navigating file string

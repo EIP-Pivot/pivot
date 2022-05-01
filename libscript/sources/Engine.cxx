@@ -10,29 +10,29 @@ Engine::Engine(systems::Index &systemIndex, component::Index &componentIndex)
 {
 }
 
-std::string Engine::loadFile(const std::string &fileName, bool verbose)
+std::string Engine::loadFile(const std::string &file, bool isContent, bool verbose)
 {    // Load a file to register all descriptions in the file, as well as store the trees for the system entry points
-    if (verbose) std::cout << "Loading file " << fileName << std::endl;
+    if (verbose) std::cout << "Loading file " << file << std::endl;
     // TODO: return string with error on top of the node
-    Node file = parser::ast_from_file(fileName, false);    // generate abstract syntax tree from file
-    if (verbose) parser::printFileNode(file);
+    Node fileNode = parser::ast_from_file(file, isContent, verbose);    // generate abstract syntax tree from file
+    if (verbose) parser::printFileNode(fileNode);
 
     // TODO: return string with error on top of the node
     std::vector<systems::Description> sysDescs = interpreter::registerDeclarations(
-        file, _componentIndex);    // register component descriptions, and retrieve system descriptions
+        fileNode, _componentIndex);    // register component descriptions, and retrieve system descriptions
     for (systems::Description &desc: sysDescs) {
         desc.system = std::bind(&Engine::systemCallback, this, std::placeholders::_1, std::placeholders::_2,
                                 std::placeholders::_3);    // add the callback to the descriptions
         _systemIndex.registerSystem(desc);                 // register system in the not-so-global index
         try {
             Node systemEntry = getEntryPointFor(
-                desc.name, file);    // only store the entry point for the system, the rest is in the description
+                desc.name, fileNode);    // only store the entry point for the system, the rest is in the description
             _systems.insert({desc.name, systemEntry});
         } catch (std::exception e) {
             return e.what();    // shouldn't happen
         }
     }
-    return (fileName + " parsed succesfully.");    // no errors
+    return (file + " parsed succesfully.");    // no errors
 }
 
 void Engine::systemCallback(const systems::Description &system, component::ArrayCombination &entities,

@@ -8,10 +8,10 @@ namespace pivot::ecs::script::parser
 {
 
 //	Main function, will return the abstract syntax tree of the file (root Node)
-Node ast_from_file(const std::string &filename, bool verbose = true);
+Node ast_from_file(const std::string &file, bool isContent = false, bool verbose = true);
 
 // Lexer function, will return a list of Tokens contained in the file
-std::vector<Token> tokens_from_file(const std::string &filename, bool verbose = false);
+std::vector<Token> tokens_from_file(const std::string &file, bool isContent = false, bool verbose = false);
 
 // private functions
 Node consumeComponent(

@@ -16,7 +16,7 @@ public:
 
     ///	Parse a file to generate the abstract tree from it
     ///	Interpret the tree to register component and system declaration
-    std::string loadFile(const std::string &fileName, bool verbose = false);
+    std::string loadFile(const std::string &file, bool isContent = false, bool verbose = false);
 
     ///	This is the callback the SystemManager will call to execute a system on entities with a given event trigger
     void systemCallback(const systems::Description &system, component::ArrayCombination &entities,

@@ -1,754 +1,876 @@
-#include <iostream>
-#include <fstream>
-#include <iterator>
 #include <algorithm>
-#include <unordered_map>
+#include <fstream>
+#include <iostream>
+#include <iterator>
 #include <stack>
+#include <unordered_map>
 
-#include "pivot/script/Parser.hxx"
-#include "pivot/script/Exceptions.hxx"
 #include "Logger.hpp"
+#include "pivot/script/Exceptions.hxx"
+#include "pivot/script/Parser.hxx"
 
-namespace pivot::ecs::script::parser {
+namespace pivot::ecs::script::parser
+{
 
 const std::string gKnownSymbols = "+-/*%=!()<>,.#&|\" \t\r\n";
 const std::string gWhitespace = " \t\r\n";
 const std::unordered_map<std::string, Precedence> gOneCharOps = {
-	{ "/", Precedence::Multiplicative },
-	{ "*", Precedence::Multiplicative },
-	{ "%", Precedence::Multiplicative },
-	{ "+", Precedence::Additive },
-	{ "-", Precedence::Additive },
-	{ "<", Precedence::Relational },
-	{ ">", Precedence::Relational }
-};
+    {"/", Precedence::Multiplicative}, {"*", Precedence::Multiplicative}, {"%", Precedence::Multiplicative},
+    {"+", Precedence::Additive},       {"-", Precedence::Additive},       {"<", Precedence::Relational},
+    {">", Precedence::Relational}};
 const std::unordered_map<std::string, Precedence> gTwoCharOps = {
-	{ ">=", Precedence::Relational },
-	{ "<=", Precedence::Relational },
-	{ "==", Precedence::Equality },
-	{ "!=", Precedence::Equality },
-	{ "&&", Precedence::LogicalAnd },
-	{ "||", Precedence::LogicalOr }
-};
-const std::vector<std::string> gBlockops = {
-	"if",
-	"while"
-};
+    {">=", Precedence::Relational}, {"<=", Precedence::Relational}, {"==", Precedence::Equality},
+    {"!=", Precedence::Equality},   {"&&", Precedence::LogicalAnd}, {"||", Precedence::LogicalOr}};
+const std::vector<std::string> gBlockops = {"if", "while"};
 // TODO : consider using magicenum
-const std::unordered_map<IndentType, std::string> gIndentTypeStrings = {
-	{	IndentType::Tabs,	"Tabs"	},
-	{	IndentType::Spaces,	"Spaces"	},
-	{	IndentType::NoIndent,	"NoIndent"	},
-	{	IndentType::Invalid,	"Invalid"	}
-};
+const std::unordered_map<IndentType, std::string> gIndentTypeStrings = {{IndentType::Tabs, "Tabs"},
+                                                                        {IndentType::Spaces, "Spaces"},
+                                                                        {IndentType::NoIndent, "NoIndent"},
+                                                                        {IndentType::Invalid, "Invalid"}};
 const std::unordered_map<NodeType, std::string> gNodeTypeStrings = {
-	{	NodeType::File,	"File"	},
-	{	NodeType::ComponentDeclaration,	"ComponentDeclaration"	},
-	{	NodeType::SystemDeclaration,	"SystemDeclaration"	},
-	{	NodeType::ComponentName,	"ComponentName"	},
-	{	NodeType::SystemName,	"SystemName"	},
-	{	NodeType::PropertyType,	"PropertyType"	},
-	{	NodeType::PropertyName,	"PropertyName"	},
-	{	NodeType::EventKeyword,	"EventKeyword"	},
-	{	NodeType::EventName,	"EventName"	},
-	{	NodeType::EventPayloadType,	"EventPayloadType"	},
-	{	NodeType::EventPayloadName,	"EventPayloadName"	},
-	{	NodeType::EntityParameterName,	"EntityParameterName"	},
-	{	NodeType::EntityParameterComponent,	"EntityParameterComponent"	},
-	{	NodeType::Symbol,	"Symbol"	}
-};
-const std::unordered_map<TokenType, std::string> gTokenTypeStrings = {
-	{	TokenType::Identifier,	"Identifier"	},
-	{	TokenType::Indent,	"Indent"	},
-	{	TokenType::Dedent,	"Dedent"	},
-	{	TokenType::Symbol,	"Symbol"	}
-};
-const std::unordered_map<std::string, data::BasicType> gVariableTypes {
-	{"Vector3", data::BasicType::Vec3},
-	{"Number", data::BasicType::Number},
-	{"Boolean", data::BasicType::Boolean},
-	{"Color", data::BasicType::Number},
-	{"String", data::BasicType::String}
-};
+    {NodeType::File, "File"},
+    {NodeType::ComponentDeclaration, "ComponentDeclaration"},
+    {NodeType::SystemDeclaration, "SystemDeclaration"},
+    {NodeType::ComponentName, "ComponentName"},
+    {NodeType::SystemName, "SystemName"},
+    {NodeType::PropertyType, "PropertyType"},
+    {NodeType::PropertyName, "PropertyName"},
+    {NodeType::EventKeyword, "EventKeyword"},
+    {NodeType::EventName, "EventName"},
+    {NodeType::EventPayloadType, "EventPayloadType"},
+    {NodeType::EventPayloadName, "EventPayloadName"},
+    {NodeType::EntityParameterName, "EntityParameterName"},
+    {NodeType::EntityParameterComponent, "EntityParameterComponent"},
+    {NodeType::Symbol, "Symbol"}};
+const std::unordered_map<TokenType, std::string> gTokenTypeStrings = {{TokenType::Identifier, "Identifier"},
+                                                                      {TokenType::Indent, "Indent"},
+                                                                      {TokenType::Dedent, "Dedent"},
+                                                                      {TokenType::Symbol, "Symbol"}};
+const std::unordered_map<std::string, data::BasicType> gVariableTypes{{"Vector3", data::BasicType::Vec3},
+                                                                      {"Number", data::BasicType::Number},
+                                                                      {"Boolean", data::BasicType::Boolean},
+                                                                      {"Color", data::BasicType::Number},
+                                                                      {"String", data::BasicType::String}};
 
 // Public functions ( can be called anywhere )
 
 /*	Abstract Syntax Tree (AST) generator function
-	This will use tokens generated by the lexer to build a tree of nodes representing the file
-	Nodes are defined by their type :
-		File:						Top node containing children nodes
-		Component Declaration:		A node containing the declaration of a component
-		System Declaration:		A node containing the declaration of a System */
-Node ast_from_file(const std::string &filename, bool verbose) {
-	Node result = {
-		.type = NodeType::File,
-		.value = filename
-	};
-try {
-	std::vector<Token> tokens = tokens_from_file(filename, verbose);
-	// Consume all tokens
-	while (!tokens.empty()) {
-		// Here we expect a list of component or system declarations, and nothing else
-		Token &t = tokens.at(0);
-		if (t.type != TokenType::Identifier) // Expect an identifier
-			throw TokenException("ERROR", t.value, t.line_nb, t.char_nb, "UnexpectedToken", "Expected Identifier token");
-		// Depending on if it is a component or a system token, call the correct callback to consume the
-		// tokens and create a node representing the declaration
-		else if (t.value == "component")
-			result.children.push_back(consumeComponent(tokens));
-		else if (t.value == "system")
-			result.children.push_back(consumeSystem(tokens));
-		else // neither an identifier, a component nor a system
-			throw TokenException("ERROR", t.value, t.line_nb, t.char_nb, "UnexpectedToken", "Expected 'component' or 'system' token");
-	}
-	if (verbose)
-		printFileNode(result);
-} catch (MixedIndentException e) {
-	// std::cerr << std::format("\nParser {} {}:\t{}\n\tline {}:\t{}\n{}",
-	// 	e.what(), "IndentException" , filename, e.get_line_nb(), e.get_line(), e.get_info()) << std::endl; // format not available in c++20 gcc yet
-	logger.err("\nParser ") << e.what() << " IndentException " << ":\t" << filename <<
-		"\n\tline " << e.get_line_nb() << ":\t" << e.get_line() << "\n" << e.get_info();
+        This will use tokens generated by the lexer to build a tree of nodes representing the file
+        Nodes are defined by their type :
+                File:						Top node containing children nodes
+                Component Declaration:		A node containing the declaration of a component
+                System Declaration:		A node containing the declaration of a System */
+Node ast_from_file(const std::string &filename, bool verbose)
+{
+    Node result = {.type = NodeType::File, .value = filename};
+    try {
+        std::vector<Token> tokens = tokens_from_file(filename, verbose);
+        // Consume all tokens
+        while (!tokens.empty()) {
+            // Here we expect a list of component or system declarations, and nothing else
+            Token &t = tokens.at(0);
+            if (t.type != TokenType::Identifier)    // Expect an identifier
+                throw TokenException("ERROR", t.value, t.line_nb, t.char_nb, "UnexpectedToken",
+                                     "Expected Identifier token");
+            // Depending on if it is a component or a system token, call the correct callback to consume the
+            // tokens and create a node representing the declaration
+            else if (t.value == "component")
+                result.children.push_back(consumeComponent(tokens));
+            else if (t.value == "system")
+                result.children.push_back(consumeSystem(tokens));
+            else    // neither an identifier, a component nor a system
+                throw TokenException("ERROR", t.value, t.line_nb, t.char_nb, "UnexpectedToken",
+                                     "Expected 'component' or 'system' token");
+        }
+        if (verbose) printFileNode(result);
+    } catch (MixedIndentException e) {
+        // std::cerr << std::format("\nParser {} {}:\t{}\n\tline {}:\t{}\n{}",
+        // 	e.what(), "IndentException" , filename, e.get_line_nb(), e.get_line(), e.get_info()) << std::endl; //
+        // format not available in c++20 gcc yet
+        logger.err("\nParser ") << e.what() << " IndentException "
+                                << ":\t" << filename << "\n\tline " << e.get_line_nb() << ":\t" << e.get_line() << "\n"
+                                << e.get_info();
 
-} catch (TokenException e) {
-	// std::cerr << std::format("\nParser {} {}:\t{}\n\tline {} char {}:\t{}\n{}",
-	// 	e.what(), e.get_exctype(), filename, e.get_line_nb(), e.get_char_nb(), e.get_token(), e.get_info()) << std::endl; // format not available in c++20 gcc yet
-	logger.err("\nParser ") << e.what() << " " << e.get_exctype()  << ":\t" << filename <<
-		"\n\tline " << e.get_line_nb() << " char " << e.get_char_nb() << ":\t" << e.get_token() <<
-		"\n" << e.get_info();
-} catch (std::exception e) {
-	// std::cerr << std::format("\nParser !Unhandled Exception!: {}", e.what()) << std::flush; // format not available in c++20 gcc yet
-	logger.err("\nParser !Unhandled Exception!: ") << e.what();
-}
-	return result;
+    } catch (TokenException e) {
+        // std::cerr << std::format("\nParser {} {}:\t{}\n\tline {} char {}:\t{}\n{}",
+        // 	e.what(), e.get_exctype(), filename, e.get_line_nb(), e.get_char_nb(), e.get_token(), e.get_info()) <<
+        // std::endl; // format not available in c++20 gcc yet
+        logger.err("\nParser ") << e.what() << " " << e.get_exctype() << ":\t" << filename << "\n\tline "
+                                << e.get_line_nb() << " char " << e.get_char_nb() << ":\t" << e.get_token() << "\n"
+                                << e.get_info();
+    } catch (std::exception e) {
+        // std::cerr << std::format("\nParser !Unhandled Exception!: {}", e.what()) << std::flush; // format not
+        // available in c++20 gcc yet
+        logger.err("\nParser !Unhandled Exception!: ") << e.what();
+    }
+    return result;
 }
 
 // Private functions (never called elsewhere than this file and tests)
 
-Node consumeComponent(std::vector<Token> &tokens) { // Consume a component token and all following to build a component declaration node
-	Node result = {
-		.type = NodeType::ComponentDeclaration
-	};
-	if (tokens.size() <= 1) // Tokens only contains ["component"]
-		throw TokenException("ERROR", tokens.at(0).value, tokens.at(0).line_nb, tokens.at(0).char_nb, "Unexpected_EndOfFile", "Expected component name");
-	Token last = tokens.at(0);
-	result.line_nb = last.line_nb;
-	result.char_nb = last.char_nb;
-	tokens.erase(tokens.begin()); // Delete 'component' token
+Node consumeComponent(std::vector<Token> &tokens)
+{    // Consume a component token and all following to build a component declaration node
+    Node result = {.type = NodeType::ComponentDeclaration};
+    if (tokens.size() <= 1)    // Tokens only contains ["component"]
+        throw TokenException("ERROR", tokens.at(0).value, tokens.at(0).line_nb, tokens.at(0).char_nb,
+                             "Unexpected_EndOfFile", "Expected component name");
+    Token last = tokens.at(0);
+    result.line_nb = last.line_nb;
+    result.char_nb = last.char_nb;
+    tokens.erase(tokens.begin());    // Delete 'component' token
 
-	consumeComponentToken(tokens, result, TokenType::Identifier, NodeType::ComponentName, last); // consume 'componentName' token
-	if (tokens.size() <= 0) // Expect at least one property
-		throw TokenException("ERROR", last.value, last.line_nb, last.char_nb, "Unexpected_EndOfFile", "Expected component property");
-	if (tokens.at(0).type == TokenType::Indent) { // Multiline component declaration
-		tokens.erase(tokens.begin()); // Delete Indent token
-		// Iterate over all tokens until either end of file, Dedent token or other declaration
-		// Remove tokens two by two, by expecting "Type Name" tokens
-		while (tokens.size() > 0 && tokens.at(0).value != "component" && tokens.at(0).value != "system" && tokens.at(0).type != TokenType::Dedent) {
-			consumeComponentToken(tokens, result, TokenType::Identifier, NodeType::PropertyType, last);
-			consumeComponentToken(tokens, result, TokenType::Identifier, NodeType::PropertyName, last);
-		}
-		if (tokens.size() > 0) { // File still has content
-			if (tokens.at(0).type != TokenType::Dedent) // But no Dedent token
-				throw TokenException("ERROR", last.value, last.line_nb, last.char_nb, "UnexpectedToken", "Expected a Dedent token");
-			tokens.erase(tokens.begin()); // Erase Dedent token
-		}
-	} else { // Single line component declaration
-		consumeComponentToken(tokens, result, TokenType::Symbol, NodeType::Symbol, last);
-		consumeComponentToken(tokens, result, TokenType::Identifier, NodeType::PropertyType, last);
-	}
-	return result;
+    consumeComponentToken(tokens, result, TokenType::Identifier, NodeType::ComponentName,
+                          last);    // consume 'componentName' token
+    if (tokens.size() <= 0)         // Expect at least one property
+        throw TokenException("ERROR", last.value, last.line_nb, last.char_nb, "Unexpected_EndOfFile",
+                             "Expected component property");
+    if (tokens.at(0).type == TokenType::Indent) {    // Multiline component declaration
+        tokens.erase(tokens.begin());                // Delete Indent token
+        // Iterate over all tokens until either end of file, Dedent token or other declaration
+        // Remove tokens two by two, by expecting "Type Name" tokens
+        while (tokens.size() > 0 && tokens.at(0).value != "component" && tokens.at(0).value != "system" &&
+               tokens.at(0).type != TokenType::Dedent) {
+            consumeComponentToken(tokens, result, TokenType::Identifier, NodeType::PropertyType, last);
+            consumeComponentToken(tokens, result, TokenType::Identifier, NodeType::PropertyName, last);
+        }
+        if (tokens.size() > 0) {                           // File still has content
+            if (tokens.at(0).type != TokenType::Dedent)    // But no Dedent token
+                throw TokenException("ERROR", last.value, last.line_nb, last.char_nb, "UnexpectedToken",
+                                     "Expected a Dedent token");
+            tokens.erase(tokens.begin());    // Erase Dedent token
+        }
+    } else {    // Single line component declaration
+        consumeComponentToken(tokens, result, TokenType::Symbol, NodeType::Symbol, last);
+        consumeComponentToken(tokens, result, TokenType::Identifier, NodeType::PropertyType, last);
+    }
+    return result;
 }
-void consumeComponentToken(std::vector<Token> &tokens, Node &result, TokenType expectedType, NodeType fillType, Token &lastToken) { // consume one token
-	if (tokens.size() <= 0)
-		throw TokenException("ERROR", lastToken.value, lastToken.line_nb, lastToken.char_nb, "Unexpected_EndOfFile", "Expected component name");
-	if (tokens.at(0).type != expectedType)
-		throw TokenException("ERROR", tokens.at(0).value, tokens.at(0).line_nb, tokens.at(0).char_nb, "UnexpectedToken", "Expected " + gTokenTypeStrings.at(expectedType) + " token");
-	// The component name is stored in the value of the node
-	if (fillType == NodeType::ComponentName)
-		result.value = tokens.at(0).value;
-	else // but its properties are stored in the children node
-		result.children.push_back(Node {.type=fillType, .value = tokens.at(0).value, .line_nb = tokens.at(0).line_nb, .char_nb = tokens.at(0).char_nb});
-	// consume the token
-	lastToken = tokens.at(0);
-	tokens.erase(tokens.begin());
+void consumeComponentToken(std::vector<Token> &tokens, Node &result, TokenType expectedType, NodeType fillType,
+                           Token &lastToken)
+{    // consume one token
+    if (tokens.size() <= 0)
+        throw TokenException("ERROR", lastToken.value, lastToken.line_nb, lastToken.char_nb, "Unexpected_EndOfFile",
+                             "Expected component name");
+    if (tokens.at(0).type != expectedType)
+        throw TokenException("ERROR", tokens.at(0).value, tokens.at(0).line_nb, tokens.at(0).char_nb, "UnexpectedToken",
+                             "Expected " + gTokenTypeStrings.at(expectedType) + " token");
+    // The component name is stored in the value of the node
+    if (fillType == NodeType::ComponentName)
+        result.value = tokens.at(0).value;
+    else    // but its properties are stored in the children node
+        result.children.push_back(Node{.type = fillType,
+                                       .value = tokens.at(0).value,
+                                       .line_nb = tokens.at(0).line_nb,
+                                       .char_nb = tokens.at(0).char_nb});
+    // consume the token
+    lastToken = tokens.at(0);
+    tokens.erase(tokens.begin());
 }
-Node consumeSystem(std::vector<Token> &tokens) { // Consume a system token and all following to build a system declaration node
-	Node result = {
-		.type = NodeType::SystemDeclaration
-	};
-	if (tokens.size() <= 1) // Tokens only contains ["system"]
-		throw TokenException("ERROR", tokens.at(0).value, tokens.at(0).line_nb, tokens.at(0).char_nb, "Unexpected_EndOfFile", "Expected system name");
-	Token last = tokens.at(0);
-	result.line_nb = last.line_nb;
-	result.char_nb = last.char_nb;
-	tokens.erase(tokens.begin()); // Delete 'system' token
+Node consumeSystem(std::vector<Token> &tokens)
+{    // Consume a system token and all following to build a system declaration node
+    Node result = {.type = NodeType::SystemDeclaration};
+    if (tokens.size() <= 1)    // Tokens only contains ["system"]
+        throw TokenException("ERROR", tokens.at(0).value, tokens.at(0).line_nb, tokens.at(0).char_nb,
+                             "Unexpected_EndOfFile", "Expected system name");
+    Token last = tokens.at(0);
+    result.line_nb = last.line_nb;
+    result.char_nb = last.char_nb;
+    tokens.erase(tokens.begin());    // Delete 'system' token
 
-	// Consume all components for the description
-	consumeSystemDescriptionToken(tokens, result, TokenType::Identifier, NodeType::SystemName, last); // Consume system name
-	consumeSystemDescriptionToken(tokens, result, TokenType::Symbol, NodeType::Symbol, last); // Consume '(' symbol
-	if (isDeclarationOver(tokens)) // Expect at least one entity parameter
-		throw TokenException("ERROR", last.value, last.line_nb, last.char_nb, "Unexpected_EndOfFile", "Expected system entity parameter");
-	while (tokens.size() > 0 && tokens.at(0).value != ")") { // Consume all entity parameters ,up until next ')' symbol
-		consumeSystemDescriptionToken(tokens, result, TokenType::Identifier, NodeType::EntityParameterName, last); // Consume entity parameter name
-		consumeSystemDescriptionToken(tokens, result, TokenType::Symbol, NodeType::Symbol, last); // Consume '<' symbol
-		while (tokens.size() > 0 && tokens.at(0).value != ">") { // Consume all entity parameter components, up until next '>' symbol
-			consumeSystemDescriptionToken(tokens, result, TokenType::Identifier, NodeType::EntityParameterComponent, last); // Consume component name
-			if (tokens.size() > 0 && tokens.at(0).value == ">") // no more ',', end of loop
-				break;
-			consumeSystemDescriptionToken(tokens, result, TokenType::Symbol, NodeType::Symbol, last); // Consume ',' symbol
-		}
-		consumeSystemDescriptionToken(tokens, result, TokenType::Symbol, NodeType::Symbol, last); // Consume '>' symbol
-	}
-	consumeSystemDescriptionToken(tokens, result, TokenType::Symbol, NodeType::Symbol, last); // Consume ')' symbol
-	// event is optional, if declaration is over use a default Tick event
-	if (isDeclarationOver(tokens) || tokens.at(0).type == TokenType::Dedent)
-		return result;
-	// custom event
-	consumeSystemDescriptionToken(tokens, result, TokenType::Identifier, NodeType::EventKeyword, last); // Consume "event" keyword
-	consumeSystemDescriptionToken(tokens, result, TokenType::Identifier, NodeType::EventName, last); // Consume 'eventName' identifier
-	consumeSystemDescriptionToken(tokens, result, TokenType::Symbol, NodeType::Symbol, last); // Consume '(' symbol
-	while (tokens.size() > 1 && tokens.at(0).value != ")") { // Consume all event parameters, up until next ')' symbol
-		if (tokens.at(1).value == "<") { // Parameter is entity parameter
-			consumeSystemDescriptionToken(tokens, result, TokenType::Identifier, NodeType::EventEntityName, last); // consume entity name
-			consumeSystemDescriptionToken(tokens, result, TokenType::Symbol, NodeType::Symbol, last); // Consume '<' symbol
-			while (tokens.size() > 0 && tokens.at(0).value != ">") { // Consume all event entity component parameters
-				consumeSystemDescriptionToken(tokens, result, TokenType::Identifier, NodeType::EventEntityComponent, last);
-				if (tokens.size() > 0 && tokens.at(0).value == ">") // no more ',' end of loop
-					break;
-				consumeSystemDescriptionToken(tokens, result, TokenType::Symbol, NodeType::Symbol, last); // Consume ',' symbol
-			}
-			consumeSystemDescriptionToken(tokens, result, TokenType::Symbol, NodeType::Symbol, last); // Consume '>' symbol
-		} else { // Parameter is payload
-			consumeSystemDescriptionToken(tokens, result, TokenType::Identifier, NodeType::EventPayloadType, last); // Consume event payload type
-			consumeSystemDescriptionToken(tokens, result, TokenType::Identifier, NodeType::EventPayloadName, last); // Consume event payload name
-		}
-		if (tokens.size() > 0 && tokens.at(0).value == ")") // no more ',', end of loop
-			break;
-		consumeSystemDescriptionToken(tokens, result, TokenType::Symbol, NodeType::Symbol, last); // Consume ',' symbol
-	}
-	consumeSystemDescriptionToken(tokens, result, TokenType::Symbol, NodeType::Symbol, last); // Consume ')' symbol
-	// End of system description
+    // Consume all components for the description
+    consumeSystemDescriptionToken(tokens, result, TokenType::Identifier, NodeType::SystemName,
+                                  last);                                                         // Consume system name
+    consumeSystemDescriptionToken(tokens, result, TokenType::Symbol, NodeType::Symbol, last);    // Consume '(' symbol
+    if (isDeclarationOver(tokens))    // Expect at least one entity parameter
+        throw TokenException("ERROR", last.value, last.line_nb, last.char_nb, "Unexpected_EndOfFile",
+                             "Expected system entity parameter");
+    while (tokens.size() > 0 &&
+           tokens.at(0).value != ")") {    // Consume all entity parameters ,up until next ')' symbol
+        consumeSystemDescriptionToken(tokens, result, TokenType::Identifier, NodeType::EntityParameterName,
+                                      last);    // Consume entity parameter name
+        consumeSystemDescriptionToken(tokens, result, TokenType::Symbol, NodeType::Symbol,
+                                      last);    // Consume '<' symbol
+        while (tokens.size() > 0 &&
+               tokens.at(0).value != ">") {    // Consume all entity parameter components, up until next '>' symbol
+            consumeSystemDescriptionToken(tokens, result, TokenType::Identifier, NodeType::EntityParameterComponent,
+                                          last);                   // Consume component name
+            if (tokens.size() > 0 && tokens.at(0).value == ">")    // no more ',', end of loop
+                break;
+            consumeSystemDescriptionToken(tokens, result, TokenType::Symbol, NodeType::Symbol,
+                                          last);    // Consume ',' symbol
+        }
+        consumeSystemDescriptionToken(tokens, result, TokenType::Symbol, NodeType::Symbol,
+                                      last);    // Consume '>' symbol
+    }
+    consumeSystemDescriptionToken(tokens, result, TokenType::Symbol, NodeType::Symbol, last);    // Consume ')' symbol
+    // event is optional, if declaration is over use a default Tick event
+    if (isDeclarationOver(tokens) || tokens.at(0).type == TokenType::Dedent) return result;
+    // custom event
+    consumeSystemDescriptionToken(tokens, result, TokenType::Identifier, NodeType::EventKeyword,
+                                  last);    // Consume "event" keyword
+    consumeSystemDescriptionToken(tokens, result, TokenType::Identifier, NodeType::EventName,
+                                  last);    // Consume 'eventName' identifier
+    consumeSystemDescriptionToken(tokens, result, TokenType::Symbol, NodeType::Symbol, last);    // Consume '(' symbol
+    while (tokens.size() > 1 &&
+           tokens.at(0).value != ")") {     // Consume all event parameters, up until next ')' symbol
+        if (tokens.at(1).value == "<") {    // Parameter is entity parameter
+            consumeSystemDescriptionToken(tokens, result, TokenType::Identifier, NodeType::EventEntityName,
+                                          last);    // consume entity name
+            consumeSystemDescriptionToken(tokens, result, TokenType::Symbol, NodeType::Symbol,
+                                          last);                        // Consume '<' symbol
+            while (tokens.size() > 0 && tokens.at(0).value != ">") {    // Consume all event entity component parameters
+                consumeSystemDescriptionToken(tokens, result, TokenType::Identifier, NodeType::EventEntityComponent,
+                                              last);
+                if (tokens.size() > 0 && tokens.at(0).value == ">")    // no more ',' end of loop
+                    break;
+                consumeSystemDescriptionToken(tokens, result, TokenType::Symbol, NodeType::Symbol,
+                                              last);    // Consume ',' symbol
+            }
+            consumeSystemDescriptionToken(tokens, result, TokenType::Symbol, NodeType::Symbol,
+                                          last);    // Consume '>' symbol
+        } else {                                    // Parameter is payload
+            consumeSystemDescriptionToken(tokens, result, TokenType::Identifier, NodeType::EventPayloadType,
+                                          last);    // Consume event payload type
+            consumeSystemDescriptionToken(tokens, result, TokenType::Identifier, NodeType::EventPayloadName,
+                                          last);    // Consume event payload name
+        }
+        if (tokens.size() > 0 && tokens.at(0).value == ")")    // no more ',', end of loop
+            break;
+        consumeSystemDescriptionToken(tokens, result, TokenType::Symbol, NodeType::Symbol,
+                                      last);    // Consume ',' symbol
+    }
+    consumeSystemDescriptionToken(tokens, result, TokenType::Symbol, NodeType::Symbol, last);    // Consume ')' symbol
+    // End of system description
 
-	// Start of system execution code
-	expectSystemToken(tokens, TokenType::Indent, last, true); // should start with indent
-	Node systemEntry = {.type=NodeType::SystemEntryPoint, .value=result.value, .line_nb=result.line_nb, .char_nb=result.char_nb};
-	while (!isDeclarationOver(tokens)) // system is list of statements
-		consumeSystemStatement(tokens, systemEntry, last); // expect statements until end of declaration
-	result.children.push_back(systemEntry);
-	return result;
+    // Start of system execution code
+    expectSystemToken(tokens, TokenType::Indent, last, true);    // should start with indent
+    Node systemEntry = {.type = NodeType::SystemEntryPoint,
+                        .value = result.value,
+                        .line_nb = result.line_nb,
+                        .char_nb = result.char_nb};
+    while (!isDeclarationOver(tokens))                        // system is list of statements
+        consumeSystemStatement(tokens, systemEntry, last);    // expect statements until end of declaration
+    result.children.push_back(systemEntry);
+    return result;
 }
-void consumeSystemDescriptionToken(std::vector<Token> &tokens, Node &result, TokenType expectedType, NodeType fillType, Token &lastToken) { // consume one token for declaration
-	if (tokens.size() <= 0)
-		throw TokenException("ERROR", lastToken.value, lastToken.line_nb, lastToken.char_nb, "Unexpected_EndOfFile", "Expected token " + gTokenTypeStrings.at(expectedType));
-	if (tokens.at(0).type != expectedType)
-		throw TokenException("ERROR", tokens.at(0).value, tokens.at(0).line_nb, tokens.at(0).char_nb, "UnexpectedToken", "Expected " + gTokenTypeStrings.at(expectedType) + " token");
-	// The system name is stored in the value
-	if (fillType == NodeType::SystemName)
-		result.value = tokens.at(0).value;
-	else // TODO: implement `data : variant(map<string, data>, string)` for actual abstract syntax tree parsing
-		result.children.push_back(Node {.type=fillType, .value=tokens.at(0).value, .line_nb=tokens.at(0).line_nb, .char_nb=tokens.at(0).char_nb});
-	lastToken = tokens.at(0);
-	tokens.erase(tokens.begin());
+void consumeSystemDescriptionToken(std::vector<Token> &tokens, Node &result, TokenType expectedType, NodeType fillType,
+                                   Token &lastToken)
+{    // consume one token for declaration
+    if (tokens.size() <= 0)
+        throw TokenException("ERROR", lastToken.value, lastToken.line_nb, lastToken.char_nb, "Unexpected_EndOfFile",
+                             "Expected token " + gTokenTypeStrings.at(expectedType));
+    if (tokens.at(0).type != expectedType)
+        throw TokenException("ERROR", tokens.at(0).value, tokens.at(0).line_nb, tokens.at(0).char_nb, "UnexpectedToken",
+                             "Expected " + gTokenTypeStrings.at(expectedType) + " token");
+    // The system name is stored in the value
+    if (fillType == NodeType::SystemName)
+        result.value = tokens.at(0).value;
+    else    // TODO: implement `data : variant(map<string, data>, string)` for actual abstract syntax tree parsing
+        result.children.push_back(Node{.type = fillType,
+                                       .value = tokens.at(0).value,
+                                       .line_nb = tokens.at(0).line_nb,
+                                       .char_nb = tokens.at(0).char_nb});
+    lastToken = tokens.at(0);
+    tokens.erase(tokens.begin());
 }
-void consumeSystemStatement(std::vector<Token> &tokens, Node &result, Token &lastToken) { // consume an entire statement and append it to children node
-	if (tokens.size() == 0)
-		throw TokenException("ERROR", lastToken.value, lastToken.line_nb, lastToken.char_nb, "Unexpected_EndOfFile", "Expected statement");
-	const Token &token = tokens.at(0);
-	Node statementResult = {
-		.type = NodeType::Statement,
-		.line_nb = token.line_nb,
-		.char_nb = token.char_nb
-	};
-	size_t lineNb = token.line_nb;
-	if (std::find(gBlockops.begin(), gBlockops.end(), token.value) != gBlockops.end()) { // Is block operator
-		statementResult.value = token.value; // store the "if","while","for" for the interpreter
-		consumeSystemBlock(tokens, statementResult, lastToken);
-	} else {
-		consumeSystemVariable(tokens, statementResult, lastToken); // line starts with variable
-		if (tokens.at(0).value == "=") { // assign expression to variable
-			statementResult.value = "assign"; // store the type of statement for the interpreter
-			// statementResult.children.push_back(Node {.type=NodeType::Symbol, .value=tokens.at(0).value, .line_nb=tokens.at(0).line_nb, .char_nb=tokens.at(0).char_nb});
-			Node expressionNode = {
-				.type = NodeType::Expression,
-				.line_nb = tokens.at(0).line_nb,
-				.char_nb = tokens.at(0).char_nb
-			};
-			lastToken = tokens.at(0);
-			tokens.erase(tokens.begin()); // delete '=' token
-			consumeSystemExpression(tokens, expressionNode, lastToken); // consume the expression to assign to variable
-			statementResult.children.push_back(expressionNode);
-		} else if (tokens.at(0).value == "(") { // variable calls a function
-			statementResult.value = "functionCall"; // store the type of statement for the interpreter
-			consumeSystemFuncParams(tokens, statementResult, lastToken);
+void consumeSystemStatement(std::vector<Token> &tokens, Node &result, Token &lastToken)
+{    // consume an entire statement and append it to children node
+    if (tokens.size() == 0)
+        throw TokenException("ERROR", lastToken.value, lastToken.line_nb, lastToken.char_nb, "Unexpected_EndOfFile",
+                             "Expected statement");
+    const Token &token = tokens.at(0);
+    Node statementResult = {.type = NodeType::Statement, .line_nb = token.line_nb, .char_nb = token.char_nb};
+    size_t lineNb = token.line_nb;
+    if (std::find(gBlockops.begin(), gBlockops.end(), token.value) != gBlockops.end()) {    // Is block operator
+        statementResult.value = token.value;    // store the "if","while","for" for the interpreter
+        consumeSystemBlock(tokens, statementResult, lastToken);
+    } else {
+        consumeSystemVariable(tokens, statementResult, lastToken);    // line starts with variable
+        if (tokens.at(0).value == "=") {                              // assign expression to variable
+            statementResult.value = "assign";                         // store the type of statement for the interpreter
+            // statementResult.children.push_back(Node {.type=NodeType::Symbol, .value=tokens.at(0).value,
+            // .line_nb=tokens.at(0).line_nb, .char_nb=tokens.at(0).char_nb});
+            Node expressionNode = {
+                .type = NodeType::Expression, .line_nb = tokens.at(0).line_nb, .char_nb = tokens.at(0).char_nb};
+            lastToken = tokens.at(0);
+            tokens.erase(tokens.begin());    // delete '=' token
+            consumeSystemExpression(tokens, expressionNode,
+                                    lastToken);    // consume the expression to assign to variable
+            statementResult.children.push_back(expressionNode);
+        } else if (tokens.at(0).value == "(") {        // variable calls a function
+            statementResult.value = "functionCall";    // store the type of statement for the interpreter
+            consumeSystemFuncParams(tokens, statementResult, lastToken);
 
-		} else { // unsupported features
-			throw TokenException("ERROR", tokens.at(0).value, tokens.at(0).line_nb, tokens.at(0).char_nb, "UnexpectedToken", "Not '=' nor '(', unsupported yet. pivot::ecs::script::parser::consumeSystemStatement()");
-		}
-	}
-	result.children.push_back(statementResult);
+        } else {    // unsupported features
+            throw TokenException(
+                "ERROR", tokens.at(0).value, tokens.at(0).line_nb, tokens.at(0).char_nb, "UnexpectedToken",
+                "Not '=' nor '(', unsupported yet. pivot::ecs::script::parser::consumeSystemStatement()");
+        }
+    }
+    result.children.push_back(statementResult);
 }
-void consumeSystemBlock(std::vector<Token> &tokens, Node &result, Token &lastToken) { // consume entire block and append it to children node
-	Node blockCondition = {
-		.type = NodeType::Expression,
-		.value = "condition",
-		.line_nb = tokens.at(0).line_nb,
-		.char_nb = tokens.at(0).char_nb
-	};
-	lastToken = tokens.at(0);
-	tokens.erase(tokens.begin()); // Remove "if","while" token
-	consumeSystemExpression(tokens, blockCondition, lastToken); // consume condition as expression
-	result.children.push_back(blockCondition); // add the condition to tree as children of block node
+void consumeSystemBlock(std::vector<Token> &tokens, Node &result, Token &lastToken)
+{    // consume entire block and append it to children node
+    Node blockCondition = {.type = NodeType::Expression,
+                           .value = "condition",
+                           .line_nb = tokens.at(0).line_nb,
+                           .char_nb = tokens.at(0).char_nb};
+    lastToken = tokens.at(0);
+    tokens.erase(tokens.begin());                                  // Remove "if","while" token
+    consumeSystemExpression(tokens, blockCondition, lastToken);    // consume condition as expression
+    result.children.push_back(blockCondition);    // add the condition to tree as children of block node
 
-	expectSystemToken(tokens, TokenType::Indent, lastToken, true); // start of block
-	while (tokens.size() > 0 && tokens.at(0).type != TokenType::Dedent) // loop over block
-		consumeSystemStatement(tokens, result, lastToken); // recursively consume all statements in the block
-	expectSystemToken(tokens, TokenType::Dedent, lastToken, true); // end of block
+    expectSystemToken(tokens, TokenType::Indent, lastToken, true);         // start of block
+    while (tokens.size() > 0 && tokens.at(0).type != TokenType::Dedent)    // loop over block
+        consumeSystemStatement(tokens, result, lastToken);            // recursively consume all statements in the block
+    expectSystemToken(tokens, TokenType::Dedent, lastToken, true);    // end of block
 }
-void consumeSystemVariable(std::vector<Token> &tokens, Node &result, Token &lastToken) { // consume a variable and append it to children node
-	if (tokens.size() == 0)
-		throw TokenException("ERROR", lastToken.value, lastToken.line_nb, lastToken.char_nb, "Unexpected_EndOfFile", "Expected variable");
-	Token &token = tokens.at(0);
-	Node variableResult = {
-		.line_nb = token.line_nb,
-		.char_nb = token.char_nb
-	};
-	if (token.type == TokenType::LiteralNumber) { // literal number
-		variableResult.type = NodeType::LiteralNumberVariable;
-		variableResult.value = token.value; // store the value directly
-		lastToken = tokens.at(0);
-		tokens.erase(tokens.begin());
-	} else if (token.type == TokenType::DoubleQuotedString) { // "string"
-		variableResult.type = NodeType::DoubleQuotedStringVariable;
-		variableResult.value = token.value;
-		lastToken = tokens.at(0);
-		tokens.erase(tokens.begin());
-	} else if (gVariableTypes.contains(token.value)) { // variable declaration
-		variableResult.type = NodeType::NewVariable;
-		variableResult.children.push_back(Node {.type=NodeType::Type, .value=token.value, .line_nb=token.line_nb, .char_nb=token.char_nb}); // type node
-		lastToken = tokens.at(0);
-		tokens.erase(tokens.begin()); // remove the type token
-		expectSystemToken(tokens, TokenType::Identifier, lastToken, false); // expect an identifier (name for the variable)
-		variableResult.children.push_back(Node {.type=NodeType::Name, .value=tokens.at(0).value, .line_nb=tokens.at(0).line_nb, .char_nb=tokens.at(0).char_nb});
-		lastToken = tokens.at(0);
-		tokens.erase(tokens.begin()); // remove the name token
-	} else { // variable
-		variableResult.type = NodeType::ExistingVariable;
-		variableResult.value = "";
-		// Take into account all identifiers and symbols which are "."
-		while (tokens.size() > 0) {
-			Token &varToken = tokens.at(0);
-			if (varToken.type == TokenType::Identifier)
-				variableResult.value += varToken.value;
-				// variableResult.children.push_back(Node {.type=NodeType::Name, .value=varToken.value, .line_nb=varToken.line_nb, .char_nb=varToken.char_nb});
-			else if (varToken.type == TokenType::Symbol && varToken.value == ".")
-				variableResult.value += varToken.value;
-				// variableResult.children.push_back(Node {.type=NodeType::Symbol, .value=varToken.value, .line_nb=varToken.line_nb, .char_nb=varToken.char_nb});
-			else
-				break;
-			lastToken = tokens.at(0);
-			tokens.erase(tokens.begin()); // delete token
-			if (tokens.size() > 0 && tokens.at(0).line_nb != lastToken.line_nb)
-				break;
-		}
-		// if (variableResult.children.size() == 1 && variableResult.children.at(0).type == NodeType::Name)
-		// 	variableResult.value = variableResult.children.at(0).value;
-	}
-	result.children.push_back(variableResult);
+void consumeSystemVariable(std::vector<Token> &tokens, Node &result, Token &lastToken)
+{    // consume a variable and append it to children node
+    if (tokens.size() == 0)
+        throw TokenException("ERROR", lastToken.value, lastToken.line_nb, lastToken.char_nb, "Unexpected_EndOfFile",
+                             "Expected variable");
+    Token &token = tokens.at(0);
+    Node variableResult = {.line_nb = token.line_nb, .char_nb = token.char_nb};
+    if (token.type == TokenType::LiteralNumber) {    // literal number
+        variableResult.type = NodeType::LiteralNumberVariable;
+        variableResult.value = token.value;    // store the value directly
+        lastToken = tokens.at(0);
+        tokens.erase(tokens.begin());
+    } else if (token.type == TokenType::DoubleQuotedString) {    // "string"
+        variableResult.type = NodeType::DoubleQuotedStringVariable;
+        variableResult.value = token.value;
+        lastToken = tokens.at(0);
+        tokens.erase(tokens.begin());
+    } else if (gVariableTypes.contains(token.value)) {    // variable declaration
+        variableResult.type = NodeType::NewVariable;
+        variableResult.children.push_back(Node{.type = NodeType::Type,
+                                               .value = token.value,
+                                               .line_nb = token.line_nb,
+                                               .char_nb = token.char_nb});    // type node
+        lastToken = tokens.at(0);
+        tokens.erase(tokens.begin());    // remove the type token
+        expectSystemToken(tokens, TokenType::Identifier, lastToken,
+                          false);    // expect an identifier (name for the variable)
+        variableResult.children.push_back(Node{.type = NodeType::Name,
+                                               .value = tokens.at(0).value,
+                                               .line_nb = tokens.at(0).line_nb,
+                                               .char_nb = tokens.at(0).char_nb});
+        lastToken = tokens.at(0);
+        tokens.erase(tokens.begin());    // remove the name token
+    } else {                             // variable
+        variableResult.type = NodeType::ExistingVariable;
+        variableResult.value = "";
+        // Take into account all identifiers and symbols which are "."
+        while (tokens.size() > 0) {
+            Token &varToken = tokens.at(0);
+            if (varToken.type == TokenType::Identifier) variableResult.value += varToken.value;
+            // variableResult.children.push_back(Node {.type=NodeType::Name, .value=varToken.value,
+            // .line_nb=varToken.line_nb, .char_nb=varToken.char_nb});
+            else if (varToken.type == TokenType::Symbol && varToken.value == ".")
+                variableResult.value += varToken.value;
+            // variableResult.children.push_back(Node {.type=NodeType::Symbol, .value=varToken.value,
+            // .line_nb=varToken.line_nb, .char_nb=varToken.char_nb});
+            else
+                break;
+            lastToken = tokens.at(0);
+            tokens.erase(tokens.begin());    // delete token
+            if (tokens.size() > 0 && tokens.at(0).line_nb != lastToken.line_nb) break;
+        }
+        // if (variableResult.children.size() == 1 && variableResult.children.at(0).type == NodeType::Name)
+        // 	variableResult.value = variableResult.children.at(0).value;
+    }
+    result.children.push_back(variableResult);
 }
-void consumeSystemExpression(std::vector<Token> &tokens, Node &result, Token &lastToken) { // consume an expression and append it to children node
-	if (tokens.size() == 0)
-		throw TokenException("ERROR", lastToken.value, lastToken.line_nb, lastToken.char_nb, "Unexpected_EndOfFile", "Expected expression");
+void consumeSystemExpression(std::vector<Token> &tokens, Node &result, Token &lastToken)
+{    // consume an expression and append it to children node
+    if (tokens.size() == 0)
+        throw TokenException("ERROR", lastToken.value, lastToken.line_nb, lastToken.char_nb, "Unexpected_EndOfFile",
+                             "Expected expression");
 
-	// An expression is a construct of Operand Operator Operand...etc that can be solved to a single operand
-	// An expression ends with a newline or until a stopping symbol ','
-	// We will single-traverse the expression, and translate it to a postfix architecture
-	// This takes care of precedence of operation and eases the work of the interpreter
-	// The postfix result is represented as the result's children
-	std::stack<Token> _stack; // storage for operators during postfix
-	while (tokens.size() > 0 && tokens.at(0).line_nb == result.line_nb && tokens.at(0).value != ",") { // an expression runs until the next line, or until stopping symbol
-		if (tokens.at(0).type != TokenType::Symbol)
-			consumeSystemVariable(tokens, result, lastToken); // consume operand as variable into postfix result
-		if (tokens.size() == 0 || tokens.at(0).line_nb != result.line_nb || tokens.at(0).value == ",") { // no more tokens/operators, end of expression
-			while (!_stack.empty()) { // At the end of infix expression, we push all stack operators into postfix result
-				result.children.push_back(Node {.type=NodeType::Operator, .value=_stack.top().value, .line_nb=_stack.top().line_nb, .char_nb=_stack.top().char_nb});
-				_stack.pop();
-			}
-			break;
-		}
-		if (tokens.at(0).type != TokenType::Symbol && tokens.at(0).type != TokenType::Dedent) // token is not an operator or dedent
-			throw TokenException("ERROR", tokens.at(0).value, tokens.at(0).line_nb, tokens.at(0).char_nb, "UnexpectedToken", "Expected operator symbol or end of expression");
-		if (tokens.at(0).value == "(") { // opening parentheses
-			_stack.push(tokens.at(0));
-			lastToken = tokens.at(0);
-			tokens.erase(tokens.begin()); // delete parentheses token
-		} else if (tokens.at(0).value == ")") { // closing parentheses
-			while (!_stack.empty() && _stack.top().value != "(") { // pop all operators to postfix result until innermost opening parentheses
-				result.children.push_back(Node {.type=NodeType::Operator, .value=_stack.top().value, .line_nb=_stack.top().line_nb, .char_nb=_stack.top().char_nb});
-				_stack.pop();
-			}
-			_stack.pop(); // pop '('
-			lastToken = tokens.at(0);
-			tokens.erase(tokens.begin());
-		} else if (gOneCharOps.contains(tokens.at(0).value) || gTwoCharOps.contains(tokens.at(0).value) ) { // normal operator
-			while (!_stack.empty() && _stack.top().value != "(" && hasHigherPrecedence(_stack.top().value, tokens.at(0).value)) { // pop all operators from stack with high precedence of operation
-				result.children.push_back(Node {.type=NodeType::Operator, .value=_stack.top().value, .line_nb=_stack.top().line_nb, .char_nb=_stack.top().char_nb});
-				_stack.pop();
-			}
-			_stack.push(tokens.at(0));
-			lastToken = tokens.at(0);
-			tokens.erase(tokens.begin()); // delete operator token
-		} else {
-			throw TokenException("ERROR", tokens.at(0).value, tokens.at(0).line_nb, tokens.at(0).char_nb, "UnexpectedToken", "Expected operator symbol");
-		}
-	}
-	while (!_stack.empty()) { // pop all operators to postfix result
-		result.children.push_back(Node {.type=NodeType::Operator, .value=_stack.top().value, .line_nb=_stack.top().line_nb, .char_nb=_stack.top().char_nb});
-		_stack.pop();
-	}
+    // An expression is a construct of Operand Operator Operand...etc that can be solved to a single operand
+    // An expression ends with a newline or until a stopping symbol ','
+    // We will single-traverse the expression, and translate it to a postfix architecture
+    // This takes care of precedence of operation and eases the work of the interpreter
+    // The postfix result is represented as the result's children
+    std::stack<Token> _stack;    // storage for operators during postfix
+    while (tokens.size() > 0 && tokens.at(0).line_nb == result.line_nb &&
+           tokens.at(0).value != ",") {    // an expression runs until the next line, or until stopping symbol
+        if (tokens.at(0).type != TokenType::Symbol)
+            consumeSystemVariable(tokens, result, lastToken);    // consume operand as variable into postfix result
+        if (tokens.size() == 0 || tokens.at(0).line_nb != result.line_nb ||
+            tokens.at(0).value == ",") {    // no more tokens/operators, end of expression
+            while (
+                !_stack.empty()) {    // At the end of infix expression, we push all stack operators into postfix result
+                result.children.push_back(Node{.type = NodeType::Operator,
+                                               .value = _stack.top().value,
+                                               .line_nb = _stack.top().line_nb,
+                                               .char_nb = _stack.top().char_nb});
+                _stack.pop();
+            }
+            break;
+        }
+        if (tokens.at(0).type != TokenType::Symbol &&
+            tokens.at(0).type != TokenType::Dedent)    // token is not an operator or dedent
+            throw TokenException("ERROR", tokens.at(0).value, tokens.at(0).line_nb, tokens.at(0).char_nb,
+                                 "UnexpectedToken", "Expected operator symbol or end of expression");
+        if (tokens.at(0).value == "(") {    // opening parentheses
+            _stack.push(tokens.at(0));
+            lastToken = tokens.at(0);
+            tokens.erase(tokens.begin());          // delete parentheses token
+        } else if (tokens.at(0).value == ")") {    // closing parentheses
+            while (!_stack.empty() &&
+                   _stack.top().value !=
+                       "(") {    // pop all operators to postfix result until innermost opening parentheses
+                result.children.push_back(Node{.type = NodeType::Operator,
+                                               .value = _stack.top().value,
+                                               .line_nb = _stack.top().line_nb,
+                                               .char_nb = _stack.top().char_nb});
+                _stack.pop();
+            }
+            _stack.pop();    // pop '('
+            lastToken = tokens.at(0);
+            tokens.erase(tokens.begin());
+        } else if (gOneCharOps.contains(tokens.at(0).value) ||
+                   gTwoCharOps.contains(tokens.at(0).value)) {    // normal operator
+            while (!_stack.empty() && _stack.top().value != "(" &&
+                   hasHigherPrecedence(
+                       _stack.top().value,
+                       tokens.at(0).value)) {    // pop all operators from stack with high precedence of operation
+                result.children.push_back(Node{.type = NodeType::Operator,
+                                               .value = _stack.top().value,
+                                               .line_nb = _stack.top().line_nb,
+                                               .char_nb = _stack.top().char_nb});
+                _stack.pop();
+            }
+            _stack.push(tokens.at(0));
+            lastToken = tokens.at(0);
+            tokens.erase(tokens.begin());    // delete operator token
+        } else {
+            throw TokenException("ERROR", tokens.at(0).value, tokens.at(0).line_nb, tokens.at(0).char_nb,
+                                 "UnexpectedToken", "Expected operator symbol");
+        }
+    }
+    while (!_stack.empty()) {    // pop all operators to postfix result
+        result.children.push_back(Node{.type = NodeType::Operator,
+                                       .value = _stack.top().value,
+                                       .line_nb = _stack.top().line_nb,
+                                       .char_nb = _stack.top().char_nb});
+        _stack.pop();
+    }
 }
-void consumeSystemFuncParams(std::vector<Token> &tokens, Node &result, Token &lastToken) { // consume function parameters and append them to children node
-	if (tokens.size() == 0)
-		throw TokenException("ERROR", lastToken.value, lastToken.line_nb, lastToken.char_nb, "Unexpected_EndOfFile", "Expected '(' symbol");
-	Node paramsResult = {
-		.type = NodeType::FunctionParams,
-		.line_nb = tokens.at(0).line_nb,
-		.char_nb = tokens.at(0).char_nb
-	};
-	expectSystemTokenValue(tokens, "(", lastToken, true);
-	// Function parameters is either nothing, or a list of expressions, separated by commas, until a ')' symbol
-	// TODO : handle parentheses '(' ')'
-	while (tokens.size() > 0 && tokens.at(0).value != ")") { // an expression runs until a ')' symbol
-		consumeSystemVariable(tokens, paramsResult, lastToken); // consume variable
-		if (tokens.size() == 0 || tokens.at(0).value == ")") // no more variables, end of expression
-			break;
-		if (tokens.at(0).value != ",") // token is not an comma
-			throw TokenException("ERROR", tokens.at(0).value, tokens.at(0).line_nb, tokens.at(0).char_nb, "Unexpected_EndOfFile", "Expected comma");
-		// paramsResult.children.push_back(Node {.type=NodeType::Symbol, .value=tokens.at(0).value, .line_nb=tokens.at(0).line_nb, .char_nb=tokens.at(0).char_nb});
-		lastToken = tokens.at(0);
-		tokens.erase(tokens.begin()); // delete ',' token
-	}
-	expectSystemTokenValue(tokens, ")", lastToken, true);
-	result.children.push_back(paramsResult);
+void consumeSystemFuncParams(std::vector<Token> &tokens, Node &result, Token &lastToken)
+{    // consume function parameters and append them to children node
+    if (tokens.size() == 0)
+        throw TokenException("ERROR", lastToken.value, lastToken.line_nb, lastToken.char_nb, "Unexpected_EndOfFile",
+                             "Expected '(' symbol");
+    Node paramsResult = {
+        .type = NodeType::FunctionParams, .line_nb = tokens.at(0).line_nb, .char_nb = tokens.at(0).char_nb};
+    expectSystemTokenValue(tokens, "(", lastToken, true);
+    // Function parameters is either nothing, or a list of expressions, separated by commas, until a ')' symbol
+    // TODO : handle parentheses '(' ')'
+    while (tokens.size() > 0 && tokens.at(0).value != ")") {       // an expression runs until a ')' symbol
+        consumeSystemVariable(tokens, paramsResult, lastToken);    // consume variable
+        if (tokens.size() == 0 || tokens.at(0).value == ")")       // no more variables, end of expression
+            break;
+        if (tokens.at(0).value != ",")    // token is not an comma
+            throw TokenException("ERROR", tokens.at(0).value, tokens.at(0).line_nb, tokens.at(0).char_nb,
+                                 "Unexpected_EndOfFile", "Expected comma");
+        // paramsResult.children.push_back(Node {.type=NodeType::Symbol, .value=tokens.at(0).value,
+        // .line_nb=tokens.at(0).line_nb, .char_nb=tokens.at(0).char_nb});
+        lastToken = tokens.at(0);
+        tokens.erase(tokens.begin());    // delete ',' token
+    }
+    expectSystemTokenValue(tokens, ")", lastToken, true);
+    result.children.push_back(paramsResult);
 }
 
-void expectSystemToken(std::vector<Token> &tokens, TokenType expectedType, Token &lastToken, bool consume) { // check that token exists, and is of correct type (and potentially consume it from tokens)
-	if (tokens.size() == 0)
-		throw TokenException("ERROR", lastToken.value, lastToken.line_nb, lastToken.char_nb, "Unexpected_EndOfFile", "Expected token " + gTokenTypeStrings.at(expectedType));
-	if (tokens.at(0).type != expectedType)
-		throw TokenException("ERROR", tokens.at(0).value, tokens.at(0).line_nb, tokens.at(0).char_nb, "UnexpectedToken", "Expected " + gTokenTypeStrings.at(expectedType) + " token");
-	if (consume) {
-		lastToken = tokens.at(0);
-		tokens.erase(tokens.begin());
-	}
+void expectSystemToken(std::vector<Token> &tokens, TokenType expectedType, Token &lastToken, bool consume)
+{    // check that token exists, and is of correct type (and potentially consume it from tokens)
+    if (tokens.size() == 0)
+        throw TokenException("ERROR", lastToken.value, lastToken.line_nb, lastToken.char_nb, "Unexpected_EndOfFile",
+                             "Expected token " + gTokenTypeStrings.at(expectedType));
+    if (tokens.at(0).type != expectedType)
+        throw TokenException("ERROR", tokens.at(0).value, tokens.at(0).line_nb, tokens.at(0).char_nb, "UnexpectedToken",
+                             "Expected " + gTokenTypeStrings.at(expectedType) + " token");
+    if (consume) {
+        lastToken = tokens.at(0);
+        tokens.erase(tokens.begin());
+    }
 }
-void expectSystemTokenValue(std::vector<Token> &tokens, const std::string &expectedValue, Token &lastToken, bool consume) { // check that token exists, and is of correct value (and potentially consume it from tokens)
-	if (tokens.size() == 0)
-		throw TokenException("ERROR", lastToken.value, lastToken.line_nb, lastToken.char_nb, "Unexpected_EndOfFile", "Expected token '" + expectedValue + "'");
-	if (tokens.at(0).value != expectedValue)
-		throw TokenException("ERROR", tokens.at(0).value, tokens.at(0).line_nb, tokens.at(0).char_nb, "UnexpectedToken", "Expected '" + expectedValue + "' token");
-	if (consume) {
-		lastToken = tokens.at(0);
-		tokens.erase(tokens.begin());
-	}
+void expectSystemTokenValue(std::vector<Token> &tokens, const std::string &expectedValue, Token &lastToken,
+                            bool consume)
+{    // check that token exists, and is of correct value (and potentially consume it from tokens)
+    if (tokens.size() == 0)
+        throw TokenException("ERROR", lastToken.value, lastToken.line_nb, lastToken.char_nb, "Unexpected_EndOfFile",
+                             "Expected token '" + expectedValue + "'");
+    if (tokens.at(0).value != expectedValue)
+        throw TokenException("ERROR", tokens.at(0).value, tokens.at(0).line_nb, tokens.at(0).char_nb, "UnexpectedToken",
+                             "Expected '" + expectedValue + "' token");
+    if (consume) {
+        lastToken = tokens.at(0);
+        tokens.erase(tokens.begin());
+    }
 }
-
 
 /* Lexer function
-	This will return the the list of all tokens in the file, in the order they appear
-	A token is defined as any string of characters which are either
-		Whitespace:		space, tab, \r or \n
-		Known symbols:	+ - * / % = ! ( ) < > . # "
-		Neither of the two above
+        This will return the the list of all tokens in the file, in the order they appear
+        A token is defined as any string of characters which are either
+                Whitespace:		space, tab, \r or \n
+                Known symbols:	+ - * / % = ! ( ) < > . # "
+                Neither of the two above
 */
-std::vector<Token> tokens_from_file(const std::string &filename, bool verbose) {
-	// Read file
-	std::ifstream ifs(filename);
-	if (!ifs.is_open()) {
-		std::cerr << "FileSystemError : couldn't open file " << filename << std::endl;
-		return {};
-	}
-	std::string text(std::istreambuf_iterator<char>{ifs}, {});
+std::vector<Token> tokens_from_file(const std::string &filename, bool verbose)
+{
+    // Read file
+    std::ifstream ifs(filename);
+    if (!ifs.is_open()) {
+        std::cerr << "FileSystemError : couldn't open file " << filename << std::endl;
+        return {};
+    }
+    std::string text(std::istreambuf_iterator<char>{ifs}, {});
 
-	// Detect indent type of file (to then insert Indent and Dedent tokens and ignore all whitespace afterthat)
-	IndentType indentType = indent_type_of(text);
-	size_t indentSize = indent_size_of(text);
-	if (verbose)
-		logger.info("Indent for ") << filename << ": " << indentSize << " " << gIndentTypeStrings.at(indentType);
-		// std::cout << std::format("Indent for {}: {} {}", filename, indentSize, gIndentTypeStrings.at(indentType)) << std::endl; // format not available in c++20 gcc yet
+    // Detect indent type of file (to then insert Indent and Dedent tokens and ignore all whitespace afterthat)
+    IndentType indentType = indent_type_of(text);
+    size_t indentSize = indent_size_of(text);
+    if (verbose)
+        logger.info("Indent for ") << filename << ": " << indentSize << " " << gIndentTypeStrings.at(indentType);
+    // std::cout << std::format("Indent for {}: {} {}", filename, indentSize, gIndentTypeStrings.at(indentType)) <<
+    // std::endl; // format not available in c++20 gcc yet
 
-	// Result and indices for navigating file string
-	std::vector<Token> result;
-	size_t lineNb = 1;
-	size_t lastLine = 0;
-	size_t lastLineIndentSize = 0;
-	size_t lineStart = 0;
-	size_t lineEnd = text.find('\n', lineStart);
-	bool shouldBreak = false;
+    // Result and indices for navigating file string
+    std::vector<Token> result;
+    size_t lineNb = 1;
+    size_t lastLine = 0;
+    size_t lastLineIndentSize = 0;
+    size_t lineStart = 0;
+    size_t lineEnd = text.find('\n', lineStart);
+    bool shouldBreak = false;
 
-	while (!shouldBreak) { // loop over every line
-		if (lineEnd == std::string::npos) { // TODO : handle last line more elegantly ?
-			lineEnd = text.size(); // last line of file
-			shouldBreak = true;
-		}
-		// get the line string clean of comments (anything after the first found hashtag is deleted)
-		std::string line = remove_comments(text.substr(lineStart, lineEnd - lineStart));
+    while (!shouldBreak) {                     // loop over every line
+        if (lineEnd == std::string::npos) {    // TODO : handle last line more elegantly ?
+            lineEnd = text.size();             // last line of file
+            shouldBreak = true;
+        }
+        // get the line string clean of comments (anything after the first found hashtag is deleted)
+        std::string line = remove_comments(text.substr(lineStart, lineEnd - lineStart));
 
-		// if it is just whitespace, ignore and get next line
-		if (line_is_empty(line)) {
-			lineStart = lineEnd + 1;
-			lineEnd = text.find('\n', lineStart);
-			lineNb++;
-			continue ;
-		}
-		// get the line indent type and size
-		IndentType lineIndentType = indent_type_of_line(line);
-		size_t lineIndentSize = indent_size_of_line(line);
+        // if it is just whitespace, ignore and get next line
+        if (line_is_empty(line)) {
+            lineStart = lineEnd + 1;
+            lineEnd = text.find('\n', lineStart);
+            lineNb++;
+            continue;
+        }
+        // get the line indent type and size
+        IndentType lineIndentType = indent_type_of_line(line);
+        size_t lineIndentSize = indent_size_of_line(line);
 
-		// check for IndentType::invalid indent
-		if (lineIndentType != IndentType::NoIndent && lineIndentType != indentType) // indent different from the one chosen at the start of the file
-			throw MixedIndentException("ERROR", line, lineNb + 1, "Different indent");
-		if (lineIndentSize != 0 && lineIndentSize % indentSize != 0) // not a multiple of indent size
-			throw MixedIndentException("ERROR", line, lineNb + 1, "Bad indent size");
+        // check for IndentType::invalid indent
+        if (lineIndentType != IndentType::NoIndent &&
+            lineIndentType != indentType)    // indent different from the one chosen at the start of the file
+            throw MixedIndentException("ERROR", line, lineNb + 1, "Different indent");
+        if (lineIndentSize != 0 && lineIndentSize % indentSize != 0)    // not a multiple of indent size
+            throw MixedIndentException("ERROR", line, lineNb + 1, "Bad indent size");
 
-		// create Indent / Unindent tokens if file has indent
-		if (indentSize != 0) {
-			// create Indent token(s) if lineIndent is strictly greater than last line indent
-			if ((lineIndentSize / indentSize) > (lastLineIndentSize / indentSize))
-				for (size_t i = 0; i < ((lineIndentSize / indentSize) - (lastLineIndentSize / indentSize)); i++) // one token per indent (4 IndentType::spaces indent, 8 IndentType::spaces in line => 2 indent tokens)
-					result.push_back(Token{.type = TokenType::Indent, .value = "Indent", .line_nb = lineNb, .char_nb = i * indentSize + lastLineIndentSize + 1});
-			// create Dedent token(s) if lineIndent is strictly lower than last line indent
-			if ((lineIndentSize / indentSize) < (lastLineIndentSize / indentSize))
-				for (size_t i = 0; i < ((lastLineIndentSize / indentSize) - (lineIndentSize / indentSize)); i++) // one token per dedent (4 IndentType::spaces dedent, 8 IndentType::spaces in line => 2 dedent tokens)
-					result.push_back(Token{.type = TokenType::Dedent, .value = "Dedent", .line_nb = lineNb, .char_nb = i * indentSize + lastLineIndentSize + 1});
-		}
-		lastLineIndentSize = lineIndentSize;
+        // create Indent / Unindent tokens if file has indent
+        if (indentSize != 0) {
+            // create Indent token(s) if lineIndent is strictly greater than last line indent
+            if ((lineIndentSize / indentSize) > (lastLineIndentSize / indentSize))
+                for (size_t i = 0; i < ((lineIndentSize / indentSize) - (lastLineIndentSize / indentSize));
+                     i++)    // one token per indent (4 IndentType::spaces indent, 8 IndentType::spaces in line => 2
+                             // indent tokens)
+                    result.push_back(Token{.type = TokenType::Indent,
+                                           .value = "Indent",
+                                           .line_nb = lineNb,
+                                           .char_nb = i * indentSize + lastLineIndentSize + 1});
+            // create Dedent token(s) if lineIndent is strictly lower than last line indent
+            if ((lineIndentSize / indentSize) < (lastLineIndentSize / indentSize))
+                for (size_t i = 0; i < ((lastLineIndentSize / indentSize) - (lineIndentSize / indentSize));
+                     i++)    // one token per dedent (4 IndentType::spaces dedent, 8 IndentType::spaces in line => 2
+                             // dedent tokens)
+                    result.push_back(Token{.type = TokenType::Dedent,
+                                           .value = "Dedent",
+                                           .line_nb = lineNb,
+                                           .char_nb = i * indentSize + lastLineIndentSize + 1});
+        }
+        lastLineIndentSize = lineIndentSize;
 
-		// create all other tokens
-		size_t lcursor = line.find_first_not_of(" \t");
-		size_t rcursor = line.find_first_of(gKnownSymbols, lcursor);
-		while (rcursor != std::string::npos) { // Find every known symbol, and add either it or the string up until it to the tokens
-			if (rcursor == lcursor && !isdigit(line.at(lcursor))) { // token is the found symbol
+        // create all other tokens
+        size_t lcursor = line.find_first_not_of(" \t");
+        size_t rcursor = line.find_first_of(gKnownSymbols, lcursor);
+        while (rcursor != std::string::npos) {    // Find every known symbol, and add either it or the string up until
+                                                  // it to the tokens
+            if (rcursor == lcursor && !isdigit(line.at(lcursor))) {    // token is the found symbol
 
-				if (line.at(lcursor) == '"') { // double quoted string start
-					rcursor = line.find('"', lcursor + 1); // find the end to the double quote string
-					if (rcursor == std::string::npos) { // no more '"' on the line, multi-line quoted strings unsupported yet.
-						// pretend the string ends at the end of the line
-						result.push_back(Token{.type = TokenType::DoubleQuotedString, .value = line.substr(lcursor), .line_nb = lineNb, .char_nb = lcursor + 1});
-						lcursor = line.size(); // end of line
-						continue; // no more tokens on the line, and rcursor == std::string::npos, go to next line
-					} else { // the quote ends on the same line
-						// save raw value without the '"'
-						result.push_back(Token{.type = TokenType::DoubleQuotedString, .value = line.substr(lcursor + 1, rcursor - lcursor - 1), .line_nb = lineNb, .char_nb = lcursor + 1});
-						lcursor = rcursor + 1;
-						rcursor = line.find_first_of(gKnownSymbols, lcursor); // TODO: better logic than continue
-						continue;
-					}
-				} // all branches led to continue
+                if (line.at(lcursor) == '"') {                // double quoted string start
+                    rcursor = line.find('"', lcursor + 1);    // find the end to the double quote string
+                    if (rcursor ==
+                        std::string::npos) {    // no more '"' on the line, multi-line quoted strings unsupported yet.
+                        // pretend the string ends at the end of the line
+                        result.push_back(Token{.type = TokenType::DoubleQuotedString,
+                                               .value = line.substr(lcursor),
+                                               .line_nb = lineNb,
+                                               .char_nb = lcursor + 1});
+                        lcursor = line.size();    // end of line
+                        continue;    // no more tokens on the line, and rcursor == std::string::npos, go to next line
+                    } else {         // the quote ends on the same line
+                        // save raw value without the '"'
+                        result.push_back(Token{.type = TokenType::DoubleQuotedString,
+                                               .value = line.substr(lcursor + 1, rcursor - lcursor - 1),
+                                               .line_nb = lineNb,
+                                               .char_nb = lcursor + 1});
+                        lcursor = rcursor + 1;
+                        rcursor = line.find_first_of(gKnownSymbols, lcursor);    // TODO: better logic than continue
+                        continue;
+                    }
+                }    // all branches led to continue
 
-				if (gWhitespace.find(line.at(rcursor)) == std::string::npos) { // token is not whitespace
-					if (gTwoCharOps.contains(line.substr(lcursor, 2))) { // token is logical / relational operator ( 2 char wide)
-						result.push_back(Token{.type = TokenType::Symbol, .value = line.substr(lcursor, 2), .line_nb = lineNb, .char_nb = lcursor});
-						lcursor = rcursor + 2;
-						rcursor = line.find_first_of(gKnownSymbols, lcursor);
-					} else { // token is just a symbol
-						result.push_back(Token{.type = TokenType::Symbol, .value = line.substr(lcursor, 1), .line_nb = lineNb, .char_nb = lcursor + 1});
-						lcursor = rcursor + 1;
-						rcursor = line.find_first_of(gKnownSymbols, lcursor);
-					}
-				} else { // token is whitespace
-					lcursor = rcursor + 1;
-					rcursor = line.find_first_of(gKnownSymbols, lcursor);
-				}
+                if (gWhitespace.find(line.at(rcursor)) == std::string::npos) {    // token is not whitespace
+                    if (gTwoCharOps.contains(
+                            line.substr(lcursor, 2))) {    // token is logical / relational operator ( 2 char wide)
+                        result.push_back(Token{.type = TokenType::Symbol,
+                                               .value = line.substr(lcursor, 2),
+                                               .line_nb = lineNb,
+                                               .char_nb = lcursor});
+                        lcursor = rcursor + 2;
+                        rcursor = line.find_first_of(gKnownSymbols, lcursor);
+                    } else {    // token is just a symbol
+                        result.push_back(Token{.type = TokenType::Symbol,
+                                               .value = line.substr(lcursor, 1),
+                                               .line_nb = lineNb,
+                                               .char_nb = lcursor + 1});
+                        lcursor = rcursor + 1;
+                        rcursor = line.find_first_of(gKnownSymbols, lcursor);
+                    }
+                } else {    // token is whitespace
+                    lcursor = rcursor + 1;
+                    rcursor = line.find_first_of(gKnownSymbols, lcursor);
+                }
 
-			} else { // tokens are the string up until the symbol, and the symbol itself
-				std::string tokenStr = line.substr(lcursor, rcursor - lcursor);
-				bool isLiteral = false;
-				try { // if token is a literal number, store it as that
-					std::stod(tokenStr); // check integral part is a number
-					if (line.at(rcursor) == '.') { // handle decimal literals
-						rcursor = line.find_first_of(gKnownSymbols, rcursor + 1);
-						rcursor = ((rcursor == std::string::npos) ? line.size() - 1 : rcursor);
-						tokenStr = line.substr(lcursor, rcursor - lcursor + 1);
-						std::stod(tokenStr); // check full decimal number
-					}
-					result.push_back(Token{.type = TokenType::LiteralNumber, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
-					isLiteral = true;
-				} catch ( std::invalid_argument e ) { // token is not a number
-					result.push_back(Token{.type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
-				} catch ( std::out_of_range e) { // token is invalid number
-					// std::cerr << std::format("Token {} is too big to go into a double. Will be stored as literal string.", tokenStr) << std::endl;
-					logger.warn("Token ") << tokenStr << " is too big to go into a double. Will be stored as literal string."; // format not available in c++20 gcc yet
-					result.push_back(Token{.type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
-				}
-				if (!isLiteral && gWhitespace.find(line.at(rcursor)) == std::string::npos)
-					result.push_back(Token{.type = TokenType::Symbol, .value = line.substr(rcursor, 1), .line_nb = lineNb, .char_nb = rcursor + 1});
-				lcursor = rcursor + 1;
-				rcursor = line.find_first_of(gKnownSymbols, lcursor);
-			}
-		}
-		if (lcursor < line.size()) { // TODO : handle last token more elegantly ?
-			std::string tokenStr = line.substr(lcursor, line.size() - lcursor);
-			try { // if token is a literal number, store it as that
-				std::stod(tokenStr);
-				result.push_back(Token{.type = TokenType::LiteralNumber, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
-			} catch ( std::invalid_argument e ) { // token is not a number
-				result.push_back(Token{.type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
-			} catch ( std::out_of_range e) { // token is invalid number
-				// std::cerr << std::format("Token {} is too big to go into a double. Will be stored as literal string.", tokenStr) << std::endl;
-				logger.warn("Token ") << tokenStr << " is too big to go into a double. Will be stored as literal string."; // format not available in c++20 gcc yet
-				result.push_back(Token{.type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
-			}
-		}
-		lineStart = lineEnd + 1;
-		lineEnd = text.find('\n', lineStart);
-		lineNb++;
-	}
+            } else {    // tokens are the string up until the symbol, and the symbol itself
+                std::string tokenStr = line.substr(lcursor, rcursor - lcursor);
+                bool isLiteral = false;
+                try {                                 // if token is a literal number, store it as that
+                    std::stod(tokenStr);              // check integral part is a number
+                    if (line.at(rcursor) == '.') {    // handle decimal literals
+                        rcursor = line.find_first_of(gKnownSymbols, rcursor + 1);
+                        rcursor = ((rcursor == std::string::npos) ? line.size() - 1 : rcursor);
+                        tokenStr = line.substr(lcursor, rcursor - lcursor + 1);
+                        std::stod(tokenStr);    // check full decimal number
+                    }
+                    result.push_back(Token{.type = TokenType::LiteralNumber,
+                                           .value = tokenStr,
+                                           .line_nb = lineNb,
+                                           .char_nb = lcursor + 1});
+                    isLiteral = true;
+                } catch (std::invalid_argument e) {    // token is not a number
+                    result.push_back(Token{
+                        .type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
+                } catch (std::out_of_range e) {    // token is invalid number
+                    // std::cerr << std::format("Token {} is too big to go into a double. Will be stored as literal
+                    // string.", tokenStr) << std::endl;
+                    logger.warn("Token ")
+                        << tokenStr
+                        << " is too big to go into a double. Will be stored as literal string.";    // format not
+                                                                                                    // available in
+                                                                                                    // c++20 gcc yet
+                    result.push_back(Token{
+                        .type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
+                }
+                if (!isLiteral && gWhitespace.find(line.at(rcursor)) == std::string::npos)
+                    result.push_back(Token{.type = TokenType::Symbol,
+                                           .value = line.substr(rcursor, 1),
+                                           .line_nb = lineNb,
+                                           .char_nb = rcursor + 1});
+                lcursor = rcursor + 1;
+                rcursor = line.find_first_of(gKnownSymbols, lcursor);
+            }
+        }
+        if (lcursor < line.size()) {    // TODO : handle last token more elegantly ?
+            std::string tokenStr = line.substr(lcursor, line.size() - lcursor);
+            try {    // if token is a literal number, store it as that
+                std::stod(tokenStr);
+                result.push_back(Token{
+                    .type = TokenType::LiteralNumber, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
+            } catch (std::invalid_argument e) {    // token is not a number
+                result.push_back(
+                    Token{.type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
+            } catch (std::out_of_range e) {    // token is invalid number
+                // std::cerr << std::format("Token {} is too big to go into a double. Will be stored as literal
+                // string.", tokenStr) << std::endl;
+                logger.warn("Token ")
+                    << tokenStr
+                    << " is too big to go into a double. Will be stored as literal string.";    // format not available
+                                                                                                // in c++20 gcc yet
+                result.push_back(
+                    Token{.type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
+            }
+        }
+        lineStart = lineEnd + 1;
+        lineEnd = text.find('\n', lineStart);
+        lineNb++;
+    }
 
-	return result;
+    return result;
 }
 
-bool isDeclarationOver(const std::vector<Token> &tokens) { // Is there no more tokens, or is the first the end of the declaration
-	if (tokens.size() == 0) // No more tokens
-		return true;
-	if (tokens.at(0).value == "component" || tokens.at(0).value == "system") // First token is "component" "system"
-		return true;
-	return false;
+bool isDeclarationOver(const std::vector<Token> &tokens)
+{                              // Is there no more tokens, or is the first the end of the declaration
+    if (tokens.size() == 0)    // No more tokens
+        return true;
+    if (tokens.at(0).value == "component" || tokens.at(0).value == "system")    // First token is "component" "system"
+        return true;
+    return false;
 }
 
-bool hasHigherPrecedence(const std::string &op, const std::string &compareTo) { // Does the op have higher precedence ( or priority ) than compareTo
-	return precedenceOf(op) > precedenceOf(compareTo);
+bool hasHigherPrecedence(const std::string &op, const std::string &compareTo)
+{    // Does the op have higher precedence ( or priority ) than compareTo
+    return precedenceOf(op) > precedenceOf(compareTo);
 }
-Precedence precedenceOf(const std::string &op) { // Get a number representing the priority of op
-	if (gOneCharOps.contains(op))
-		return gOneCharOps.at(op);
-	if (gTwoCharOps.contains(op))
-		return gTwoCharOps.at(op);
-	// unlikely (impossible?)
-	throw TokenException("ERROR", op, 0, 0, "UnexpectedToken", "Expected operator symbol in precendenceOf()");
-}
-
-size_t indent_size_of(const std::string &fileString) { // Detect indent size of file content
-	size_t lineStart = 0;
-	size_t lineEnd = fileString.find('\n');
-	bool shouldBreak = false;
-
-	while (!shouldBreak) {
-		if (lineEnd == std::string::npos) { // TODO : handle last line more elegantly ?
-			lineEnd = fileString.size() - 1; // last line of file
-			shouldBreak = true;
-		}
-		// get the line string clean of comments (anything after the first found hashtag is deleted)
-		std::string line = remove_comments(fileString.substr(lineStart, lineEnd - lineStart));
-
-		// if it is just whitespace, ignore and get next line
-		if (line_is_empty(line)) {
-			lineStart = lineEnd + 1;
-			lineEnd = fileString.find('\n', lineStart);
-			continue ;
-		}
-		size_t r = indent_size_of_line(line);
-		if (r != 0)
-			return r;
-		lineStart = lineEnd + 1;
-		lineEnd = fileString.find('\n', lineStart);
-	}
-	return 0;
-}
-size_t indent_size_of_line(const std::string &fileLine) { // for a single line
-	for (size_t i = 0; i < fileLine.size(); i++)
-		if (fileLine[i] != ' ' && fileLine[i] != '\t')
-			return i;
-	return 0;
+Precedence precedenceOf(const std::string &op)
+{    // Get a number representing the priority of op
+    if (gOneCharOps.contains(op)) return gOneCharOps.at(op);
+    if (gTwoCharOps.contains(op)) return gTwoCharOps.at(op);
+    // unlikely (impossible?)
+    throw TokenException("ERROR", op, 0, 0, "UnexpectedToken", "Expected operator symbol in precendenceOf()");
 }
 
-IndentType indent_type_of(const std::string &fileString) { // Detect indent type of file content
-	size_t lineNb = 0;
-	size_t lineStart = 0;
-	size_t lineEnd = fileString.find('\n', lineStart);
-	bool shouldBreak = false;
+size_t indent_size_of(const std::string &fileString)
+{    // Detect indent size of file content
+    size_t lineStart = 0;
+    size_t lineEnd = fileString.find('\n');
+    bool shouldBreak = false;
 
-	while (!shouldBreak) {
-		if (lineEnd == std::string::npos) { // TODO : handle last line more elegantly ?
-			lineEnd = fileString.size() - 1; // last line of file
-			shouldBreak = true;
-		}
-		// get the line string clean of comments (anything after the first found hashtag is deleted)
-		std::string line = remove_comments(fileString.substr(lineStart, lineEnd - lineStart));
+    while (!shouldBreak) {
+        if (lineEnd == std::string::npos) {     // TODO : handle last line more elegantly ?
+            lineEnd = fileString.size() - 1;    // last line of file
+            shouldBreak = true;
+        }
+        // get the line string clean of comments (anything after the first found hashtag is deleted)
+        std::string line = remove_comments(fileString.substr(lineStart, lineEnd - lineStart));
 
-		// if it is just whitespace, ignore and get next line
-		if (line_is_empty(line)) {
-			lineStart = lineEnd + 1;
-			lineEnd = fileString.find('\n', lineStart);
-			continue ;
-		}
-		IndentType r = indent_type_of_line(line);
-		if (r == IndentType::Invalid)
-			throw MixedIndentException("ERROR", line, lineNb + 1, "Mixed indent");
-		if (r != IndentType::NoIndent)
-			return r;
-		lineStart = lineEnd + 1;
-		lineEnd = fileString.find('\n', lineStart);
-		lineNb++;
-	}
-	return IndentType::NoIndent;
+        // if it is just whitespace, ignore and get next line
+        if (line_is_empty(line)) {
+            lineStart = lineEnd + 1;
+            lineEnd = fileString.find('\n', lineStart);
+            continue;
+        }
+        size_t r = indent_size_of_line(line);
+        if (r != 0) return r;
+        lineStart = lineEnd + 1;
+        lineEnd = fileString.find('\n', lineStart);
+    }
+    return 0;
 }
-IndentType indent_type_of_line(const std::string &fileLine) { // for a single line
-	if (fileLine.empty())
-		return IndentType::NoIndent;
-	char indentChar = fileLine.at(0);
-	IndentType indentType = indent_type_of_char(indentChar);
-	if (indentType == IndentType::NoIndent) // first char is neither a space nor a tab
-		return IndentType::NoIndent;
-	for (char c : fileLine) { // indent type has been decided, IndentType::Spaces or IndentType::Tabs
-		if (c != ' ' && c != '\t') // if looped character is neither a space nor a tab, return valid indent
-			return indentType;
-		if (c != indentChar) // if looped character isn't the same as first char, return IndentType::invalid indent
-			return IndentType::Invalid;
-	}
-	std::cerr << "Why is this code branch executed ? Parser.cxx :: indent_type_of_line(const std::string &fileLine)" << std::endl;
-	return IndentType::Invalid;
-}
-IndentType indent_type_of_char(char c) { // for a single char
-	return (c == ' ' ? IndentType::Spaces : (c == '\t' ? IndentType::Tabs : IndentType::NoIndent));
+size_t indent_size_of_line(const std::string &fileLine)
+{    // for a single line
+    for (size_t i = 0; i < fileLine.size(); i++)
+        if (fileLine[i] != ' ' && fileLine[i] != '\t') return i;
+    return 0;
 }
 
-void printFileNode(const Node &file) { // Display a file tree in a readable way
-	if (file.type != NodeType::File) {
-		// std::cerr << std::format("printFileNode(const Node &file): can't print node {} (not a file)", gNodeTypeStrings.at(file.type)) << std::endl; // format not available in c++20 gcc yet
-		logger.warn("printFileNode(const Node &file): can't print node ") << gNodeTypeStrings.at(file.type) << " (not a file)";
-		return;
-	}
-	// std::cout << std::format("file {}\n", file.value); // format not available in c++20 gcc yet
-	std::cout << "file " << file.value << "\n";
-	for (const Node &child: file.children)
-		// std::cout << std::format("\t{} {}", gNodeTypeStrings.at(child.type), child.value) << std::endl; // format not available in c++20 gcc yet
-		std::cout << "\t" << gNodeTypeStrings.at(child.type) << " " << child.value << std::endl;
+IndentType indent_type_of(const std::string &fileString)
+{    // Detect indent type of file content
+    size_t lineNb = 0;
+    size_t lineStart = 0;
+    size_t lineEnd = fileString.find('\n', lineStart);
+    bool shouldBreak = false;
+
+    while (!shouldBreak) {
+        if (lineEnd == std::string::npos) {     // TODO : handle last line more elegantly ?
+            lineEnd = fileString.size() - 1;    // last line of file
+            shouldBreak = true;
+        }
+        // get the line string clean of comments (anything after the first found hashtag is deleted)
+        std::string line = remove_comments(fileString.substr(lineStart, lineEnd - lineStart));
+
+        // if it is just whitespace, ignore and get next line
+        if (line_is_empty(line)) {
+            lineStart = lineEnd + 1;
+            lineEnd = fileString.find('\n', lineStart);
+            continue;
+        }
+        IndentType r = indent_type_of_line(line);
+        if (r == IndentType::Invalid) throw MixedIndentException("ERROR", line, lineNb + 1, "Mixed indent");
+        if (r != IndentType::NoIndent) return r;
+        lineStart = lineEnd + 1;
+        lineEnd = fileString.find('\n', lineStart);
+        lineNb++;
+    }
+    return IndentType::NoIndent;
 }
-void printComponentNode(const Node &component) { // Display a component declaration in a readable way
-	if (component.type != NodeType::ComponentDeclaration) {
-		// std::cerr << std::format("printComponentNode(const Node &component): can't print node {} (not a component)", gNodeTypeStrings.at(component.type)) << std::endl; // format not available in c++20 gcc yet
-		logger.warn("printComponentNode(const Node &component): can't print node ") << gNodeTypeStrings.at(component.type) << " (not a component)";
-		return;
-	}
-	// std::cout << std::format("Component {}", component.value); // format not available in c++20 gcc yet
-	std::cout << "Component " << component.value;
-	if (component.children.at(0).value == "=") // Single line component
-		// std::cout << std::format(" = {}", component.children.at(1).value) << std::endl; // format not available in c++20 gcc yet
-		std::cout << " = " << component.children.at(1).value << std::endl;
-	else {
-		std::cout << "\n";
-		for (size_t i = 0; i < component.children.size() - 2; i+=2)
-			// std::cout << std::format("\t{} {}", component.children.at(i).value, component.children.at(i + 1).value) << std::endl; // format not available in c++20 gcc yet
-			std::cout << "\t" << component.children.at(i).value << " " << component.children.at(i + 1).value << std::endl;
-	}
+IndentType indent_type_of_line(const std::string &fileLine)
+{    // for a single line
+    if (fileLine.empty()) return IndentType::NoIndent;
+    char indentChar = fileLine.at(0);
+    IndentType indentType = indent_type_of_char(indentChar);
+    if (indentType == IndentType::NoIndent)    // first char is neither a space nor a tab
+        return IndentType::NoIndent;
+    for (char c: fileLine) {          // indent type has been decided, IndentType::Spaces or IndentType::Tabs
+        if (c != ' ' && c != '\t')    // if looped character is neither a space nor a tab, return valid indent
+            return indentType;
+        if (c != indentChar)    // if looped character isn't the same as first char, return IndentType::invalid indent
+            return IndentType::Invalid;
+    }
+    std::cerr << "Why is this code branch executed ? Parser.cxx :: indent_type_of_line(const std::string &fileLine)"
+              << std::endl;
+    return IndentType::Invalid;
 }
-std::string remove_comments(const std::string &line) { // Return comment-free version of input
-	size_t hashtag = line.find('#');
-	if (hashtag == std::string::npos)
-		return line;
-	return line.substr(0, hashtag);
-}
-bool line_is_empty(const std::string &line) { // Is line empty
-	return line.find_first_not_of(" \t") == std::string::npos;
+IndentType indent_type_of_char(char c)
+{    // for a single char
+    return (c == ' ' ? IndentType::Spaces : (c == '\t' ? IndentType::Tabs : IndentType::NoIndent));
 }
 
-} // end of namespace pivot::ecs::script::parser
+void printFileNode(const Node &file)
+{    // Display a file tree in a readable way
+    if (file.type != NodeType::File) {
+        // std::cerr << std::format("printFileNode(const Node &file): can't print node {} (not a file)",
+        // gNodeTypeStrings.at(file.type)) << std::endl; // format not available in c++20 gcc yet
+        logger.warn("printFileNode(const Node &file): can't print node ")
+            << gNodeTypeStrings.at(file.type) << " (not a file)";
+        return;
+    }
+    // std::cout << std::format("file {}\n", file.value); // format not available in c++20 gcc yet
+    std::cout << "file " << file.value << "\n";
+    for (const Node &child: file.children)
+        // std::cout << std::format("\t{} {}", gNodeTypeStrings.at(child.type), child.value) << std::endl; // format not
+        // available in c++20 gcc yet
+        std::cout << "\t" << gNodeTypeStrings.at(child.type) << " " << child.value << std::endl;
+}
+void printComponentNode(const Node &component)
+{    // Display a component declaration in a readable way
+    if (component.type != NodeType::ComponentDeclaration) {
+        // std::cerr << std::format("printComponentNode(const Node &component): can't print node {} (not a component)",
+        // gNodeTypeStrings.at(component.type)) << std::endl; // format not available in c++20 gcc yet
+        logger.warn("printComponentNode(const Node &component): can't print node ")
+            << gNodeTypeStrings.at(component.type) << " (not a component)";
+        return;
+    }
+    // std::cout << std::format("Component {}", component.value); // format not available in c++20 gcc yet
+    std::cout << "Component " << component.value;
+    if (component.children.at(0).value == "=")    // Single line component
+        // std::cout << std::format(" = {}", component.children.at(1).value) << std::endl; // format not available in
+        // c++20 gcc yet
+        std::cout << " = " << component.children.at(1).value << std::endl;
+    else {
+        std::cout << "\n";
+        for (size_t i = 0; i < component.children.size() - 2; i += 2)
+            // std::cout << std::format("\t{} {}", component.children.at(i).value, component.children.at(i + 1).value)
+            // << std::endl; // format not available in c++20 gcc yet
+            std::cout << "\t" << component.children.at(i).value << " " << component.children.at(i + 1).value
+                      << std::endl;
+    }
+}
+std::string remove_comments(const std::string &line)
+{    // Return comment-free version of input
+    size_t hashtag = line.find('#');
+    if (hashtag == std::string::npos) return line;
+    return line.substr(0, hashtag);
+}
+bool line_is_empty(const std::string &line)
+{    // Is line empty
+    return line.find_first_not_of(" \t") == std::string::npos;
+}
+
+}    // end of namespace pivot::ecs::script::parser

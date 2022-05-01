@@ -2,45 +2,44 @@
 
 #include "pivot/ecs/Core/Data/value.hxx"
 
-#include <unordered_map>
 #include <functional>
+#include <unordered_map>
 
-namespace pivot::ecs::script::interpreter {
+namespace pivot::ecs::script::interpreter
+{
 
 struct Variable {
-	std::string name;
-	bool hasValue = false;
-	data::Value value;
-	std::unordered_map<std::string, Variable> members;
+    std::string name;
+    bool hasValue = false;
+    data::Value value;
+    std::unordered_map<std::string, Variable> members;
 };
 
 /**
  * \brief	Container for all the variables a system
  * 			holds during the execution of a tick
- * 
+ *
  * 	This container allows access, use and modification of the
  * 	variables it stores. This is use by the interpreter to handle
  * 	variables during the execution of a tick.
  */
-class Stack {
+class Stack
+{
 public:
+    Stack();
+    ~Stack() = default;
 
-	Stack();
-	~Stack() = default;
+    void push(const Variable &var);
+    const Variable &find(const std::string &name) const;
+    void setValue(const std::string &name, const data::Value &newVal);
 
-
-	void push(const Variable &var);
-	const Variable &find(const std::string &name) const;
-	void setValue(const std::string &name, const data::Value &newVal);
-
-	inline void clear() noexcept { _stack.clear(); }
+    inline void clear() noexcept { _stack.clear(); }
 
 private:
-	std::unordered_map<std::string, Variable> _stack; /// name to variable
+    std::unordered_map<std::string, Variable> _stack;    /// name to variable
 
-	Variable &findMut(const std::string &name, std::unordered_map<std::string, Variable> &where);
-	const Variable &find(const std::string &name, const std::unordered_map<std::string, Variable> &where) const;
-
+    Variable &findMut(const std::string &name, std::unordered_map<std::string, Variable> &where);
+    const Variable &find(const std::string &name, const std::unordered_map<std::string, Variable> &where) const;
 };
 
-} // end of namespace pivot::ecs::script::interpreter
+}    // end of namespace pivot::ecs::script::interpreter

@@ -58,6 +58,6 @@ TEST_CASE("Test save scene", "[Scene][save]")
     save.close();
     REQUIRE(
         nlohmann::json::parse(
-            R"({"components":[{"Tag":{"name":"test"}}],"name":"test","systems":["Test Description","Test Description 2"],"scripts":[]})") ==
+            R"({"components":[{"Tag":{"name":"test"}}],"name":"test","systems":["Test Description","Test Description 2"],"scripts":[],"assets":[]})") ==
         nlohmann::json::parse(output));
 }

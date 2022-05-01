@@ -194,7 +194,7 @@ TEST_CASE("Scripting-Refacto-Engine")
 {
     std::cout << "------Engine------start" << std::endl;
 
-    std::string file = "C:/Users/jonme/eip/pivot/libscript/tests/tests/physics.pvt";
+    std::string file = "../../pivot/libscript/tests/tests/physics.pvt";
     component::Index cind;
     systems::Index sind;
     script::Engine engine(sind, cind);

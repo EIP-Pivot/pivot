@@ -76,6 +76,12 @@ public:
     /// @brief get Swapchain aspect ratio
     constexpr float getAspectRatio() const noexcept { return swapchain.getAspectRatio(); }
 
+    void buildAssetStorage(AssetStorage::CpuKeepFlags cpuKeep = AssetStorage::CpuKeepFlagBits::eNone,
+                           AssetStorage::GpuRessourceFlags gpuFlag = AssetStorage::GpuRessourceFlagBits::eClear)
+    {
+        return assetStorage.build(DescriptorBuilder(layoutCache, descriptorAllocator), cpuKeep, gpuFlag);
+    }
+
     template <validRenderer T>
     /// Add a Renderer to the frame
     T &addRenderer()

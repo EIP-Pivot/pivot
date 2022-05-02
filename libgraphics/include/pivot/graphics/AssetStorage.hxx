@@ -135,6 +135,8 @@ private:
         std::vector<std::uint32_t> indexStagingBuffer;
         IndexedStorage<std::string, CPUTexture> textureStaging;
         IndexedStorage<std::string, CPUMaterial> materialStaging;
+        std::unordered_map<std::string, std::filesystem::path> modelPaths;
+        std::unordered_map<std::string, std::filesystem::path> texturePaths;
     };
 
 public:

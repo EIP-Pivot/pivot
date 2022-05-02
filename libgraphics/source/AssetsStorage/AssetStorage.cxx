@@ -5,6 +5,9 @@
 
 #include <Logger.hpp>
 
+ENABLE_FLAGS_FOR_ENUM(pivot::graphics::AssetStorage::CpuKeepFlagBits);
+ENABLE_FLAGS_FOR_ENUM(pivot::graphics::AssetStorage::GpuRessourceFlagBits);
+
 namespace pivot::graphics
 {
 

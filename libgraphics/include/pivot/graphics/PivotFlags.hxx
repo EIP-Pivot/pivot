@@ -64,4 +64,27 @@ private:
     MaskType m_mask;
 };
 
+template <typename T>
+requires std::is_enum_v<T>
+constexpr bool enable_flag_for_enum = false;
+
+template <typename T>
+requires enable_flag_for_enum<T>
+constexpr Flags<T> operator|(const T &rhs, const T &lhs) noexcept { return Flags<T>(rhs) | lhs; }
+
+template <typename T>
+requires enable_flag_for_enum<T>
+constexpr Flags<T> operator^(const T &rhs, const T &lhs) noexcept { return Flags<T>(rhs) ^ lhs; }
+
+template <typename T>
+requires enable_flag_for_enum<T>
+constexpr Flags<T> operator&(const T &rhs, const T &lhs) noexcept { return Flags<T>(rhs) & lhs; }
+
 }    // namespace pivot
+
+#define ENABLE_FLAGS_FOR_ENUM(type)                         \
+    namespace pivot                                         \
+    {                                                       \
+        template <>                                         \
+        constexpr bool enable_flag_for_enum<::type> = true; \
+    }

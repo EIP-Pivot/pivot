@@ -83,15 +83,7 @@ struct Node {
 };
 
 struct Token {
-private:
-    inline auto tied() const { return std::tie(type, value, line_nb, char_nb); }
-
 public:
-    TokenType type;
-    std::string value;
-    size_t line_nb;
-    size_t char_nb;
-
     // inline std::string toString() const { return std::format("value='{}' line {} char {}", value, line_nb, char_nb);
     // } // format not available in c++20 gcc yet
     inline std::string toString() const
@@ -99,6 +91,12 @@ public:
         return "value='" + value + "' line " + std::to_string(line_nb) + " char " + std::to_string(line_nb);
     }
     auto operator<=>(const Token &rhs) const = default;
+
+public:
+    TokenType type;
+    std::string value;
+    size_t line_nb;
+    size_t char_nb;
 };
 
 }    // end of namespace pivot::ecs::script

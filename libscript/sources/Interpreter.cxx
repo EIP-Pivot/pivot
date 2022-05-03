@@ -29,15 +29,21 @@ const std::map<std::string, data::BasicType> gVariableTypes{{"Vector3", data::Ba
                                                             {"Boolean", data::BasicType::Boolean},
                                                             {"Color", data::BasicType::Number},
                                                             {"String", data::BasicType::String}};
-// Map builtin binary (two operands) operators, to their callback
+// Map builtin binary (two operands) operators, to their operator enum
 const std::map<std::string, std::function<data::Value(const data::Value &, const data::Value &)>> gOperatorCallbacks = {
-    {"*", interpreter::builtins::builtin_operatorMul},   {"/", interpreter::builtins::builtin_operatorDiv},
-    {"%", interpreter::builtins::builtin_operatorMod},   {"+", interpreter::builtins::builtin_operatorAdd},
-    {"-", interpreter::builtins::builtin_operatorSub},   {"<", interpreter::builtins::builtin_operatorLt},
-    {"<=", interpreter::builtins::builtin_operatorLtEq}, {">", interpreter::builtins::builtin_operatorGt},
-    {">=", interpreter::builtins::builtin_operatorGtEq}, {"==", interpreter::builtins::builtin_operatorEq},
-    {"!=", interpreter::builtins::builtin_operatorNEq},  {"&&", interpreter::builtins::builtin_operatorAnd},
-    {"||", interpreter::builtins::builtin_operatorOr}};
+    {"*", interpreter::builtins::builtin_operator<builtins::Operator::Multiplication>},
+    {"/", interpreter::builtins::builtin_operator<builtins::Operator::Divison>},
+    {"%", interpreter::builtins::builtin_operator<builtins::Operator::Modulo>},
+    {"+", interpreter::builtins::builtin_operator<builtins::Operator::Addition>},
+    {"-", interpreter::builtins::builtin_operator<builtins::Operator::Substraction>},
+    {"<", interpreter::builtins::builtin_operator<builtins::Operator::LowerThan>},
+    {"<=", interpreter::builtins::builtin_operator<builtins::Operator::LowerOrEqual>},
+    {">", interpreter::builtins::builtin_operator<builtins::Operator::GreaterThan>},
+    {">=", interpreter::builtins::builtin_operator<builtins::Operator::GreaterOrEqual>},
+    {"==", interpreter::builtins::builtin_operator<builtins::Operator::Equal>},
+    {"!=", interpreter::builtins::builtin_operator<builtins::Operator::NotEqual>},
+    {"&&", interpreter::builtins::builtin_operator<builtins::Operator::LogicalAnd>},
+    {"||", interpreter::builtins::builtin_operator<builtins::Operator::LogicalOr>}};
 // Map built-in function strings, to their callback and parameters (number and types)
 const std::unordered_map<              // map
     std::string, std::pair<            // function string name, to a pair

@@ -7,29 +7,22 @@
 namespace pivot::ecs::script::interpreter::builtins
 {
 
-// Builtins assume that the interpreter has called interpreter::validateParams()
-// therefore that the parameters are of correct size and types
-
-// Boolean	isPressed(String key)
-//		Returns whether or not the keyboard key is pressed
 data::Value builtin_isPressed(const std::vector<data::Value> &params)
 {
     // TODO : find a way to pass Window * as parameter
     return data::Value(true);
 }
 
-// void	print(String/Number/Boolean param1, ...)
-//		print the parameters on a single line, ending with a newline
 data::Value builtin_print(const std::vector<data::Value> &params)
 {
     for (const data::Value &param: params) {    // print has unlimited number of parameters
         data::BasicType varType = std::get<data::BasicType>(param.type());
-        if (varType == data::BasicType::Number)
-            std::cout << std::get<double>(param) << " ";
-        else if (varType == data::BasicType::String)
-            std::cout << std::get<std::string>(param) << " ";
-        else if (varType == data::BasicType::Boolean)
-            std::cout << (std::get<bool>(param) ? "true" : "false") << " ";
+        switch (varType) {
+            case data::BasicType::Number: std::cout << std::get<double>(param) << " "; break;
+            case data::BasicType::String: std::cout << std::get<std::string>(param) << " "; break;
+            case data::BasicType::Boolean: std::cout << (std::get<bool>(param) ? "true" : "false") << " "; break;
+            default: throw(std::runtime_error("Code branch shouldn't execute."));
+        }
     }
     std::cout << "\n";
     return data::Value();
@@ -40,7 +33,8 @@ data::Value builtin_print(const std::vector<data::Value> &params)
 
 // Relational operators -- start
 
-data::Value builtin_operatorEq(const data::Value &left, const data::Value &right)
+template <>
+data::Value builtin_operator<Operator::Equal>(const data::Value &left, const data::Value &right)
 {    // equal to operator '=='
     try {
         if (std::get<data::BasicType>(left.type()) == data::BasicType::Number &&
@@ -59,14 +53,13 @@ data::Value builtin_operatorEq(const data::Value &left, const data::Value &right
         else                                                                                // unsupported
             throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                    "Invalid equal to '==' operator between these types.");
-    } catch (InvalidException e) {
-        throw e;
     } catch (std::bad_variant_access e) {
         throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                "Invalid equal to '==' operator between these types.");
     }
 }
-data::Value builtin_operatorNEq(const data::Value &left, const data::Value &right)
+template <>
+data::Value builtin_operator<Operator::NotEqual>(const data::Value &left, const data::Value &right)
 {    // not equal to operator '!='
     try {
         if (std::get<data::BasicType>(left.type()) == data::BasicType::Number &&
@@ -92,27 +85,30 @@ data::Value builtin_operatorNEq(const data::Value &left, const data::Value &righ
                                "Invalid not equal to '!=' operator between these types.");
     }
 }
-data::Value builtin_operatorGt(const data::Value &left, const data::Value &right)
-{    // greater than operator '>'
-    try {
-        if (std::get<data::BasicType>(left.type()) == data::BasicType::Number &&
-            std::get<data::BasicType>(right.type()) == data::BasicType::Number)
-            return data::Value(std::get<double>(left) > std::get<double>(right));    // perform arithmetic comparison
-        else if (std::get<data::BasicType>(left.type()) == data::BasicType::String &&
-                 std::get<data::BasicType>(right.type()) == data::BasicType::String)
-            return data::Value(std::get<std::string>(left) >
-                               std::get<std::string>(right));    // perform alphabetical comparison
-        else                                                     // unsupported
-            throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
-                                   "Invalid greater than '>' operator between these types.");
-    } catch (InvalidException e) {
-        throw e;
-    } catch (std::bad_variant_access e) {
+// TODO : try function blocks
+template <>
+data::Value builtin_operator<Operator::GreaterThan>(const data::Value &left, const data::Value &right)
+try {
+    if (std::get<data::BasicType>(left.type()) == data::BasicType::Number &&
+        std::get<data::BasicType>(right.type()) == data::BasicType::Number)
+        return data::Value(std::get<double>(left) > std::get<double>(right));    // perform arithmetic comparison
+    else if (std::get<data::BasicType>(left.type()) == data::BasicType::String &&
+             std::get<data::BasicType>(right.type()) == data::BasicType::String)
+        // auto &strLeft = std::get_if<std::string>(left);
+        // if (!strLeft || !strRight) // std::get_if()
+        // 	throw();
+        return data::Value(std::get<std::string>(left) >
+                           std::get<std::string>(right));    // perform alphabetical comparison
+    else                                                     // unsupported
         throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
                                "Invalid greater than '>' operator between these types.");
-    }
+} catch (const std::bad_variant_access &) {
+    throw InvalidException("InvalidOperation", (left.type().toString() + "," + right.type().toString()).c_str(),
+                           "Invalid greater than '>' operator between these types.");
 }
-data::Value builtin_operatorGtEq(const data::Value &left, const data::Value &right)
+
+template <>
+data::Value builtin_operator<Operator::GreaterOrEqual>(const data::Value &left, const data::Value &right)
 {    // greater than or equal to operator '>='
     try {
         if (std::get<data::BasicType>(left.type()) == data::BasicType::Number &&
@@ -132,7 +128,8 @@ data::Value builtin_operatorGtEq(const data::Value &left, const data::Value &rig
                                "Invalid greater than or equal to '>=' operator between these types.");
     }
 }
-data::Value builtin_operatorLt(const data::Value &left, const data::Value &right)
+template <>
+data::Value builtin_operator<Operator::LowerThan>(const data::Value &left, const data::Value &right)
 {    // lower than operator '<'
     try {
         if (std::get<data::BasicType>(left.type()) == data::BasicType::Number &&
@@ -152,7 +149,8 @@ data::Value builtin_operatorLt(const data::Value &left, const data::Value &right
                                "Invalid lower than '<' operator between these types.");
     }
 }
-data::Value builtin_operatorLtEq(const data::Value &left, const data::Value &right)
+template <>
+data::Value builtin_operator<Operator::LowerOrEqual>(const data::Value &left, const data::Value &right)
 {    // lower than or equal to operator '<='
     try {
         if (std::get<data::BasicType>(left.type()) == data::BasicType::Number &&
@@ -176,7 +174,8 @@ data::Value builtin_operatorLtEq(const data::Value &left, const data::Value &rig
 // Relational operators -- end
 
 // Mathematical/Arithmetic operators -- start
-data::Value builtin_operatorAdd(const data::Value &left, const data::Value &right)
+template <>
+data::Value builtin_operator<Operator::Addition>(const data::Value &left, const data::Value &right)
 {    // additive operator '+'
     try {
         if (std::get<data::BasicType>(left.type()) == data::BasicType::Number &&
@@ -199,7 +198,8 @@ data::Value builtin_operatorAdd(const data::Value &left, const data::Value &righ
                                "Invalid addition '+' operator between these types.");
     }
 }
-data::Value builtin_operatorSub(const data::Value &left, const data::Value &right)
+template <>
+data::Value builtin_operator<Operator::Substraction>(const data::Value &left, const data::Value &right)
 {    // additive operator '-'
     try {
         if (std::get<data::BasicType>(left.type()) == data::BasicType::Number &&
@@ -219,7 +219,8 @@ data::Value builtin_operatorSub(const data::Value &left, const data::Value &righ
                                "Invalid substraction '-' operator between these types.");
     }
 }
-data::Value builtin_operatorMul(const data::Value &left, const data::Value &right)
+template <>
+data::Value builtin_operator<Operator::Multiplication>(const data::Value &left, const data::Value &right)
 {    // multiplication operator '*'
     try {
         if (std::get<data::BasicType>(left.type()) == data::BasicType::Number &&
@@ -240,7 +241,8 @@ data::Value builtin_operatorMul(const data::Value &left, const data::Value &righ
                                "Invalid multiplication '*' operator between these types.");
     }
 }
-data::Value builtin_operatorDiv(const data::Value &left, const data::Value &right)
+template <>
+data::Value builtin_operator<Operator::Divison>(const data::Value &left, const data::Value &right)
 {    // division operator '/'
     try {
         if (std::get<data::BasicType>(left.type()) == data::BasicType::Number &&
@@ -264,7 +266,8 @@ data::Value builtin_operatorDiv(const data::Value &left, const data::Value &righ
                                "Invalid division '-' operator between these types.");
     }
 }
-data::Value builtin_operatorMod(const data::Value &left, const data::Value &right)
+template <>
+data::Value builtin_operator<Operator::Modulo>(const data::Value &left, const data::Value &right)
 {    // modulo operator '%'
     try {
         if (std::get<data::BasicType>(left.type()) == data::BasicType::Integer &&
@@ -288,7 +291,8 @@ data::Value builtin_operatorMod(const data::Value &left, const data::Value &righ
 
 // Logical operators -- start
 
-data::Value builtin_operatorAnd(const data::Value &left, const data::Value &right)
+template <>
+data::Value builtin_operator<Operator::LogicalAnd>(const data::Value &left, const data::Value &right)
 {    // logical operator '&&' AND
     try {
         if (std::get<data::BasicType>(left.type()) == data::BasicType::Boolean &&
@@ -304,7 +308,8 @@ data::Value builtin_operatorAnd(const data::Value &left, const data::Value &righ
                                "Invalid Logical AND '&&' operator between these types.");
     }
 }
-data::Value builtin_operatorOr(const data::Value &left, const data::Value &right)
+template <>
+data::Value builtin_operator<Operator::LogicalOr>(const data::Value &left, const data::Value &right)
 {    // logical operator '||' OR
     try {
         if (std::get<data::BasicType>(left.type()) == data::BasicType::Boolean &&

@@ -49,13 +49,13 @@ enum class NodeType {
 };
 
 enum class Precedence {
-    LogicalAnd = 0,
-    LogicalOr = 1,
-    Equality = 2,
-    Relational = 3,
-    Additive = 4,
-    Multiplicative = 5,
-    Parens = 6,
+    LogicalAnd,
+    LogicalOr,
+    Equality,
+    Relational,
+    Additive,
+    Multiplicative,
+    Parens,
 };
 
 enum class TokenType {
@@ -98,10 +98,7 @@ public:
     {
         return "value='" + value + "' line " + std::to_string(line_nb) + " char " + std::to_string(line_nb);
     }
-    inline bool operator==(Token rhs) const { return tied() == rhs.tied(); }
+    auto operator<=>(const Token &rhs) const = default;
 };
 
 }    // end of namespace pivot::ecs::script
-
-// bool operator==(const pivot::ecs::script::Token &lhs, const pivot::ecs::script::Token &rhs) const { return lhs.tied()
-// == rhs.tied(); }

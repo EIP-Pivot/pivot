@@ -44,8 +44,8 @@ public:
 
         immediateCommand([&](vk::CommandBuffer &cmd) {
             vk::BufferCopy copyRegion{
-                .srcOffset = 0,
-                .dstOffset = 0,
+                .srcOffset = srcOffset,
+                .dstOffset = dstOffset,
                 .size = src.getBytesSize(),
             };
             cmd.copyBuffer(src.buffer, dst.buffer, copyRegion);

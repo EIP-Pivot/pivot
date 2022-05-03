@@ -97,23 +97,23 @@ public:
     template <typename T>
     /// Copy the data into a buffer
     requires std::is_standard_layout_v<T>
-    void copyBuffer(AllocatedBuffer<T> &buffer, const T *data, size_t size)
+    void copyBuffer(AllocatedBuffer<T> &buffer, const T *data, std::size_t data_size, std::size_t offset = 0)
     {
         assert(buffer);
         assert(data);
-        assert(buffer.getBytesSize() >= size);
-        if (size == 0) return;
+        assert(buffer.getBytesSize() >= data_size + offset);
+        if (data_size == 0) return;
         auto *mapped = mapMemory<T>(buffer);
-        std::memcpy(mapped, data, buffer.getBytesSize());
+        std::memcpy(mapped + offset, data, data_size);
         unmapMemory(buffer);
     }
 
     template <typename T>
     /// Copy the vector into the buffer
     requires std::is_standard_layout_v<T>
-    void copyBuffer(AllocatedBuffer<T> &buffer, const std::span<T> &data)
+    void copyBuffer(AllocatedBuffer<T> &buffer, const std::span<T> &data, std::size_t offset = 0)
     {
-        return copyBuffer(buffer, data.data(), data.size_bytes());
+        return copyBuffer(buffer, data.data(), data.size_bytes(), offset);
     }
 
     template <typename T>

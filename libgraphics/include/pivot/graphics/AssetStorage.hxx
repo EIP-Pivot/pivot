@@ -297,7 +297,6 @@ private:
 
     // Push to gpu
     void pushModelsOnGPU(GpuRessourceFlags gpuFlag);
-    void pushAABBOnGPU(GpuRessourceFlags gpuFlag);
     void pushTexturesOnGPU(GpuRessourceFlags gpuFlag);
     void pushMaterialOnGPU(GpuRessourceFlags gpuFlag);
 

@@ -3,6 +3,8 @@
 #include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/vk_debug.hxx"
 
+#include <type_traits>
+
 #include <Logger.hpp>
 
 ENABLE_FLAGS_FOR_ENUM(pivot::graphics::AssetStorage::CpuKeepFlagBits);
@@ -66,16 +68,16 @@ AssetStorage::~AssetStorage() {}
 void AssetStorage::build(DescriptorBuilder builder, CpuKeepFlags cpuKeep, GpuRessourceFlags gpuFlag)
 {
     DEBUG_FUNCTION
+    // check for incorrect combination of flags
+    assert(std::popcount(static_cast<std::underlying_type_t<AssetStorage::GpuRessourceFlagBits>>(gpuFlag)) == 1);
     assert(cpuStorage.materialStaging.contains(missing_material_name));
     assert(cpuStorage.textureStaging.contains(missing_texture_name));
+    vulkanDeletionQueue.flush();
     createTextureSampler();
 
     logger.info("Asset Storage") << prefabStorage.size() << " prefab loaded";
     logger.info("Asset Storage") << "Pushing " << modelStorage.size() << " models onto the GPU";
     pushModelsOnGPU(gpuFlag);
-
-    logger.info("Asset Storage") << "Pushing " << meshAABBStorage.size() << " AABB onto the GPU";
-    pushAABBOnGPU(gpuFlag);
 
     logger.info("Asset Storage") << "Pushing " << cpuStorage.textureStaging.size() << " textures onto the GPU";
     pushTexturesOnGPU(gpuFlag);
@@ -182,24 +184,31 @@ template <typename T>
 static void copy_with_staging_buffer(VulkanBase &base_ref, AssetStorage::GpuRessourceFlags gpuFlag,
                                      vk::BufferUsageFlags flag, std::vector<T> &data, AllocatedBuffer<T> &buffer)
 {
-    bool isComplicated = bool(gpuFlag & (AssetStorage::GpuRessourceFlags(AssetStorage::GpuRessourceFlagBits::eAfter) |
-                                         AssetStorage::GpuRessourceFlagBits::eBefore));
+    // check for incorrect combination of flags
+    assert(std::popcount(static_cast<std::underlying_type_t<AssetStorage::GpuRessourceFlagBits>>(gpuFlag)) == 1);
+
     auto true_size = data.size();
-    if (buffer && isComplicated) true_size += buffer.getSize();
-    auto staging = base_ref.allocator.createBuffer<T>(true_size, vk::BufferUsageFlagBits::eTransferSrc,
-                                                      vma::MemoryUsage::eCpuToGpu);
+    if (buffer &&
+        (gpuFlag & (AssetStorage::GpuRessourceFlagBits::eAfter | AssetStorage::GpuRessourceFlagBits::eBefore))) {
+        true_size += buffer.getSize();
+    }
+    auto staging = base_ref.allocator.createBuffer<T>(
+        true_size, vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst,
+        vma::MemoryUsage::eCpuToGpu);
 
-    if (gpuFlag & AssetStorage::GpuRessourceFlagBits::eAfter && buffer) base_ref.copyBuffer(buffer, staging);
-
-    base_ref.allocator.copyBuffer(staging, std::span(data));
-
-    if (gpuFlag & AssetStorage::GpuRessourceFlagBits::eBefore && buffer)
+    auto offset = 0;
+    if (buffer && (gpuFlag & AssetStorage::GpuRessourceFlagBits::eAfter)) {
+        base_ref.copyBuffer(buffer, staging);
+        offset += buffer.getSize();
+    }
+    base_ref.allocator.copyBuffer(staging, std::span(data), offset);
+    if (buffer && (gpuFlag & AssetStorage::GpuRessourceFlagBits::eBefore))
         base_ref.copyBuffer(buffer, staging, 0, data.size() * sizeof(T));
-
     if (true_size > buffer.getSize()) {
         base_ref.allocator.destroyBuffer(buffer);
-        buffer = base_ref.allocator.createBuffer<T>(true_size, flag | vk::BufferUsageFlagBits::eTransferDst,
-                                                    vma::MemoryUsage::eGpuOnly);
+        buffer = base_ref.allocator.createBuffer<T>(
+            true_size, flag | vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst,
+            vma::MemoryUsage::eGpuOnly);
     }
     base_ref.copyBuffer(staging, buffer);
     base_ref.allocator.destroyBuffer(staging);
@@ -209,16 +218,26 @@ void AssetStorage::pushModelsOnGPU(GpuRessourceFlags gpuFlag)
 {
     DEBUG_FUNCTION
     if (gpuFlag & GpuRessourceFlagBits::eClear) {
-        prefabStorage.clear();
-        modelStorage.clear();
         modelPaths.clear();
+        meshAABBStorage.clear();
     }
     if (gpuFlag & (AssetStorage::GpuRessourceFlagBits::eBefore | AssetStorage::GpuRessourceFlagBits::eAfter)) {
         modelPaths.insert(cpuStorage.modelPaths.begin(), cpuStorage.modelPaths.end());
     }
 
+    for (const auto &[name, model]: modelStorage) {
+        meshAABBStorage.add(name,
+                            gpu_object::AABB(std::span(cpuStorage.vertexStagingBuffer.begin() + model.mesh.vertexOffset,
+                                                       model.mesh.vertexSize)));
+    }
+
+    assert(modelStorage.size() == meshAABBStorage.size());
     if (cpuStorage.vertexStagingBuffer.empty()) {
         logger.warn("Asset Storage") << "No model to push";
+        return;
+    }
+    if (meshAABBStorage.empty()) {
+        logger.warn("Asset Storage") << "No AABB to push";
         return;
     }
 
@@ -229,22 +248,7 @@ void AssetStorage::pushModelsOnGPU(GpuRessourceFlags gpuFlag)
     copy_with_staging_buffer(base_ref->get(), gpuFlag, vk::BufferUsageFlagBits::eIndexBuffer,
                              cpuStorage.indexStagingBuffer, indicesBuffer);
     vk_debug::setObjectName(base_ref->get().device, indicesBuffer.buffer, "Indices Buffer");
-}
 
-void AssetStorage::pushAABBOnGPU(GpuRessourceFlags gpuFlag)
-{
-    DEBUG_FUNCTION
-    meshAABBStorage.clear();
-    for (const auto &[name, model]: modelStorage) {
-        meshAABBStorage.add(name,
-                            gpu_object::AABB(std::span(cpuStorage.vertexStagingBuffer.begin() + model.mesh.vertexOffset,
-                                                       model.mesh.vertexSize)));
-    }
-    assert(modelStorage.size() == meshAABBStorage.size());
-    if (meshAABBStorage.empty()) {
-        logger.warn("Asset Storage") << "No AABB to push";
-        return;
-    }
     copy_with_staging_buffer(base_ref->get(), gpuFlag, vk::BufferUsageFlagBits::eStorageBuffer,
                              meshAABBStorage.getStorage(), AABBBuffer);
     vk_debug::setObjectName(base_ref->get().device, AABBBuffer.buffer, "AABB Buffer");
@@ -254,12 +258,12 @@ void AssetStorage::pushTexturesOnGPU(GpuRessourceFlags gpuFlag)
 {
     DEBUG_FUNCTION
     if (gpuFlag & GpuRessourceFlagBits::eClear) {
-        textureStorage.clear();
         texturePaths.clear();
         for (auto &image: textureStorage.getStorage()) {
             base_ref->get().device.destroyImageView(image.imageView);
             base_ref->get().allocator.destroyImage(image);
         }
+        textureStorage.clear();
     }
     if (gpuFlag & (AssetStorage::GpuRessourceFlagBits::eBefore | AssetStorage::GpuRessourceFlagBits::eAfter)) {
         texturePaths.insert(cpuStorage.texturePaths.begin(), cpuStorage.texturePaths.end());
@@ -300,6 +304,7 @@ void AssetStorage::pushTexturesOnGPU(GpuRessourceFlags gpuFlag)
         base_ref->get().generateMipmaps(image, image.mipLevels);
 
         base_ref->get().allocator.destroyBuffer(stagingBuffer);
+        logger.trace("Push Texture") << name;
         textureStorage.add(name, std::move(image));
     }
 }

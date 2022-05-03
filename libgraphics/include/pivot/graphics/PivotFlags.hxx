@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <type_traits>
 
+#define BIT(x) (1u << x)
+
 namespace pivot
 {
 

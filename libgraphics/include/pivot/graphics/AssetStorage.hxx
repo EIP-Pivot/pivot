@@ -112,19 +112,19 @@ public:
     using Texture = AllocatedImage;
 
     enum class CpuKeepFlagBits : FlagsType {
-        eNone = 1 << 1,
-        eTexture = 1 << 2,
-        eMaterial = 1 << 3,
-        eVertex = 1 << 4,
-        eIndice = 1 << 5,
-        eAll = 1 << 6,
+        eNone = BIT(1),
+        eTexture = BIT(2),
+        eMaterial = BIT(3),
+        eVertex = BIT(4),
+        eIndice = BIT(5),
+        eAll = BIT(6),
     };
     using CpuKeepFlags = Flags<CpuKeepFlagBits>;
 
     enum class GpuRessourceFlagBits : FlagsType {
-        eClear = 1 << 1,
-        eAfter = 1 << 2,
-        eBefore = 1 << 3,
+        eClear = BIT(1),
+        eAfter = BIT(2),
+        eBefore = BIT(3),
     };
     using GpuRessourceFlags = Flags<GpuRessourceFlagBits>;
 

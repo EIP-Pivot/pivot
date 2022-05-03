@@ -5,12 +5,12 @@
 using namespace pivot;
 
 enum class TestEnum : FlagsType {
-    eOne = 1 << 1,
-    eTwo = 1 << 2,
-    eThree = 1 << 3,
-    eFour = 1 << 4,
-    eFive = 1 << 5,
-    eSix = 1 << 6,
+    eOne = BIT(1),
+    eTwo = BIT(2),
+    eThree = BIT(3),
+    eFour = BIT(4),
+    eFive = BIT(5),
+    eSix = BIT(6),
 };
 using TestEnumFlags = Flags<TestEnum>;
 ENABLE_FLAGS_FOR_ENUM(TestEnum)

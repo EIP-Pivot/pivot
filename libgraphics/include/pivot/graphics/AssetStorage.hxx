@@ -111,6 +111,7 @@ public:
     /// Alias for AllocatedImage
     using Texture = AllocatedImage;
 
+    /// Select with asset to keep in CPU Memory when building
     enum class CpuKeepFlagBits : FlagsType {
         eNone = BIT(1),
         eTexture = BIT(2),
@@ -119,13 +120,16 @@ public:
         eIndice = BIT(5),
         eAll = BIT(6),
     };
+    /// @see CpuKeepFlagBits
     using CpuKeepFlags = Flags<CpuKeepFlagBits>;
 
+    /// Select how assets should be uploaded onto the GPU
     enum class GpuRessourceFlagBits : FlagsType {
         eClear = BIT(1),
         eAfter = BIT(2),
         eBefore = BIT(3),
     };
+    /// @see GpuRessourceFlagBits
     using GpuRessourceFlags = Flags<GpuRessourceFlagBits>;
 
 private:

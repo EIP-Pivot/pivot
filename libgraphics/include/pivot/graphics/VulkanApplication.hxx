@@ -76,6 +76,7 @@ public:
     /// @brief get Swapchain aspect ratio
     constexpr float getAspectRatio() const noexcept { return swapchain.getAspectRatio(); }
 
+    /// Build the asset Storage
     void buildAssetStorage(AssetStorage::CpuKeepFlags cpuKeep = AssetStorage::CpuKeepFlagBits::eNone,
                            AssetStorage::GpuRessourceFlags gpuFlag = AssetStorage::GpuRessourceFlagBits::eClear);
 

@@ -14,7 +14,7 @@ std::string Engine::loadFile(const std::string &file, bool isContent, bool verbo
 {    // Load a file to register all descriptions in the file, as well as store the trees for the system entry points
     if (verbose) logger.info("script::Engine") << ": Loading file " << file;
     // TODO: return string with error on top of the node to deamImgui
-    Node fileNode = parser::ast_from_file(file, isContent, verbose);    // generate abstract syntax tree from file
+    Node fileNode = _parser.ast_from_file(file, isContent, verbose);    // generate abstract syntax tree from file
     if (verbose) parser::printFileNode(fileNode);
 
     // TODO: return string with error on top of the node

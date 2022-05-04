@@ -28,10 +28,10 @@ private:
 
     std::unordered_map<std::string, Node> _systems;
     interpreter::Stack _stack;
+    parser::Parser _parser;
 
-    Node
-    getEntryPointFor(const std::string &systemName,
-                     const Node &file);    // find entry point (TODO: make system decl into a node to avoid searching)
+    // Find entry point (TODO: make system decl into a node to avoid searching)
+    Node getEntryPointFor(const std::string &systemName, const Node &file);
 };
 
 }    // end of namespace pivot::ecs::script

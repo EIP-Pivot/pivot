@@ -61,6 +61,7 @@ TEST_CASE("Scripting-Refacto-HelperFunctions")
 
 TEST_CASE("Scripting-Refacto-Lexer")
 {
+    script::parser::Parser p;
     // std::vector<Token> script::parser::tokens_from_file(const std::string &fileName)
     // Mapping file names (containing PivotScript) to the expected list of tokens the lexer should extract
     std::map<std::string, std::vector<script::Token>> _expectedTokenlists = {
@@ -71,8 +72,12 @@ TEST_CASE("Scripting-Refacto-Lexer")
           script::Token{.type = script::TokenType::Identifier, .value = "Number", .line_nb = 1, .char_nb = 18}}}};
     for (auto &[fileContent, expectedTokens]: _expectedTokenlists) {
         // TODO : find elegant way to overload== for vectors (which isn't possible as of c++20)
-        std::vector<script::Token> tokens = script::parser::tokens_from_file(fileContent, true);
+        p.tokens_from_file(fileContent, true);
+        std::queue<script::Token> tokens = p.getTokenQueue();
         REQUIRE(tokens.size() == expectedTokens.size());
-        for (size_t i = 0; i < tokens.size(); i++) REQUIRE(tokens.at(i) == expectedTokens.at(i));
+        for (size_t i = 0; i < tokens.size(); i++) {
+            REQUIRE(tokens.front() == expectedTokens.at(i));
+            tokens.pop();
+        }
     }
 }

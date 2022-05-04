@@ -8,6 +8,8 @@
 namespace pivot::ecs::script::interpreter
 {
 
+struct Variable;
+
 struct Variable {
     std::string name;
     bool hasValue = false;

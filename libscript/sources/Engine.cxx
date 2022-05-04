@@ -52,7 +52,7 @@ void Engine::systemCallback(const systems::Description &system, component::Array
         } catch (const InvalidOperation &e) {
             logger.err("Invalid Operation: ") << e.what();
         } catch (const InvalidException &e) {
-            logger.err(e.what());
+            logger.err("Error: ") << e.what();
         } catch (const std::invalid_argument &e) {    // logic error
             logger.err("LogicError: ") << e.what();
         } catch (const std::exception &e) {

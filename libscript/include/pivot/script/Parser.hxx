@@ -7,6 +7,13 @@
 namespace pivot::ecs::script::parser
 {
 
+/*! \brief	Parser/Lexer handler to parse files and extract ASTs
+ *
+ * 	The lexer will analyze files and extract tokens based on symbols.
+ * 	It will pass these tokens to the parser which will extract nodes
+ * 	and generate an AST based on syntax.
+ *
+ */
 class Parser
 {
 public:

@@ -11,8 +11,8 @@ GraphicsRenderer::GraphicsRenderer(PipelineStorage &storage, AssetStorage &asset
 }
 GraphicsRenderer::~GraphicsRenderer() {}
 
-bool GraphicsRenderer::onInit(const vk::Extent2D &size, VulkanBase &base_ref, vk::DescriptorSetLayout &resolverLayout,
-                              vk::RenderPass &pass)
+bool GraphicsRenderer::onInit(const vk::Extent2D &size, VulkanBase &base_ref,
+                              const vk::DescriptorSetLayout &resolverLayout, vk::RenderPass &pass)
 {
     bIsMultiDraw = base_ref.deviceFeature.multiDrawIndirect;
     createPipelineLayout(base_ref.device, resolverLayout);
@@ -26,15 +26,15 @@ void GraphicsRenderer::onStop(VulkanBase &base_ref)
 }
 
 bool GraphicsRenderer::onRecreate(const vk::Extent2D &size, VulkanBase &base_ref,
-                                  vk::DescriptorSetLayout &resolverLayout, vk::RenderPass &pass)
+                                  const vk::DescriptorSetLayout &resolverLayout, vk::RenderPass &pass)
 {
     stor.removePipeline("pbr");
     stor.removePipeline("lit");
     stor.removePipeline("unlit");
     stor.removePipeline("wireframe");
     stor.removePipeline("skybox");
-    createPipeline(base_ref, pass, size);
-    return true;
+    onStop(base_ref);
+    return onInit(size, base_ref, resolverLayout, pass);
 }
 
 bool GraphicsRenderer::onDraw(const CameraData &cameraData, DrawCallResolver &resolver, vk::CommandBuffer &cmd)
@@ -76,7 +76,7 @@ bool GraphicsRenderer::onDraw(const CameraData &cameraData, DrawCallResolver &re
     return true;
 }
 
-void GraphicsRenderer::createPipelineLayout(vk::Device &device, vk::DescriptorSetLayout &resolverLayout)
+void GraphicsRenderer::createPipelineLayout(vk::Device &device, const vk::DescriptorSetLayout &resolverLayout)
 {
     DEBUG_FUNCTION
     std::vector<vk::PushConstantRange> pipelinePushConstant = {

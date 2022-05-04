@@ -14,10 +14,10 @@ public:
     ~ImGuiRenderer();
 
     std::string getName() const noexcept override { return "ImGui"; }
-    bool onInit(const vk::Extent2D &size, VulkanBase &base_ref, vk::DescriptorSetLayout &resolverLayout,
+    bool onInit(const vk::Extent2D &size, VulkanBase &base_ref, const vk::DescriptorSetLayout &resolverLayout,
                 vk::RenderPass &pass) override;
     void onStop(VulkanBase &base_ref) override;
-    bool onRecreate(const vk::Extent2D &size, VulkanBase &base_ref, vk::DescriptorSetLayout &resolverLayout,
+    bool onRecreate(const vk::Extent2D &size, VulkanBase &base_ref, const vk::DescriptorSetLayout &resolverLayout,
                     vk::RenderPass &pass) override;
     bool onDraw(const CameraData &cameraData, DrawCallResolver &resolver, vk::CommandBuffer &cmd) override;
 

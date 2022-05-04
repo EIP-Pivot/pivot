@@ -63,7 +63,7 @@ VulkanApplication::~VulkanApplication()
 void VulkanApplication::init()
 {
     VulkanBase::init({}, deviceExtensions, validationLayers);
-    buildAssetStorage();
+    assetStorage.build(DescriptorBuilder(layoutCache, descriptorAllocator));
     initVulkanRessources();
 }
 
@@ -87,10 +87,13 @@ void VulkanApplication::initVulkanRessources()
     createRenderPass();
     createFramebuffers();
 
-    auto layout = frames[0].drawResolver.getDescriptorSetLayout();
-    for (auto &[rendy, buffers]: graphicsRenderer)
-        rendy->onInit(swapchain.getSwapchainExtent(), *this, layout, renderPass.getRenderPass());
-    for (auto &[rendy, buffers]: computeRenderer) rendy->onInit(*this, layout);
+    std::ranges::for_each(graphicsRenderer, [this](auto &pair) {
+        pair.first->onInit(swapchain.getSwapchainExtent(), *this, frames[0].drawResolver.getDescriptorSetLayout(),
+                           renderPass.getRenderPass());
+    });
+    std::ranges::for_each(computeRenderer, [this](auto &pair) {
+        pair.first->onInit(*this, frames[0].drawResolver.getDescriptorSetLayout());
+    });
 
     createCommandBuffers();
     postInitialization();
@@ -98,6 +101,22 @@ void VulkanApplication::initVulkanRessources()
 }
 
 void VulkanApplication::postInitialization() {}
+
+void VulkanApplication::buildAssetStorage(AssetStorage::CpuKeepFlags cpuKeep, AssetStorage::GpuRessourceFlags gpuFlag)
+{
+    device.waitIdle();
+
+    assetStorage.build(DescriptorBuilder(layoutCache, descriptorAllocator), cpuKeep, gpuFlag);
+    std::ranges::for_each(computeRenderer, [this](auto &pair) {
+        pair.first->onRecreate(swapchain.getSwapchainExtent(), *this, frames[0].drawResolver.getDescriptorSetLayout(),
+                               renderPass.getRenderPass());
+    });
+    std::ranges::for_each(graphicsRenderer, [this](auto &pair) {
+        pair.first->onRecreate(swapchain.getSwapchainExtent(), *this, frames[0].drawResolver.getDescriptorSetLayout(),
+                               renderPass.getRenderPass());
+    });
+    logger.info("Vulkan Application") << "Asset Storage rebuild !";
+}
 
 void VulkanApplication::recreateSwapchain()
 {
@@ -156,7 +175,7 @@ try {
         .framebuffer = swapChainFramebuffers.at(imageIndex),
     };
     vk::CommandBufferBeginInfo drawBeginInfo{
-        .flags = vk::CommandBufferUsageFlagBits::eRenderPassContinue,
+        .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit | vk::CommandBufferUsageFlagBits::eRenderPassContinue,
         .pInheritanceInfo = &inheritanceInfo,
     };
     vk::CommandBufferBeginInfo computeInfo{
@@ -196,7 +215,10 @@ try {
         .clearValueCount = clearValues.size(),
         .pClearValues = clearValues.data(),
     };
-    vk::CommandBufferBeginInfo beginInfo;
+    vk::CommandBufferBeginInfo beginInfo{
+        .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit | vk::CommandBufferUsageFlagBits::eRenderPassContinue,
+
+    };
     vk_utils::vk_try(cmd.begin(&beginInfo));
     vk_debug::beginRegion(cmd, "main command", {1.f, 1.f, 1.f, 1.f});
     cmd.executeCommands(computeBuffer);

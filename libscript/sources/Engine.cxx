@@ -71,7 +71,7 @@ Node Engine::getEntryPointFor(const std::string &systemName, const Node &file)
                 if (child.type == NodeType::SystemEntryPoint) return child;
     // throw(std::exception(std::format("No entry point found for {}", systemName).c_str())); // format not available in
     // c++20 gcc yet
-    throw(std::runtime_error(("No entry point found for " + systemName).c_str()));
+    throw std::runtime_error(("No entry point found for " + systemName).c_str());
 }
 
 }    // end of namespace pivot::ecs::script

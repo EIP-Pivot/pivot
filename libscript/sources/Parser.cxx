@@ -13,7 +13,6 @@ namespace pivot::ecs::script::parser
 {
 
 const std::string gKnownSymbols = "+-/*%=!()<>,.#&|\" \t\r\n";
-const std::string gWhitespace = " \t\r\n";
 const std::unordered_map<std::string, Precedence> gOneCharOps = {
     {"/", Precedence::Multiplicative}, {"*", Precedence::Multiplicative}, {"%", Precedence::Multiplicative},
     {"+", Precedence::Additive},       {"-", Precedence::Additive},       {"<", Precedence::Relational},
@@ -291,7 +290,7 @@ void consumeSystemDescriptionToken(std::vector<Token> &tokens, Node &result, Tok
 }
 void consumeSystemStatement(std::vector<Token> &tokens, Node &result, Token &lastToken)
 {    // consume an entire statement and append it to children node
-    if (tokens.size() == 0) {
+    if (tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
         throw UnexpectedEOFException("Expected statement");
@@ -346,7 +345,7 @@ void consumeSystemBlock(std::vector<Token> &tokens, Node &result, Token &lastTok
 }
 void consumeSystemVariable(std::vector<Token> &tokens, Node &result, Token &lastToken)
 {    // consume a variable and append it to children node
-    if (tokens.size() == 0) {
+    if (tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
         throw UnexpectedEOFException("Expected variable");
@@ -405,7 +404,7 @@ void consumeSystemVariable(std::vector<Token> &tokens, Node &result, Token &last
 }
 void consumeSystemExpression(std::vector<Token> &tokens, Node &result, Token &lastToken)
 {    // consume an expression and append it to children node
-    if (tokens.size() == 0) {
+    if (tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
         throw UnexpectedEOFException("Expected expression");
@@ -421,7 +420,7 @@ void consumeSystemExpression(std::vector<Token> &tokens, Node &result, Token &la
            tokens.at(0).value != ",") {    // an expression runs until the next line, or until stopping symbol
         if (tokens.at(0).type != TokenType::Symbol)
             consumeSystemVariable(tokens, result, lastToken);    // consume operand as variable into postfix result
-        if (tokens.size() == 0 || tokens.at(0).line_nb != result.line_nb ||
+        if (tokens.empty() || tokens.at(0).line_nb != result.line_nb ||
             tokens.at(0).value == ",") {    // no more tokens/operators, end of expression
             while (
                 !_stack.empty()) {    // At the end of infix expression, we push all stack operators into postfix result
@@ -487,7 +486,7 @@ void consumeSystemExpression(std::vector<Token> &tokens, Node &result, Token &la
 }
 void consumeSystemFuncParams(std::vector<Token> &tokens, Node &result, Token &lastToken)
 {    // consume function parameters and append them to children node
-    if (tokens.size() == 0) {
+    if (tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
         throw UnexpectedEOFException("Expected '(' symbol");
@@ -499,7 +498,7 @@ void consumeSystemFuncParams(std::vector<Token> &tokens, Node &result, Token &la
     // TODO : handle parentheses '(' ')'
     while (tokens.size() > 0 && tokens.at(0).value != ")") {       // an expression runs until a ')' symbol
         consumeSystemVariable(tokens, paramsResult, lastToken);    // consume variable
-        if (tokens.size() == 0 || tokens.at(0).value == ")")       // no more variables, end of expression
+        if (tokens.empty() || tokens.at(0).value == ")")           // no more variables, end of expression
             break;
         if (tokens.at(0).value != ",") {    // token is not an comma
             logger.err("ERROR") << " at line " << tokens.at(0).line_nb << " char " << tokens.at(0).char_nb << ": '"
@@ -517,7 +516,7 @@ void consumeSystemFuncParams(std::vector<Token> &tokens, Node &result, Token &la
 
 void expectSystemToken(std::vector<Token> &tokens, TokenType expectedType, Token &lastToken, bool consume)
 {    // check that token exists, and is of correct type (and potentially consume it from tokens)
-    if (tokens.size() == 0) {
+    if (tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
         logger.err("Expected ") << gTokenTypeStrings.at(expectedType) << " token type.";
@@ -537,7 +536,7 @@ void expectSystemToken(std::vector<Token> &tokens, TokenType expectedType, Token
 void expectSystemTokenValue(std::vector<Token> &tokens, const std::string &expectedValue, Token &lastToken,
                             bool consume)
 {    // check that token exists, and is of correct value (and potentially consume it from tokens)
-    if (tokens.size() == 0) {
+    if (tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
         logger.err("Expected '") << expectedValue << "' token value.";
@@ -675,7 +674,7 @@ std::vector<Token> tokens_from_file(const std::string &file, bool isContent, boo
                     }
                 }    // all branches led to continue
 
-                if (gWhitespace.find(line.at(rcursor)) == std::string::npos) {    // token is not whitespace
+                if (!std::isspace(line.at(rcursor))) {    // token is not whitespace
                     if (gTwoCharOps.contains(
                             line.substr(lcursor, 2))) {    // token is logical / relational operator ( 2 char wide)
                         result.push_back(Token{.type = TokenType::Symbol,
@@ -727,7 +726,7 @@ std::vector<Token> tokens_from_file(const std::string &file, bool isContent, boo
                     result.push_back(Token{
                         .type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
                 }
-                if (!isLiteral && gWhitespace.find(line.at(rcursor)) == std::string::npos)
+                if (!isLiteral && !std::isspace(line.at(rcursor)))
                     result.push_back(Token{.type = TokenType::Symbol,
                                            .value = line.substr(rcursor, 1),
                                            .line_nb = lineNb,
@@ -765,8 +764,8 @@ std::vector<Token> tokens_from_file(const std::string &file, bool isContent, boo
 }
 
 bool isDeclarationOver(const std::vector<Token> &tokens)
-{                              // Is there no more tokens, or is the first the end of the declaration
-    if (tokens.size() == 0)    // No more tokens
+{                          // Is there no more tokens, or is the first the end of the declaration
+    if (tokens.empty())    // No more tokens
         return true;
     if (tokens.at(0).value == "component" || tokens.at(0).value == "system")    // First token is "component" "system"
         return true;

@@ -44,19 +44,19 @@ const std::map<std::string, std::function<data::Value(const data::Value &, const
     {"!=", interpreter::builtins::builtin_operator<builtins::Operator::NotEqual>},
     {"&&", interpreter::builtins::builtin_operator<builtins::Operator::LogicalAnd>},
     {"||", interpreter::builtins::builtin_operator<builtins::Operator::LogicalOr>}};
-// Map built-in function strings, to their callback and parameters (number and types)
-const std::unordered_map<              // map
-    std::string, std::pair<            // function string name, to a pair
-                     std::function<    // first : callback
-                         data::Value(const std::vector<data::Value> &)>,
-                     std::pair<size_t, std::vector<std::vector<data::Type>>>    // second: pair; first: number of
-                                                                                // params, second: types of params
-                     >>
-    gBuiltinsCallbacks = {{"isPressed", {interpreter::builtins::builtin_isPressed, {1, {{data::BasicType::String}}}}},
-                          {"print",
-                           {interpreter::builtins::builtin_print,
-                            {std::numeric_limits<size_t>::max(),
-                             {{data::BasicType::String, data::BasicType::Number, data::BasicType::Boolean}}}}}};
+
+/// Builtins are callbacks taking values as parameters and returning a single value
+using BuiltinFunctionCallback = std::function<data::Value(const std::vector<data::Value> &)>;
+/// The signature can be represented as a number of parameters, and to each their possible types
+using ParameterPair = std::pair<size_t, std::vector<std::vector<data::Type>>>;
+
+/// This map will map the name of a builtin, to its callback paired with its signature
+const std::unordered_map<std::string, std::pair<FunctionCallback, ParameterPair>> gBuiltinsCallbacks = {
+    {"isPressed", {interpreter::builtins::builtin_isPressed, {1, {{data::BasicType::String}}}}},
+    {"print",
+     {interpreter::builtins::builtin_print,
+      {std::numeric_limits<size_t>::max(),
+       {{data::BasicType::String, data::BasicType::Number, data::BasicType::Boolean}}}}}};
 
 // Public functions ( can be called anywhere )
 
@@ -90,7 +90,7 @@ std::vector<systems::Description> registerDeclarations(const Node &file, compone
                 // std::cerr << std::format("registerDeclarations(const Node &file): can't interpret sub node {} (not a
                 // component nor a system)", gNodeTypeStrings.at(node.type)) << std::endl; // format not available in
                 // c++20 gcc yet
-                logger.err("registerDeclarations(const Node &file): can't register declarations for sub node ")
+                logger.err("Register Declarations:") << "registerDeclarations(const Node &file): can't register declarations for sub node ")
                     << gNodeTypeStrings.at(node.type) << " (not a component nor a system)";
                 return result;
             }

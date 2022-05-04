@@ -6,6 +6,7 @@
 #include <unordered_map>
 
 #include "Logger.hpp"
+#include "magic_enum.hpp"
 #include "pivot/script/Exceptions.hxx"
 #include "pivot/script/Parser.hxx"
 
@@ -21,30 +22,6 @@ const std::unordered_map<std::string, Precedence> gTwoCharOps = {
     {">=", Precedence::Relational}, {"<=", Precedence::Relational}, {"==", Precedence::Equality},
     {"!=", Precedence::Equality},   {"&&", Precedence::LogicalAnd}, {"||", Precedence::LogicalOr}};
 const std::vector<std::string> gBlockops = {"if", "while"};
-// TODO : consider using magicenum
-const std::unordered_map<IndentType, std::string> gIndentTypeStrings = {{IndentType::Tabs, "Tabs"},
-                                                                        {IndentType::Spaces, "Spaces"},
-                                                                        {IndentType::NoIndent, "NoIndent"},
-                                                                        {IndentType::Invalid, "Invalid"}};
-const std::unordered_map<NodeType, std::string> gNodeTypeStrings = {
-    {NodeType::File, "File"},
-    {NodeType::ComponentDeclaration, "ComponentDeclaration"},
-    {NodeType::SystemDeclaration, "SystemDeclaration"},
-    {NodeType::ComponentName, "ComponentName"},
-    {NodeType::SystemName, "SystemName"},
-    {NodeType::PropertyType, "PropertyType"},
-    {NodeType::PropertyName, "PropertyName"},
-    {NodeType::EventKeyword, "EventKeyword"},
-    {NodeType::EventName, "EventName"},
-    {NodeType::EventPayloadType, "EventPayloadType"},
-    {NodeType::EventPayloadName, "EventPayloadName"},
-    {NodeType::EntityParameterName, "EntityParameterName"},
-    {NodeType::EntityParameterComponent, "EntityParameterComponent"},
-    {NodeType::Symbol, "Symbol"}};
-const std::unordered_map<TokenType, std::string> gTokenTypeStrings = {{TokenType::Identifier, "Identifier"},
-                                                                      {TokenType::Indent, "Indent"},
-                                                                      {TokenType::Dedent, "Dedent"},
-                                                                      {TokenType::Symbol, "Symbol"}};
 const std::unordered_map<std::string, data::BasicType> gVariableTypes{{"Vector3", data::BasicType::Vec3},
                                                                       {"Number", data::BasicType::Number},
                                                                       {"Boolean", data::BasicType::Boolean},
@@ -127,8 +104,8 @@ void Parser::tokens_from_file(const std::string &file, bool isContent, bool verb
     // Detect indent type of file (to then insert Indent and Dedent tokens and ignore all whitespace afterthat)
     IndentType indentType = indent_type_of(text);
     size_t indentSize = indent_size_of(text);
-    if (verbose) logger.info("Indent for ") << file << ": " << indentSize << " " << gIndentTypeStrings.at(indentType);
-    // std::cout << std::format("Indent for {}: {} {}", file, indentSize, gIndentTypeStrings.at(indentType)) <<
+    if (verbose) logger.info("Indent for ") << file << ": " << indentSize << " " << magic_enum::enum_name(indentType);
+    // std::cout << std::format("Indent for {}: {} {}", file, indentSize, magic_enum::enum_name(indentType)) <<
     // std::endl; // format not available in c++20 gcc yet
 
     // Clear _tokens variable (new assign more efficient than .pop() loop ?)
@@ -364,7 +341,7 @@ void Parser::consumeComponentToken(Node &result, TokenType expectedType, NodeTyp
     if (_tokens.front().type != expectedType) {
         logger.err("ERROR") << " at line " << _tokens.front().line_nb << " char " << _tokens.front().char_nb << ": '"
                             << _tokens.front().value << "'";
-        logger.err("Expected ") << gTokenTypeStrings.at(expectedType) + " token";
+        logger.err("Expected ") << magic_enum::enum_name(expectedType) << " token";
         throw UnexpectedTokenTypeException("Invalid type for token.");
     }
     // The component name is stored in the value of the node
@@ -483,13 +460,13 @@ void Parser::consumeSystemDescriptionToken(Node &result, TokenType expectedType,
     if (_tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
-        logger.err("Expected ") << gTokenTypeStrings.at(expectedType) << "token";
+        logger.err("Expected ") << magic_enum::enum_name(expectedType) << "token";
         throw UnexpectedEOFException("");
     }
     if (_tokens.front().type != expectedType) {
         logger.err("ERROR") << " at line " << _tokens.front().line_nb << " char " << _tokens.front().char_nb << ": '"
                             << _tokens.front().value << "'";
-        logger.err("Expected ") << gTokenTypeStrings.at(expectedType) << "token";
+        logger.err("Expected ") << magic_enum::enum_name(expectedType) << "token";
         throw UnexpectedTokenTypeException("");
     }
     // The system name is stored in the value
@@ -508,7 +485,7 @@ void Parser::consumeSystemDescriptionToken(const Token &token, Node &result, Tok
 {    // consume one token for declaration (parameter)
     if (token.type != expectedType) {
         logger.err("ERROR") << " at line " << token.line_nb << " char " << token.char_nb << ": '" << token.value << "'";
-        logger.err("Expected ") << gTokenTypeStrings.at(expectedType) << "token";
+        logger.err("Expected ") << magic_enum::enum_name(expectedType) << "token";
         throw UnexpectedTokenTypeException("");
     }
     // The system name is stored in the value
@@ -750,13 +727,13 @@ void Parser::expectSystemToken(TokenType expectedType, Token &lastToken, bool co
     if (_tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
-        logger.err("Expected ") << gTokenTypeStrings.at(expectedType) << " token type.";
+        logger.err("Expected ") << magic_enum::enum_name(expectedType) << " token type.";
         throw UnexpectedEOFException("");
     }
     if (_tokens.front().type != expectedType) {
         logger.err("ERROR") << " at line " << _tokens.front().line_nb << " char " << _tokens.front().char_nb << ": '"
                             << _tokens.front().value << "'";
-        logger.err("Expected ") << gTokenTypeStrings.at(expectedType) << " token type.";
+        logger.err("Expected ") << magic_enum::enum_name(expectedType) << " token type.";
         throw UnexpectedTokenTypeException("");
     }
     if (consume) {
@@ -903,25 +880,25 @@ void printFileNode(const Node &file)
 {    // Display a file tree in a readable way
     if (file.type != NodeType::File) {
         // std::cerr << std::format("printFileNode(const Node &file): can't print node {} (not a file)",
-        // gNodeTypeStrings.at(file.type)) << std::endl; // format not available in c++20 gcc yet
+        // magic_enum::enum_name(file.type)) << std::endl; // format not available in c++20 gcc yet
         logger.warn("printFileNode(const Node &file): can't print node ")
-            << gNodeTypeStrings.at(file.type) << " (not a file)";
+            << magic_enum::enum_name(file.type) << " (not a file)";
         return;
     }
     // std::cout << std::format("file {}\n", file.value); // format not available in c++20 gcc yet
     std::cout << "file " << file.value << "\n";
     for (const Node &child: file.children)
-        // std::cout << std::format("\t{} {}", gNodeTypeStrings.at(child.type), child.value) << std::endl; // format not
-        // available in c++20 gcc yet
-        std::cout << "\t" << gNodeTypeStrings.at(child.type) << " " << child.value << std::endl;
+        // std::cout << std::format("\t{} {}", magic_enum::enum_name(child.type), child.value) << std::endl; // format
+        // not available in c++20 gcc yet
+        std::cout << "\t" << magic_enum::enum_name(child.type) << " " << child.value << std::endl;
 }
 void printComponentNode(const Node &component)
 {    // Display a component declaration in a readable way
     if (component.type != NodeType::ComponentDeclaration) {
         // std::cerr << std::format("printComponentNode(const Node &component): can't print node {} (not a component)",
-        // gNodeTypeStrings.at(component.type)) << std::endl; // format not available in c++20 gcc yet
+        // magic_enum::enum_name(component.type)) << std::endl; // format not available in c++20 gcc yet
         logger.warn("printComponentNode(const Node &component): can't print node ")
-            << gNodeTypeStrings.at(component.type) << " (not a component)";
+            << magic_enum::enum_name(component.type) << " (not a component)";
         return;
     }
     // std::cout << std::format("Component {}", component.value); // format not available in c++20 gcc yet

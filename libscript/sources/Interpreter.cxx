@@ -1,5 +1,6 @@
 #include "pivot/script/Interpreter.hxx"
 #include "Logger.hpp"
+#include "magic_enum.hpp"
 #include "pivot/script/Builtins.hxx"
 #include "pivot/script/Exceptions.hxx"
 #include <limits>
@@ -8,22 +9,6 @@
 namespace pivot::ecs::script::interpreter
 {
 
-// TODO: consider using magicenum
-const std::map<NodeType, std::string> gNodeTypeStrings = {
-    {NodeType::File, "File"},
-    {NodeType::ComponentDeclaration, "ComponentDeclaration"},
-    {NodeType::SystemDeclaration, "SystemDeclaration"},
-    {NodeType::ComponentName, "ComponentName"},
-    {NodeType::SystemName, "SystemName"},
-    {NodeType::PropertyType, "PropertyType"},
-    {NodeType::PropertyName, "PropertyName"},
-    {NodeType::EventKeyword, "EventKeyword"},
-    {NodeType::EventName, "EventName"},
-    {NodeType::EventPayloadType, "EventPayloadType"},
-    {NodeType::EventPayloadName, "EventPayloadName"},
-    {NodeType::EntityParameterName, "EntityParameterName"},
-    {NodeType::EntityParameterComponent, "EntityParameterComponent"},
-    {NodeType::Symbol, "Symbol"}};
 const std::map<std::string, data::BasicType> gVariableTypes{{"Vector3", data::BasicType::Vec3},
                                                             {"Number", data::BasicType::Number},
                                                             {"Boolean", data::BasicType::Boolean},
@@ -66,9 +51,9 @@ std::vector<systems::Description> registerDeclarations(const Node &file, compone
     std::vector<systems::Description> result;
     if (file.type != NodeType::File) {
         // std::cerr << std::format("registerDeclarations(const Node &file): can't interpret node {} (not a file)",
-        // gNodeTypeStrings.at(file.type)) << std::endl; // format not available in c++20 gcc yet
+        // magic_enum::enum_name(file.type) << std::endl; // format not available in c++20 gcc yet
         logger.warn("registerDeclarations(const Node &file): can't interpret node ")
-            << gNodeTypeStrings.at(file.type) << " (not a file)";
+            << magic_enum::enum_name(file.type) << " (not a file)";
         return result;
     }
     try {    // handle exceptions from register functions
@@ -80,19 +65,19 @@ std::vector<systems::Description> registerDeclarations(const Node &file, compone
                 systems::Description r = registerSystemDeclaration(node, file.value);
                 if (r.name == "Error 1") {
                     // std::cerr << std::format("registerDeclarations(const Node &file): failed to interpret sub node
-                    // {}", gNodeTypeStrings.at(node.type)) << std::endl; // format not available in c++20 gcc yet
+                    // {}", magic_enum::enum_name(node.type)) << std::endl; // format not available in c++20 gcc yet
                     logger.err("registerDeclarations(const Node &file): failed to register declarations for sub node ")
-                        << gNodeTypeStrings.at(node.type);
+                        << magic_enum::enum_name(node.type);
                     return result;
                 }
                 result.push_back(r);
             } else {    // ??
                 // std::cerr << std::format("registerDeclarations(const Node &file): can't interpret sub node {} (not a
-                // component nor a system)", gNodeTypeStrings.at(node.type)) << std::endl; // format not available in
+                // component nor a system)", magic_enum::enum_name(node.type)) << std::endl; // format not available in
                 // c++20 gcc yet
                 logger.err("Register Declarations:")
                     << "registerDeclarations(const Node &file): can't register declarations for sub node "
-                    << gNodeTypeStrings.at(node.type) << " (not a component nor a system)";
+                    << magic_enum::enum_name(node.type) << " (not a component nor a system)";
                 return result;
             }
         }
@@ -413,13 +398,13 @@ void consumeNode(const std::vector<Node> &children, size_t &childIndex, systems:
     if (childIndex >= children.size()) {    // TODO : for sure this -1 crashes, fix
         logger.err("ERROR") << " at line " << children.at(childIndex - 1).line_nb << " char "
                             << children.at(childIndex - 1).char_nb << ": '" << children.at(childIndex - 1).value << "'";
-        logger.err("Expected ") << gNodeTypeStrings.at(expectedType) << " node type.";
+        logger.err("Expected ") << magic_enum::enum_name(expectedType) << " node type.";
         throw UnexpectedEOFException("");
     }
     const script::Node &node = children.at(childIndex);
     if (node.type != expectedType) {
         logger.err("ERROR") << " at line " << node.line_nb << " char " << node.char_nb << ": '" << node.value << "'";
-        logger.err("Expected ") << gNodeTypeStrings.at(expectedType) << " node type.";
+        logger.err("Expected ") << magic_enum::enum_name(expectedType) << " node type.";
         throw UnexpectedNodeTypeException("");
     }
     switch (expectedType) {
@@ -446,7 +431,7 @@ void consumeNode(const std::vector<Node> &children, size_t &childIndex, systems:
         default:
             logger.err("ERROR") << " at line " << node.line_nb << " char " << node.char_nb << ": '" << node.value
                                 << "'";
-            logger.err("Expected ") << gNodeTypeStrings.at(expectedType) << " node type.";
+            logger.err("Expected ") << magic_enum::enum_name(expectedType) << " node type.";
             throw UnexpectedNodeTypeException("");
     }
     childIndex++;
@@ -519,13 +504,13 @@ void expectNodeTypeValue(const std::vector<Node> &children, size_t &childIndex, 
     if (childIndex == children.size()) {
         logger.err("ERROR") << " at line " << children.at(childIndex - 1).line_nb << " char "
                             << children.at(childIndex - 1).char_nb << ": '" << children.at(childIndex - 1).value << "'";
-        logger.err("Expected ") << gNodeTypeStrings.at(expectedType) << " node type.";
+        logger.err("Expected ") << magic_enum::enum_name(expectedType) << " node type.";
         throw UnexpectedEOFException("");
     }
     const Node &node = children.at(childIndex);
     if (node.type != expectedType) {
         logger.err("ERROR") << " at line " << node.line_nb << " char " << node.char_nb << ": '" << node.value << "'";
-        logger.err("Expected ") << gNodeTypeStrings.at(expectedType) << " node type.";
+        logger.err("Expected ") << magic_enum::enum_name(expectedType) << " node type.";
         throw UnexpectedNodeTypeException("");
     }
     if (node.value != expectedValue) {
@@ -541,13 +526,13 @@ void expectNodeType(const std::vector<Node> &children, size_t &childIndex, NodeT
     if (childIndex == children.size()) {
         logger.err("ERROR") << " at line " << children.at(childIndex - 1).line_nb << " char "
                             << children.at(childIndex - 1).char_nb << ": '" << children.at(childIndex - 1).value << "'";
-        logger.err("Expected ") << gNodeTypeStrings.at(expectedType) << " node type.";
+        logger.err("Expected ") << magic_enum::enum_name(expectedType) << " node type.";
         throw UnexpectedEOFException("");
     }
     const Node &node = children.at(childIndex);
     if (node.type != expectedType) {
         logger.err("ERROR") << " at line " << node.line_nb << " char " << node.char_nb << ": '" << node.value << "'";
-        logger.err("Expected ") << gNodeTypeStrings.at(expectedType) << " node type.";
+        logger.err("Expected ") << magic_enum::enum_name(expectedType) << " node type.";
         throw UnexpectedNodeTypeException("");
     }
     if (consume) childIndex++;

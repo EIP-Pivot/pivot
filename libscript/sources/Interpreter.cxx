@@ -51,7 +51,7 @@ using BuiltinFunctionCallback = std::function<data::Value(const std::vector<data
 using ParameterPair = std::pair<size_t, std::vector<std::vector<data::Type>>>;
 
 /// This map will map the name of a builtin, to its callback paired with its signature
-const std::unordered_map<std::string, std::pair<FunctionCallback, ParameterPair>> gBuiltinsCallbacks = {
+const std::unordered_map<std::string, std::pair<BuiltinFunctionCallback, ParameterPair>> gBuiltinsCallbacks = {
     {"isPressed", {interpreter::builtins::builtin_isPressed, {1, {{data::BasicType::String}}}}},
     {"print",
      {interpreter::builtins::builtin_print,
@@ -90,7 +90,8 @@ std::vector<systems::Description> registerDeclarations(const Node &file, compone
                 // std::cerr << std::format("registerDeclarations(const Node &file): can't interpret sub node {} (not a
                 // component nor a system)", gNodeTypeStrings.at(node.type)) << std::endl; // format not available in
                 // c++20 gcc yet
-                logger.err("Register Declarations:") << "registerDeclarations(const Node &file): can't register declarations for sub node ")
+                logger.err("Register Declarations:")
+                    << "registerDeclarations(const Node &file): can't register declarations for sub node "
                     << gNodeTypeStrings.at(node.type) << " (not a component nor a system)";
                 return result;
             }

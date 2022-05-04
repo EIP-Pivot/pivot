@@ -712,10 +712,10 @@ std::vector<Token> tokens_from_file(const std::string &file, bool isContent, boo
                                            .line_nb = lineNb,
                                            .char_nb = lcursor + 1});
                     isLiteral = true;
-                } catch (const std::invalid_argument &e) {    // token is not a number
+                } catch (const std::invalid_argument &) {    // token is not a number
                     result.push_back(Token{
                         .type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
-                } catch (const std::out_of_range &e) {    // token is invalid number
+                } catch (const std::out_of_range &) {    // token is invalid number
                     // std::cerr << std::format("Token {} is too big to go into a double. Will be stored as literal
                     // string.", tokenStr) << std::endl;
                     logger.warn("Token ")
@@ -741,10 +741,10 @@ std::vector<Token> tokens_from_file(const std::string &file, bool isContent, boo
                 std::stod(tokenStr);
                 result.push_back(Token{
                     .type = TokenType::LiteralNumber, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
-            } catch (const std::invalid_argument &e) {    // token is not a number
+            } catch (const std::invalid_argument &) {    // token is not a number
                 result.push_back(
                     Token{.type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
-            } catch (const std::out_of_range &e) {    // token is invalid number
+            } catch (const std::out_of_range &) {    // token is invalid number
                 // std::cerr << std::format("Token {} is too big to go into a double. Will be stored as literal
                 // string.", tokenStr) << std::endl;
                 logger.warn("Token ")

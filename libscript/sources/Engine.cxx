@@ -12,8 +12,8 @@ Engine::Engine(systems::Index &systemIndex, component::Index &componentIndex)
 
 std::string Engine::loadFile(const std::string &file, bool isContent, bool verbose)
 {    // Load a file to register all descriptions in the file, as well as store the trees for the system entry points
-    if (verbose) std::cout << "Loading file " << file << std::endl;
-    // TODO: return string with error on top of the node
+    if (verbose) logger.info("script::Engine") << ": Loading file " << file;
+    // TODO: return string with error on top of the node to deamImgui
     Node fileNode = parser::ast_from_file(file, isContent, verbose);    // generate abstract syntax tree from file
     if (verbose) parser::printFileNode(fileNode);
 
@@ -28,8 +28,8 @@ std::string Engine::loadFile(const std::string &file, bool isContent, bool verbo
             Node systemEntry = getEntryPointFor(
                 desc.name, fileNode);    // only store the entry point for the system, the rest is in the description
             _systems.insert({desc.name, systemEntry});
-        } catch (std::exception e) {
-            return e.what();    // shouldn't happen
+        } catch (const std::exception &e) {
+            return e.what();    // unlikely branch, return error to dearImGui
         }
     }
     return (file + " parsed succesfully.");    // no errors
@@ -49,9 +49,13 @@ void Engine::systemCallback(const systems::Description &system, component::Array
         try {
             _stack.clear();
             interpreter::executeSystem(systemEntry, system, entity, trigger, _stack);
-        } catch (InvalidException e) {
-            logger.warn(e.getExceptionType()) << " '" << e.getFaulter() << "' => " << e.getError();
-        } catch (std::exception e) {
+        } catch (const InvalidOperation &e) {
+            logger.err("Invalid Operation: ") << e.what();
+        } catch (const InvalidException &e) {
+            logger.err(e.what());
+        } catch (const std::invalid_argument &e) {    // logic error
+            logger.err("LogicError: ") << e.what();
+        } catch (const std::exception &e) {
             logger.err("Unhandled std exception: ") << e.what();
         }
     }

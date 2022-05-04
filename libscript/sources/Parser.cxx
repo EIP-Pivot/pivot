@@ -69,39 +69,36 @@ Node ast_from_file(const std::string &file, bool isContent, bool verbose)
         while (!tokens.empty()) {
             // Here we expect a list of component or system declarations, and nothing else
             Token &t = tokens.at(0);
-            if (t.type != TokenType::Identifier)    // Expect an identifier
-                throw TokenException("ERROR", t.value.c_str(), t.line_nb, t.char_nb, "UnexpectedToken",
-                                     "Expected Identifier token");
+            if (t.type != TokenType::Identifier) {    // Expect an identifier
+                logger.err("ERROR") << " at line " << t.line_nb << " char " << t.char_nb << ": '" << t.value << "'";
+                throw UnexpectedTokenTypeException("Expected Identifier token");
+            }
             // Depending on if it is a component or a system token, call the correct callback to consume the
             // tokens and create a node representing the declaration
             else if (t.value == "component")
                 result.children.push_back(consumeComponent(tokens));
             else if (t.value == "system")
                 result.children.push_back(consumeSystem(tokens));
-            else    // neither an identifier, a component nor a system
-                throw TokenException("ERROR", t.value.c_str(), t.line_nb, t.char_nb, "UnexpectedToken",
-                                     "Expected 'component' or 'system' token");
+            else {    // neither an identifier, a component nor a system
+                logger.err("ERROR") << " at line " << t.line_nb << " char " << t.char_nb << ": '" << t.value << "'";
+                throw UnexpectedTokenTypeException("Expected 'component' or 'system' token.");
+            }
         }
         if (verbose) printFileNode(result);
-    } catch (MixedIndentException e) {
-        // std::cerr << std::format("\nParser {} {}:\t{}\n\tline {}:\t{}\n{}",
-        // 	e.what(), "IndentException" , file, e.get_line_nb(), e.get_line(), e.get_info()) << std::endl; //
-        // format not available in c++20 gcc yet
-        logger.err("\nParser ") << e.what() << " IndentException "
-                                << ":\t" << file << "\n\tline " << e.get_line_nb() << ":\t" << e.get_line() << "\n"
-                                << e.get_info();
-
-    } catch (TokenException e) {
-        // std::cerr << std::format("\nParser {} {}:\t{}\n\tline {} char {}:\t{}\n{}",
-        // 	e.what(), e.get_exctype(), file, e.get_line_nb(), e.get_char_nb(), e.get_token(), e.get_info()) <<
-        // std::endl; // format not available in c++20 gcc yet
-        logger.err("\nParser ") << e.what() << " " << e.get_exctype() << ":\t" << file << "\n\tline " << e.get_line_nb()
-                                << " char " << e.get_char_nb() << ":\t" << e.get_token() << "\n"
-                                << e.get_info();
-    } catch (std::exception e) {
+    } catch (const InvalidIndentException &e) {
+        logger.err("Invalid Indent: ") << e.what();
+    } catch (const UnexpectedEOFException &e) {
+        logger.err("Unepexpected EndOfFile: ") << e.what();
+    } catch (const UnexpectedTokenTypeException &e) {
+        logger.err("Unexpected Token Type: ") << e.what();
+    } catch (const UnexpectedTokenValueException &e) {
+        logger.err("Unexpected Token Value: ") << e.what();
+    } catch (const std::invalid_argument &e) {    // logic error
+        logger.err("LogicError: ") << e.what();
+    } catch (const std::exception &e) {
         // std::cerr << std::format("\nParser !Unhandled Exception!: {}", e.what()) << std::flush; // format not
         // available in c++20 gcc yet
-        logger.err("\nParser !Unhandled Exception!: ") << e.what();
+        logger.err("\nscript::parser !Unhandled Exception!: ") << e.what();
     }
     return result;
 }
@@ -111,9 +108,11 @@ Node ast_from_file(const std::string &file, bool isContent, bool verbose)
 Node consumeComponent(std::vector<Token> &tokens)
 {    // Consume a component token and all following to build a component declaration node
     Node result = {.type = NodeType::ComponentDeclaration};
-    if (tokens.size() <= 1)    // Tokens only contains ["component"]
-        throw TokenException("ERROR", tokens.at(0).value.c_str(), tokens.at(0).line_nb, tokens.at(0).char_nb,
-                             "Unexpected_EndOfFile", "Expected component name");
+    if (tokens.size() <= 1) {    // Tokens only contains ["component"]
+        logger.err("ERROR") << " at line " << tokens.at(0).line_nb << " char " << tokens.at(0).char_nb << ": '"
+                            << tokens.at(0).value << "'";
+        throw UnexpectedEOFException("Expected component name");
+    }
     Token last = tokens.at(0);
     result.line_nb = last.line_nb;
     result.char_nb = last.char_nb;
@@ -121,9 +120,10 @@ Node consumeComponent(std::vector<Token> &tokens)
 
     consumeComponentToken(tokens, result, TokenType::Identifier, NodeType::ComponentName,
                           last);    // consume 'componentName' token
-    if (tokens.size() <= 0)         // Expect at least one property
-        throw TokenException("ERROR", last.value.c_str(), last.line_nb, last.char_nb, "Unexpected_EndOfFile",
-                             "Expected component property");
+    if (tokens.size() <= 0) {       // Expect at least one property
+        logger.err("ERROR") << " at line " << last.line_nb << " char " << last.char_nb << ": '" << last.value << "'";
+        throw UnexpectedEOFException("Expected component property");
+    }
     if (tokens.at(0).type == TokenType::Indent) {    // Multiline component declaration
         tokens.erase(tokens.begin());                // Delete Indent token
         // Iterate over all tokens until either end of file, Dedent token or other declaration
@@ -133,10 +133,12 @@ Node consumeComponent(std::vector<Token> &tokens)
             consumeComponentToken(tokens, result, TokenType::Identifier, NodeType::PropertyType, last);
             consumeComponentToken(tokens, result, TokenType::Identifier, NodeType::PropertyName, last);
         }
-        if (tokens.size() > 0) {                           // File still has content
-            if (tokens.at(0).type != TokenType::Dedent)    // But no Dedent token
-                throw TokenException("ERROR", last.value.c_str(), last.line_nb, last.char_nb, "UnexpectedToken",
-                                     "Expected a Dedent token");
+        if (tokens.size() > 0) {                             // File still has content
+            if (tokens.at(0).type != TokenType::Dedent) {    // But no Dedent token
+                logger.err("ERROR") << " at line " << last.line_nb << " char " << last.char_nb << ": '" << last.value
+                                    << "'";
+                throw UnexpectedTokenTypeException("Expected a Dedent token");
+            }
             tokens.erase(tokens.begin());    // Erase Dedent token
         }
     } else {    // Single line component declaration
@@ -148,12 +150,17 @@ Node consumeComponent(std::vector<Token> &tokens)
 void consumeComponentToken(std::vector<Token> &tokens, Node &result, TokenType expectedType, NodeType fillType,
                            Token &lastToken)
 {    // consume one token
-    if (tokens.size() <= 0)
-        throw TokenException("ERROR", lastToken.value.c_str(), lastToken.line_nb, lastToken.char_nb,
-                             "Unexpected_EndOfFile", "Expected component name");
-    if (tokens.at(0).type != expectedType)
-        throw TokenException("ERROR", tokens.at(0).value.c_str(), tokens.at(0).line_nb, tokens.at(0).char_nb,
-                             "UnexpectedToken", ("Expected " + gTokenTypeStrings.at(expectedType) + " token").c_str());
+    if (tokens.size() <= 0) {
+        logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
+                            << lastToken.value << "'";
+        throw UnexpectedEOFException("Expected component name");
+    }
+    if (tokens.at(0).type != expectedType) {
+        logger.err("ERROR") << " at line " << tokens.at(0).line_nb << " char " << tokens.at(0).char_nb << ": '"
+                            << tokens.at(0).value << "'";
+        logger.err("Expected ") << gTokenTypeStrings.at(expectedType) + " token";
+        throw UnexpectedTokenTypeException("Invalid type for token.");
+    }
     // The component name is stored in the value of the node
     if (fillType == NodeType::ComponentName)
         result.value = tokens.at(0).value;
@@ -169,9 +176,11 @@ void consumeComponentToken(std::vector<Token> &tokens, Node &result, TokenType e
 Node consumeSystem(std::vector<Token> &tokens)
 {    // Consume a system token and all following to build a system declaration node
     Node result = {.type = NodeType::SystemDeclaration};
-    if (tokens.size() <= 1)    // Tokens only contains ["system"]
-        throw TokenException("ERROR", tokens.at(0).value.c_str(), tokens.at(0).line_nb, tokens.at(0).char_nb,
-                             "Unexpected_EndOfFile", "Expected system name");
+    if (tokens.size() <= 1) {    // Tokens only contains ["system"]
+        logger.err("ERROR") << " at line " << tokens.at(0).line_nb << " char " << tokens.at(0).char_nb << ": '"
+                            << tokens.at(0).value << "'";
+        throw UnexpectedEOFException("Expected system name");
+    }
     Token last = tokens.at(0);
     result.line_nb = last.line_nb;
     result.char_nb = last.char_nb;
@@ -181,9 +190,10 @@ Node consumeSystem(std::vector<Token> &tokens)
     consumeSystemDescriptionToken(tokens, result, TokenType::Identifier, NodeType::SystemName,
                                   last);                                                         // Consume system name
     consumeSystemDescriptionToken(tokens, result, TokenType::Symbol, NodeType::Symbol, last);    // Consume '(' symbol
-    if (isDeclarationOver(tokens))    // Expect at least one entity parameter
-        throw TokenException("ERROR", last.value.c_str(), last.line_nb, last.char_nb, "Unexpected_EndOfFile",
-                             "Expected system entity parameter");
+    if (isDeclarationOver(tokens)) {    // Expect at least one entity parameter
+        logger.err("ERROR") << " at line " << last.line_nb << " char " << last.char_nb << ": '" << last.value << "'";
+        throw UnexpectedEOFException("Expected system entity parameter");
+    }
     while (tokens.size() > 0 &&
            tokens.at(0).value != ")") {    // Consume all entity parameters ,up until next ')' symbol
         consumeSystemDescriptionToken(tokens, result, TokenType::Identifier, NodeType::EntityParameterName,
@@ -256,12 +266,18 @@ Node consumeSystem(std::vector<Token> &tokens)
 void consumeSystemDescriptionToken(std::vector<Token> &tokens, Node &result, TokenType expectedType, NodeType fillType,
                                    Token &lastToken)
 {    // consume one token for declaration
-    if (tokens.size() <= 0)
-        throw TokenException("ERROR", lastToken.value.c_str(), lastToken.line_nb, lastToken.char_nb,
-                             "Unexpected_EndOfFile", ("Expected token " + gTokenTypeStrings.at(expectedType)).c_str());
-    if (tokens.at(0).type != expectedType)
-        throw TokenException("ERROR", tokens.at(0).value.c_str(), tokens.at(0).line_nb, tokens.at(0).char_nb,
-                             "UnexpectedToken", ("Expected " + gTokenTypeStrings.at(expectedType) + " token").c_str());
+    if (tokens.size() <= 0) {
+        logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
+                            << lastToken.value << "'";
+        logger.err("Expected ") << gTokenTypeStrings.at(expectedType) << "token";
+        throw UnexpectedEOFException("");
+    }
+    if (tokens.at(0).type != expectedType) {
+        logger.err("ERROR") << " at line " << tokens.at(0).line_nb << " char " << tokens.at(0).char_nb << ": '"
+                            << tokens.at(0).value << "'";
+        logger.err("Expected ") << gTokenTypeStrings.at(expectedType) << "token";
+        throw UnexpectedTokenTypeException("");
+    }
     // The system name is stored in the value
     if (fillType == NodeType::SystemName)
         result.value = tokens.at(0).value;
@@ -275,9 +291,11 @@ void consumeSystemDescriptionToken(std::vector<Token> &tokens, Node &result, Tok
 }
 void consumeSystemStatement(std::vector<Token> &tokens, Node &result, Token &lastToken)
 {    // consume an entire statement and append it to children node
-    if (tokens.size() == 0)
-        throw TokenException("ERROR", lastToken.value.c_str(), lastToken.line_nb, lastToken.char_nb,
-                             "Unexpected_EndOfFile", "Expected statement");
+    if (tokens.size() == 0) {
+        logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
+                            << lastToken.value << "'";
+        throw UnexpectedEOFException("Expected statement");
+    }
     const Token &token = tokens.at(0);
     Node statementResult = {.type = NodeType::Statement, .line_nb = token.line_nb, .char_nb = token.char_nb};
     size_t lineNb = token.line_nb;
@@ -302,8 +320,9 @@ void consumeSystemStatement(std::vector<Token> &tokens, Node &result, Token &las
             consumeSystemFuncParams(tokens, statementResult, lastToken);
 
         } else {    // unsupported features
-            throw TokenException(
-                "ERROR", tokens.at(0).value.c_str(), tokens.at(0).line_nb, tokens.at(0).char_nb, "UnexpectedToken",
+            logger.err("ERROR") << " at line " << tokens.at(0).line_nb << " char " << tokens.at(0).char_nb << ": '"
+                                << tokens.at(0).value << "'";
+            throw UnexpectedTokenValueException(
                 "Not '=' nor '(', unsupported yet. pivot::ecs::script::parser::consumeSystemStatement()");
         }
     }
@@ -327,9 +346,11 @@ void consumeSystemBlock(std::vector<Token> &tokens, Node &result, Token &lastTok
 }
 void consumeSystemVariable(std::vector<Token> &tokens, Node &result, Token &lastToken)
 {    // consume a variable and append it to children node
-    if (tokens.size() == 0)
-        throw TokenException("ERROR", lastToken.value.c_str(), lastToken.line_nb, lastToken.char_nb,
-                             "Unexpected_EndOfFile", "Expected variable");
+    if (tokens.size() == 0) {
+        logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
+                            << lastToken.value << "'";
+        throw UnexpectedEOFException("Expected variable");
+    }
     Token &token = tokens.at(0);
     Node variableResult = {.line_nb = token.line_nb, .char_nb = token.char_nb};
     if (token.type == TokenType::LiteralNumber) {    // literal number
@@ -384,9 +405,11 @@ void consumeSystemVariable(std::vector<Token> &tokens, Node &result, Token &last
 }
 void consumeSystemExpression(std::vector<Token> &tokens, Node &result, Token &lastToken)
 {    // consume an expression and append it to children node
-    if (tokens.size() == 0)
-        throw TokenException("ERROR", lastToken.value.c_str(), lastToken.line_nb, lastToken.char_nb,
-                             "Unexpected_EndOfFile", "Expected expression");
+    if (tokens.size() == 0) {
+        logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
+                            << lastToken.value << "'";
+        throw UnexpectedEOFException("Expected expression");
+    }
 
     // An expression is a construct of Operand Operator Operand...etc that can be solved to a single operand
     // An expression ends with a newline or until a stopping symbol ','
@@ -411,9 +434,11 @@ void consumeSystemExpression(std::vector<Token> &tokens, Node &result, Token &la
             break;
         }
         if (tokens.at(0).type != TokenType::Symbol &&
-            tokens.at(0).type != TokenType::Dedent)    // token is not an operator or dedent
-            throw TokenException("ERROR", tokens.at(0).value.c_str(), tokens.at(0).line_nb, tokens.at(0).char_nb,
-                                 "UnexpectedToken", "Expected operator symbol or end of expression");
+            tokens.at(0).type != TokenType::Dedent) {    // token is not an operator or dedent
+            logger.err("ERROR") << " at line " << tokens.at(0).line_nb << " char " << tokens.at(0).char_nb << ": '"
+                                << tokens.at(0).value << "'";
+            throw UnexpectedTokenTypeException("Expected operator symbol or end of expression");
+        }
         if (tokens.at(0).value == "(") {    // opening parentheses
             _stack.push(tokens.at(0));
             lastToken = tokens.at(0);
@@ -447,8 +472,9 @@ void consumeSystemExpression(std::vector<Token> &tokens, Node &result, Token &la
             lastToken = tokens.at(0);
             tokens.erase(tokens.begin());    // delete operator token
         } else {
-            throw TokenException("ERROR", tokens.at(0).value.c_str(), tokens.at(0).line_nb, tokens.at(0).char_nb,
-                                 "UnexpectedToken", "Expected operator symbol");
+            logger.err("ERROR") << " at line " << tokens.at(0).line_nb << " char " << tokens.at(0).char_nb << ": '"
+                                << tokens.at(0).value << "'";
+            throw UnexpectedTokenTypeException("Expected operator symbol");
         }
     }
     while (!_stack.empty()) {    // pop all operators to postfix result
@@ -461,9 +487,11 @@ void consumeSystemExpression(std::vector<Token> &tokens, Node &result, Token &la
 }
 void consumeSystemFuncParams(std::vector<Token> &tokens, Node &result, Token &lastToken)
 {    // consume function parameters and append them to children node
-    if (tokens.size() == 0)
-        throw TokenException("ERROR", lastToken.value.c_str(), lastToken.line_nb, lastToken.char_nb,
-                             "Unexpected_EndOfFile", "Expected '(' symbol");
+    if (tokens.size() == 0) {
+        logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
+                            << lastToken.value << "'";
+        throw UnexpectedEOFException("Expected '(' symbol");
+    }
     Node paramsResult = {
         .type = NodeType::FunctionParams, .line_nb = tokens.at(0).line_nb, .char_nb = tokens.at(0).char_nb};
     expectSystemTokenValue(tokens, "(", lastToken, true);
@@ -473,9 +501,11 @@ void consumeSystemFuncParams(std::vector<Token> &tokens, Node &result, Token &la
         consumeSystemVariable(tokens, paramsResult, lastToken);    // consume variable
         if (tokens.size() == 0 || tokens.at(0).value == ")")       // no more variables, end of expression
             break;
-        if (tokens.at(0).value != ",")    // token is not an comma
-            throw TokenException("ERROR", tokens.at(0).value.c_str(), tokens.at(0).line_nb, tokens.at(0).char_nb,
-                                 "Unexpected_EndOfFile", "Expected comma");
+        if (tokens.at(0).value != ",") {    // token is not an comma
+            logger.err("ERROR") << " at line " << tokens.at(0).line_nb << " char " << tokens.at(0).char_nb << ": '"
+                                << tokens.at(0).value << "'";
+            throw UnexpectedEOFException("Expected comma");
+        }
         // paramsResult.children.push_back(Node {.type=NodeType::Symbol, .value=tokens.at(0).value,
         // .line_nb=tokens.at(0).line_nb, .char_nb=tokens.at(0).char_nb});
         lastToken = tokens.at(0);
@@ -487,12 +517,18 @@ void consumeSystemFuncParams(std::vector<Token> &tokens, Node &result, Token &la
 
 void expectSystemToken(std::vector<Token> &tokens, TokenType expectedType, Token &lastToken, bool consume)
 {    // check that token exists, and is of correct type (and potentially consume it from tokens)
-    if (tokens.size() == 0)
-        throw TokenException("ERROR", lastToken.value.c_str(), lastToken.line_nb, lastToken.char_nb,
-                             "Unexpected_EndOfFile", ("Expected token " + gTokenTypeStrings.at(expectedType)).c_str());
-    if (tokens.at(0).type != expectedType)
-        throw TokenException("ERROR", tokens.at(0).value.c_str(), tokens.at(0).line_nb, tokens.at(0).char_nb,
-                             "UnexpectedToken", ("Expected " + gTokenTypeStrings.at(expectedType) + " token").c_str());
+    if (tokens.size() == 0) {
+        logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
+                            << lastToken.value << "'";
+        logger.err("Expected ") << gTokenTypeStrings.at(expectedType) << " token type.";
+        throw UnexpectedEOFException("");
+    }
+    if (tokens.at(0).type != expectedType) {
+        logger.err("ERROR") << " at line " << tokens.at(0).line_nb << " char " << tokens.at(0).char_nb << ": '"
+                            << tokens.at(0).value << "'";
+        logger.err("Expected ") << gTokenTypeStrings.at(expectedType) << " token type.";
+        throw UnexpectedTokenTypeException("");
+    }
     if (consume) {
         lastToken = tokens.at(0);
         tokens.erase(tokens.begin());
@@ -501,12 +537,18 @@ void expectSystemToken(std::vector<Token> &tokens, TokenType expectedType, Token
 void expectSystemTokenValue(std::vector<Token> &tokens, const std::string &expectedValue, Token &lastToken,
                             bool consume)
 {    // check that token exists, and is of correct value (and potentially consume it from tokens)
-    if (tokens.size() == 0)
-        throw TokenException("ERROR", lastToken.value.c_str(), lastToken.line_nb, lastToken.char_nb,
-                             "Unexpected_EndOfFile", ("Expected token '" + expectedValue + "'").c_str());
-    if (tokens.at(0).value != expectedValue)
-        throw TokenException("ERROR", tokens.at(0).value.c_str(), tokens.at(0).line_nb, tokens.at(0).char_nb,
-                             "UnexpectedToken", ("Expected '" + expectedValue + "' token").c_str());
+    if (tokens.size() == 0) {
+        logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
+                            << lastToken.value << "'";
+        logger.err("Expected '") << expectedValue << "' token value.";
+        throw UnexpectedEOFException("");
+    }
+    if (tokens.at(0).value != expectedValue) {
+        logger.err("ERROR") << " at line " << tokens.at(0).line_nb << " char " << tokens.at(0).char_nb << ": '"
+                            << tokens.at(0).value << "'";
+        logger.err("Expected '") << expectedValue << "' token value.";
+        throw UnexpectedTokenValueException("");
+    }
     if (consume) {
         lastToken = tokens.at(0);
         tokens.erase(tokens.begin());
@@ -572,11 +614,14 @@ std::vector<Token> tokens_from_file(const std::string &file, bool isContent, boo
 
         // check for IndentType::invalid indent
         if (lineIndentType != IndentType::NoIndent &&
-            lineIndentType != indentType)    // indent different from the one chosen at the start of the file
-            throw MixedIndentException("ERROR", line.c_str(), lineNb + 1, "Different indent");
-        if (lineIndentSize != 0 && lineIndentSize % indentSize != 0)    // not a multiple of indent size
-            throw MixedIndentException("ERROR", line.c_str(), lineNb + 1, "Bad indent size");
-
+            lineIndentType != indentType) {    // indent different from the one chosen at the start of the file
+            logger.err("ERROR") << " at line " << lineNb + 1 << ": " << line;
+            throw InvalidIndentException("Different indent than the one defined at start of file.");
+        }
+        if (lineIndentSize != 0 && lineIndentSize % indentSize != 0) {    // not a multiple of indent size
+            logger.err("ERROR") << " at line " << lineNb + 1 << ": " << line;
+            throw InvalidIndentException("Indent size is not correct.");
+        }
         // create Indent / Unindent tokens if file has indent
         if (indentSize != 0) {
             // create Indent token(s) if lineIndent is strictly greater than last line indent
@@ -668,10 +713,10 @@ std::vector<Token> tokens_from_file(const std::string &file, bool isContent, boo
                                            .line_nb = lineNb,
                                            .char_nb = lcursor + 1});
                     isLiteral = true;
-                } catch (std::invalid_argument e) {    // token is not a number
+                } catch (const std::invalid_argument &e) {    // token is not a number
                     result.push_back(Token{
                         .type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
-                } catch (std::out_of_range e) {    // token is invalid number
+                } catch (const std::out_of_range &e) {    // token is invalid number
                     // std::cerr << std::format("Token {} is too big to go into a double. Will be stored as literal
                     // string.", tokenStr) << std::endl;
                     logger.warn("Token ")
@@ -697,10 +742,10 @@ std::vector<Token> tokens_from_file(const std::string &file, bool isContent, boo
                 std::stod(tokenStr);
                 result.push_back(Token{
                     .type = TokenType::LiteralNumber, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
-            } catch (std::invalid_argument e) {    // token is not a number
+            } catch (const std::invalid_argument &e) {    // token is not a number
                 result.push_back(
                     Token{.type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
-            } catch (std::out_of_range e) {    // token is invalid number
+            } catch (const std::out_of_range &e) {    // token is invalid number
                 // std::cerr << std::format("Token {} is too big to go into a double. Will be stored as literal
                 // string.", tokenStr) << std::endl;
                 logger.warn("Token ")
@@ -736,8 +781,10 @@ Precedence precedenceOf(const std::string &op)
 {    // Get a number representing the priority of op
     if (gOneCharOps.contains(op)) return gOneCharOps.at(op);
     if (gTwoCharOps.contains(op)) return gTwoCharOps.at(op);
-    // unlikely (impossible?)
-    throw TokenException("ERROR", op.c_str(), 0, 0, "UnexpectedToken", "Expected operator symbol in precendenceOf()");
+
+    // unlikely branch (impossible?)
+    logger.err("ERROR") << " with operator '" << op << "'";
+    throw std::invalid_argument("Expected operator symbol in precendenceOf(const std::string &)");
 }
 
 size_t indent_size_of(const std::string &fileString)
@@ -796,7 +843,10 @@ IndentType indent_type_of(const std::string &fileString)
             continue;
         }
         IndentType r = indent_type_of_line(line);
-        if (r == IndentType::Invalid) throw MixedIndentException("ERROR", line.c_str(), lineNb + 1, "Mixed indent");
+        if (r == IndentType::Invalid) {
+            logger.err("ERROR") << " at line " << lineNb + 1 << ": " << line;
+            throw InvalidIndentException("Invalid indent.");
+        }
         if (r != IndentType::NoIndent) return r;
         lineStart = lineEnd + 1;
         lineEnd = fileString.find('\n', lineStart);

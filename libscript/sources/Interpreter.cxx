@@ -95,14 +95,17 @@ std::vector<systems::Description> registerDeclarations(const Node &file, compone
                 return result;
             }
         }
-    } catch (TokenException e) {
-        // std::cerr << std::format("\nInterpreter {} {}:\t{}\n\tline {} char {}:\t{}\n{}",
-        // 	e.what(), e.get_exctype(), file.value, e.get_line_nb(), e.get_char_nb(), e.get_token(), e.get_info()) <<
-        // std::endl; // format not available in c++20 gcc yet
-        logger.err("\nInterpreter ") << e.what() << " " << e.get_exctype() << ":\t" << file.value << "\n\tline "
-                                     << e.get_line_nb() << " char " << e.get_char_nb() << ":\t" << e.get_token() << "\n"
-                                     << e.get_info();
-    } catch (std::exception e) {
+    } catch (const UnexpectedEOFException &e) {
+        logger.err("Unepexpected EndOfFile: ") << e.what();
+    } catch (const UnexpectedNodeTypeException &e) {
+        logger.err("Unepexpected Node Type: ") << e.what();
+    } catch (const UnexpectedNodeValueException &e) {
+        logger.err("Unepexpected Node Value: ") << e.what();
+    } catch (const UnknownTypeException &e) {
+        logger.err("Unknown Type: ") << e.what();
+    } catch (const std::invalid_argument &e) {    // logic error
+        logger.err("LogicError: ") << e.what();
+    } catch (const std::exception &e) {
         // std::cerr << std::format("Unhandled exception in file {}: {}", file.value, e.what()) << std::endl; // format
         // not available in c++20 gcc yet
         logger.err("Unhandled exception in file ") << file.value << ": " << e.what();
@@ -147,13 +150,15 @@ void executeSystem(const Node &systemEntry, const systems::Description &desc,
 void executeStatement(const Node &statement, Stack &stack)
 {
     if (statement.value == "functionCall") {
-        if (statement.children.size() != 2)    // should be [Variable, FunctionParams]
-            throw InvalidException("InvalidFunctionStatement", statement.value.c_str(),
-                                   "Expected callee and params children node.");
+        if (statement.children.size() != 2) {    // should be [Variable, FunctionParams]
+            logger.err("ERROR") << " at node " << statement.value;
+            throw InvalidException("Invalid Function Statement: Expected callee and params children node.");
+        }
         const Node &callee = statement.children.at(0);
-        if (!gBuiltinsCallbacks.contains(callee.value))    // Only support builtin functions for now
-            throw InvalidException("UnknownFunction", callee.value.c_str(),
-                                   "Pivotscript only supports built-in functions for now.");
+        if (!gBuiltinsCallbacks.contains(callee.value)) {    // Only support builtin functions for now
+            logger.err("ERROR") << " at node " << callee.value;
+            throw InvalidException("Unknown Function: Pivotscript only supports built-in functions for now.");
+        }
         std::vector<data::Value> parameters;
         for (const Node &param: statement.children.at(1).children)    // get all the parameters for the callback
             parameters.push_back(valueOf(param, stack));
@@ -163,30 +168,37 @@ void executeStatement(const Node &statement, Stack &stack)
                        callee.value);    // pair is <size_t numberOfParams, vector<data::Type> types>
         gBuiltinsCallbacks.at(callee.value).first(parameters);
     } else if (statement.value == "if") {
-        if (statement.children.size() < 2 || statement.children.at(0).type != NodeType::Expression)
-            throw InvalidException("InvalidIfStatement", statement.value.c_str(), "Expected if condition expression.");
+        if (statement.children.size() < 2 || statement.children.at(0).type != NodeType::Expression) {
+            logger.err("ERROR") << " at node " << statement.value;
+            throw InvalidException("Invalid If Statement: Expected if condition expression.");
+        }
         data::Value exprResult = evaluateExpression(statement.children.at(0), stack);
         try {    // check that expression resulted in data::BasicType::Boolean specifically
-            if (std::get<data::BasicType>(exprResult.type()) != data::BasicType::Boolean)
-                throw InvalidException("InvalidIfCondition", exprResult.type().toString().c_str(),
-                                       "If condition should result in data::BasicType::Boolean instead.");
+            if (std::get<data::BasicType>(exprResult.type()) != data::BasicType::Boolean) {
+                logger.err("ERROR") << " at node " << exprResult.type().toString();
+                throw InvalidException(
+                    "Invalid If Condition: If condition should result in data::BasicType::Boolean instead.");
+            }
             if (std::get<bool>(exprResult)) {    // if the condition is true, execute the block statements
                 for (size_t statementIndex = 1; statementIndex < statement.children.size(); statementIndex++)
                     executeStatement(statement.children.at(statementIndex), stack);
             }    // else ignore the block
-        } catch (std::bad_variant_access e) {
-            throw InvalidException("InvalidIfCondition", exprResult.type().toString().c_str(),
-                                   "If condition should result in data::BasicType instead.");
+        } catch (const std::bad_variant_access &) {
+            logger.err("ERROR") << " at node " << exprResult.type().toString();
+            throw InvalidException("Invalid If Condition: If condition should result in data::BasicType instead.");
         }
     } else if (statement.value == "while") {
-        if (statement.children.size() < 2 || statement.children.at(0).type != NodeType::Expression)
-            throw InvalidException("InvalidWhileStatement", statement.value.c_str(),
-                                   "Expected while condition expression.");
+        if (statement.children.size() < 2 || statement.children.at(0).type != NodeType::Expression) {
+            logger.err("ERROR") << " at node " << statement.value;
+            throw InvalidException("Invalid While Statement: Expected while condition expression.");
+        }
         data::Value exprResult = evaluateExpression(statement.children.at(0), stack);
         try {    // check that expression resulted in data::BasicType::Boolean specifically
-            if (std::get<data::BasicType>(exprResult.type()) != data::BasicType::Boolean)
-                throw InvalidException("InvalidWhileCondition", exprResult.type().toString().c_str(),
-                                       "While condition should result in data::BasicType::Boolean instead.");
+            if (std::get<data::BasicType>(exprResult.type()) != data::BasicType::Boolean) {
+                logger.err("ERROR") << " at node " << exprResult.type().toString();
+                throw InvalidException(
+                    "Invalid While Condition: While condition should result in data::BasicType::Boolean instead.");
+            }
             size_t infinitePrevent = 0;
             while (std::get<bool>(exprResult) &&
                    infinitePrevent < 1000) {    // while the condition is true, execute the block statements
@@ -199,15 +211,17 @@ void executeStatement(const Node &statement, Stack &stack)
             if (infinitePrevent == 1000)
                 logger.warn("InfiniteLoop")
                     << "while loop ran for more than 1000 times. This may be the result of an infinite loop.";
-        } catch (std::bad_variant_access e) {
-            throw InvalidException("InvalidWhileCondition", exprResult.type().toString().c_str(),
-                                   "While condition should result in data::BasicType instead.");
+        } catch (const std::bad_variant_access &) {
+            logger.err("ERROR") << " at node " << exprResult.type().toString();
+            throw InvalidException(
+                "Invalid While Condition: While condition should result in data::BasicType instead.");
         }
     } else if (statement.value == "assign") {
 
-        if (statement.children.size() != 2 || statement.children.at(1).type != NodeType::Expression)
-            throw InvalidException("InvalidAssignStatement", statement.children.at(1).value.c_str(),
-                                   "Expected assign expression.");
+        if (statement.children.size() != 2 || statement.children.at(1).type != NodeType::Expression) {
+            logger.err("ERROR") << " at node " << statement.children.at(1).value;
+            throw InvalidException("Invalid Assign Statement: Expected assign expression.");
+        }
 
         if (statement.children.at(0).type == NodeType::NewVariable) {    // assign to a new variable
             const std::string &newVarType =
@@ -216,10 +230,10 @@ void executeStatement(const Node &statement, Stack &stack)
             data::Value exprResult = evaluateExpression(statement.children.at(1), stack);
 
             if (std::get<data::BasicType>(exprResult.type()) !=
-                gVariableTypes.at(newVarType))    // Expression result not of same type as declared variable
-                throw InvalidException("InvalidAssign", (newVarType + " = " + exprResult.type().toString()).c_str(),
-                                       "Cannot convert expression type to variable type.");
-
+                gVariableTypes.at(newVarType)) {    // Expression result not of same type as declared variable
+                logger.err("ERROR") << " at node '" << newVarType << " = " << exprResult.type().toString() << "'";
+                throw InvalidException("InvalidAssign: Cannot convert expression type to variable type.");
+            }
             stack.push(Variable{
                 .name = newVarName, .hasValue = true, .value = exprResult});    // assign is valid, push it on the stack
 
@@ -229,21 +243,24 @@ void executeStatement(const Node &statement, Stack &stack)
 
             if (std::get<data::BasicType>(exprResult.type()) !=
                 std::get<data::BasicType>(
-                    existingVar.value.type()))    // Expression result not of same type as declared variable
-                throw InvalidException(
-                    "InvalidAssign",
-                    (existingVar.value.type().toString() + " = " + exprResult.type().toString()).c_str(),
-                    "Cannot convert expression type to variable type.");
+                    existingVar.value.type())) {    // Expression result not of same type as declared variable
+                logger.err("ERROR") << " at node " << existingVar.value.type().toString() << " = "
+                                    << exprResult.type().toString();
+                throw InvalidException("InvalidAssign: Cannot convert expression type to variable type.");
+            }
 
             stack.setValue(statement.children.at(0).value, exprResult);
-        } else
-            throw InvalidException("InvalidAssignStatement", statement.children.at(1).value.c_str(),
-                                   "Expected variable term as left-hand of assign statement.");
+        } else {
+            logger.err("ERROR") << " at node " << statement.children.at(1).value;
+            throw InvalidException(
+                "Invalid Assign Statement: Expected variable term as left-hand of assign statement.");
+        }
 
         // data::Value exprResult = evaluateExpression(statement.children.at(0), stack);
         // std::cout << "ASSIGN:  " << statement.children.at(2).value << std::endl;
     } else {    // unsupported yet
-        throw InvalidException("InvalidStatement", statement.value.c_str(), "Unsupported statement.");
+        logger.err("ERROR") << " at node " << statement.value;
+        throw InvalidException("Invalid Statement: Unsupported statement.");
     }
 }
 
@@ -253,30 +270,32 @@ void validateParams(const std::vector<data::Value> &toValidate, size_t expectedS
 {
     if (expectedSize != std::numeric_limits<size_t>::max()) {    // limited number of parameters
         // check expected size
-        if (toValidate.size() != expectedSize)
-            throw InvalidException("BadNumberOfParameters", name.c_str(),
-                                   ("Wrong number of parameters " + std::to_string(toValidate.size()) + " (expected " +
-                                    std::to_string(expectedSize) + ")")
-                                       .c_str());
+        if (toValidate.size() != expectedSize) {
+            logger.err("ERROR") << " at node " << name;
+            logger.err("Expected ") << expectedSize << " parameters, got " << toValidate.size() << ".";
+            throw InvalidException("Bad Number Of Parameters: Wrong number of parameters.");
+        }
         // check expected types (assume expectedTypes is of right size)
         for (size_t i = 0; i < expectedSize; i++)
             if (std::find(expectedTypes.at(i).begin(), expectedTypes.at(i).end(), toValidate.at(i).type()) ==
-                expectedTypes.at(i).end())
-                throw InvalidException("BadParameter", name.c_str(),
-                                       ("Bad parameter type " + toValidate.at(i).type().toString() +
-                                        " (expected one of " + stringifyVectorType(expectedTypes.at(i)) + ")")
-                                           .c_str());
+                expectedTypes.at(i).end()) {
+                logger.err("ERROR") << " at node " << name;
+                logger.err("Expected one of ") << stringifyVectorType(expectedTypes.at(i)) << " parameter types, got "
+                                               << toValidate.at(i).type().toString() << ".";
+                throw InvalidException("BadParameterType");
+            }
     } else {    // unlimited number of parameters (only one type of expected types)
         const std::vector<data::Type> &validTypes =
             expectedTypes.at(0);    // assumes the vector is correctly initialized
 
         for (const data::Value &valueToValidate: toValidate)    // iterate over every parameter value
             if (std::find(validTypes.begin(), validTypes.end(), valueToValidate.type()) ==
-                validTypes.end())    // check it has correct type
-                throw InvalidException("BadParameter", name.c_str(),
-                                       ("Bad parameter type " + valueToValidate.type().toString() +
-                                        " (expected one of " + stringifyVectorType(validTypes) + ")")
-                                           .c_str());
+                validTypes.end()) {    // check it has correct type
+                logger.err("ERROR") << " at node " << name;
+                logger.err("Expected one of ") << stringifyVectorType(validTypes) << " parameter types, got "
+                                               << valueToValidate.type().toString() << ".";
+                throw InvalidException("BadParameterType");
+            }
     }
 }
 
@@ -290,9 +309,11 @@ void registerComponentDeclaration(const Node &component, component::Index &compo
         NodeType::Symbol) {    // we know children is not empty from parser::ast_from_file(const std::string &filename)
         const Node &componentTypeNode = component.children.at(1);
 
-        if (!gVariableTypes.contains(componentTypeNode.value))    // Not a known pivotscript type
-            throw TokenException("ERROR", componentTypeNode.value.c_str(), componentTypeNode.line_nb,
-                                 componentTypeNode.char_nb, "UnknownType", "This is not a PivotScript type.");
+        if (!gVariableTypes.contains(componentTypeNode.value)) {    // Not a known pivotscript type
+            logger.err("ERROR") << " at line " << componentTypeNode.line_nb << " char " << componentTypeNode.char_nb
+                                << ": '" << componentTypeNode.value << "'";
+            throw UnknownTypeException("This is not a PivotScript type.");
+        }
 
         // Type of component is data::BasicType
         r.type = gVariableTypes.at(componentTypeNode.value);
@@ -303,9 +324,11 @@ void registerComponentDeclaration(const Node &component, component::Index &compo
         for (size_t i = 0; i < component.children.size() - 1; i += 2) {    // Loop over every property of the component
             const Node &propertyTypeNode = component.children.at(i);
             const Node &propertyNameNode = component.children.at(i + 1);
-            if (!gVariableTypes.contains(propertyTypeNode.value))    // Not a known pivotscript type
-                throw TokenException("ERROR", propertyTypeNode.value.c_str(), propertyTypeNode.line_nb,
-                                     propertyTypeNode.char_nb, "UnknownType", "This is not a PivotScript type.");
+            if (!gVariableTypes.contains(propertyTypeNode.value)) {    // Not a known pivotscript type
+                logger.err("ERROR") << " at line " << propertyTypeNode.line_nb << " char " << propertyTypeNode.char_nb
+                                    << ": '" << propertyTypeNode.value << "'";
+                throw UnknownTypeException("This is not a PivotScript type.");
+            }
             // Push the property in the record type of the description
             std::get<data::RecordType>(r.type)[propertyNameNode.value] = gVariableTypes.at(propertyTypeNode.value);
         }
@@ -386,14 +409,18 @@ systems::Description registerSystemDeclaration(const Node &system, const std::st
 void consumeNode(const std::vector<Node> &children, size_t &childIndex, systems::Description &sysDesc,
                  event::Description &evtDesc, NodeType expectedType)
 {
-    if (childIndex >= children.size())
-        throw TokenException("ERROR", children.at(childIndex - 1).value.c_str(), children.at(childIndex - 1).line_nb,
-                             children.at(childIndex - 1).char_nb, "Unexpected_EndOfFile",
-                             ("Expected token " + gNodeTypeStrings.at(expectedType)).c_str());
+    if (childIndex >= children.size()) {    // TODO : for sure this -1 crashes, fix
+        logger.err("ERROR") << " at line " << children.at(childIndex - 1).line_nb << " char "
+                            << children.at(childIndex - 1).char_nb << ": '" << children.at(childIndex - 1).value << "'";
+        logger.err("Expected ") << gNodeTypeStrings.at(expectedType) << " node type.";
+        throw UnexpectedEOFException("");
+    }
     const script::Node &node = children.at(childIndex);
-    if (node.type != expectedType)
-        throw TokenException("ERROR", node.value.c_str(), node.line_nb, node.char_nb, "UnexpectedNodeType",
-                             ("Expected type " + gNodeTypeStrings.at(expectedType)).c_str());
+    if (node.type != expectedType) {
+        logger.err("ERROR") << " at line " << node.line_nb << " char " << node.char_nb << ": '" << node.value << "'";
+        logger.err("Expected ") << gNodeTypeStrings.at(expectedType) << " node type.";
+        throw UnexpectedNodeTypeException("");
+    }
     switch (expectedType) {
         case NodeType::EntityParameterName:
             // TODO : keep record of entity parameter names for execution later
@@ -408,14 +435,18 @@ void consumeNode(const std::vector<Node> &children, size_t &childIndex, systems:
             evtDesc.payloadName = node.value;
             break;
         case NodeType::EventPayloadType:
-            if (!gVariableTypes.contains(node.value))    // Not a known pivotscript type
-                throw TokenException("ERROR", node.value.c_str(), node.line_nb, node.char_nb, "UnknownType",
-                                     "This is not a PivotScript type.");
+            if (!gVariableTypes.contains(node.value)) {    // Not a known pivotscript type
+                logger.err("ERROR") << " at line " << node.line_nb << " char " << node.char_nb << ": '" << node.value
+                                    << "'";
+                throw UnknownTypeException("This is not a PivotScript type.");
+            }
             evtDesc.payload = gVariableTypes.at(node.value);
             break;
         default:
-            throw TokenException("ERROR", node.value.c_str(), node.line_nb, node.char_nb, "UnexpectedNodeType",
-                                 ("Expected type " + gNodeTypeStrings.at(expectedType)).c_str());
+            logger.err("ERROR") << " at line " << node.line_nb << " char " << node.char_nb << ": '" << node.value
+                                << "'";
+            logger.err("Expected ") << gNodeTypeStrings.at(expectedType) << " node type.";
+            throw UnexpectedNodeTypeException("");
     }
     childIndex++;
 }
@@ -428,18 +459,24 @@ data::Value valueOf(const Node &var, const Stack &stack)
         return data::Value(var.value);
     else if (var.type == NodeType::ExistingVariable) {    // Named variable
         const Variable &v = stack.find(var.value);        // find it in the stack
-        if (!v.hasValue)
-            throw InvalidException("VariableHasNoValue", v.name.c_str(),
-                                   "This variable has not been initialized or only has members.");
+        if (!v.hasValue) {
+            logger.err("ERROR") << " with variable " << v.name;
+            throw InvalidException(
+                "Variable Has No Value: This variable has not been initialized or only has members.");
+        }
         return v.value;
-    } else
-        throw InvalidException("UnsupportedFeature", var.value.c_str(), "This type of variable is not supported yet.");
+    } else {
+        logger.err("ERROR") << " with variable " << var.value;
+        throw std::invalid_argument("Unsupported Feature: This type of variable is not supported yet.");
+    }
 }
 // Only binary operators are supported (which take 2 operands exactly)
 data::Value evaluateFactor(const data::Value &left, const data::Value &right, const std::string &op)
 {    // Return the result of the operation op on left and right
-    if (!gOperatorCallbacks.contains(op))
-        throw InvalidException("UnsupportedFeature", op.c_str(), "This type of operator is not supported yet.");
+    if (!gOperatorCallbacks.contains(op)) {
+        logger.err("ERROR") << " with operator " << op;
+        throw InvalidException("Unsupported Feature: This type of operator is not supported yet.");
+    }
     return gOperatorCallbacks.at(op)(left, right);
 }
 data::Value evaluateExpression(const Node &expr, const Stack &stack)
@@ -478,44 +515,58 @@ data::Value evaluateExpression(const Node &expr, const Stack &stack)
 void expectNodeTypeValue(const std::vector<Node> &children, size_t &childIndex, NodeType expectedType,
                          const std::string &expectedValue, bool consume)
 {
-    if (childIndex == children.size())
-        throw TokenException("ERROR", children.at(childIndex - 1).value.c_str(), children.at(childIndex - 1).line_nb,
-                             children.at(childIndex - 1).char_nb, "Unexpected_EndOfFile",
-                             ("Expected token of type " + gNodeTypeStrings.at(expectedType)).c_str());
+    if (childIndex == children.size()) {
+        logger.err("ERROR") << " at line " << children.at(childIndex - 1).line_nb << " char "
+                            << children.at(childIndex - 1).char_nb << ": '" << children.at(childIndex - 1).value << "'";
+        logger.err("Expected ") << gNodeTypeStrings.at(expectedType) << " node type.";
+        throw UnexpectedEOFException("");
+    }
     const Node &node = children.at(childIndex);
-    if (node.type != expectedType)
-        throw TokenException("ERROR", node.value.c_str(), node.line_nb, node.char_nb, "UnexpectedNodeType",
-                             ("Expected type " + gNodeTypeStrings.at(expectedType)).c_str());
-    if (node.value != expectedValue)
-        throw TokenException("ERROR", node.value.c_str(), node.line_nb, node.char_nb, "UnexpectedNodeValue",
-                             ("Expected value " + expectedValue).c_str());
+    if (node.type != expectedType) {
+        logger.err("ERROR") << " at line " << node.line_nb << " char " << node.char_nb << ": '" << node.value << "'";
+        logger.err("Expected ") << gNodeTypeStrings.at(expectedType) << " node type.";
+        throw UnexpectedNodeTypeException("");
+    }
+    if (node.value != expectedValue) {
+        logger.err("ERROR") << " at line " << node.line_nb << " char " << node.char_nb << ": '" << node.value << "'";
+        logger.err("Expected ") << expectedValue << " node value.";
+        throw UnexpectedNodeValueException("");
+    }
     if (consume) childIndex++;
 }
 // Throw if the type of the targeted node isn't equal to the expected type
 void expectNodeType(const std::vector<Node> &children, size_t &childIndex, NodeType expectedType, bool consume)
 {
-    if (childIndex == children.size())
-        throw TokenException("ERROR", children.at(childIndex - 1).value.c_str(), children.at(childIndex - 1).line_nb,
-                             children.at(childIndex - 1).char_nb, "Unexpected_EndOfFile",
-                             ("Expected token of type " + gNodeTypeStrings.at(expectedType)).c_str());
+    if (childIndex == children.size()) {
+        logger.err("ERROR") << " at line " << children.at(childIndex - 1).line_nb << " char "
+                            << children.at(childIndex - 1).char_nb << ": '" << children.at(childIndex - 1).value << "'";
+        logger.err("Expected ") << gNodeTypeStrings.at(expectedType) << " node type.";
+        throw UnexpectedEOFException("");
+    }
     const Node &node = children.at(childIndex);
-    if (node.type != expectedType)
-        throw TokenException("ERROR", node.value.c_str(), node.line_nb, node.char_nb, "UnexpectedNodeType",
-                             ("Expected type " + gNodeTypeStrings.at(expectedType)).c_str());
+    if (node.type != expectedType) {
+        logger.err("ERROR") << " at line " << node.line_nb << " char " << node.char_nb << ": '" << node.value << "'";
+        logger.err("Expected ") << gNodeTypeStrings.at(expectedType) << " node type.";
+        throw UnexpectedNodeTypeException("");
+    }
     if (consume) childIndex++;
 }
 // Throw if the value of the targeted node isn't equal to the expected value
 void expectNodeValue(const std::vector<Node> &children, size_t &childIndex, const std::string &expectedValue,
                      bool consume)
 {
-    if (childIndex == children.size())
-        throw TokenException("ERROR", children.at(childIndex - 1).value.c_str(), children.at(childIndex - 1).line_nb,
-                             children.at(childIndex - 1).char_nb, "UnexpectedNodeValue",
-                             ("Expected value " + expectedValue).c_str());
+    if (childIndex == children.size()) {
+        logger.err("ERROR") << " at line " << children.at(childIndex - 1).line_nb << " char "
+                            << children.at(childIndex - 1).char_nb << ": '" << children.at(childIndex - 1).value << "'";
+        logger.err("Expected ") << expectedValue << " node value.";
+        throw UnexpectedNodeValueException("");
+    }
     const Node &node = children.at(childIndex);
-    if (node.value != expectedValue)
-        throw TokenException("ERROR", node.value.c_str(), node.line_nb, node.char_nb, "UnexpectedNodeValue",
-                             ("Expected value " + expectedValue).c_str());
+    if (node.value != expectedValue) {
+        logger.err("ERROR") << " at line " << node.line_nb << " char " << node.char_nb << ": '" << node.value << "'";
+        logger.err("Expected ") << expectedValue << " node value.";
+        throw UnexpectedNodeValueException("");
+    }
     if (consume) childIndex++;
 }
 

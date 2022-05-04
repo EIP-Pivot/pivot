@@ -1,4 +1,5 @@
 #include "pivot/script/Stack.hxx"
+#include "Logger.hpp"
 #include "pivot/script/Exceptions.hxx"
 
 namespace pivot::ecs::script::interpreter
@@ -10,8 +11,10 @@ Stack::Stack() {}
 
 void Stack::push(const Variable &var)
 {
-    if (_stack.contains(var.name))
-        throw InvalidException("Redefinition", var.name.c_str(), "Redefinition of variable which already exists.");
+    if (_stack.contains(var.name)) {
+        logger.err("ERROR") << " with variable " << var.name;
+        throw InvalidException("Stack Redefinition: Redefinition of variable which already exists.");
+    }
     _stack.insert_or_assign(var.name, var);
 }
 
@@ -30,11 +33,16 @@ Variable &Stack::findMut(const std::string &name, std::unordered_map<std::string
 {
     size_t dot = name.find('.');
     if (dot == std::string::npos) {
-        if (!where.contains(name)) throw InvalidException("UnknownVariable", name.c_str(), "Unknown variable.");
+        if (!where.contains(name)) {
+            logger.err("ERROR") << " with variable " << name;
+            throw InvalidException("Stack Find: Unknown Variable.");
+        }
         return where.at(name);
     }
-    if (!where.contains(name.substr(0, dot)))
-        throw InvalidException("UnknownVariable", name.c_str(), "Unknown variable.");
+    if (!where.contains(name.substr(0, dot))) {
+        logger.err("ERROR") << " with variable " << name;
+        throw InvalidException("Stack Find: Unknown Variable.");
+    }
     return findMut(name.substr(dot + 1), where.at(name.substr(0, dot)).members);
 }
 
@@ -42,11 +50,16 @@ const Variable &Stack::find(const std::string &name, const std::unordered_map<st
 {
     size_t dot = name.find('.');
     if (dot == std::string::npos) {
-        if (!where.contains(name)) throw InvalidException("UnknownVariable", name.c_str(), "Unknown variable.");
+        if (!where.contains(name)) {
+            logger.err("ERROR") << " with variable " << name;
+            throw InvalidException("Stack Find: Unknown Variable.");
+        }
         return where.at(name);
     }
-    if (!where.contains(name.substr(0, dot)))
-        throw InvalidException("UnknownVariable", name.c_str(), "Unknown variable.");
+    if (!where.contains(name.substr(0, dot))) {
+        logger.err("ERROR") << " with variable " << name;
+        throw InvalidException("Stack Find: Unknown Variable.");
+    }
     return find(name.substr(dot + 1), where.at(name.substr(0, dot)).members);
 }
 

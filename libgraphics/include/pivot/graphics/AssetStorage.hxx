@@ -406,3 +406,6 @@ inline std::int32_t AssetStorage::getIndex<gpu_object::Material>(const std::stri
 #endif
 
 }    // namespace pivot::graphics
+
+ENABLE_FLAGS_FOR_ENUM(pivot::graphics::AssetStorage::CpuKeepFlagBits);
+ENABLE_FLAGS_FOR_ENUM(pivot::graphics::AssetStorage::GpuRessourceFlagBits);

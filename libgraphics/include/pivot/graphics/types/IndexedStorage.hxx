@@ -43,6 +43,12 @@ public:
         index.clear();
         storage.clear();
     }
+    /// Reserve extra memory
+    void reserve(size_type size)
+    {
+        index.reserve(size);
+        storage.reserve(size);
+    }
 
     /// Append to the current storage
     void append(const IndexedStorage &stor)

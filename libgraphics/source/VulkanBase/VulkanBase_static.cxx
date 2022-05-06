@@ -31,21 +31,21 @@ std::uint32_t VulkanBase::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT m
                                         VkDebugUtilsMessageTypeFlagsEXT messageType,
                                         const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *)
 {
-    decltype(&Logger::debug) severity;
+    decltype(&cpplogger::Logger::debug) severity;
     switch (messageSeverity) {
         case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-            severity = &Logger::debug;
+            severity = &cpplogger::Logger::debug;
             break;
         case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-            severity = &Logger::err;
+            severity = &cpplogger::Logger::err;
             break;
         case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-            severity = &Logger::warn;
+            severity = &cpplogger::Logger::warn;
             break;
         case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-            severity = &Logger::info;
+            severity = &cpplogger::Logger::info;
             break;
-        default: severity = &Logger::err; break;
+        default: severity = &cpplogger::Logger::err; break;
     }
     vk::to_string(vk::DebugUtilsMessageTypeFlagsEXT(messageType));
     (logger.*severity)(to_string_message_type(messageType)) << pCallbackData->pMessage;

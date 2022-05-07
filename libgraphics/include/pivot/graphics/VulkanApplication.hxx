@@ -71,12 +71,7 @@ public:
     /// @arg camera The information about the camera
     ///
     /// You must have already loaded your models and texture !
-    void draw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation, const CameraData &camera
-#ifdef CULLING_DEBUG
-              ,
-              const std::optional<std::reference_wrapper<const CameraData>> cullingCamera = std::nullopt
-#endif
-    );
+    void draw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation, const CameraData &camera);
 
     /// @brief get Swapchain aspect ratio
     constexpr float getAspectRatio() const noexcept { return swapchain.getAspectRatio(); }

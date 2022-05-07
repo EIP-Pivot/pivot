@@ -25,12 +25,7 @@ VulkanApplication::VulkanApplication()
       descriptorAllocator(device),
       layoutCache(device)
 {
-    DEBUG_FUNCTION;
-
-#if defined(CULLING_DEBUG)
-    logger.warn("Culling") << "Culling camera are enabled !";
-#endif
-
+    DEBUG_FUNCTION
     if (bEnableValidationLayers && !VulkanBase::checkValidationLayerSupport(validationLayers)) {
         logger.warn("Vulkan Instance") << "Validation layers requested, but not available!";
         bEnableValidationLayers = false;
@@ -139,12 +134,7 @@ void VulkanApplication::recreateSwapchain()
 }
 
 void VulkanApplication::draw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
-                             const CameraData &cameraData
-#ifdef CULLING_DEBUG
-                             ,
-                             const std::optional<std::reference_wrapper<const CameraData>> cullingCameraData
-#endif
-)
+                             const CameraData &cameraData)
 try {
     assert(!graphicsRenderer.empty() && !computeRenderer.empty());
     assert(currentFrame < MaxFrameInFlight);
@@ -190,12 +180,6 @@ try {
         cmdBuf.end();
         secondaryBuffer.push_back(cmdBuf);
     }
-
-    // #ifdef CULLING_DEBUG
-    //     auto cullingCameraDataSelected = cullingCameraData.value_or(std::ref(cameraData)).get();
-    // #else
-    //     auto cullingCameraDataSelected = cameraData;
-    // #endif
 
     const std::array<float, 4> vClearColor = {0.0f, 0.0f, 0.0f, 1.0f};
     std::array<vk::ClearValue, 2> clearValues{};

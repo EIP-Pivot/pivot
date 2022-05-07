@@ -28,7 +28,7 @@ namespace gpu_object
     /// Represent a Directional Light
     /// @cond
     struct DirectionalLight {
-        alignas(16) glm::vec3 position;
+        alignas(16) glm::vec3 orientation;
         alignas(16) glm::vec3 color = {1.0f, 1.0f, 1.0f};
         alignas(4) float intensity = 1.0f;
         alignas(4) float radius = 0.5f;

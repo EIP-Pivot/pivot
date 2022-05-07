@@ -77,8 +77,7 @@ public:
     constexpr float getAspectRatio() const noexcept { return swapchain.getAspectRatio(); }
 
     /// Build the asset Storage
-    void buildAssetStorage(AssetStorage::CpuKeepFlags cpuKeep = AssetStorage::CpuKeepFlagBits::eNone,
-                           AssetStorage::GpuRessourceFlags gpuFlag = AssetStorage::GpuRessourceFlagBits::eClear);
+    void buildAssetStorage(AssetStorage::BuildFlags flags);
 
     template <validRenderer T>
     /// Add a Renderer to the frame

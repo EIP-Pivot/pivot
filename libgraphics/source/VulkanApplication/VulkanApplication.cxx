@@ -102,11 +102,11 @@ void VulkanApplication::initVulkanRessources()
 
 void VulkanApplication::postInitialization() {}
 
-void VulkanApplication::buildAssetStorage(AssetStorage::CpuKeepFlags cpuKeep, AssetStorage::GpuRessourceFlags gpuFlag)
+void VulkanApplication::buildAssetStorage(AssetStorage::BuildFlags flags)
 {
     device.waitIdle();
 
-    assetStorage.build(DescriptorBuilder(layoutCache, descriptorAllocator), cpuKeep, gpuFlag);
+    assetStorage.build(DescriptorBuilder(layoutCache, descriptorAllocator), flags);
     std::ranges::for_each(computeRenderer, [this](auto &pair) {
         pair.first->onRecreate(swapchain.getSwapchainExtent(), *this, frames[0].drawResolver.getDescriptorSetLayout(),
                                renderPass.getRenderPass());

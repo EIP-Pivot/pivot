@@ -6,48 +6,54 @@
 namespace pivot::graphics
 {
 
-void AssetStorage::build(DescriptorBuilder builder, CpuKeepFlags cpuKeep, GpuRessourceFlags gpuFlag)
+void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
 {
     DEBUG_FUNCTION
     // check for incorrect combination of flags
-    assert(std::popcount(static_cast<std::underlying_type_t<AssetStorage::GpuRessourceFlagBits>>(gpuFlag)) == 1);
-    if (cpuKeep & CpuKeepFlagBits::eNone) {
-        assert(std::popcount(static_cast<std::underlying_type_t<AssetStorage::CpuKeepFlagBits>>(cpuKeep)) == 1);
-    }
-
+    assert(std::popcount(static_cast<std::underlying_type_t<AssetStorage::BuildFlagBits>>(flags)) == 1);
     assert(cpuStorage.materialStaging.contains(missing_material_name));
     assert(cpuStorage.textureStaging.contains(missing_texture_name));
+
+    // TODO: better separation of loading ressources
+    modelStorage.clear();
+    prefabStorage.clear();
+    materialStorage.clear();
+    meshAABBStorage.clear();
+    for (auto &image: textureStorage.getStorage()) {
+        base_ref->get().device.destroyImageView(image.imageView);
+        base_ref->get().allocator.destroyImage(image);
+    }
+    textureStorage.clear();
     vulkanDeletionQueue.flush();
+
     createTextureSampler();
+
+    if (flags & (BuildFlagBits::eReloadOldAssets | BuildFlagBits::eReloadAllAssets)) {
+        cpuStorage.modelPaths.insert(modelPaths.begin(), modelPaths.end());
+        cpuStorage.texturePaths.insert(texturePaths.begin(), texturePaths.end());
+    }
+    for (const auto &i: cpuStorage.modelPaths) {
+        if (!loadModel(i.second)) logger.warn("Asset Storage") << "Model failed to load: " << i.second;
+    }
+    for (const auto &i: cpuStorage.texturePaths) {
+        if (!loadTexture(i.second)) logger.warn("Asset Storage") << "Texture failed to load: " << i.second;
+    }
 
     logger.info("Asset Storage") << prefabStorage.size() << " prefab loaded";
     logger.info("Asset Storage") << "Pushing " << modelStorage.size() << " models onto the GPU";
-    pushModelsOnGPU(gpuFlag);
+    pushModelsOnGPU();
 
     logger.info("Asset Storage") << "Pushing " << cpuStorage.textureStaging.size() << " textures onto the GPU";
-    pushTexturesOnGPU(gpuFlag);
+    pushTexturesOnGPU();
 
     logger.info("Asset Storage") << "Pushing " << cpuStorage.materialStaging.size() << " materials onto the GPU";
-    pushMaterialOnGPU(gpuFlag);
+    pushMaterialOnGPU();
 
     createDescriptorSet(builder);
 
-    CPUStorage newStorage;
-    if (cpuKeep & CpuKeepFlagBits::eAll) {
-        newStorage = std::move(cpuStorage);
-    } else {
-        if (cpuKeep & CpuKeepFlagBits::eTexture) { newStorage.textureStaging = std::move(cpuStorage.textureStaging); }
-        if (cpuKeep & CpuKeepFlagBits::eMaterial) {
-            newStorage.materialStaging = std::move(cpuStorage.materialStaging);
-        }
-        if (cpuKeep & CpuKeepFlagBits::eVertex) {
-            newStorage.vertexStagingBuffer = std::move(cpuStorage.vertexStagingBuffer);
-        }
-        if (cpuKeep & CpuKeepFlagBits::eIndice) {
-            newStorage.indexStagingBuffer = std::move(cpuStorage.indexStagingBuffer);
-        }
-    }
-    cpuStorage = std::move(newStorage);
+    modelPaths.swap(cpuStorage.modelPaths);
+    texturePaths.swap(cpuStorage.texturePaths);
+    cpuStorage = {};
 }
 
 void AssetStorage::destroy()
@@ -62,33 +68,20 @@ void AssetStorage::destroy()
         base_ref->get().device.destroyImageView(image.imageView);
         base_ref->get().allocator.destroyImage(image);
     }
+    textureStorage.clear();
     vulkanDeletionQueue.flush();
 }
 
 template <typename T>
-static void copy_with_staging_buffer(VulkanBase &base_ref, AssetStorage::GpuRessourceFlags gpuFlag,
-                                     vk::BufferUsageFlags flag, std::vector<T> &data, AllocatedBuffer<T> &buffer)
+static void copy_with_staging_buffer(VulkanBase &base_ref, vk::BufferUsageFlags flag, std::vector<T> &data,
+                                     AllocatedBuffer<T> &buffer)
 {
-    // check for incorrect combination of flags
-    assert(std::popcount(static_cast<std::underlying_type_t<AssetStorage::GpuRessourceFlagBits>>(gpuFlag)) == 1);
-
     auto true_size = data.size();
-    if (buffer &&
-        (gpuFlag & (AssetStorage::GpuRessourceFlagBits::eAfter | AssetStorage::GpuRessourceFlagBits::eBefore))) {
-        true_size += buffer.getSize();
-    }
     auto staging = base_ref.allocator.createBuffer<T>(
         true_size, vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst,
         vma::MemoryUsage::eCpuToGpu);
 
-    auto offset = 0;
-    if (buffer && (gpuFlag & AssetStorage::GpuRessourceFlagBits::eAfter)) {
-        base_ref.copyBuffer(buffer, staging);
-        offset += buffer.getSize();
-    }
-    base_ref.allocator.copyBuffer(staging, std::span(data), offset);
-    if (buffer && (gpuFlag & AssetStorage::GpuRessourceFlagBits::eBefore))
-        base_ref.copyBuffer(buffer, staging, 0, data.size() * sizeof(T));
+    base_ref.allocator.copyBuffer(staging, std::span(data));
     if (true_size > buffer.getSize()) {
         base_ref.allocator.destroyBuffer(buffer);
         buffer = base_ref.allocator.createBuffer<T>(
@@ -99,68 +92,45 @@ static void copy_with_staging_buffer(VulkanBase &base_ref, AssetStorage::GpuRess
     base_ref.allocator.destroyBuffer(staging);
 }
 
-void AssetStorage::pushModelsOnGPU(GpuRessourceFlags gpuFlag)
+void AssetStorage::pushModelsOnGPU()
 {
     DEBUG_FUNCTION
-    if (gpuFlag & GpuRessourceFlagBits::eClear) {
-        modelPaths.clear();
-    } else if (gpuFlag & (AssetStorage::GpuRessourceFlagBits::eBefore | AssetStorage::GpuRessourceFlagBits::eAfter)) {
-        modelPaths.insert(cpuStorage.modelPaths.begin(), cpuStorage.modelPaths.end());
-    }
-
     meshAABBStorage.clear();
     meshAABBStorage.reserve(modelStorage.size());
+
+    if (cpuStorage.vertexStagingBuffer.empty()) {
+        logger.warn("Asset Storage") << "No model to push";
+        return;
+    }
+
     for (const auto &[name, model]: modelStorage) {
         meshAABBStorage.add(name,
                             gpu_object::AABB(std::span(cpuStorage.vertexStagingBuffer.begin() + model.mesh.vertexOffset,
                                                        model.mesh.vertexSize)));
     }
-
     assert(modelStorage.size() == meshAABBStorage.size());
-    if (cpuStorage.vertexStagingBuffer.empty()) {
-        logger.warn("Asset Storage") << "No model to push";
-        return;
-    }
-    if (meshAABBStorage.empty()) {
-        logger.warn("Asset Storage") << "No AABB to push";
-        return;
-    }
 
-    copy_with_staging_buffer(base_ref->get(), gpuFlag, vk::BufferUsageFlagBits::eVertexBuffer,
-                             cpuStorage.vertexStagingBuffer, vertexBuffer);
+    copy_with_staging_buffer(base_ref->get(), vk::BufferUsageFlagBits::eVertexBuffer, cpuStorage.vertexStagingBuffer,
+                             vertexBuffer);
     vk_debug::setObjectName(base_ref->get().device, vertexBuffer.buffer, "Vertex Buffer");
 
-    copy_with_staging_buffer(base_ref->get(), gpuFlag, vk::BufferUsageFlagBits::eIndexBuffer,
-                             cpuStorage.indexStagingBuffer, indicesBuffer);
+    copy_with_staging_buffer(base_ref->get(), vk::BufferUsageFlagBits::eIndexBuffer, cpuStorage.indexStagingBuffer,
+                             indicesBuffer);
     vk_debug::setObjectName(base_ref->get().device, indicesBuffer.buffer, "Indices Buffer");
 
-    copy_with_staging_buffer(base_ref->get(), gpuFlag, vk::BufferUsageFlagBits::eStorageBuffer,
-                             meshAABBStorage.getStorage(), AABBBuffer);
+    copy_with_staging_buffer(base_ref->get(), vk::BufferUsageFlagBits::eStorageBuffer, meshAABBStorage.getStorage(),
+                             AABBBuffer);
     vk_debug::setObjectName(base_ref->get().device, AABBBuffer.buffer, "AABB Buffer");
 }
 
-void AssetStorage::pushTexturesOnGPU(GpuRessourceFlags gpuFlag)
+void AssetStorage::pushTexturesOnGPU()
 {
     DEBUG_FUNCTION
-    if (gpuFlag & GpuRessourceFlagBits::eClear) {
-        texturePaths.clear();
-        for (auto &image: textureStorage.getStorage()) {
-            base_ref->get().device.destroyImageView(image.imageView);
-            base_ref->get().allocator.destroyImage(image);
-        }
-        textureStorage.clear();
-    }
-    bool isComplicated =
-        bool(gpuFlag & (AssetStorage::GpuRessourceFlagBits::eBefore | AssetStorage::GpuRessourceFlagBits::eAfter));
-    texturePaths.insert(cpuStorage.texturePaths.begin(), cpuStorage.texturePaths.end());
-
     if (cpuStorage.textureStaging.size() == 0) {
         logger.warn("Asset Storage") << "No textures to push";
         return;
     }
     for (auto &[name, idx]: cpuStorage.textureStaging) {
-        if (name == missing_texture_name && isComplicated) continue;
-
         auto &img = cpuStorage.textureStaging.get(idx);
         auto stagingBuffer = base_ref->get().allocator.createBuffer<std::byte>(
             img.image.size(), vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);
@@ -196,21 +166,14 @@ void AssetStorage::pushTexturesOnGPU(GpuRessourceFlags gpuFlag)
     }
 }
 
-void AssetStorage::pushMaterialOnGPU(GpuRessourceFlags gpuFlag)
+void AssetStorage::pushMaterialOnGPU()
 {
     DEBUG_FUNCTION
-    if (gpuFlag & GpuRessourceFlagBits::eClear) materialStorage.clear();
-
     if (cpuStorage.materialStaging.empty()) {
         logger.warn("Asset Storage") << "No material to push";
         return;
     }
-    bool isComplicated =
-        bool(gpuFlag & (AssetStorage::GpuRessourceFlagBits::eBefore | AssetStorage::GpuRessourceFlagBits::eAfter));
-
     for (auto &[name, idx]: cpuStorage.materialStaging) {
-        if (name == missing_material_name && isComplicated) continue;
-
         const auto &mat = cpuStorage.materialStaging.getStorage()[idx];
         materialStorage.add(
             name,
@@ -230,8 +193,8 @@ void AssetStorage::pushMaterialOnGPU(GpuRessourceFlags gpuFlag)
                     (mat.emissiveTexture.empty()) ? (-1) : (textureStorage.getIndex(mat.emissiveTexture)),
             });
     }
-    copy_with_staging_buffer(base_ref->get(), gpuFlag, vk::BufferUsageFlagBits::eStorageBuffer,
-                             materialStorage.getStorage(), materialBuffer);
+    copy_with_staging_buffer(base_ref->get(), vk::BufferUsageFlagBits::eStorageBuffer, materialStorage.getStorage(),
+                             materialBuffer);
     vk_debug::setObjectName(base_ref->get().device, materialBuffer.buffer, "Material Buffer");
 }
 

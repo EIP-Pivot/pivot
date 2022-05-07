@@ -81,34 +81,48 @@ bool AssetStorage::bindForCompute(vk::CommandBuffer &cmd, const vk::PipelineLayo
     return true;
 }
 
-bool AssetStorage::loadAsset(const std::filesystem::path &path)
+bool AssetStorage::addAsset(const std::filesystem::path &path)
 {
     DEBUG_FUNCTION
     auto iterModel = supportedObject.find(path.extension().string());
-    if (iterModel != supportedObject.end()) { return loadModel(path); }
+    if (iterModel != supportedObject.end()) { return addModel(path); }
 
     auto iterTexture = supportedTexture.find(path.extension().string());
-    if (iterTexture != supportedTexture.end()) { return loadTexture(path); }
+    if (iterTexture != supportedTexture.end()) { return addTexture(path); }
 
-    logger.err("LOAD ASSET") << "Not supported asset extension: " << path.extension();
+    logger.err("AssetStorage/addAsset") << "Not supported asset extension: " << path.extension();
     return false;
 }
 
-bool AssetStorage::loadModel(const std::filesystem::path &path)
+bool AssetStorage::addAsset(const std::vector<std::filesystem::path> &path)
+{
+    DEBUG_FUNCTION
+    unsigned load = 0;
+    for (const auto &i: path) load += addAsset(i);
+    return load == path.size();
+}
+
+bool AssetStorage::addModel(const std::filesystem::path &path)
 {
     DEBUG_FUNCTION
     auto iter = supportedObject.find(path.extension().string());
     if (iter == supportedObject.end()) {
-        logger.err("LOAD MODEL") << "Not supported model extension: " << path.extension();
+        logger.err("AssetStorage/addModel") << "Not supported model extension: " << path.extension();
         return false;
     }
-    logger.info("Asset Storage") << "Loading model at : " << path;
-    auto ret = std::apply(iter->second, std::make_tuple(this, path));
-    if (ret) modelPaths[path.stem().string()] = path;
-    return ret;
+    cpuStorage.modelPaths[path.stem().string()] = asset_dir / path;
+    return true;
 }
 
-bool AssetStorage::loadTexture(const std::filesystem::path &path)
+bool AssetStorage::addModel(const std::vector<std::filesystem::path> &path)
+{
+    DEBUG_FUNCTION
+    unsigned load = 0;
+    for (const auto &i: path) load += addModel(i);
+    return load == path.size();
+}
+
+bool AssetStorage::addTexture(const std::filesystem::path &path)
 {
     DEBUG_FUNCTION
     const auto iter = supportedTexture.find(path.extension().string());
@@ -116,10 +130,31 @@ bool AssetStorage::loadTexture(const std::filesystem::path &path)
         logger.err("Load Texture") << "Not supported texture extension: " << path.extension();
         return false;
     }
-    logger.info("Asset Storage") << "Loading texture at : " << path;
-    auto ret = std::apply(iter->second, std::make_tuple(this, path));
-    if (ret) texturePaths[path.stem().string()] = path;
-    return ret;
+    cpuStorage.texturePaths[path.stem().string()] = asset_dir / path;
+    return true;
+}
+bool AssetStorage::addTexture(const std::vector<std::filesystem::path> &path)
+{
+    DEBUG_FUNCTION
+    unsigned load = 0;
+    for (const auto &i: path) load += addTexture(i);
+    return load == path.size();
+}
+
+bool AssetStorage::loadModel(const std::filesystem::path &path)
+{
+    auto extension = path.extension().string();
+    assert(supportedObject.contains(extension));
+    logger.debug("Asset Storage") << "Loading model at : " << path;
+    return std::apply(supportedObject.at(extension), std::make_tuple(this, path));
+}
+
+bool AssetStorage::loadTexture(const std::filesystem::path &path)
+{
+    auto extension = path.extension().string();
+    assert(supportedTexture.contains(extension));
+    logger.debug("Asset Storage") << "Loading texture at : " << path;
+    return std::apply(supportedTexture.at(extension), std::make_tuple(this, path));
 }
 
 }    // namespace pivot::graphics

@@ -111,26 +111,14 @@ public:
     /// Alias for AllocatedImage
     using Texture = AllocatedImage;
 
-    /// Select with asset to keep in CPU Memory when building
-    enum class CpuKeepFlagBits : FlagsType {
-        eNone = BIT(1),
-        eTexture = BIT(2),
-        eMaterial = BIT(3),
-        eVertex = BIT(4),
-        eIndice = BIT(5),
-        eAll = BIT(6),
+    /// Select how to handle the ressouces
+    enum class BuildFlagBits : FlagsType {
+        eClear = BIT(0),
+        eReloadOldAssets = BIT(1),
+        eReloadAllAssets = BIT(2),
     };
-    /// @see CpuKeepFlagBits
-    using CpuKeepFlags = Flags<CpuKeepFlagBits>;
-
-    /// Select how assets should be uploaded onto the GPU
-    enum class GpuRessourceFlagBits : FlagsType {
-        eClear = BIT(1),
-        eAfter = BIT(2),
-        eBefore = BIT(3),
-    };
-    /// @see GpuRessourceFlagBits
-    using GpuRessourceFlags = Flags<GpuRessourceFlagBits>;
+    /// @copydoc BuildFlagBits
+    using BuildFlags = Flags<BuildFlagBits>;
 
 private:
     struct CPUStorage {
@@ -152,51 +140,23 @@ public:
     /// Set the asset directory
     void setAssetDirectory(const std::filesystem::path &path) noexcept { asset_dir = path; }
 
-    template <is_valid_path... Path>
-    /// @brief load the assets into CPU memory
-    ///
-    /// @arg the path for all individual file to load
-    void loadAssets(Path... p)
-    {
-        unsigned i = ((loadAsset(asset_dir / p)) + ...);
-        if (i < sizeof...(Path)) {
-            throw AssetStorageError("An asset file failed to load. See above for further errors");
-        }
-    }
     /// Load a single assets file
-    bool loadAsset(const std::filesystem::path &path);
+    bool addAsset(const std::filesystem::path &path);
+    /// @copydoc addAsset
+    bool addAsset(const std::vector<std::filesystem::path> &path);
 
-    template <is_valid_path... Path>
-    /// @brief load the 3D models into CPU memory
-    ///
-    /// @arg the path for all individual file to load
-    void loadModels(Path... p)
-    {
-        unsigned i = ((loadModel(asset_dir / p)) + ...);
-        if (i < sizeof...(Path)) {
-            throw AssetStorageError("A model file failed to load. See above for further errors");
-        }
-    }
     /// Load a single model file
-    bool loadModel(const std::filesystem::path &path);
+    bool addModel(const std::filesystem::path &path);
+    /// @copydoc addModel
+    bool addModel(const std::vector<std::filesystem::path> &path);
 
-    template <is_valid_path... Path>
-    /// @brief load the textures into CPU memory
-    ///
-    /// @arg the path for all individual file to load
-    void loadTextures(Path... p)
-    {
-        unsigned i = ((loadTexture(asset_dir / p)) + ...);
-        if (i < sizeof...(Path)) {
-            throw AssetStorageError("A texture file failed to load. See above for further errors");
-        }
-    }
     /// Load a single texture
-    bool loadTexture(const std::filesystem::path &path);
+    bool addTexture(const std::filesystem::path &path);
+    /// @copydoc addTexture
+    bool addTexture(const std::vector<std::filesystem::path> &path);
 
     /// Push the ressource into GPU memory
-    void build(DescriptorBuilder builder, CpuKeepFlags cpuKeep = CpuKeepFlagBits::eNone,
-               GpuRessourceFlags gpuFlag = GpuRessourceFlagBits::eClear);
+    void build(DescriptorBuilder builder, BuildFlags flags = BuildFlagBits::eClear);
 
     /// Free GPU memory
     void destroy();
@@ -291,18 +251,20 @@ public:
 
 private:
     /// Load models
+    bool loadModel(const std::filesystem::path &path);
     bool loadObjModel(const std::filesystem::path &path);
     bool loadGltfModel(const std::filesystem::path &path);
 
     /// Load texture
+    bool loadTexture(const std::filesystem::path &path);
     bool loadPngTexture(const std::filesystem::path &path);
     bool loadJpgTexture(const std::filesystem::path &path);
     bool loadKtxImage(const std::filesystem::path &path);
 
     // Push to gpu
-    void pushModelsOnGPU(GpuRessourceFlags gpuFlag);
-    void pushTexturesOnGPU(GpuRessourceFlags gpuFlag);
-    void pushMaterialOnGPU(GpuRessourceFlags gpuFlag);
+    void pushModelsOnGPU();
+    void pushTexturesOnGPU();
+    void pushMaterialOnGPU();
 
     // Descriptor ressources
     void createTextureSampler();
@@ -407,5 +369,4 @@ inline std::int32_t AssetStorage::getIndex<gpu_object::Material>(const std::stri
 
 }    // namespace pivot::graphics
 
-ENABLE_FLAGS_FOR_ENUM(pivot::graphics::AssetStorage::CpuKeepFlagBits);
-ENABLE_FLAGS_FOR_ENUM(pivot::graphics::AssetStorage::GpuRessourceFlagBits);
+ENABLE_FLAGS_FOR_ENUM(pivot::graphics::AssetStorage::BuildFlagBits);

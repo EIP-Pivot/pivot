@@ -26,6 +26,7 @@ bool CullingRenderer::onRecreate(const vk::Extent2D &size, VulkanBase &base_ref,
                                  const vk::DescriptorSetLayout &resolverLayout, vk::RenderPass &pass)
 {
     onStop(base_ref);
+    stor.removePipeline("culling");
     onInit(base_ref, resolverLayout);
     return true;
 }

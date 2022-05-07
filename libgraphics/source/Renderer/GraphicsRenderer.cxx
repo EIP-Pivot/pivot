@@ -28,12 +28,12 @@ void GraphicsRenderer::onStop(VulkanBase &base_ref)
 bool GraphicsRenderer::onRecreate(const vk::Extent2D &size, VulkanBase &base_ref,
                                   const vk::DescriptorSetLayout &resolverLayout, vk::RenderPass &pass)
 {
+    onStop(base_ref);
     stor.removePipeline("pbr");
     stor.removePipeline("lit");
     stor.removePipeline("unlit");
     stor.removePipeline("wireframe");
     stor.removePipeline("skybox");
-    onStop(base_ref);
     return onInit(size, base_ref, resolverLayout, pass);
 }
 

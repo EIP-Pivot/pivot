@@ -3,6 +3,8 @@
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
+#include <algorithm>
+
 namespace pivot::graphics::abstract
 {
 AImmediateCommand::AImmediateCommand() {}

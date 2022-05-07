@@ -79,9 +79,6 @@ void Editor::create(pivot::Engine &engine, pivot::graphics::PipelineStorage &pip
     ImGui::Text("X: %f Y: %f", io.MousePos.x, io.MousePos.y);
     ImGui::Text("Fps: %.1f", ImGui::GetIO().Framerate);
     ImGui::Text("ms/frame %.3f", 1000.0f / ImGui::GetIO().Framerate);
-#ifdef CULLING_DEBUG
-    ImGui::Text("Culling separated from camera: %s", std::to_string(!cullingCameraFollowsCamera).c_str());
-#endif
     ImGui::Checkbox("Systems", &run);
     ImGui::End();
 }

@@ -94,12 +94,6 @@ public:
         window.setKeyPressCallback(Window::Key::A, key_lambda_press);
         window.setKeyPressCallback(Window::Key::SPACE, key_lambda_press);
         window.setKeyPressCallback(Window::Key::LEFT_SHIFT, key_lambda_press);
-#ifdef CULLING_DEBUG
-        window.setKeyPressCallback(Window::Key::C, [this](Window &window, const Window::Key key) {
-            if (window.captureCursor())
-                this->editor.cullingCameraFollowsCamera = !this->editor.cullingCameraFollowsCamera;
-        });
-#endif
         // Release action
         window.setKeyReleaseCallback(Window::Key::W, key_lambda_release);
         window.setKeyReleaseCallback(Window::Key::S, key_lambda_release);
@@ -190,11 +184,6 @@ public:
             if (entity.hasSelected()) { editor.DisplayGuizmo(entity.getEntitySelected(), m_camera); }
         }
         UpdateCamera(dt);
-
-#ifdef CULLING_DEBUG
-        if (editor.cullingCameraFollowsCamera) m_culling_camera = m_camera;
-#endif
-
         imGuiManager.render();
     }
 

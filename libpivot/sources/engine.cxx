@@ -44,15 +44,10 @@ void Engine::run()
         auto data = m_current_scene_render_object.value().get().getData();
         // FIXME: Send data and existence vector directly to the graphic library
         std::vector<std::reference_wrapper<const pivot::graphics::RenderObject>> objects;
+        objects.reserve(objects.size());
         for (const auto &ro: data) { objects.push_back(ro); }
 
-        m_vulkan_application.draw(
-            objects, pivot::internals::getGPUCameraData(m_camera, Engine::fov, aspectRatio)
-#ifdef CULLING_DEBUG
-                         ,
-            std::make_optional(pivot::internals::getGPUCameraData(m_culling_camera, Engine::fov, aspectRatio))
-#endif
-        );
+        m_vulkan_application.draw(objects, pivot::internals::getGPUCameraData(m_camera, Engine::fov, aspectRatio));
 
         if (!m_paused) {
             m_scene_manager.getCurrentScene().getEventManager().sendEvent(

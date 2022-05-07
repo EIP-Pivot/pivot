@@ -36,10 +36,6 @@ protected:
     builtins::Camera m_camera;
     bool m_paused = true;
 
-#ifdef CULLING_DEBUG
-    builtins::Camera m_culling_camera;
-#endif
-
     virtual void onTick(float delta){};
     ecs::CurrentScene getCurrentScene() { return m_scene_manager; };
     const ecs::SceneManager &getSceneManager() { return m_scene_manager; };

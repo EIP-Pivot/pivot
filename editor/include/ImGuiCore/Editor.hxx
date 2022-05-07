@@ -43,11 +43,4 @@ private:
     float aspectRatio;
     float snap[3] = {20.f, 20.f, 20.f};
     std::vector<std::string> availableModes;
-
-#ifdef CULLING_DEBUG
-public:
-    bool cullingCameraFollowsCamera = true;
-
-private:
-#endif
 };

@@ -57,7 +57,7 @@ layout(std140, set = 1, binding = 2) readonly buffer LightBuffer {
 }  omniLight;
 
 layout(std140, set = 1, binding = 3) readonly buffer DirectLight {
-    DirectionalLight pointLightArray[];
+    DirectionalLight directionalLightArray[];
 }  directLight;
 
 #define PI 3.1415926535897932384626433832795
@@ -142,7 +142,6 @@ void main()
         vec3 H = normalize(V + L);
         float distance = length(light.position.xyz - fragPosition);
         float attenuation = 1.0 / (distance * distance);
-        /// Replace the value with the color of the light
         vec3 radiance = light.color.rgb * light.intensity * attenuation;
 
         // Cook-Torrance BRDF

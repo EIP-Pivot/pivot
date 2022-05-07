@@ -58,7 +58,7 @@ layout(std140, set = 1, binding = 2) readonly buffer LightBuffer {
 }  omniLight;
 
 layout(std140, set = 1, binding = 3) readonly buffer DirectLight {
-    DirectionalLight pointLightArray[];
+    DirectionalLight directionalLightArray[];
 }  directLight;
 
 const float ambientStrength = 0.1;

@@ -116,7 +116,7 @@ void Engine::saveScene(ecs::SceneManager::SceneId id, const std::filesystem::pat
             auto modelPath = assetStorage.getModelPath(asset);
             if (!texturePath.has_value() && !modelPath.has_value()) return std::nullopt;
             std::filesystem::path assetPath = texturePath.value_or(modelPath.value());
-            return assetPath.lexically_relative(path.parent_path());
+            return assetPath.lexically_relative(path.parent_path()).string();
         })));
 }
 

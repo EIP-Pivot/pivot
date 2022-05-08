@@ -39,14 +39,14 @@ public:
     void copyBuffer(AllocatedBuffer<T> &src, AllocatedBuffer<T> &dst, vk::DeviceSize srcOffset = 0,
                     vk::DeviceSize dstOffset = 0)
     {
-        if (src.getBytesSize() > dst.getAllocatedSize())
+        if (src.getBytesSize() - srcOffset > dst.getAllocatedSize() - dstOffset)
             throw ImmediateCommandError("The destination buffer is too small");
 
         immediateCommand([&](vk::CommandBuffer &cmd) {
             vk::BufferCopy copyRegion{
                 .srcOffset = srcOffset,
                 .dstOffset = dstOffset,
-                .size = src.getBytesSize(),
+                .size = src.getBytesSize() - srcOffset,
             };
             cmd.copyBuffer(src.buffer, dst.buffer, copyRegion);
         });

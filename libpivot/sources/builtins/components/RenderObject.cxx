@@ -18,11 +18,6 @@ namespace
 struct RenderObjectAsset {
     RenderObjectAsset() = default;
 
-    Asset meshID;
-    std::string pipelineID = "";
-    Asset materialIndex;
-    Transform transform;
-
     RenderObjectAsset(const RenderObject &ro)
         : meshID({ro.meshID}), pipelineID(ro.pipelineID), materialIndex({ro.materialIndex}), transform(ro.transform)
     {
@@ -32,6 +27,11 @@ struct RenderObjectAsset {
     {
         return RenderObject{this->meshID.name, this->pipelineID, this->materialIndex.name, this->transform};
     }
+
+    Asset meshID;
+    std::string pipelineID = "";
+    Asset materialIndex;
+    Transform transform;
 };
 }    // namespace
 

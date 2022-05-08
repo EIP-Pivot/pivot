@@ -58,17 +58,11 @@ public:
           systemsEditor(m_system_index, getCurrentScene()),
           componentEditor(m_component_index, getCurrentScene()){};
 
-    void loadScene()
-    {
-        SceneManager::SceneId defaultScene = registerScene("Default");
-        changeCurrentScene(defaultScene);
-    }
+    SceneManager::SceneId loadDefaultScene() { return registerScene("Default"); }
 
     void init()
     {
         auto &window = m_vulkan_application.window;
-
-        loadScene();
 
         Scene &scene = *getCurrentScene();
 
@@ -199,10 +193,19 @@ public:
     std::bitset<UINT16_MAX> button;
 };
 
-int main()
+int main(int argc, char *argv[])
 {
     logger.start();
     Application app;
+
+    SceneManager::SceneId sceneId;
+    if (argc == 2) {
+        sceneId = app.loadScene(argv[1]);
+    } else {
+        sceneId = app.loadDefaultScene();
+    }
+    app.changeCurrentScene(sceneId);
+
     app.init();
     app.run();
     return 0;

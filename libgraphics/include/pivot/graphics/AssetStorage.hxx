@@ -115,7 +115,6 @@ public:
     enum class BuildFlagBits : FlagsType {
         eClear = BIT(0),
         eReloadOldAssets = BIT(1),
-        eReloadAllAssets = BIT(2),
     };
     /// @copydoc BuildFlagBits
     using BuildFlags = Flags<BuildFlagBits>;

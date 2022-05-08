@@ -28,7 +28,7 @@ void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
 
     createTextureSampler();
 
-    if (flags & (BuildFlagBits::eReloadOldAssets | BuildFlagBits::eReloadAllAssets)) {
+    if (flags & (BuildFlagBits::eReloadOldAssets)) {
         cpuStorage.modelPaths.insert(modelPaths.begin(), modelPaths.end());
         cpuStorage.texturePaths.insert(texturePaths.begin(), texturePaths.end());
     }

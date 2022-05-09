@@ -42,10 +42,6 @@ void ImGuiRenderer::onStop(VulkanBase &base_ref)
 bool ImGuiRenderer::onRecreate(const vk::Extent2D &size, VulkanBase &base_ref,
                                const vk::DescriptorSetLayout &resolverLayout, vk::RenderPass &pass)
 {
-    ImGui_ImplVulkan_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-    createImGuiContext(base_ref, pass);
     return true;
 }
 

@@ -97,8 +97,14 @@ void DrawCallResolver::prepareForDraw(std::vector<std::reference_wrapper<const R
 
     auto lightData = frame.omniLightBuffer.getMappedSpan();
     lightData[0] = gpu_object::PointLight{
-        .position = glm::vec4(0, 1000, 0, 1),
-        .intensity = 1000000,
+        .position = glm::vec4(0, 1000, 0, 0),
+        .intensity = 100,
+    };
+
+    auto dirLight = frame.directLightBuffer.getMappedSpan();
+    dirLight[0] = gpu_object::DirectionalLight{
+        .orientation = glm::vec4(1),
+        .intensity = 1,
     };
 
     auto sceneData = frame.indirectBuffer.getMappedSpan();

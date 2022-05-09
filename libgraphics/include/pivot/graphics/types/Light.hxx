@@ -15,27 +15,26 @@ namespace gpu_object
     /// @cond
     struct PointLight {
         alignas(16) glm::vec4 position;
-        alignas(16) glm::vec4 color = {1.0f, 1.0f, 1.0f, 1.0f};
+        alignas(16) glm::vec4 color = {1.0f, 1.0f, 1.0f, 0.0f};
         alignas(4) float intensity = 1.0f;
         alignas(4) float minRadius = 1.0f;
         alignas(4) float radius = 10.0f;
         alignas(4) float falloff = 1.0f;
     };
     static_assert(sizeof(PointLight) % 4 == 0);
-    static_assert(sizeof(PointLight) == (sizeof(float) * 3) + (sizeof(float) * 3) + (sizeof(float) * 4) + 8);
+    static_assert(sizeof(PointLight) == (sizeof(float) * 4) + (sizeof(float) * 4) + (sizeof(float) * 4));
     /// @endcond
 
     /// Represent a Directional Light
     /// @cond
     struct DirectionalLight {
-        alignas(16) glm::vec3 orientation;
-        alignas(16) glm::vec3 color = {1.0f, 1.0f, 1.0f};
+        alignas(16) glm::vec4 orientation;
+        alignas(16) glm::vec4 color = {1.0f, 1.0f, 1.0f, 0.0f};
         alignas(4) float intensity = 1.0f;
-        alignas(4) float radius = 0.5f;
     };
     /// @endcond
     static_assert(sizeof(DirectionalLight) % 4 == 0);
-    static_assert(sizeof(DirectionalLight) == (sizeof(float) * 3) + (sizeof(float) * 3) + (sizeof(float) * 2) + 16);
+    static_assert(sizeof(DirectionalLight) == (sizeof(float) * 4) + (sizeof(float) * 4) + (sizeof(float) * 2) + 8);
 
 }    // namespace gpu_object
 

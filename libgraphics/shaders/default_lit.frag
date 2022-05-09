@@ -12,10 +12,9 @@ struct PointLight {
 };
 
 struct DirectionalLight {
-    vec3 orientation;
-    vec3 color;
+    vec4 orientation;
+    vec4 color;
     float intensity;
-    float radius;
 };
 
 struct Material {

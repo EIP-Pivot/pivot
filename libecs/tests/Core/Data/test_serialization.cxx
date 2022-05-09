@@ -15,6 +15,7 @@ TEST_CASE("Values can be serialized", "[data][save]")
     REQUIRE(json(Value{true}).dump() == "true");
     REQUIRE(json(Value{glm::vec3{1, 2, 3}}).dump() == "[1.0,2.0,3.0]");
     REQUIRE(json(Value{Record{{"name", "bob"}, {"age", 42}}}).dump() == R"({"age":42,"name":"bob"})");
+    REQUIRE(json(Value{Asset{"cube"}}).dump() == R"({"asset":{"name":"cube"}})");
 }
 
 TEST_CASE("Values can be deserialized", "[data][save]")
@@ -25,6 +26,7 @@ TEST_CASE("Values can be deserialized", "[data][save]")
     REQUIRE(json::parse("false").get<Value>() == Value{false});
     REQUIRE(json::parse("[1.0,2.0,3.0]").get<Value>() == Value{glm::vec3{1, 2, 3}});
     REQUIRE(json::parse(R"({"age":42,"name":"bob"})").get<Value>() == Value{Record{{"name", "bob"}, {"age", 42}}});
+    REQUIRE(json::parse(R"({"asset":{"name":"cube"}})").get<Value>() == Value{Asset{"cube"}});
 
     REQUIRE_THROWS(json::parse("[1.0,2.0,3.0,4.0]").get<Value>());
     REQUIRE_THROWS(json::parse("[1.0,2.0]").get<Value>());

@@ -109,7 +109,15 @@ ecs::SceneManager::SceneId Engine::registerScene(std::unique_ptr<ecs::Scene> sce
 
 void Engine::saveScene(ecs::SceneManager::SceneId id, const std::filesystem::path &path)
 {
-    m_scene_manager.getSceneById(id).save(path);
+    m_scene_manager.getSceneById(id).save(
+        path, std::make_optional(std::function([this, &path](const std::string &asset) -> std::optional<std::string> {
+            auto &assetStorage = m_vulkan_application.assetStorage;
+            auto texturePath = assetStorage.getTexturePath(asset);
+            auto modelPath = assetStorage.getModelPath(asset);
+            if (!texturePath.has_value() && !modelPath.has_value()) return std::nullopt;
+            std::filesystem::path assetPath = texturePath.value_or(modelPath.value());
+            return assetPath.lexically_relative(path.parent_path()).string();
+        })));
 }
 
 ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
@@ -122,6 +130,10 @@ ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
     }
     auto scene_json = nlohmann::json::parse(scene_file);
     auto scene = Scene::load(scene_json, m_component_index, m_system_index);
+    for (auto &asset: scene_json["assets"]) {
+        auto assetPath = path.parent_path() / asset.get<std::string>();
+        m_vulkan_application.assetStorage.loadAsset(assetPath);
+    }
     return this->registerScene(std::move(scene));
 }
 }    // namespace pivot

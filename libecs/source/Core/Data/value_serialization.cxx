@@ -4,19 +4,11 @@ namespace pivot::ecs::data
 {
 void to_json(nlohmann::json &json, const Value &value)
 {
-    std::visit(
-        [&](auto &data) {
-            // using type = std::decay_t<decltype(data)>;
-
-            // if constexpr (std::is_same_v<type, >)
-            json = data;
-        },
-        static_cast<const Value::variant &>(value));
+    std::visit([&](auto &data) { json = data; }, static_cast<const Value::variant &>(value));
 }
 
 void from_json(const nlohmann::json &json, Value &value)
 {
-
     if (json.is_string()) {
         value = json.get<std::string>();
     } else if (json.is_number_float()) {
@@ -27,13 +19,13 @@ void from_json(const nlohmann::json &json, Value &value)
         value = json.get<bool>();
     } else if (json.is_array()) {
         if (json.size() != 3) { throw nlohmann::json::type_error::create(399, "Invalid data::Value", json); }
-        value = glm::vec3{
-            json.at(0).get<float>(),
-            json.at(1).get<float>(),
-            json.at(2).get<float>(),
-        };
+        value = json.get<glm::vec3>();
     } else if (json.is_object()) {
-        value = json.get<Record>();
+        // TODO: How to distinguish between an asset and a record ?
+        if (json.contains("asset") && json.size() == 1)
+            value = json.get<Asset>();
+        else
+            value = json.get<Record>();
     } else {
         throw nlohmann::json::type_error::create(399, "Invalid data::Value", json);
     }
@@ -41,6 +33,12 @@ void from_json(const nlohmann::json &json, Value &value)
 
 std::ostream &operator<<(std::ostream &stream, const Record &type) { return stream << nlohmann::json(type).dump(); }
 std::ostream &operator<<(std::ostream &stream, const Value &type) { return stream << nlohmann::json(type).dump(); }
+
+/// Serialize an Asset to json
+void to_json(nlohmann::json &json, const Asset &value) { json["asset"]["name"] = value.name; }
+
+/// Deserialize an Asset from json
+void from_json(const nlohmann::json &json, Asset &value) { value.name = json["asset"]["name"].get<std::string>(); }
 }    // namespace pivot::ecs::data
 
 namespace nlohmann
@@ -53,4 +51,5 @@ void adl_serializer<glm::vec3>::from_json(const json &j, glm::vec3 &opt)
     opt.y = j.at(1).get<float>();
     opt.z = j.at(2).get<float>();
 }
+
 }    // namespace nlohmann

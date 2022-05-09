@@ -35,20 +35,50 @@ TEST_CASE("RenderObject component works", "[graphics][component]")
     auto array = description.createContainer(description);
 
     const auto data =
-        R"({"meshID": "sponza","pipelineID":"default", "materialIndex":"blue","transform":{"scale": [1,2,3], "position": [5, 5, 5], "rotation": [0, 2.7, 0.4]}})";
+        R"(
+{
+  "meshID": {
+    "asset": {
+      "name": "sponza"
+    }
+  },
+  "pipelineID": "default",
+  "materialIndex": {
+    "asset": {
+      "name": "blue"
+    }
+  },
+  "transform": {
+    "scale": [
+      1,
+      2,
+      3
+    ],
+    "position": [
+      5,
+      5,
+      5
+    ],
+    "rotation": [
+      0,
+      2.7,
+      0.4
+    ]
+  }
+}
+)";
 
     REQUIRE_NOTHROW(array->setValueForEntity(0, json::parse(data).get<Value>()));
 
-    const RenderObject expected{"sponza", "default", "blue", {{5, 5, 5}, {0, 2.7, 0.4}, {1, 2, 3}}
+    const RenderObject expected{"sponza", "default", "blue", {{5, 5, 5}, {0, 2.7, 0.4}, {1, 2, 3}}};
 
-    };
     const RenderObject &renderObject = dynamic_cast<DenseTypedComponentArray<RenderObject> &>(*array).getData().front();
     REQUIRE(renderObject == expected);
 
     REQUIRE(description.defaultValue ==
-            Value{Record{{"meshID", Value{"cube"}},
+            Value{Record{{"meshID", Asset{"cube"}},
                          {"pipelineID", Value{""}},
-                         {"materialIndex", Value{""}},
+                         {"materialIndex", Asset{""}},
                          {"transform", Value{Record{{"position", Value{glm::vec3{0, 0, 0}}},
                                                     {"rotation", Value{glm::vec3{0, 0, 0}}},
                                                     {"scale", Value{glm::vec3{1, 1, 1}}}}}}}});

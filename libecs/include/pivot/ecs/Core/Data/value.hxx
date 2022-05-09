@@ -31,12 +31,29 @@ struct Record : public std::map<std::string, Value> {
  * - String (std::string)
  * - Record
  * - Vec3 (glm::vec3)
+ * - Asset (name and path)
  */
-struct Value : public std::variant<std::string, double, int, bool, glm::vec3, Record> {
+struct Value : public std::variant<std::string, double, int, bool, glm::vec3, Record, Asset> {
     using variant::variant;
 
     /// Returns the Type corresponding to this Value
     Type type() const;
+
+    /// Visits every simple datum in the value
+    template <typename F>
+    void visit_data(F f) const
+    {
+        std::visit(
+            [&](const auto &datum) {
+                using type = std::decay_t<decltype(datum)>;
+                if constexpr (std::is_same_v<type, Record>) {
+                    for (const auto &[_, value]: datum) { value.visit_data(f); }
+                } else {
+                    f(datum);
+                }
+            },
+            static_cast<const Value::variant &>(*this));
+    }
 };
 
 }    // namespace pivot::ecs::data

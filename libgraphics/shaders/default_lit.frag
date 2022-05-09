@@ -12,10 +12,9 @@ struct PointLight {
 };
 
 struct DirectionalLight {
-    vec3 orientation;
-    vec3 color;
+    vec4 orientation;
+    vec4 color;
     float intensity;
-    float radius;
 };
 
 struct Material {
@@ -31,6 +30,7 @@ struct Material {
 
 struct pushConstantStruct {
     uint pointLightCount;
+    uint directLightCount;
     vec3 position;
 };
 
@@ -61,31 +61,36 @@ layout(std140, set = 1, binding = 3) readonly buffer DirectLight {
     DirectionalLight directionalLightArray[];
 }  directLight;
 
-const float ambientStrength = 0.1;
-const float specularStrength = 0.5;
-const float diffuseStrength = 5.0;
-
-vec3 calculateLight(in  Material mat, in PointLight light) {
-    // ambient
-    vec3 ambient = ambientStrength * vec3(1.0);
+vec3 calculateDirectionalLight(in Material mat, in DirectionalLight light) {
+    vec3 lightDir = normalize(-light.orientation.xyz);
+    vec3 norm = normalize(fragNormal);
 
     // diffuse
-    vec3 lightDir = normalize(light.position.xyz - fragPosition);
-    vec3 norm = normalize(fragNormal);
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diffuseStrength * (diff * vec3(1.0));
+    float diffuse = max(dot(norm, lightDir), 0.0);
 
     // specular
-    vec3 viewDir = normalize(cameraData.push.position - fragPosition);
-    vec3 halfwayDir = normalize(lightDir + viewDir);
-    float spec = pow(max(dot(norm, halfwayDir), 0.0), 64.0);
-    vec3 specular = specularStrength *  (spec * vec3(1.0));
+    vec3 refectDir = reflect(-lightDir, norm);
+    float specular = pow(max(dot(norm, refectDir), 0.0), 32.0);
+
+    return light.color.rgb * ((diffuse + specular) * light.intensity);
+}
+
+vec3 calculateLight(in  Material mat, in PointLight light) {
+    vec3 lightDir = normalize(light.position.xyz - fragPosition);
+    vec3 norm = normalize(fragNormal);
+
+    // diffuse
+    float diffuse = max(dot(norm, lightDir), 0.0);
+
+    // specular
+    vec3 refectDir = reflect(-lightDir, norm);
+    float specular = pow(max(dot(norm, refectDir), 0.0), 32.0);
 
     float attenuation = 1.0 / length(light.position.xyz - fragPosition);
     diffuse *= attenuation;
     specular *= attenuation;
 
-    return ambient + diffuse + specular;
+    return light.color.rgb * ((diffuse + specular) * light.intensity);
 }
 
 void main() {
@@ -93,6 +98,9 @@ void main() {
     vec3 diffuseColor = (material.baseColorTexture >= 0) ? (texture(texSampler[material.baseColorTexture], fragTextCoords).rgb) : (material.baseColor.rgb);
     
     vec3 light = vec3(1.0);
+    for (uint i = 0; i < cameraData.push.directLightCount; i++) {
+        light += calculateDirectionalLight(material, directLight.directionalLightArray[i]);
+    }
     for (uint i = 0; i < cameraData.push.pointLightCount; i++) {
         light += calculateLight(material, omniLight.pointLightArray[i]);
     }

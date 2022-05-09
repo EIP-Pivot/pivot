@@ -110,7 +110,18 @@ public:
             pivot::builtins::systems::ControlSystem::processMouseMovement(m_camera, glm::dvec2(xoffset, yoffset));
         });
 
-        m_vulkan_application.assetStorage.loadModels("cube.obj");
+        m_vulkan_application.assetStorage.loadModels("cube.obj",
+                                                     "spruce_planks.gltf",
+                                                     "light_gray_wool.gltf",
+                                                     "white_wool.gltf",
+                                                     "jungle_planks.gltf",
+                                                     "oak_planks.gltf",
+                                                     "iron_block.gltf",
+                                                     "glass.gltf",
+                                                     "glowstone.gltf",
+                                                     "quartz_block.gltf",
+                                                     "oak_log.gltf"
+                                                     );
         m_vulkan_application.assetStorage.loadTextures("violet.png");
     }
     void processKeyboard(const pivot::builtins::Camera::Movement direction, float dt) noexcept
@@ -118,25 +129,25 @@ public:
         using Camera = pivot::builtins::Camera;
         switch (direction) {
             case Camera::Movement::FORWARD: {
-                m_camera.position.x += m_camera.front.x * 2.5f * (dt * 500);
-                m_camera.position.z += m_camera.front.z * 2.5f * (dt * 500);
+                m_camera.position.x += m_camera.front.x * 2.5f * (dt * 50);
+                m_camera.position.z += m_camera.front.z * 2.5f * (dt * 50);
             } break;
             case Camera::Movement::BACKWARD: {
-                m_camera.position.x -= m_camera.front.x * 2.5f * (dt * 500);
-                m_camera.position.z -= m_camera.front.z * 2.5f * (dt * 500);
+                m_camera.position.x -= m_camera.front.x * 2.5f * (dt * 50);
+                m_camera.position.z -= m_camera.front.z * 2.5f * (dt * 50);
             } break;
             case Camera::Movement::RIGHT: {
-                m_camera.position.x += m_camera.right.x * 2.5f * (dt * 500);
-                m_camera.position.z += m_camera.right.z * 2.5f * (dt * 500);
+                m_camera.position.x += m_camera.right.x * 2.5f * (dt * 50);
+                m_camera.position.z += m_camera.right.z * 2.5f * (dt * 50);
             } break;
             case Camera::Movement::LEFT: {
-                m_camera.position.x -= m_camera.right.x * 2.5f * (dt * 500);
-                m_camera.position.z -= m_camera.right.z * 2.5f * (dt * 500);
+                m_camera.position.x -= m_camera.right.x * 2.5f * (dt * 50);
+                m_camera.position.z -= m_camera.right.z * 2.5f * (dt * 50);
             } break;
             case Camera::Movement::UP: {
-                m_camera.position.y += 2.5f * (dt * 500);
+                m_camera.position.y += 2.5f * (dt * 20);
             } break;
-            case Camera::Movement::DOWN: m_camera.position.y -= 2.5f * (dt * 500); break;
+            case Camera::Movement::DOWN: m_camera.position.y -= 2.5f * (dt * 20); break;
         }
     }
 

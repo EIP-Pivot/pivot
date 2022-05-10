@@ -118,9 +118,9 @@ void Editor::DisplayGuizmo(Entity entity, const pivot::builtins::Camera &camera)
     // TODO: Refactor this out, to compute only when the scene changes
     auto &cm = m_currentScene->getComponentManager();
     auto &array = cm.GetComponentArray(cm.GetComponentId(Transform::description.name).value());
-    auto &ro_array = dynamic_cast<pivot::ecs::component::DenseTypedComponentArray<Transform> &>(array);
+    auto &ro_array = dynamic_cast<pivot::ecs::component::DenseTypedComponentArray<pivot::graphics::Transform> &>(array);
     if (!ro_array.entityHasValue(entity)) return;
-    Transform &transform = ro_array.getData()[entity];
+    pivot::graphics::Transform &transform = ro_array.getData()[entity];
     auto matrix = transform.getModelMatrix();
     float *matrix_data = glm::value_ptr(matrix);
     ImGuiIO &io = ImGui::GetIO();

@@ -6,7 +6,7 @@ namespace pivot::graphics
 {
 
 bool AssetStorage::loadKtxImage(const std::filesystem::path &path)
-{
+try {
     CPUTexture texture;
     ktxTexture *ktxTexture = nullptr;
     auto result =
@@ -28,6 +28,9 @@ bool AssetStorage::loadKtxImage(const std::filesystem::path &path)
     ktxTexture_Destroy(ktxTexture);
     cpuStorage.textureStaging.add(path.stem().string(), std::move(texture));
     return true;
+} catch (const std::runtime_error &re) {
+    logger.err("Asset Storage/KTX") << re.what();
+    return false;
 }
 
 }    // namespace pivot::graphics

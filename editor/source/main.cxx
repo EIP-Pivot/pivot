@@ -110,8 +110,8 @@ public:
             pivot::builtins::systems::ControlSystem::processMouseMovement(m_camera, glm::dvec2(xoffset, yoffset));
         });
 
-        m_vulkan_application.assetStorage.loadModels("cube.obj");
-        m_vulkan_application.assetStorage.loadTextures("violet.png");
+        m_vulkan_application.assetStorage.addModel("cube.obj");
+        m_vulkan_application.assetStorage.addTexture("violet.png");
     }
     void processKeyboard(const pivot::builtins::Camera::Movement direction, float dt) noexcept
     {

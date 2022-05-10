@@ -12,8 +12,8 @@ class Launcher : public pivot::Engine
 public:
     void init()
     {
-        m_vulkan_application.assetStorage.loadModels("cube.obj");
-        m_vulkan_application.assetStorage.loadTextures("violet.png");
+        m_vulkan_application.assetStorage.addModel("cube.obj");
+        m_vulkan_application.assetStorage.addTexture("violet.png");
     }
 };
 

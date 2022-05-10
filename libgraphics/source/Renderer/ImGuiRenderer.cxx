@@ -13,11 +13,11 @@ namespace pivot::graphics
 ImGuiRenderer::ImGuiRenderer(PipelineStorage &storage, AssetStorage &assets): IGraphicsRenderer(storage, assets) {}
 ImGuiRenderer::~ImGuiRenderer() {}
 
-bool ImGuiRenderer::onInit(const vk::Extent2D &size, VulkanBase &base_ref, vk::DescriptorSetLayout &resolverLayout,
-                           vk::RenderPass &pass)
+bool ImGuiRenderer::onInit(const vk::Extent2D &size, VulkanBase &base_ref,
+                           const vk::DescriptorSetLayout &resolverLayout, vk::RenderPass &pass)
 {
     DEBUG_FUNCTION;
-
+    IMGUI_CHECKVERSION();
     ImGui_ImplVulkan_LoadFunctions(
         [](const char *function_name, void *user) {
             auto loader = reinterpret_cast<vk::DynamicLoader *>(user);
@@ -39,13 +39,9 @@ void ImGuiRenderer::onStop(VulkanBase &base_ref)
     if (pool) base_ref.device.destroyDescriptorPool(pool);
 }
 
-bool ImGuiRenderer::onRecreate(const vk::Extent2D &size, VulkanBase &base_ref, vk::DescriptorSetLayout &resolverLayout,
-                               vk::RenderPass &pass)
+bool ImGuiRenderer::onRecreate(const vk::Extent2D &size, VulkanBase &base_ref,
+                               const vk::DescriptorSetLayout &resolverLayout, vk::RenderPass &pass)
 {
-    ImGui_ImplVulkan_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-    createImGuiContext(base_ref, pass);
     return true;
 }
 

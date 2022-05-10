@@ -2,6 +2,7 @@
 
 #include "pivot/graphics/DeletionQueue.hxx"
 #include "pivot/graphics/DescriptorAllocator/DescriptorBuilder.hxx"
+#include "pivot/graphics/PivotFlags.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/abstract/AImmediateCommand.hxx"
 #include "pivot/graphics/types/AABB.hxx"
@@ -110,6 +111,14 @@ public:
     /// Alias for AllocatedImage
     using Texture = AllocatedImage;
 
+    /// Select how to handle the ressouces
+    enum class BuildFlagBits : FlagsType {
+        eClear = BIT(0),
+        eReloadOldAssets = BIT(1),
+    };
+    /// @copydoc BuildFlagBits
+    using BuildFlags = Flags<BuildFlagBits>;
+
 private:
     struct CPUStorage {
         CPUStorage();
@@ -117,6 +126,8 @@ private:
         std::vector<std::uint32_t> indexStagingBuffer;
         IndexedStorage<std::string, CPUTexture> textureStaging;
         IndexedStorage<std::string, CPUMaterial> materialStaging;
+        std::unordered_map<std::string, std::filesystem::path> modelPaths;
+        std::unordered_map<std::string, std::filesystem::path> texturePaths;
     };
 
 public:
@@ -128,50 +139,23 @@ public:
     /// Set the asset directory
     void setAssetDirectory(const std::filesystem::path &path) noexcept { asset_dir = path; }
 
-    template <is_valid_path... Path>
-    /// @brief load the assets into CPU memory
-    ///
-    /// @arg the path for all individual file to load
-    void loadAssets(Path... p)
-    {
-        unsigned i = ((loadAsset(asset_dir / p)) + ...);
-        if (i < sizeof...(Path)) {
-            throw AssetStorageError("An asset file failed to load. See above for further errors");
-        }
-    }
     /// Load a single assets file
-    bool loadAsset(const std::filesystem::path &path);
+    bool addAsset(const std::filesystem::path &path);
+    /// @copydoc addAsset
+    bool addAsset(const std::vector<std::filesystem::path> &path);
 
-    template <is_valid_path... Path>
-    /// @brief load the 3D models into CPU memory
-    ///
-    /// @arg the path for all individual file to load
-    void loadModels(Path... p)
-    {
-        unsigned i = ((loadModel(asset_dir / p)) + ...);
-        if (i < sizeof...(Path)) {
-            throw AssetStorageError("A model file failed to load. See above for further errors");
-        }
-    }
     /// Load a single model file
-    bool loadModel(const std::filesystem::path &path);
+    bool addModel(const std::filesystem::path &path);
+    /// @copydoc addModel
+    bool addModel(const std::vector<std::filesystem::path> &path);
 
-    template <is_valid_path... Path>
-    /// @brief load the textures into CPU memory
-    ///
-    /// @arg the path for all individual file to load
-    void loadTextures(Path... p)
-    {
-        unsigned i = ((loadTexture(asset_dir / p)) + ...);
-        if (i < sizeof...(Path)) {
-            throw AssetStorageError("A texture file failed to load. See above for further errors");
-        }
-    }
     /// Load a single texture
-    bool loadTexture(const std::filesystem::path &path);
+    bool addTexture(const std::filesystem::path &path);
+    /// @copydoc addTexture
+    bool addTexture(const std::vector<std::filesystem::path> &path);
 
     /// Push the ressource into GPU memory
-    void build(DescriptorBuilder builder);
+    void build(DescriptorBuilder builder, BuildFlags flags = BuildFlagBits::eClear);
 
     /// Free GPU memory
     void destroy();
@@ -266,17 +250,18 @@ public:
 
 private:
     /// Load models
+    bool loadModel(const std::filesystem::path &path);
     bool loadObjModel(const std::filesystem::path &path);
     bool loadGltfModel(const std::filesystem::path &path);
 
     /// Load texture
+    bool loadTexture(const std::filesystem::path &path);
     bool loadPngTexture(const std::filesystem::path &path);
     bool loadJpgTexture(const std::filesystem::path &path);
     bool loadKtxImage(const std::filesystem::path &path);
 
     // Push to gpu
     void pushModelsOnGPU();
-    void pushAABBOnGPU();
     void pushTexturesOnGPU();
     void pushMaterialOnGPU();
 
@@ -382,3 +367,5 @@ inline std::int32_t AssetStorage::getIndex<gpu_object::Material>(const std::stri
 #endif
 
 }    // namespace pivot::graphics
+
+ENABLE_FLAGS_FOR_ENUM(pivot::graphics::AssetStorage::BuildFlagBits);

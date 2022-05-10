@@ -53,7 +53,7 @@ TEST_CASE("Indexed Storage", "[indexedStorage]")
 
     REQUIRE(storage.getStorage() == std::vector{value1, value2, value3});
 
-    SECTION("Test appends")
+    SECTION("Test append()")
     {
         IndexedStorage<std::string, std::string> storage2;
         storage2.add(key4, value4);
@@ -63,6 +63,16 @@ TEST_CASE("Indexed Storage", "[indexedStorage]")
         REQUIRE(testIndex(storage, key2, value2, 1));
         REQUIRE(testIndex(storage, key3, value3, 2));
         REQUIRE(testIndex(storage, key4, value4, 3));
+    }
+
+    SECTION("Test reserve()")
+    {
+        auto previous_size = storage.size();
+        REQUIRE_NOTHROW(storage.reserve(512));
+        REQUIRE(testIndex(storage, key1, value1, 0));
+        REQUIRE(testIndex(storage, key2, value2, 1));
+        REQUIRE(testIndex(storage, key3, value3, 2));
+        REQUIRE(storage.size() == previous_size);
     }
 
     SECTION("Test errors cases")

@@ -71,9 +71,9 @@ void ImGuiManager::loadScene(pivot::Engine &engine)
         switch (resultSave) {
             case NFD_OKAY: {
                 logger.info("Load Scene") << scenePath;
-                ImGui::OpenPopup("LoadOk");
                 try {
                     engine.loadScene(scenePath.get());
+                    ImGui::OpenPopup("LoadOk");
                 } catch (const std::exception &e) {
                     logger.err() << e.what();
                     ImGui::OpenPopup("LoadFail");

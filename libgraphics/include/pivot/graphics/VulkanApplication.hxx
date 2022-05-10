@@ -76,6 +76,9 @@ public:
     /// @brief get Swapchain aspect ratio
     constexpr float getAspectRatio() const noexcept { return swapchain.getAspectRatio(); }
 
+    /// Build the asset Storage
+    void buildAssetStorage(AssetStorage::BuildFlags flags = AssetStorage::BuildFlagBits::eClear);
+
     template <validRenderer T>
     /// Add a Renderer to the frame
     T &addRenderer()

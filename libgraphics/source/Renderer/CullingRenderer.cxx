@@ -9,7 +9,7 @@ namespace pivot::graphics
 CullingRenderer::CullingRenderer(PipelineStorage &storage, AssetStorage &assets): IComputeRenderer(storage, assets) {}
 CullingRenderer::~CullingRenderer() {}
 
-bool CullingRenderer::onInit(VulkanBase &base_ref, vk::DescriptorSetLayout &resolverLayout)
+bool CullingRenderer::onInit(VulkanBase &base_ref, const vk::DescriptorSetLayout &resolverLayout)
 {
     indices = base_ref.queueIndices;
     createPipelineLayout(base_ref.device, resolverLayout);
@@ -20,6 +20,15 @@ bool CullingRenderer::onInit(VulkanBase &base_ref, vk::DescriptorSetLayout &reso
 void CullingRenderer::onStop(VulkanBase &base_ref)
 {
     if (cullingLayout) base_ref.device.destroyPipelineLayout(cullingLayout);
+}
+
+bool CullingRenderer::onRecreate(const vk::Extent2D &size, VulkanBase &base_ref,
+                                 const vk::DescriptorSetLayout &resolverLayout, vk::RenderPass &pass)
+{
+    onStop(base_ref);
+    stor.removePipeline("culling");
+    onInit(base_ref, resolverLayout);
+    return true;
 }
 
 bool CullingRenderer::onDraw(const CameraData &cameraData, DrawCallResolver &resolver, vk::CommandBuffer &cmd)
@@ -57,7 +66,7 @@ bool CullingRenderer::onDraw(const CameraData &cameraData, DrawCallResolver &res
     return true;
 }
 
-void CullingRenderer::createPipelineLayout(vk::Device &device, vk::DescriptorSetLayout &resolverLayout)
+void CullingRenderer::createPipelineLayout(vk::Device &device, const vk::DescriptorSetLayout &resolverLayout)
 {
     DEBUG_FUNCTION
     std::vector<vk::PushConstantRange> pipelinePushConstant = {vk_init::populateVkPushConstantRange(

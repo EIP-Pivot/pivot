@@ -132,8 +132,9 @@ ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
     auto scene = Scene::load(scene_json, m_component_index, m_system_index);
     for (auto &asset: scene_json["assets"]) {
         auto assetPath = path.parent_path() / asset.get<std::string>();
-        m_vulkan_application.assetStorage.loadAsset(assetPath);
+        m_vulkan_application.assetStorage.addAsset(assetPath);
     }
+    m_vulkan_application.buildAssetStorage();
     return this->registerScene(std::move(scene));
 }
 }    // namespace pivot

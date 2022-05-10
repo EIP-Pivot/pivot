@@ -93,8 +93,12 @@ namespace
     void postSceneRegister(Scene &scene)
     {
         auto &cm = scene.getComponentManager();
-        if (cm.GetComponentId(builtins::components::RenderObject::description.name).has_value()) { return; }
-        cm.RegisterComponent(builtins::components::RenderObject::description);
+        if (!cm.GetComponentId(builtins::components::RenderObject::description.name).has_value()) {
+            cm.RegisterComponent(builtins::components::RenderObject::description);
+        }
+        if (!cm.GetComponentId(builtins::components::Transform::description.name).has_value()) {
+            cm.RegisterComponent(builtins::components::Transform::description);
+        }
     }
 }    // namespace
 

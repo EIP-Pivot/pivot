@@ -68,6 +68,18 @@ public:
         vk::DeviceSize currentDescriptorSetSize = defaultBufferSize;
     };
 
+    /// Informations needed to draw a scene. Including all objects and al lights
+    struct DrawSceneInformation {
+        /// The array of render object
+        std::reference_wrapper<const std::vector<RenderObject>> renderObjects;
+        /// Indicate which entities have the RenderObject compoenent
+        std::reference_wrapper<const std::vector<bool>> renderObjectExist;
+        /// The array of Transform
+        std::reference_wrapper<const std::vector<Transform>> transforms;
+        /// Indicate which entities have the RenderObject compoenent
+        std::reference_wrapper<const std::vector<bool>> transformExist;
+    };
+
 public:
     /// Constructor
     DrawCallResolver();
@@ -78,14 +90,6 @@ public:
     void init(VulkanBase &, AssetStorage &, DescriptorBuilder &);
     /// Destroy them
     void destroy();
-
-    /// Informations needed to draw a scene. Including all objects and al lights
-    struct DrawSceneInformation {
-        std::reference_wrapper<const std::vector<RenderObject>> renderObjects;
-        std::reference_wrapper<const std::vector<bool>> renderObjectExist;
-        std::reference_wrapper<const std::vector<Transform>> transforms;
-        std::reference_wrapper<const std::vector<bool>> transformExist;
-    };
 
     /// Build the buffer for the draw
     void prepareForDraw(DrawSceneInformation sceneInformation);

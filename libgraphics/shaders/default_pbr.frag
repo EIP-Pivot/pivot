@@ -17,6 +17,15 @@ struct DirectionalLight {
     float intensity;
 };
 
+struct SpotLight {
+    vec4 position;
+    vec4 direction;
+    vec4 color;
+    float cutOff;
+    float outerCutOff;
+    float intensity;
+};
+
 struct Material {
     vec4 baseColor;
     float metallic;
@@ -31,6 +40,7 @@ struct Material {
 struct pushConstantStruct {
     uint pointLightCount;
     uint directLightCount;
+    uint spotLightCount;
     vec3 position;
 };
 
@@ -59,6 +69,11 @@ layout(std140, set = 1, binding = 2) readonly buffer LightBuffer {
 layout(std140, set = 1, binding = 3) readonly buffer DirectLight {
     DirectionalLight directionalLightArray[];
 }  directLight;
+
+layout(std140, set = 1, binding = 4) readonly buffer SpoLight {
+    SpotLight spotLightArray[];
+}  spotLight;
+
 
 #define PI 3.1415926535897932384626433832795
 
@@ -141,6 +156,35 @@ void main()
         vec3 L = normalize(-light.orientation.xyz);
         vec3 H = normalize(V + L);
         vec3 radiance = light.color.rgb * light.intensity;
+
+        // Cook-Torrance BRDF
+        float NDF = DistributionGGX(N, H, roughness);
+        float G = GeometrySmith(N, V, L, roughness);
+        vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
+
+        vec3 numerator    = NDF * G * F;
+        float denominator = 4 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; // + 0.0001 to prevent divide by zero
+        vec3 specular = numerator / denominator;
+
+        vec3 kS = F;
+        vec3 kD = vec3(1.0) - kS;
+        kD *= 1.0 - metallic;
+
+        float NdotL = max(dot(N, L), 0.0);
+
+        Lo += (kD * diffuseColor / PI + specular) * radiance * NdotL;
+    }
+    for (uint i = 0; i < cameraData.push.spotLightCount; i++) {
+        SpotLight light = spotLight.spotLightArray[i];
+        vec3 L = normalize(light.position.xyz - fragPosition);
+        float theta = dot(L, normalize(-light.direction.xyz));
+        float epsilon = light.cutOff - light.outerCutOff;
+        float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0) * light.intensity;  
+
+        vec3 H = normalize(V + L);
+        float distance = length(light.position.xyz - fragPosition);
+        float attenuation = 1.0 / (distance * distance);
+        vec3 radiance = light.color.rgb * intensity * attenuation;
 
         // Cook-Torrance BRDF
         float NDF = DistributionGGX(N, H, roughness);

@@ -34,7 +34,22 @@ namespace gpu_object
     };
     /// @endcond
     static_assert(sizeof(DirectionalLight) % 4 == 0);
-    static_assert(sizeof(DirectionalLight) == (sizeof(float) * 4) + (sizeof(float) * 4) + (sizeof(float) * 2) + 8);
+    static_assert(sizeof(DirectionalLight) == (sizeof(float) * 4) + (sizeof(float) * 4) + (sizeof(float)) + 12);
+
+    /// Represent a Spot Light
+    /// @cond
+    struct SpotLight {
+        alignas(16) glm::vec4 position;
+        alignas(16) glm::vec4 direction;
+        alignas(16) glm::vec4 color = {1.0f, 1.0f, 1.0f, 0.0f};
+        alignas(4) float cutOff = glm::cos(glm::radians(12.5f));
+        alignas(4) float outerCutOff = glm::cos(glm::radians(17.5f));
+        alignas(4) float intensity = 1.0f;
+    };
+    /// @endcond
+    /// TODO: Check ensure the cutOff > outerCutOff
+    static_assert(sizeof(SpotLight) % 4 == 0);
+    static_assert(sizeof(SpotLight) == ((sizeof(float) * 4) * 3) + (sizeof(float) * 3) + 4);
 
 }    // namespace gpu_object
 
@@ -57,6 +72,15 @@ struct DirectionalLight {
     glm::vec3 color = {1.0f, 1.0f, 1.0f};
     float intensity = 1.0f;
     float radius = 0.5f;
+};
+/// @endcond
+
+/// The CPU side spot light representation
+/// @cond
+struct SpotLight {
+    Transform position;
+    glm::vec3 color = {1.0f, 1.0f, 1.0f};
+    float cutOff = 0.3f;
 };
 /// @endcond
 

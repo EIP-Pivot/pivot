@@ -30,14 +30,16 @@ namespace gpu_object
     /// The push constant data for the fragment shader
     struct FragmentPushConstant {
         /// The number of point light
-        alignas(4) std::uint32_t omniLightCount;
+        alignas(4) std::uint32_t omniLightCount = 0;
         /// The number of directional light
-        alignas(4) std::uint32_t directLightCount;
+        alignas(4) std::uint32_t directLightCount = 0;
+        /// The number of spot light
+        alignas(4) std::uint32_t spotLightCount = 0;
         /// The position of the camera
         alignas(16) glm::vec3 position;
     };
     static_assert(sizeof(FragmentPushConstant) % 4 == 0);
-    static_assert(sizeof(FragmentPushConstant) == (sizeof(float) * 3) + (sizeof(std::uint32_t)) + 16);
+    static_assert(sizeof(FragmentPushConstant) == (sizeof(float) * 3) + (sizeof(std::uint32_t) * 2) + 12);
 
     /// The push constant data for the culling shader
     struct CullingPushConstant {

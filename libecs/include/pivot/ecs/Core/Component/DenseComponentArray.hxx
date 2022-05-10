@@ -72,6 +72,12 @@ public:
     /// miss this component.
     std::span<const T> getData() const { return this->m_components; }
 
+    /// Returns the booleans specifying whether an an entity has the component
+    const std::vector<bool> &getExistence() const { return this->m_component_exist; }
+
+    /// Returns the vector containing the component data
+    const std::vector<T> &getComponents() const { return this->m_components; }
+
 protected:
     /// Description of the component
     Description m_description;

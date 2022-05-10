@@ -45,6 +45,7 @@ bool GraphicsRenderer::onDraw(const CameraData &cameraData, DrawCallResolver &re
     const gpu_object::FragmentPushConstant fragmentCamera{
         .omniLightCount = 1,
         .directLightCount = 1,
+        .spotLightCount = 1,
         .position = cameraData.position,
     };
 

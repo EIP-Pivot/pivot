@@ -54,6 +54,8 @@ public:
         AllocatedBuffer<gpu_object::PointLight> omniLightBuffer;
         /// Hold the directional light buffer
         AllocatedBuffer<gpu_object::DirectionalLight> directLightBuffer;
+        /// Hold the spot light buffer
+        AllocatedBuffer<gpu_object::SpotLight> spotLightBuffer;
         /// The descriptor set holding the object buffer
         vk::DescriptorSet objectDescriptor = VK_NULL_HANDLE;
         /// The draw batches

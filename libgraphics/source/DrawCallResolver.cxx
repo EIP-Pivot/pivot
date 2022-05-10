@@ -52,22 +52,22 @@ void DrawCallResolver::destroy()
 void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sceneInformation)
 {
     frame.packedDraws.clear();
-    frame.packedDraws.resize(sceneInformation.renderObjects.size());
+    frame.packedDraws.resize(sceneInformation.renderObjects.get().size());
     frame.pipelineBatch.clear();
-    frame.pipelineBatch.resize(sceneInformation.renderObjects.size());
+    frame.pipelineBatch.resize(sceneInformation.renderObjects.get().size());
     std::vector<gpu_object::UniformBufferObject> objectGPUData;
     std::uint32_t drawCount = 0;
 
     // std::ranges::sort(sceneInformation, {},
     //                   [](const auto &info) { return std::make_tuple(info.get().pipelineID, info.get().meshID); });
 
-    assert(sceneInformation.renderObjects.size() == sceneInformation.renderObjectExist.size());
-    assert(sceneInformation.transforms.size() == sceneInformation.transformExist.size());
-    assert(sceneInformation.renderObjects.size() == sceneInformation.transforms.size());
-    for (unsigned i = 0; i < sceneInformation.renderObjects.size(); i++) {
-        if (!sceneInformation.renderObjectExist[i] || !sceneInformation.transformExist[i]) continue;
-        const auto &object = sceneInformation.renderObjects[i];
-        const auto &transform = sceneInformation.transforms[i];
+    assert(sceneInformation.renderObjects.get().size() == sceneInformation.renderObjectExist.get().size());
+    assert(sceneInformation.transforms.get().size() == sceneInformation.transformExist.get().size());
+    assert(sceneInformation.renderObjects.get().size() == sceneInformation.transforms.get().size());
+    for (unsigned i = 0; i < sceneInformation.renderObjects.get().size(); i++) {
+        if (!sceneInformation.renderObjectExist.get()[i] || !sceneInformation.transformExist.get()[i]) continue;
+        const auto &object = sceneInformation.renderObjects.get()[i];
+        const auto &transform = sceneInformation.transforms.get()[i];
 
         // TODO: Pipeline batch
         auto prefab = storage_ref->get().get_optional<AssetStorage::Prefab>(object.meshID);

@@ -81,10 +81,10 @@ public:
 
     /// Informations needed to draw a scene. Including all objects and al lights
     struct DrawSceneInformation {
-        std::span<const RenderObject> renderObjects;
-        const std::vector<bool> &renderObjectExist;
-        std::span<const Transform> transforms;
-        const std::vector<bool> &transformExist;
+        std::reference_wrapper<const std::vector<RenderObject>> renderObjects;
+        std::reference_wrapper<const std::vector<bool>> renderObjectExist;
+        std::reference_wrapper<const std::vector<Transform>> transforms;
+        std::reference_wrapper<const std::vector<bool>> transformExist;
     };
 
     /// Build the buffer for the draw
@@ -106,5 +106,11 @@ private:
     Frame frame;
     vk::DescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
 };
+
+// void swap(DrawCallResolver::DrawSceneInformation &lhs, DrawCallResolver::DrawSceneInformation &rhs)
+// {
+//     std::swap(lhs.renderObjects, rhs.renderObjects);
+//     std::swap(lhs.transforms, rhs.transforms);
+// }
 
 }    // namespace pivot::graphics

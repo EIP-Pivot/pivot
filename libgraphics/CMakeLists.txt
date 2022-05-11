@@ -55,7 +55,7 @@ endif()
 FetchContent_Declare(
     vma
     GIT_REPOSITORY https://github.com/YaaZ/VulkanMemoryAllocator-Hpp.git
-    GIT_TAG 05d9e5419a78cd178a4f3cfd54475b556d9e50df
+    GIT_TAG da6ea76eecf12a1decc76f58a3e096bcc555bd94
 )
 if (NOT vma_POPULATED)
     message(STATUS "Populating vma")

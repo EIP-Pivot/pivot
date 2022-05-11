@@ -5,7 +5,7 @@ find_package(Vulkan REQUIRED)
 FetchContent_Declare(
     glfw
     GIT_REPOSITORY https://github.com/glfw/glfw.git
-    GIT_TAG 814b7929c5add4b0541ccad26fb81f28b71dc4d8
+    GIT_TAG 3.3.7
 )
 if (NOT glfw_POPULATED)
     message(STATUS "Populating glfw")

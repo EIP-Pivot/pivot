@@ -37,7 +37,7 @@ fetch_boost_library(io)
 FetchContent_Declare(
     nlohmann_json
     GIT_REPOSITORY https://github.com/nlohmann/json.git
-    GIT_TAG v3.10.4
+    GIT_TAG v3.10.5
 )
 if (NOT nlohmann_json_POPULATED)
     message(STATUS "Populating json")

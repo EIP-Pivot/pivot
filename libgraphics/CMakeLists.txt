@@ -34,7 +34,7 @@ endif()
 FetchContent_Declare(
     tinygltf
     GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
-    GIT_TAG e7f1ff5c59d3ca2489923beb239bdf93d863498f
+    GIT_TAG 912856823dcb2badf2074055b6d006f7bb3800b8
 )
 if (NOT tinygltf_POPULATED)
     message(STATUS "Populating tinygltf")

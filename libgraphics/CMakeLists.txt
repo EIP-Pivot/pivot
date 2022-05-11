@@ -159,6 +159,7 @@ add_library(
     source/lib.cxx
     source/types/Vertex.cxx
     source/types/Frame.cxx
+    source/types/Light.cxx
     source/types/UniformBufferObject.cxx
     source/Window.cxx
     source/vk_utils.cxx

@@ -102,10 +102,12 @@ public:
         assert(buffer);
         assert(data);
         assert(buffer.getBytesSize() >= data_size + offset);
+        assert((data_size + offset) % sizeof(T) == 0);
         if (data_size == 0) return;
         auto *mapped = mapMemory<T>(buffer);
         std::memcpy(mapped + offset, data, data_size);
         unmapMemory(buffer);
+        buffer.size = (data_size + offset) / sizeof(T);
     }
 
     template <typename T>

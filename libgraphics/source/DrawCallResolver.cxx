@@ -20,6 +20,7 @@ void DrawCallResolver::init(VulkanBase &base, AssetStorage &stor, DescriptorBuil
     base_ref = base;
     storage_ref = stor;
     createBuffer(defaultBufferSize);
+    createLightBuffer();
 
     auto success = builder
                        .bindBuffer(0, frame.objectBuffer.getBufferInfo(), vk::DescriptorType::eStorageBuffer,
@@ -108,9 +109,12 @@ void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sce
     assert(frame.currentBufferSize > 0);
     base_ref->get().allocator.copyBuffer(frame.objectBuffer, std::span(objectGPUData));
 
-    handleLights(frame.omniLightBuffer, sceneInformation.pointLight, sceneInformation.transform);
-    handleLights(frame.directLightBuffer, sceneInformation.directionalLight, sceneInformation.transform);
-    handleLights(frame.spotLightBuffer, sceneInformation.spotLight, sceneInformation.transform);
+    handleLights(frame.omniLightBuffer, sceneInformation.pointLight, sceneInformation.transform,
+                 "Point light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
+    handleLights(frame.directLightBuffer, sceneInformation.directionalLight, sceneInformation.transform,
+                 "Directionnal light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
+    handleLights(frame.spotLightBuffer, sceneInformation.spotLight, sceneInformation.transform,
+                 "Spot light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
 
     auto sceneData = frame.indirectBuffer.getMappedSpan();
     for (uint32_t i = 0; i < frame.packedDraws.size(); i++) {
@@ -139,6 +143,19 @@ void DrawCallResolver::createBuffer(vk::DeviceSize bufferSize)
     vk_debug::setObjectName(base_ref->get().device, frame.objectBuffer.buffer,
                             "Object Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
     frame.currentBufferSize = bufferSize;
+}
+
+void DrawCallResolver::createLightBuffer()
+{
+    frame.omniLightBuffer = base_ref->get().allocator.createBuffer<gpu_object::PointLight>(
+        1, vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu,
+        vma::AllocationCreateFlagBits::eMapped);
+    frame.directLightBuffer = base_ref->get().allocator.createBuffer<gpu_object::DirectionalLight>(
+        1, vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu,
+        vma::AllocationCreateFlagBits::eMapped);
+    frame.spotLightBuffer = base_ref->get().allocator.createBuffer<gpu_object::SpotLight>(
+        1, vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu,
+        vma::AllocationCreateFlagBits::eMapped);
 }
 
 void DrawCallResolver::updateDescriptorSet(vk::DeviceSize bufferSize)

@@ -133,6 +133,7 @@ private:
         base_ref->get().allocator.copyBuffer(buffer, std::span(lightsData));
     }
     void createBuffer(const vk::DeviceSize bufferSize);
+    void createLightBuffer();
     void updateDescriptorSet(const vk::DeviceSize bufferSize);
 
 private:

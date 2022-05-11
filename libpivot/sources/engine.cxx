@@ -85,22 +85,21 @@ void Engine::changeCurrentScene(ecs::SceneManager::SceneId sceneId)
 {
     m_scene_manager.setCurrentSceneId(sceneId);
 
-    using RenderObject = pivot::builtins::components::RenderObject;
-    using Transform = pivot::builtins::components::Transform;
+    using namespace pivot::builtins::components;
 
     auto &cm = m_scene_manager.getCurrentScene().getComponentManager();
     auto renderobject_id = cm.GetComponentId(RenderObject::description.name);
     auto transform_id = cm.GetComponentId(Transform::description.name);
-    auto pointlight_id = cm.GetComponentId(Transform::description.name);
-    auto directional_id = cm.GetComponentId(Transform::description.name);
-    auto spotlight_id = cm.GetComponentId(Transform::description.name);
+    auto pointlight_id = cm.GetComponentId(PointLight::description.name);
+    auto directional_id = cm.GetComponentId(DirectionalLight::description.name);
+    auto spotlight_id = cm.GetComponentId(SpotLight::description.name);
     if (renderobject_id && transform_id && pointlight_id && directional_id && spotlight_id) {
         auto &ro_array = dynamic_cast<Array<pivot::graphics::RenderObject> &>(cm.GetComponentArray(*renderobject_id));
         auto &transform_array = dynamic_cast<Array<pivot::graphics::Transform> &>(cm.GetComponentArray(*transform_id));
-        auto &point_array = dynamic_cast<Array<pivot::graphics::PointLight> &>(cm.GetComponentArray(*transform_id));
+        auto &point_array = dynamic_cast<Array<pivot::graphics::PointLight> &>(cm.GetComponentArray(*pointlight_id));
         auto &directional_array =
-            dynamic_cast<Array<pivot::graphics::DirectionalLight> &>(cm.GetComponentArray(*transform_id));
-        auto &spotlight_array = dynamic_cast<Array<pivot::graphics::SpotLight> &>(cm.GetComponentArray(*transform_id));
+            dynamic_cast<Array<pivot::graphics::DirectionalLight> &>(cm.GetComponentArray(*directional_id));
+        auto &spotlight_array = dynamic_cast<Array<pivot::graphics::SpotLight> &>(cm.GetComponentArray(*spotlight_id));
 
         auto new_command = std::make_optional<graphics::DrawCallResolver::DrawSceneInformation>({
             .renderObjects =

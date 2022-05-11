@@ -15,9 +15,7 @@
 #include <pivot/builtins/components/RenderObject.hxx>
 #include <pivot/builtins/components/Transform.hxx>
 
-#include <pivot/builtins/components/DirectionalLight.hxx>
-#include <pivot/builtins/components/PointLight.hxx>
-#include <pivot/builtins/components/SpotLight.hxx>
+#include <pivot/builtins/components/Light.hxx>
 
 using namespace pivot;
 using namespace pivot::ecs;

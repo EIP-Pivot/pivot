@@ -101,8 +101,8 @@ if (BUILD_TESTING)
     endif()
     FetchContent_Declare(
         catch2
-        GIT_REPOSITORY https://github.com/EIP-Pivot/Catch2
-        GIT_TAG f35dd17f72e67335003accfd7432294f77a1dc3e
+        GIT_REPOSITORY https://github.com/catchorg/Catch2
+        GIT_TAG ed6b38b096eac9a976e1fdeee5320fa913146af7
     )
     if (NOT catch2_POPULATED)
         message(STATUS "Populating Catch2")

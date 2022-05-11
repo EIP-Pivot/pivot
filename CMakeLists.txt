@@ -62,7 +62,7 @@ endif()
 FetchContent_Declare(
     glm
     GIT_REPOSITORY https://github.com/g-truc/glm.git
-    GIT_TAG 6ad79aae3eb5bf809c30bf1168171e9e55857e45
+    GIT_TAG cc98465e3508535ba8c7f6208df934c156a018dc
 )
 if (NOT glm_POPULATED)
     message(STATUS "Populating glm")

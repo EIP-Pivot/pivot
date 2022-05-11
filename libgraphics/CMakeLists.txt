@@ -92,7 +92,7 @@ endif()
 FetchContent_Declare(
     tinyobjloader
     GIT_REPOSITORY https://github.com/tinyobjloader/tinyobjloader.git
-    GIT_TAG 95fe4ef41de28ce6b0aef00bfdd7b788641a15a6
+    GIT_TAG 8322e00ae685ea623ab6ac5a6cebcfa2d22fbf93
 )
 if (NOT tinyobjloader_POPULATED)
     message(STATUS "Populating tinyobjloader")

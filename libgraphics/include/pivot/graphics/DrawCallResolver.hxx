@@ -9,6 +9,7 @@
 #include "pivot/graphics/types/UniformBufferObject.hxx"
 #include "pivot/graphics/types/common.hxx"
 #include "pivot/graphics/types/vk_types.hxx"
+#include "pivot/graphics/vk_debug.hxx"
 
 #include <array>
 #include <vulkan/vulkan.hpp>
@@ -68,16 +69,21 @@ public:
         vk::DeviceSize currentDescriptorSetSize = defaultBufferSize;
     };
 
+    template <class T>
+    struct Object {
+        /// The array of component
+        std::reference_wrapper<const std::vector<T>> objects;
+        /// Indicate which entities have the component
+        std::reference_wrapper<const std::vector<bool>> exist;
+    };
+
     /// Informations needed to draw a scene. Including all objects and al lights
     struct DrawSceneInformation {
-        /// The array of render object
-        std::reference_wrapper<const std::vector<RenderObject>> renderObjects;
-        /// Indicate which entities have the RenderObject compoenent
-        std::reference_wrapper<const std::vector<bool>> renderObjectExist;
-        /// The array of Transform
-        std::reference_wrapper<const std::vector<Transform>> transforms;
-        /// Indicate which entities have the RenderObject compoenent
-        std::reference_wrapper<const std::vector<bool>> transformExist;
+        Object<RenderObject> renderObjects;
+        Object<PointLight> pointLight;
+        Object<DirectionalLight> directionalLight;
+        Object<SpotLight> spotLight;
+        Object<Transform> transform;
     };
 
 public:
@@ -101,6 +107,31 @@ public:
     constexpr const vk::DescriptorSetLayout &getDescriptorSetLayout() const noexcept { return descriptorSetLayout; }
 
 private:
+    template <class T, class G>
+    requires std::is_constructible_v<G, const T &, const Transform &> && BufferValid<G>
+    void handleLights(AllocatedBuffer<G> &buffer, const Object<T> &lights, const Object<Transform> &transforms,
+                      const std::string &debug_name = "")
+    {
+        assert(lights.objects.get().size() == lights.exist.get().size());
+        assert(transforms.objects.get().size() == transforms.exist.get().size());
+
+        std::vector<G> lightsData;
+        for (unsigned i = 0; i < lights.objects.get().size() && i < transforms.objects.get().size(); i++) {
+            if (!lights.exist.get().at(i) || !lights.exist.get().at(i)) continue;
+            const auto &light = lights.objects.get().at(i);
+            const auto &transform = transforms.objects.get().at(i);
+
+            lightsData.emplace_back(light, transform);
+        }
+        if (!buffer || buffer.getAllocatedSize() < lightsData.size()) {
+            if (buffer) base_ref->get().allocator.destroyBuffer(buffer);
+            buffer = base_ref->get().allocator.createBuffer<G>(
+                lightsData.size(), vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu,
+                vma::AllocationCreateFlagBits::eMapped);
+            vk_debug::setObjectName(base_ref->get().device, buffer.buffer, debug_name);
+        }
+        base_ref->get().allocator.copyBuffer(buffer, std::span(lightsData));
+    }
     void createBuffer(const vk::DeviceSize bufferSize);
     void updateDescriptorSet(const vk::DeviceSize bufferSize);
 

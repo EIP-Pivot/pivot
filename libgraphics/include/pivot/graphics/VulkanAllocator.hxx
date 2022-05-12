@@ -9,6 +9,7 @@
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 #include "pivot/graphics/types/AllocatedImage.hxx"
 #include "pivot/graphics/types/common.hxx"
+#include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
 namespace pivot::graphics
@@ -44,7 +45,7 @@ public:
     template <typename T>
     /// Create a buffer.
     AllocatedBuffer<T> createBuffer(std::size_t size, vk::BufferUsageFlags usage, vma::MemoryUsage memoryUsage,
-                                    vma::AllocationCreateFlags flags = {})
+                                    vma::AllocationCreateFlags flags = {}, const std::string &debug_name = "")
     {
         assert(size != 0);
         AllocatedBuffer<T> buffer{
@@ -59,6 +60,7 @@ public:
         vmaallocInfo.usage = memoryUsage;
         vmaallocInfo.flags = flags;
         std::tie(buffer.buffer, buffer.memory) = allocator.createBuffer(bufferInfo, vmaallocInfo, buffer.info);
+        if (!debug_name.empty()) vk_debug::setObjectName(device, buffer.buffer, debug_name);
         return buffer;
     }
 
@@ -134,6 +136,7 @@ public:
     GPUMemoryStats getStats();
 
 private:
+    vk::Device device;
     vma::Allocator allocator;
     vk::PhysicalDeviceMemoryProperties properties;
 };

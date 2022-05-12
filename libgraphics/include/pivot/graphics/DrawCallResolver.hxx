@@ -67,6 +67,9 @@ public:
         vk::DeviceSize currentBufferSize = defaultBufferSize;
         /// The current size of the buffer that is exposed through the descriptor set.
         vk::DeviceSize currentDescriptorSetSize = defaultBufferSize;
+        vk::DeviceSize pointLightCount = 0;
+        vk::DeviceSize directionalLightCount = 0;
+        vk::DeviceSize spotLightCount = 0;
     };
 
     template <class T>
@@ -108,9 +111,9 @@ public:
 
 private:
     template <class T, class G>
-    requires std::is_constructible_v<G, const T &, const Transform &> && BufferValid<G>
-    void handleLights(AllocatedBuffer<G> &buffer, const Object<T> &lights, const Object<Transform> &transforms,
-                      const std::string &debug_name = "")
+    requires std::is_constructible_v<G, const T &, const Transform &> && BufferValid<G> vk::DeviceSize
+    handleLights(AllocatedBuffer<G> &buffer, const Object<T> &lights, const Object<Transform> &transforms,
+                 const std::string &debug_name = "")
     {
         assert(lights.objects.get().size() == lights.exist.get().size());
         assert(transforms.objects.get().size() == transforms.exist.get().size());
@@ -123,15 +126,16 @@ private:
 
             lightsData.emplace_back(light, transform);
         }
-        if (!buffer || buffer.getAllocatedSize() < lightsData.size()) {
+        if (buffer.getAllocatedSize() / sizeof(G) < lightsData.size()) {
             if (buffer) base_ref->get().allocator.destroyBuffer(buffer);
             buffer = base_ref->get().allocator.createBuffer<G>(
                 lightsData.size(), vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu,
-                vma::AllocationCreateFlagBits::eMapped);
-            vk_debug::setObjectName(base_ref->get().device, buffer.buffer, debug_name);
+                vma::AllocationCreateFlagBits::eMapped, debug_name);
         }
         base_ref->get().allocator.copyBuffer(buffer, std::span(lightsData));
+        return lightsData.size();
     }
+
     void createBuffer(const vk::DeviceSize bufferSize);
     void createLightBuffer();
     void updateDescriptorSet(const vk::DeviceSize bufferSize);

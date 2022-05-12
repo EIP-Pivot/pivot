@@ -10,6 +10,7 @@ VulkanAllocator::~VulkanAllocator() {}
 void VulkanAllocator::init(const vma::AllocatorCreateInfo &info)
 {
     allocator = vma::createAllocator(info);
+    device = info.device;
     properties = info.physicalDevice.getMemoryProperties();
 }
 

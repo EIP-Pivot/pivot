@@ -38,12 +38,6 @@ private:
 
 private:
     Entity currentEntity;
-    glm::vec3 matrixTranslation{0.f};
-    glm::vec3 matrixRotation{0.f};
-    glm::vec3 matrixScale{1.f};
-    std::array<std::string, 8> textures = {"rouge", "vert", "bleu", "cyan", "orange", "jaune", "blanc", "violet"};
-    std::array<std::string, 2> models = {"cube", "plane"};
-
     const pivot::ecs::component::Index &m_index;
     pivot::ecs::CurrentScene m_scene;
 };

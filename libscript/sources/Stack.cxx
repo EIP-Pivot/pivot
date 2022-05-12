@@ -24,10 +24,6 @@ void Stack::setValue(const std::string &name, const data::Value &newVal) { findM
 
 // Private methods
 
-template <class... Ts>
-struct overload : Ts... {
-    using Ts::operator()...;
-};
 data::Value &Stack::findMut(const std::string &name, data::Record &where)
 {
     size_t dot = name.find('.');
@@ -51,10 +47,6 @@ data::Value &Stack::findMut(const std::string &name, data::Record &where)
                    std::get<data::Record>(where.at(accessingVar)));    // recursive call on the rest of the access chain
 }
 
-// template <class... Ts>
-// struct overload : Ts... {
-//     using Ts::operator()...;
-// };
 const data::Value &Stack::find(const std::string &name, const data::Record &where) const
 {
     size_t dot = name.find('.');

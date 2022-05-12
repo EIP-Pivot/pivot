@@ -39,45 +39,29 @@ const std::unordered_map<std::string, data::BasicType> gVariableTypes{{"Vector3"
 Node Parser::ast_from_file(const std::string &file, bool isContent, bool verbose)
 {
     Node result = {.type = NodeType::File, .value = file};
-    try {
-        // Fill _tokens with the tokens from the file
-        tokens_from_file(file, isContent, verbose);
-        // Consume all tokens
-        while (!_tokens.empty()) {
-            // Here we expect a list of component or system declarations, and nothing else
-            Token &t = _tokens.front();
-            if (t.type != TokenType::Identifier) {    // Expect an identifier
-                logger.err("ERROR") << " at line " << t.line_nb << " char " << t.char_nb << ": '" << t.value << "'";
-                throw UnexpectedTokenTypeException("Expected Identifier token");
-            }
-            // Depending on if it is a component or a system token, call the correct callback to consume the
-            // tokens and create a node representing the declaration
-            else if (t.value == "component")
-                result.children.push_back(consumeComponent());
-            else if (t.value == "system")
-                result.children.push_back(consumeSystem());
-            else {    // neither an identifier, a component nor a system
-                logger.err("ERROR") << " at line " << t.line_nb << " char " << t.char_nb << ": '" << t.value << "'";
-                throw UnexpectedTokenTypeException("Expected 'component' or 'system' token.");
-            }
+    // Fill _tokens with the tokens from the file
+    tokens_from_file(file, isContent, verbose);
+    // Consume all tokens
+    while (!_tokens.empty()) {
+        // Here we expect a list of component or system declarations, and nothing else
+        Token &t = _tokens.front();
+        if (t.type != TokenType::Identifier) {    // Expect an identifier
+            logger.err("ERROR") << " at line " << t.line_nb << " char " << t.char_nb << ": '" << t.value << "'";
+            throw UnexpectedTokenTypeException("Expected Identifier token");
         }
-        if (verbose) printFileNode(result);
-    } catch (const InvalidIndentException &e) {
-        logger.err("Invalid Indent: ") << e.what();
-    } catch (const UnexpectedEOFException &e) {
-        logger.err("Unepexpected EndOfFile: ") << e.what();
-    } catch (const UnexpectedTokenTypeException &e) {
-        logger.err("Unexpected Token Type: ") << e.what();
-    } catch (const UnexpectedTokenValueException &e) {
-        logger.err("Unexpected Token Value: ") << e.what();
-    } catch (const std::invalid_argument &e) {    // logic error
-        logger.err("LogicError: ") << e.what();
-    } catch (const std::exception &e) {
-        // std::cerr << std::format("\nParser !Unhandled Exception!: {}", e.what()) << std::flush; // format not
-        // available in c++20 gcc yet
-        logger.err("\nscript::parser !Unhandled Exception!: ") << e.what();
+        // Depending on if it is a component or a system token, call the correct callback to consume the
+        // tokens and create a node representing the declaration
+        else if (t.value == "component")
+            result.children.push_back(consumeComponent());
+        else if (t.value == "system")
+            result.children.push_back(consumeSystem());
+        else {    // neither an identifier, a component nor a system
+            logger.err("ERROR") << " at line " << t.line_nb << " char " << t.char_nb << ": '" << t.value << "'";
+            throw UnexpectedTokenTypeException("Expected 'component' or 'system' token.");
+        }
     }
-    return result;
+    if (verbose) printFileNode(result);
+    return result;    // valid node
 }
 
 /* Lexer function

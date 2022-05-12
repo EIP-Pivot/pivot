@@ -13,8 +13,31 @@ Engine::Engine(systems::Index &systemIndex, component::Index &componentIndex)
 std::string Engine::loadFile(const std::string &file, bool isContent, bool verbose)
 {    // Load a file to register all descriptions in the file, as well as store the trees for the system entry points
     if (verbose) logger.info("script::Engine") << ": Loading file " << file;
-    // TODO: return string with error on top of the node to deamImgui
-    Node fileNode = _parser.ast_from_file(file, isContent, verbose);    // generate abstract syntax tree from file
+    Node fileNode;
+    try {
+        fileNode = _parser.ast_from_file(file, isContent, verbose);    // generate abstract syntax tree from file
+    } catch (const InvalidIndentException &e) {
+        logger.err("Invalid Indent: ") << e.what();
+        return std::string("Invalid Indent: ") + e.what();    // return error for imGui
+    } catch (const UnexpectedEOFException &e) {
+        logger.err("Unepexpected EndOfFile: ") << e.what();
+        return std::string("Unepexpected EndOfFile: ") + e.what();    // return error for imGui
+    } catch (const UnexpectedTokenTypeException &e) {
+        logger.err("Unexpected Token Type: ") << e.what();
+        return std::string("Unexpected Token Type: ") + e.what();    // return error for imGui
+    } catch (const UnexpectedTokenValueException &e) {
+        logger.err("Unexpected Token Value: ") << e.what();
+        return std::string("Unexpected Token Value: ") + e.what();    // return error for imGui
+    } catch (const std::invalid_argument &e) {                        // logic error
+        logger.err("LogicError: ") << e.what();
+        return std::string("LogicError: ") + e.what();    // return error for imGui
+    } catch (const std::exception &e) {
+        // std::cerr << std::format("\nParser !Unhandled Exception!: {}", e.what()) << std::flush; // format not
+        // available in c++20 gcc yet
+        logger.err("\nscript::parser !Unhandled Exception!: ") << e.what();
+        return std::string("\nscript::parser !Unhandled Exception!: ") + e.what();    // return error for imGui
+    }
+
     if (verbose) parser::printFileNode(fileNode);
 
     // TODO: return string with error on top of the node
@@ -24,13 +47,9 @@ std::string Engine::loadFile(const std::string &file, bool isContent, bool verbo
         desc.system = std::bind(&Engine::systemCallback, this, std::placeholders::_1, std::placeholders::_2,
                                 std::placeholders::_3);    // add the callback to the descriptions
         _systemIndex.registerSystem(desc);                 // register system in the not-so-global index
-        try {
-            Node systemEntry = getEntryPointFor(
-                desc.name, fileNode);    // only store the entry point for the system, the rest is in the description
-            _systems.insert({desc.name, systemEntry});
-        } catch (const std::exception &e) {
-            return e.what();    // unlikely branch, return error to dearImGui
-        }
+        Node systemEntry = getEntryPointFor(
+            desc.name, fileNode);    // only store the entry point for the system, the rest is in the description
+        _systems.insert({desc.name, systemEntry});
     }
     return (file + " parsed succesfully.");    // no errors
 }

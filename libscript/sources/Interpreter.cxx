@@ -104,26 +104,18 @@ void executeSystem(const Node &systemEntry, const systems::Description &desc,
                    component::ArrayCombination::ComponentCombination &entity, const event::EventWithComponent &trigger,
                    Stack &stack)
 {
-    std::cout << "Executing block " << systemEntry.value << std::endl;
-    // Push input entity to stack
-    Variable inputEntity = {.name = desc.entityName, .hasValue = false};
     // systemComponents : [ "Position", "Velocity" ]
     // entity : [ PositionRecord, VelocityRecord ]
+    std::cout << "Executing block " << systemEntry.value << std::endl;
+    // Push input entity to stack
+    data::Record inputEntity;
     size_t componentIndex = 0;
-    for (const std::string &componentString: desc.systemComponents) {
-        // get the component from the ArrayCombination using a size_t index
-        data::Record componentRecord = std::get<data::Record>(entity[componentIndex].get());
-        data::RecordType componentRecordType = componentRecord.type();
-        Variable componentVar = {.name = componentString, .hasValue = false};
 
-        for (const auto &[memberName, memberType]:
-             componentRecordType)    // insert all members of input entity as members of the variable inputEntity
-            componentVar.members.insert_or_assign(
-                memberName, Variable{.name = memberName, .hasValue = true, .value = componentRecord.at(memberName)});
-        inputEntity.members.insert_or_assign(componentString, componentVar);
+    for (const std::string &componentString: desc.systemComponents) {
+        inputEntity.insert_or_assign(componentString, std::get<data::Record>(entity[componentIndex].get()));
         componentIndex++;    // go to next component
     }
-    stack.push(inputEntity);
+    stack.push(desc.entityName, inputEntity);
 
     for (const Node &statement: systemEntry.children) {    // execute all statements
         executeStatement(statement, stack);
@@ -220,17 +212,21 @@ void executeStatement(const Node &statement, Stack &stack)
                 logger.err("ERROR") << " at node '" << newVarType << " = " << exprResult.type().toString() << "'";
                 throw InvalidException("InvalidAssign: Cannot convert expression type to variable type.");
             }
-            stack.push(Variable{
-                .name = newVarName, .hasValue = true, .value = exprResult});    // assign is valid, push it on the stack
+            stack.push(newVarName, exprResult);    // assign is valid
 
         } else if (statement.children.at(0).type == NodeType::ExistingVariable) {    // assign to an existing variable
-            const Variable &existingVar = stack.find(statement.children.at(0).value);
+            const data::Value &existingVar = stack.find(statement.children.at(0).value);
             data::Value exprResult = evaluateExpression(statement.children.at(1), stack);
 
+            if (!std::holds_alternative<data::BasicType>(exprResult.type())) {
+                logger.err("ERROR") << " at node " << existingVar.type().toString() << " = "
+                                    << exprResult.type().toString();
+                throw InvalidException("InvalidAssign: Cannot assign to a Record (yet).");
+            }
             if (std::get<data::BasicType>(exprResult.type()) !=
                 std::get<data::BasicType>(
-                    existingVar.value.type())) {    // Expression result not of same type as declared variable
-                logger.err("ERROR") << " at node " << existingVar.value.type().toString() << " = "
+                    existingVar.type())) {    // Expression result not of same type as declared variable
+                logger.err("ERROR") << " at node " << existingVar.type().toString() << " = "
                                     << exprResult.type().toString();
                 throw InvalidException("InvalidAssign: Cannot convert expression type to variable type.");
             }
@@ -444,13 +440,7 @@ data::Value valueOf(const Node &var, const Stack &stack)
     else if (var.type == NodeType::DoubleQuotedStringVariable)
         return data::Value(var.value);
     else if (var.type == NodeType::ExistingVariable) {    // Named variable
-        const Variable &v = stack.find(var.value);        // find it in the stack
-        if (!v.hasValue) {
-            logger.err("ERROR") << " with variable " << v.name;
-            throw InvalidException(
-                "Variable Has No Value: This variable has not been initialized or only has members.");
-        }
-        return v.value;
+        return stack.find(var.value);                     // find it in the stack
     } else {
         logger.err("ERROR") << " with variable " << var.value;
         throw std::invalid_argument("Unsupported Feature: This type of variable is not supported yet.");

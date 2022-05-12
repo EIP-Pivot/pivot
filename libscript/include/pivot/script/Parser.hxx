@@ -54,7 +54,6 @@ private:
     /// Check for end of system/component declaration
     bool isDeclarationOver();
 
-public:
 private:
     std::queue<Token> _tokens;
 };

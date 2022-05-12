@@ -126,6 +126,7 @@ if (BUILD_DOCUMENTATION)
         doxygen_add_docs(doc
             libgraphics/include
             libecs/include
+            libscript/include
             README.md)
     else()
         message(SEND_ERROR "Doxygen needs to be installed to build the documentation")
@@ -136,6 +137,7 @@ endif()
 include(cmake/CompileShaders.cmake)
 add_subdirectory(libecs/)
 add_subdirectory(libgraphics/)
+add_subdirectory(libscript/)
 add_subdirectory(libpivot/)
 
 option(BUILD_EDITOR "Build pivot editor" ON)
@@ -151,6 +153,7 @@ endif()
 add_library(pivot::pivot ALIAS pivot)
 add_library(pivot::graphics ALIAS pivot-graphics)
 add_library(pivot::ecs ALIAS pivot-ecs)
+add_library(pivot::script ALIAS pivot-script)
 
 target_compile_options(pivot-ecs PRIVATE
      $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
@@ -159,6 +162,12 @@ target_compile_options(pivot-ecs PRIVATE
           /W3 /wd4267 /wd4201 /wd4244>)
 
 target_compile_options(pivot-graphics PRIVATE
+     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+          -Wall>
+     $<$<CXX_COMPILER_ID:MSVC>:
+          /W3 /wd4267 /wd4201 /wd4244>)
+
+target_compile_options(pivot-script PRIVATE
      $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
           -Wall>
      $<$<CXX_COMPILER_ID:MSVC>:

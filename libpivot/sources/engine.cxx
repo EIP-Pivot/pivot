@@ -32,6 +32,10 @@ Engine::Engine()
     m_component_index.registerComponent(builtins::components::RigidBody::description);
     m_component_index.registerComponent(builtins::components::RenderObject::description);
     m_component_index.registerComponent(builtins::components::Transform::description);
+    m_component_index.registerComponent(builtins::components::PointLight::description);
+    m_component_index.registerComponent(builtins::components::DirectionalLight::description);
+    m_component_index.registerComponent(builtins::components::SpotLight::description);
+
     m_event_index.registerEvent(builtins::events::tick);
     m_event_index.registerEvent(builtins::events::keyPress);
     m_system_index.registerSystem(builtins::systems::physicSystem);

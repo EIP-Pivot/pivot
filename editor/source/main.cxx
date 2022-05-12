@@ -58,17 +58,11 @@ public:
           systemsEditor(m_system_index, getCurrentScene()),
           componentEditor(m_component_index, getCurrentScene()){};
 
-    void loadScene()
-    {
-        SceneManager::SceneId defaultScene = registerScene("Default");
-        changeCurrentScene(defaultScene);
-    }
+    SceneManager::SceneId loadDefaultScene() { return registerScene("Default"); }
 
     void init()
     {
         auto &window = m_vulkan_application.window;
-
-        loadScene();
 
         Scene &scene = *getCurrentScene();
 
@@ -94,12 +88,6 @@ public:
         window.setKeyPressCallback(Window::Key::A, key_lambda_press);
         window.setKeyPressCallback(Window::Key::SPACE, key_lambda_press);
         window.setKeyPressCallback(Window::Key::LEFT_SHIFT, key_lambda_press);
-#ifdef CULLING_DEBUG
-        window.setKeyPressCallback(Window::Key::C, [this](Window &window, const Window::Key key) {
-            if (window.captureCursor())
-                this->editor.cullingCameraFollowsCamera = !this->editor.cullingCameraFollowsCamera;
-        });
-#endif
         // Release action
         window.setKeyReleaseCallback(Window::Key::W, key_lambda_release);
         window.setKeyReleaseCallback(Window::Key::S, key_lambda_release);
@@ -122,8 +110,8 @@ public:
             pivot::builtins::systems::ControlSystem::processMouseMovement(m_camera, glm::dvec2(xoffset, yoffset));
         });
 
-        m_vulkan_application.assetStorage.loadModels("cube.obj");
-        m_vulkan_application.assetStorage.loadTextures("violet.png");
+        m_vulkan_application.assetStorage.addModel("cube.obj");
+        m_vulkan_application.assetStorage.addTexture("violet.png");
     }
     void processKeyboard(const pivot::builtins::Camera::Movement direction, float dt) noexcept
     {
@@ -190,11 +178,6 @@ public:
             if (entity.hasSelected()) { editor.DisplayGuizmo(entity.getEntitySelected(), m_camera); }
         }
         UpdateCamera(dt);
-
-#ifdef CULLING_DEBUG
-        if (editor.cullingCameraFollowsCamera) m_culling_camera = m_camera;
-#endif
-
         imGuiManager.render();
     }
 
@@ -210,10 +193,19 @@ public:
     std::bitset<UINT16_MAX> button;
 };
 
-int main()
+int main(int argc, char *argv[])
 {
     logger.start();
     Application app;
+
+    SceneManager::SceneId sceneId;
+    if (argc == 2) {
+        sceneId = app.loadScene(argv[1]);
+    } else {
+        sceneId = app.loadDefaultScene();
+    }
+    app.changeCurrentScene(sceneId);
+
     app.init();
     app.run();
     return 0;

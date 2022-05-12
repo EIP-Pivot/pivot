@@ -1,7 +1,8 @@
 #include "pivot/graphics/AssetStorage.hxx"
 
 #include "pivot/graphics/DebugMacros.hxx"
-#include "pivot/graphics/vk_debug.hxx"
+
+#include <type_traits>
 
 #include <Logger.hpp>
 
@@ -60,63 +61,6 @@ AssetStorage::AssetStorage(VulkanBase &base): base_ref(base) {}
 
 AssetStorage::~AssetStorage() {}
 
-void AssetStorage::build(DescriptorBuilder builder)
-{
-    DEBUG_FUNCTION
-    assert(cpuStorage.materialStaging.contains(missing_material_name));
-    assert(cpuStorage.textureStaging.contains(missing_texture_name));
-    createTextureSampler();
-
-    for (const auto &[name, model]: modelStorage) {
-        meshAABBStorage.add(name,
-                            gpu_object::AABB(std::span(cpuStorage.vertexStagingBuffer.begin() + model.mesh.vertexOffset,
-                                                       model.mesh.vertexSize)));
-    }
-    assert(modelStorage.size() == meshAABBStorage.size());
-
-    logger.info("Asset Storage") << prefabStorage.size() << " prefab loaded";
-    logger.info("Asset Storage") << "Pushing " << modelStorage.size() << " models onto the GPU";
-    pushModelsOnGPU();
-    vk_debug::setObjectName(base_ref->get().device, vertexBuffer.buffer, "Vertex Buffer");
-    vk_debug::setObjectName(base_ref->get().device, indicesBuffer.buffer, "Indices Buffer");
-
-    logger.info("Asset Storage") << "Pushing " << meshAABBStorage.size() << " AABB onto the GPU";
-    pushAABBOnGPU();
-    vk_debug::setObjectName(base_ref->get().device, AABBBuffer.buffer, "AABB Buffer");
-
-    logger.info("Asset Storage") << "Pushing " << cpuStorage.textureStaging.size() << " textures onto the GPU";
-    pushTexturesOnGPU();
-    for (const auto &[name, idex]: textureStorage) {
-        const auto &im = textureStorage.get(idex);
-        vk_debug::setObjectName(base_ref->get().device, im.image, "Texture " + name);
-        vk_debug::setObjectName(base_ref->get().device, im.imageView, "Texture " + name + " ImageView");
-    }
-
-    logger.info("Asset Storage") << "Pushing " << cpuStorage.materialStaging.size() << " materials onto the GPU";
-    pushMaterialOnGPU();
-    vk_debug::setObjectName(base_ref->get().device, materialBuffer.buffer, "Material Buffer");
-
-    cpuStorage = {};
-    createDescriptorSet(builder);
-}
-
-void AssetStorage::destroy()
-{
-    DEBUG_FUNCTION
-    if (vertexBuffer && indicesBuffer) {
-        base_ref->get().allocator.destroyBuffer(vertexBuffer);
-        base_ref->get().allocator.destroyBuffer(indicesBuffer);
-    }
-    if (AABBBuffer) base_ref->get().allocator.destroyBuffer(AABBBuffer);
-    if (materialBuffer) base_ref->get().allocator.destroyBuffer(materialBuffer);
-
-    for (auto &image: textureStorage.getStorage()) {
-        base_ref->get().device.destroyImageView(image.imageView);
-        base_ref->get().allocator.destroyImage(image);
-    }
-    vulkanDeletionQueue.flush();
-}
-
 bool AssetStorage::bindForGraphics(vk::CommandBuffer &cmd, const vk::PipelineLayout &pipelineLayout,
                                    std::uint32_t descriptorSetNb)
 {
@@ -137,32 +81,48 @@ bool AssetStorage::bindForCompute(vk::CommandBuffer &cmd, const vk::PipelineLayo
     return true;
 }
 
-bool AssetStorage::loadAsset(const std::filesystem::path &path)
+bool AssetStorage::addAsset(const std::filesystem::path &path)
 {
+    DEBUG_FUNCTION
     auto iterModel = supportedObject.find(path.extension().string());
-    if (iterModel != supportedObject.end()) { return loadModel(path); }
+    if (iterModel != supportedObject.end()) { return addModel(path); }
 
     auto iterTexture = supportedTexture.find(path.extension().string());
-    if (iterTexture != supportedTexture.end()) { return loadTexture(path); }
+    if (iterTexture != supportedTexture.end()) { return addTexture(path); }
 
-    logger.err("LOAD ASSET") << "Not supported asset extension: " << path.extension();
+    logger.err("AssetStorage/addAsset") << "Not supported asset extension: " << path.extension();
     return false;
 }
 
-bool AssetStorage::loadModel(const std::filesystem::path &path)
+bool AssetStorage::addAsset(const std::vector<std::filesystem::path> &path)
 {
-    auto iter = supportedObject.find(path.extension().string());
-    if (iter == supportedObject.end()) {
-        logger.err("LOAD MODEL") << "Not supported model extension: " << path.extension();
-        return false;
-    }
-    logger.info("Asset Storage") << "Loading model at : " << path;
-    auto ret = std::apply(iter->second, std::make_tuple(this, path));
-    if (ret) modelPaths[path.stem().string()] = path;
-    return ret;
+    DEBUG_FUNCTION
+    unsigned load = 0;
+    for (const auto &i: path) load += addAsset(i);
+    return load == path.size();
 }
 
-bool AssetStorage::loadTexture(const std::filesystem::path &path)
+bool AssetStorage::addModel(const std::filesystem::path &path)
+{
+    DEBUG_FUNCTION
+    auto iter = supportedObject.find(path.extension().string());
+    if (iter == supportedObject.end()) {
+        logger.err("AssetStorage/addModel") << "Not supported model extension: " << path.extension();
+        return false;
+    }
+    cpuStorage.modelPaths[path.stem().string()] = asset_dir / path;
+    return true;
+}
+
+bool AssetStorage::addModel(const std::vector<std::filesystem::path> &path)
+{
+    DEBUG_FUNCTION
+    unsigned load = 0;
+    for (const auto &i: path) load += addModel(i);
+    return load == path.size();
+}
+
+bool AssetStorage::addTexture(const std::filesystem::path &path)
 {
     DEBUG_FUNCTION
     const auto iter = supportedTexture.find(path.extension().string());
@@ -170,120 +130,31 @@ bool AssetStorage::loadTexture(const std::filesystem::path &path)
         logger.err("Load Texture") << "Not supported texture extension: " << path.extension();
         return false;
     }
-    logger.info("Asset Storage") << "Loading texture at : " << path;
-    auto ret = std::apply(iter->second, std::make_tuple(this, path));
-    if (ret) texturePaths[path.stem().string()] = path;
-    return ret;
+    cpuStorage.texturePaths[path.stem().string()] = asset_dir / path;
+    return true;
 }
-
-template <typename T>
-static AllocatedBuffer<T> copy_with_staging_buffer(VulkanBase &base_ref, vk::BufferUsageFlags flag,
-                                                   std::vector<T> &data)
-{
-    auto staging = base_ref.allocator.createBuffer<T>(data.size(), vk::BufferUsageFlagBits::eTransferSrc,
-                                                      vma::MemoryUsage::eCpuToGpu);
-    auto ret = base_ref.allocator.createBuffer<T>(data.size(), flag | vk::BufferUsageFlagBits::eTransferDst,
-                                                  vma::MemoryUsage::eGpuOnly);
-    base_ref.allocator.copyBuffer(staging, std::span(data));
-    base_ref.copyBuffer(staging, ret);
-    base_ref.allocator.destroyBuffer(staging);
-    return ret;
-}
-
-void AssetStorage::pushModelsOnGPU()
+bool AssetStorage::addTexture(const std::vector<std::filesystem::path> &path)
 {
     DEBUG_FUNCTION
-    if (cpuStorage.vertexStagingBuffer.empty()) {
-        logger.warn("Asset Storage") << "No model to push";
-        return;
-    }
-
-    vertexBuffer = copy_with_staging_buffer(base_ref->get(), vk::BufferUsageFlagBits::eVertexBuffer,
-                                            cpuStorage.vertexStagingBuffer);
-    indicesBuffer =
-        copy_with_staging_buffer(base_ref->get(), vk::BufferUsageFlagBits::eIndexBuffer, cpuStorage.indexStagingBuffer);
+    unsigned load = 0;
+    for (const auto &i: path) load += addTexture(i);
+    return load == path.size();
 }
 
-void AssetStorage::pushTexturesOnGPU()
+bool AssetStorage::loadModel(const std::filesystem::path &path)
 {
-    DEBUG_FUNCTION
-    if (cpuStorage.textureStaging.size() == 0) {
-        logger.warn("Asset Storage") << "No textures to push";
-        return;
-    }
-    for (auto &[name, idx]: cpuStorage.textureStaging) {
-        auto &img = cpuStorage.textureStaging.get(idx);
-        auto stagingBuffer = base_ref->get().allocator.createBuffer<std::byte>(
-            img.image.size(), vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);
-        base_ref->get().allocator.copyBuffer(stagingBuffer, std::span(img.image));
-
-        vk::ImageCreateInfo imageInfo{
-            .imageType = vk::ImageType::e2D,
-            .format = vk::Format::eR8G8B8A8Srgb,
-            .extent = img.size,
-            .mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(img.size.width, img.size.height))) + 1),
-            .arrayLayers = 1,
-            .samples = vk::SampleCountFlagBits::e1,
-            .tiling = vk::ImageTiling::eOptimal,
-            .usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc |
-                     vk::ImageUsageFlagBits::eSampled,
-            .sharingMode = vk::SharingMode::eExclusive,
-            .initialLayout = vk::ImageLayout::eUndefined,
-        };
-        vma::AllocationCreateInfo allocInfo;
-        allocInfo.usage = vma::MemoryUsage::eGpuOnly;
-        auto image = base_ref->get().allocator.createImage(imageInfo, allocInfo);
-        image.createImageView(base_ref->get().device);
-        base_ref->get().transitionLayout(image, vk::ImageLayout::eTransferDstOptimal);
-        base_ref->get().copyBufferToImage(stagingBuffer, image);
-        base_ref->get().generateMipmaps(image, image.mipLevels);
-
-        base_ref->get().allocator.destroyBuffer(stagingBuffer);
-        textureStorage.add(name, std::move(image));
-    }
+    auto extension = path.extension().string();
+    assert(supportedObject.contains(extension));
+    logger.debug("Asset Storage") << "Loading model at : " << path;
+    return std::apply(supportedObject.at(extension), std::make_tuple(this, path));
 }
 
-void AssetStorage::pushMaterialOnGPU()
+bool AssetStorage::loadTexture(const std::filesystem::path &path)
 {
-    DEBUG_FUNCTION
-    if (cpuStorage.materialStaging.empty()) {
-        logger.warn("Asset Storage") << "No material to push";
-        return;
-    }
-
-    for (auto &[name, idx]: cpuStorage.materialStaging) {
-        const auto &mat = cpuStorage.materialStaging.getStorage()[idx];
-        materialStorage.add(
-            name,
-            {
-                .baseColor = mat.baseColor,
-                .metallic = mat.metallic,
-                .roughness = mat.roughness,
-                .baseColorTexture =
-                    (mat.baseColorTexture.empty()) ? (-1) : (textureStorage.getIndex(mat.baseColorTexture)),
-                .metallicRoughnessTexture = (mat.metallicRoughnessTexture.empty())
-                                                ? (-1)
-                                                : (textureStorage.getIndex(mat.metallicRoughnessTexture)),
-                .normalTexture = (mat.normalTexture.empty()) ? (-1) : (textureStorage.getIndex(mat.normalTexture)),
-                .occlusionTexture =
-                    (mat.occlusionTexture.empty()) ? (-1) : (textureStorage.getIndex(mat.occlusionTexture)),
-                .emissiveTexture =
-                    (mat.emissiveTexture.empty()) ? (-1) : (textureStorage.getIndex(mat.emissiveTexture)),
-            });
-    }
-    materialBuffer = copy_with_staging_buffer(base_ref->get(), vk::BufferUsageFlagBits::eStorageBuffer,
-                                              materialStorage.getStorage());
-}
-
-void AssetStorage::pushAABBOnGPU()
-{
-    DEBUG_FUNCTION
-    if (meshAABBStorage.empty()) {
-        logger.warn("Asset Storage") << "No AABB to push";
-        return;
-    }
-    AABBBuffer = copy_with_staging_buffer(base_ref->get(), vk::BufferUsageFlagBits::eStorageBuffer,
-                                          meshAABBStorage.getStorage());
+    auto extension = path.extension().string();
+    assert(supportedTexture.contains(extension));
+    logger.debug("Asset Storage") << "Loading texture at : " << path;
+    return std::apply(supportedTexture.at(extension), std::make_tuple(this, path));
 }
 
 }    // namespace pivot::graphics

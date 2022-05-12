@@ -14,6 +14,12 @@ void from_json(const nlohmann::json &json, Value &value);
 
 std::ostream &operator<<(std::ostream &stream, const Record &type);
 std::ostream &operator<<(std::ostream &stream, const Value &type);
+
+/// Serialize an Asset to json
+void to_json(nlohmann::json &json, const Asset &value);
+
+/// Deserialize an Asset from json
+void from_json(const nlohmann::json &json, Asset &value);
 }    // namespace pivot::ecs::data
 
 namespace nlohmann

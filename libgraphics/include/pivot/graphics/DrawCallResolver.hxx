@@ -4,6 +4,7 @@
 #include "pivot/graphics/DescriptorAllocator/DescriptorBuilder.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
+#include "pivot/graphics/types/Light.hxx"
 #include "pivot/graphics/types/RenderObject.hxx"
 #include "pivot/graphics/types/UniformBufferObject.hxx"
 #include "pivot/graphics/types/common.hxx"
@@ -46,9 +47,15 @@ public:
     /// Represent a frame ressources
     struct Frame {
         /// Hold the indirect command
-        AllocatedBuffer<vk::DrawIndexedIndirectCommand> indirectBuffer{};
+        AllocatedBuffer<vk::DrawIndexedIndirectCommand> indirectBuffer;
         /// Hold the uniform object buffer
-        AllocatedBuffer<gpu_object::UniformBufferObject> objectBuffer{};
+        AllocatedBuffer<gpu_object::UniformBufferObject> objectBuffer;
+        /// Hold the omnidirectional light buffer
+        AllocatedBuffer<gpu_object::PointLight> omniLightBuffer;
+        /// Hold the directional light buffer
+        AllocatedBuffer<gpu_object::DirectionalLight> directLightBuffer;
+        /// Hold the spot light buffer
+        AllocatedBuffer<gpu_object::SpotLight> spotLightBuffer;
         /// The descriptor set holding the object buffer
         vk::DescriptorSet objectDescriptor = VK_NULL_HANDLE;
         /// The draw batches

@@ -36,16 +36,17 @@ public:
 
     template <typename T>
     /// Copy the source buffer into the destination
-    void copyBuffer(AllocatedBuffer<T> &src, AllocatedBuffer<T> &dst)
+    void copyBuffer(AllocatedBuffer<T> &src, AllocatedBuffer<T> &dst, vk::DeviceSize srcOffset = 0,
+                    vk::DeviceSize dstOffset = 0)
     {
-        if (src.getBytesSize() > dst.getAllocatedSize())
+        if (src.getBytesSize() - srcOffset > dst.getAllocatedSize() - dstOffset)
             throw ImmediateCommandError("The destination buffer is too small");
 
         immediateCommand([&](vk::CommandBuffer &cmd) {
             vk::BufferCopy copyRegion{
-                .srcOffset = 0,
-                .dstOffset = 0,
-                .size = src.getBytesSize(),
+                .srcOffset = srcOffset,
+                .dstOffset = dstOffset,
+                .size = src.getBytesSize() - srcOffset,
             };
             cmd.copyBuffer(src.buffer, dst.buffer, copyRegion);
         });

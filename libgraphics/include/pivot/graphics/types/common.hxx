@@ -1,9 +1,5 @@
 #pragma once
 
-#if !defined(CULLING_DEBUG) && !defined(NDEBUG)
-    #define CULLING_DEBUG
-#endif
-
 #include <optional>
 
 template <typename T>

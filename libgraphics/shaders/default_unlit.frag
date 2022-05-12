@@ -2,18 +2,6 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_EXT_nonuniform_qualifier : enable
 
-layout(location = 0) in vec3 fragPosition;
-layout(location = 1) in vec3 fragNormal;
-layout(location = 2) in vec3 fragColor;
-layout(location = 3) in vec2 fragTextCoords;
-layout(location = 4) in flat uint materialIndex;
-
-layout(location = 0) out vec4 outColor;
-
-layout (push_constant) uniform readonly constants {
-    layout(offset = 64) vec3 position;
-} cameraData;
-
 struct Material {
     vec4 baseColor;
     float metallic;
@@ -25,9 +13,27 @@ struct Material {
     int emissiveTexture;
 };
 
+struct pushConstantStruct {
+    uint pointLightCount;
+    uint directLightCount;
+    vec3 position;
+};
+
+layout(location = 0) in vec3 fragPosition;
+layout(location = 1) in vec3 fragNormal;
+layout(location = 2) in vec3 fragColor;
+layout(location = 3) in vec2 fragTextCoords;
+layout(location = 4) in flat uint materialIndex;
+
+layout(location = 0) out vec4 outColor;
+
 layout (std140, set = 0, binding = 1) readonly buffer ObjectMaterials {
     Material materials[];
 } objectMaterials;
+
+layout (push_constant) uniform readonly constants {
+    layout(offset = 64) pushConstantStruct push;
+} cameraData;
 
 layout(set = 0, binding = 2) uniform sampler2D texSampler[];
 

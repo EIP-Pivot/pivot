@@ -7,6 +7,8 @@
 #include <string>
 #include <variant>
 
+#include <pivot/ecs/Core/Data/asset.hxx>
+
 namespace pivot::ecs::data
 {
 
@@ -26,6 +28,9 @@ enum class BasicType {
 
     /// The property is of type glm::vec3
     Vec3,
+
+    /// The property is of type Asset
+    Asset,
 };
 
 struct Type;
@@ -62,6 +67,8 @@ template <>
 constexpr std::optional<BasicType> basic_type_representation<bool> = BasicType::Boolean;
 template <>
 constexpr std::optional<BasicType> basic_type_representation<glm::vec3> = BasicType::Vec3;
+template <>
+constexpr std::optional<BasicType> basic_type_representation<Asset> = BasicType::Asset;
 
 }    // namespace pivot::ecs::data
 

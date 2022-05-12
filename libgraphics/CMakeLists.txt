@@ -159,6 +159,7 @@ add_library(${PROJECT_NAME} STATIC source/lib.cxx
                                    source/VulkanSwapchain.cxx
                                    source/AssetsStorage/AssetStorage.cxx
                                    source/AssetsStorage/AssetStorage_init.cxx
+                                   source/AssetsStorage/AssetStorage_build.cxx
                                    source/AssetsStorage/Loaders/AssetStorage_obj.cxx
                                    source/AssetsStorage/Loaders/AssetStorage_png.cxx
                                    source/AssetsStorage/Loaders/AssetStorage_jpg.cxx
@@ -222,4 +223,5 @@ build_tests(${PROJECT_NAME}
   tests/culling.cxx
   tests/bounding_box.cxx
   tests/indexed_storage.cxx
+  tests/flags.cxx
 )

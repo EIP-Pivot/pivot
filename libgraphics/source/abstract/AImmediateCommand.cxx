@@ -104,10 +104,10 @@ void AImmediateCommand::generateMipmaps(AllocatedImage &image, uint32_t mipLevel
                     .layerCount = 1,
                 },
         };
-        int32_t mipWidth = image.size.width;
-        int32_t mipHeight = image.size.height;
+        std::int32_t mipWidth = image.size.width;
+        std::int32_t mipHeight = image.size.height;
 
-        for (uint32_t i = 1; i < mipLevel; i++) {
+        for (std::uint32_t i = 1; i < mipLevel; i++) {
             barrier.subresourceRange.baseMipLevel = i - 1;
             barrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
             barrier.newLayout = vk::ImageLayout::eTransferSrcOptimal;

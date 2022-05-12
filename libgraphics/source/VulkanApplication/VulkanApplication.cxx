@@ -25,12 +25,7 @@ VulkanApplication::VulkanApplication()
       descriptorAllocator(device),
       layoutCache(device)
 {
-    DEBUG_FUNCTION;
-
-#if defined(CULLING_DEBUG)
-    logger.warn("Culling") << "Culling camera are enabled !";
-#endif
-
+    DEBUG_FUNCTION
     if (bEnableValidationLayers && !VulkanBase::checkValidationLayerSupport(validationLayers)) {
         logger.warn("Vulkan Instance") << "Validation layers requested, but not available!";
         bEnableValidationLayers = false;
@@ -92,10 +87,13 @@ void VulkanApplication::initVulkanRessources()
     createRenderPass();
     createFramebuffers();
 
-    auto layout = frames[0].drawResolver.getDescriptorSetLayout();
-    for (auto &[rendy, buffers]: graphicsRenderer)
-        rendy->onInit(swapchain.getSwapchainExtent(), *this, layout, renderPass.getRenderPass());
-    for (auto &[rendy, buffers]: computeRenderer) rendy->onInit(*this, layout);
+    std::ranges::for_each(graphicsRenderer, [this](auto &pair) {
+        pair.first->onInit(swapchain.getSwapchainExtent(), *this, frames[0].drawResolver.getDescriptorSetLayout(),
+                           renderPass.getRenderPass());
+    });
+    std::ranges::for_each(computeRenderer, [this](auto &pair) {
+        pair.first->onInit(*this, frames[0].drawResolver.getDescriptorSetLayout());
+    });
 
     createCommandBuffers();
     postInitialization();
@@ -103,6 +101,22 @@ void VulkanApplication::initVulkanRessources()
 }
 
 void VulkanApplication::postInitialization() {}
+
+void VulkanApplication::buildAssetStorage(AssetStorage::BuildFlags flags)
+{
+    device.waitIdle();
+
+    assetStorage.build(DescriptorBuilder(layoutCache, descriptorAllocator), flags);
+    std::ranges::for_each(computeRenderer, [this](auto &pair) {
+        pair.first->onRecreate(swapchain.getSwapchainExtent(), *this, frames[0].drawResolver.getDescriptorSetLayout(),
+                               renderPass.getRenderPass());
+    });
+    std::ranges::for_each(graphicsRenderer, [this](auto &pair) {
+        pair.first->onRecreate(swapchain.getSwapchainExtent(), *this, frames[0].drawResolver.getDescriptorSetLayout(),
+                               renderPass.getRenderPass());
+    });
+    logger.info("Vulkan Application") << "Asset Storage rebuild !";
+}
 
 void VulkanApplication::recreateSwapchain()
 {
@@ -139,12 +153,7 @@ void VulkanApplication::recreateSwapchain()
 }
 
 void VulkanApplication::draw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
-                             const CameraData &cameraData
-#ifdef CULLING_DEBUG
-                             ,
-                             const std::optional<std::reference_wrapper<const CameraData>> cullingCameraData
-#endif
-)
+                             const CameraData &cameraData)
 try {
     assert(!graphicsRenderer.empty() && !computeRenderer.empty());
     assert(currentFrame < MaxFrameInFlight);
@@ -166,7 +175,7 @@ try {
         .framebuffer = swapChainFramebuffers.at(imageIndex),
     };
     vk::CommandBufferBeginInfo drawBeginInfo{
-        .flags = vk::CommandBufferUsageFlagBits::eRenderPassContinue,
+        .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit | vk::CommandBufferUsageFlagBits::eRenderPassContinue,
         .pInheritanceInfo = &inheritanceInfo,
     };
     vk::CommandBufferBeginInfo computeInfo{
@@ -191,12 +200,6 @@ try {
         secondaryBuffer.push_back(cmdBuf);
     }
 
-    // #ifdef CULLING_DEBUG
-    //     auto cullingCameraDataSelected = cullingCameraData.value_or(std::ref(cameraData)).get();
-    // #else
-    //     auto cullingCameraDataSelected = cameraData;
-    // #endif
-
     const std::array<float, 4> vClearColor = {0.0f, 0.0f, 0.0f, 1.0f};
     std::array<vk::ClearValue, 2> clearValues{};
     clearValues.at(0).color = vk::ClearColorValue{vClearColor};
@@ -212,7 +215,10 @@ try {
         .clearValueCount = clearValues.size(),
         .pClearValues = clearValues.data(),
     };
-    vk::CommandBufferBeginInfo beginInfo;
+    vk::CommandBufferBeginInfo beginInfo{
+        .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit | vk::CommandBufferUsageFlagBits::eRenderPassContinue,
+
+    };
     vk_utils::vk_try(cmd.begin(&beginInfo));
     vk_debug::beginRegion(cmd, "main command", {1.f, 1.f, 1.f, 1.f});
     cmd.executeCommands(computeBuffer);

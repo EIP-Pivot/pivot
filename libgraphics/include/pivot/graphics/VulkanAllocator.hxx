@@ -99,11 +99,12 @@ public:
     requires std::is_standard_layout_v<T>
     void copyBuffer(AllocatedBuffer<T> &buffer, const T *data, std::size_t data_size, std::size_t offset = 0)
     {
+        if (data_size == 0) return;
         assert(buffer);
-        assert(data);
         assert(buffer.getBytesSize() >= data_size + offset);
         assert((data_size + offset) % sizeof(T) == 0);
-        if (data_size == 0) return;
+        assert(data);
+
         auto *mapped = mapMemory<T>(buffer);
         std::memcpy(mapped + offset, data, data_size);
         unmapMemory(buffer);

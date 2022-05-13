@@ -105,7 +105,7 @@ void Engine::changeCurrentScene(ecs::SceneManager::SceneId sceneId)
             dynamic_cast<Array<pivot::graphics::DirectionalLight> &>(cm.GetComponentArray(*directional_id));
         auto &spotlight_array = dynamic_cast<Array<pivot::graphics::SpotLight> &>(cm.GetComponentArray(*spotlight_id));
 
-        auto new_command = std::make_optional<graphics::DrawCallResolver::DrawSceneInformation>({
+        m_current_scene_draw_command = {
             .renderObjects =
                 {
                     .objects = ro_array.getComponents(),
@@ -131,8 +131,7 @@ void Engine::changeCurrentScene(ecs::SceneManager::SceneId sceneId)
                     .objects = transform_array.getComponents(),
                     .exist = transform_array.getExistence(),
                 },
-        });
-        m_current_scene_draw_command.swap(new_command);
+        };
     } else {
         m_current_scene_draw_command = std::nullopt;
     }

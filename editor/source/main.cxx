@@ -44,6 +44,8 @@
 #include <pivot/builtins/events/tick.hxx>
 #include <pivot/engine.hxx>
 
+#include <pivot/script/Engine.hxx>
+
 using namespace pivot::ecs;
 using Window = pivot::graphics::Window;
 
@@ -52,7 +54,8 @@ class Application : public pivot::Engine
 public:
     Application()
         : Engine(),
-          imGuiManager(getSceneManager()),
+          scriptEngine(script::Engine(m_system_index, m_component_index)),
+          imGuiManager(getSceneManager(), scriptEngine),
           editor(getSceneManager(), getCurrentScene()),
           entity(getCurrentScene()),
           systemsEditor(m_system_index, getCurrentScene()),
@@ -187,6 +190,7 @@ public:
     EntityModule entity;
     ComponentEditor componentEditor;
     SystemsEditor systemsEditor;
+    script::Engine scriptEngine;
     glm::dvec2 last;
 
     bool bFirstMouse = true;

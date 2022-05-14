@@ -279,7 +279,7 @@ Node Parser::consumeComponent()
     if (_tokens.size() <= 1) {    // Tokens only contains ["component"]
         logger.err("ERROR") << " at line " << _tokens.front().line_nb << " char " << _tokens.front().char_nb << ": '"
                             << _tokens.front().value << "'";
-        throw UnexpectedEOFException("Expected component name");
+        throw UnexpectedEOFException("Expected new declaration");
     }
     Token last = _tokens.front();
     result.line_nb = last.line_nb;
@@ -320,7 +320,7 @@ void Parser::consumeComponentToken(Node &result, TokenType expectedType, NodeTyp
     if (_tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
-        throw UnexpectedEOFException("Expected component name");
+        throw UnexpectedEOFException("Expected component property type or end of declaration");
     }
     if (_tokens.front().type != expectedType) {
         logger.err("ERROR") << " at line " << _tokens.front().line_nb << " char " << _tokens.front().char_nb << ": '"
@@ -532,8 +532,8 @@ void Parser::consumeSystemBlock(Node &result, Token &lastToken)
 
     expectSystemToken(TokenType::Indent, lastToken, true);                     // start of block
     while (_tokens.size() > 0 && _tokens.front().type != TokenType::Dedent)    // loop over block
-        consumeSystemStatement(result, lastToken);            // recursively consume all statements in the block
-    expectSystemToken(TokenType::Dedent, lastToken, true);    // end of block
+        consumeSystemStatement(result, lastToken);    // recursively consume all statements in the block
+    if (_tokens.size() != 0) expectSystemToken(TokenType::Dedent, lastToken, true);    // end of block
 }
 void Parser::consumeSystemVariable(Node &result, Token &lastToken)
 {    // consume a variable and append it to children node

@@ -6,7 +6,7 @@ function(fetch_boost_library library)
 FetchContent_Declare(
     boost_${library}
     GIT_REPOSITORY https://github.com/boostorg/${library}.git
-    GIT_TAG boost-1.77.0
+    GIT_TAG boost-1.79.0
 )
 if (NOT boost_${library}_POPULATED)
     message(STATUS "Populating Boost ${library}")
@@ -37,7 +37,7 @@ fetch_boost_library(io)
 FetchContent_Declare(
     nlohmann_json
     GIT_REPOSITORY https://github.com/nlohmann/json.git
-    GIT_TAG v3.10.4
+    GIT_TAG v3.10.5
 )
 if (NOT nlohmann_json_POPULATED)
     message(STATUS "Populating json")

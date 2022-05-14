@@ -25,13 +25,13 @@ Engine::Engine(): m_camera(builtins::Camera(glm::vec3(0, 200, 500)))
     m_vulkan_application.addRenderer<pivot::graphics::CullingRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::GraphicsRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::ImGuiRenderer>();
+    m_vulkan_application.init();
 }
 
 void Engine::run()
 {
 
     float dt = 0.0f;
-    m_vulkan_application.init();
     FrameLimiter<60> fpsLimiter;
     while (!m_vulkan_application.window.shouldClose()) {
         auto startTime = std::chrono::high_resolution_clock::now();
@@ -130,10 +130,8 @@ ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
     }
     auto scene_json = nlohmann::json::parse(scene_file);
     auto scene = Scene::load(scene_json, m_component_index, m_system_index);
-    for (auto &asset: scene_json["assets"]) {
-        auto assetPath = path.parent_path() / asset.get<std::string>();
-        m_vulkan_application.assetStorage.addAsset(assetPath);
-    }
+    m_vulkan_application.assetStorage.setAssetDirectory(path.parent_path());
+    for (auto &asset: scene_json["assets"]) m_vulkan_application.assetStorage.addAsset(asset.get<std::string>());
     m_vulkan_application.buildAssetStorage();
     return this->registerScene(std::move(scene));
 }

@@ -116,6 +116,8 @@ void executeSystem(const Node &systemEntry, const systems::Description &desc,
         componentIndex++;    // go to next component
     }
     stack.push(desc.entityName, inputEntity);
+    // Push payload to stack
+    stack.push(trigger.event.description.payloadName, trigger.event.payload);
 
     for (const Node &statement: systemEntry.children) {    // execute all statements
         executeStatement(statement, stack);

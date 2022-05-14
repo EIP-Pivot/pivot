@@ -49,10 +49,6 @@ public:
     using AssetHandler = bool (AssetStorage::*)(const std::filesystem::path &);
 
 public:
-    /// name of the fallback texture if missing
-    static constexpr auto missing_texture_name = "internal/missing_texture";
-    /// name of the default material if missing
-    static constexpr auto missing_material_name = "internal/missing_material";
 
     /// List of supported texture extensions
     static const std::unordered_map<std::string, AssetHandler> supportedTexture;
@@ -130,6 +126,12 @@ private:
         std::unordered_map<std::string, std::filesystem::path> texturePaths;
     };
 
+    /// name of the fallback texture if missing
+    static constexpr auto missing_texture_name = "internal/missing_texture";
+    /// name of the default material if missing
+    static constexpr auto missing_material_name = "internal/missing_material";
+    /// name of the default quad mesh
+    static constexpr auto quad_mesh = "internal/quad_mesh";
 public:
     /// Constructor
     AssetStorage(VulkanBase &device);

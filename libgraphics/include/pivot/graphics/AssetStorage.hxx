@@ -298,7 +298,7 @@ private:
 namespace loaders
 {
     /// @brief The function signature of an asset handler
-    using AssetHandler = bool (*)(const std::filesystem::path &, AssetStorage::CPUStorage &);
+    using AssetHandler = std::function<bool(const std::filesystem::path &, AssetStorage::CPUStorage &)>;
 
     /// Load a .obj file
     bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);

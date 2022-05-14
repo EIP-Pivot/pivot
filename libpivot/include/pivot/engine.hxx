@@ -28,6 +28,8 @@ public:
     void saveScene(ecs::SceneManager::SceneId id, const std::filesystem::path &path);
     ecs::SceneManager::SceneId loadScene(const std::filesystem::path &path);
 
+    void loadScript(const std::filesystem::path &path);
+
     static constexpr float fov = 80;
 
 protected:

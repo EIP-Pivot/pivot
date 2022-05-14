@@ -144,4 +144,6 @@ ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
     m_vulkan_application.buildAssetStorage();
     return this->registerScene(std::move(scene));
 }
+
+void Engine::loadScript(const std::filesystem::path &path) { m_scripting_engine.loadFile(path, false, true); }
 }    // namespace pivot

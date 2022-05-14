@@ -255,7 +255,7 @@ void Parser::tokens_from_file(const std::string &file, bool isContent, bool verb
         if (lcursor < line.size()) {    // TODO : handle last token more elegantly ?
             std::string tokenStr = line.substr(lcursor, rcursor - lcursor);
             bool isLiteral = false;
-            try {    // if token is a literal number, store it as that
+            try {                       // if token is a literal number, store it as that
                 std::stod(tokenStr);    // check integral part is a number
                 _tokens.push(Token{
                     .type = TokenType::LiteralNumber, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});

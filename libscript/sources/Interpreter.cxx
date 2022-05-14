@@ -122,6 +122,14 @@ void executeSystem(const Node &systemEntry, const systems::Description &desc,
     for (const Node &statement: systemEntry.children) {    // execute all statements
         executeStatement(statement, stack);
     }
+
+    // Push stack data to the component array
+    const data::Record &newInputEntity = std::get<data::Record>(stack.find(desc.entityName));
+    componentIndex = 0;
+    for (const std::string &componentString: desc.systemComponents) {
+        entity[componentIndex].set(newInputEntity.at(componentString));
+        componentIndex++;
+    }
 }
 
 // Private functions (never called elsewhere than this file and tests)

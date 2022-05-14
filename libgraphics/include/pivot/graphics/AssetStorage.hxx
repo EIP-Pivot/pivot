@@ -104,7 +104,9 @@ public:
     /// @copydoc BuildFlagBits
     using BuildFlags = Flags<BuildFlagBits>;
 
+    /// Represent the loaded assets before being uploaded to the GPU
     struct CPUStorage {
+        /// @cond
         CPUStorage();
 
         std::unordered_map<std::string, Model> modelStorage;
@@ -115,6 +117,7 @@ public:
         IndexedStorage<std::string, CPUMaterial> materialStaging;
         std::unordered_map<std::string, std::filesystem::path> modelPaths;
         std::unordered_map<std::string, std::filesystem::path> texturePaths;
+        /// @endcond
     };
 
     /// name of the fallback texture if missing
@@ -297,17 +300,19 @@ namespace loaders
     /// @brief The function signature of an asset handler
     using AssetHandler = bool (*)(const std::filesystem::path &, AssetStorage::CPUStorage &);
 
-    /// Load models
+    /// Load a .obj file
     bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
+    /// Load a .gltf file
     bool loadGltfModel(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
 
-    /// Load texture
+    /// Load a .png file
     bool loadPngTexture(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
+    /// Load a .jpg file
     bool loadJpgTexture(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
+    /// Load a .ktx file
     bool loadKtxImage(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
 
     /// List of supported texture extensions
-
     const std::unordered_map<std::string, loaders::AssetHandler> supportedTexture = {
         {".png", &loadPngTexture},
         {".jpg", &loadJpgTexture},

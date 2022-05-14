@@ -29,6 +29,7 @@ public:
     ecs::SceneManager::SceneId loadScene(const std::filesystem::path &path);
 
     void loadScript(const std::filesystem::path &path);
+    void loadAsset(const std::filesystem::path &path);
 
     static constexpr float fov = 80;
 

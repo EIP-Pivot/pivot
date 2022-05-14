@@ -141,9 +141,15 @@ ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
         auto scriptPath = scene_base_path / script.get<std::string>();
         m_scripting_engine.loadFile(scriptPath, false, true);
     }
-    m_vulkan_application.buildAssetStorage();
+    m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eClear);
     return this->registerScene(std::move(scene));
 }
 
 void Engine::loadScript(const std::filesystem::path &path) { m_scripting_engine.loadFile(path, false, true); }
+
+void Engine::loadAsset(const std::filesystem::path &path)
+{
+    m_vulkan_application.assetStorage.addAsset(path);
+    m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
+}
 }    // namespace pivot

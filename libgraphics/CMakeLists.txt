@@ -5,7 +5,7 @@ find_package(Vulkan REQUIRED)
 FetchContent_Declare(
     glfw
     GIT_REPOSITORY https://github.com/glfw/glfw.git
-    GIT_TAG 814b7929c5add4b0541ccad26fb81f28b71dc4d8
+    GIT_TAG 3.3.7
 )
 if (NOT glfw_POPULATED)
     message(STATUS "Populating glfw")
@@ -34,7 +34,7 @@ endif()
 FetchContent_Declare(
     tinygltf
     GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
-    GIT_TAG e7f1ff5c59d3ca2489923beb239bdf93d863498f
+    GIT_TAG 912856823dcb2badf2074055b6d006f7bb3800b8
 )
 if (NOT tinygltf_POPULATED)
     message(STATUS "Populating tinygltf")
@@ -55,7 +55,7 @@ endif()
 FetchContent_Declare(
     vma
     GIT_REPOSITORY https://github.com/YaaZ/VulkanMemoryAllocator-Hpp.git
-    GIT_TAG 05d9e5419a78cd178a4f3cfd54475b556d9e50df
+    GIT_TAG da6ea76eecf12a1decc76f58a3e096bcc555bd94
 )
 if (NOT vma_POPULATED)
     message(STATUS "Populating vma")
@@ -92,7 +92,7 @@ endif()
 FetchContent_Declare(
     tinyobjloader
     GIT_REPOSITORY https://github.com/tinyobjloader/tinyobjloader.git
-    GIT_TAG 95fe4ef41de28ce6b0aef00bfdd7b788641a15a6
+    GIT_TAG 8322e00ae685ea623ab6ac5a6cebcfa2d22fbf93
 )
 if (NOT tinyobjloader_POPULATED)
     message(STATUS "Populating tinyobjloader")

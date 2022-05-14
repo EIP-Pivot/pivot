@@ -26,8 +26,6 @@ Engine::Engine()
     m_vulkan_application.addRenderer<pivot::graphics::CullingRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::GraphicsRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::ImGuiRenderer>();
-
-    m_vulkan_application.init();
 }
 
 void Engine::run()
@@ -35,6 +33,8 @@ void Engine::run()
 
     float dt = 0.0f;
     FrameLimiter<60> fpsLimiter;
+    // FIXME: Move to constructor when default mesh is added
+    m_vulkan_application.init();
     while (!m_vulkan_application.window.shouldClose()) {
         auto startTime = std::chrono::high_resolution_clock::now();
         m_vulkan_application.window.pollEvent();

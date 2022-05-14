@@ -8,6 +8,8 @@
 
 #include <pivot/graphics/VulkanApplication.hxx>
 
+#include <pivot/script/Engine.hxx>
+
 #include <pivot/builtins/components/RenderObject.hxx>
 
 namespace pivot
@@ -33,6 +35,7 @@ protected:
     ecs::event::Index m_event_index;
     ecs::systems::Index m_system_index;
     graphics::VulkanApplication m_vulkan_application;
+    ecs::script::Engine m_scripting_engine;
     builtins::Camera m_camera;
     bool m_paused = true;
 

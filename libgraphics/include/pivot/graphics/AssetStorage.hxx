@@ -45,17 +45,6 @@ public:
     /// Error type for the AssetStorage
     LOGIC_ERROR(AssetStorage);
 
-    /// @brief The function signature of an asset handler
-    using AssetHandler = bool (AssetStorage::*)(const std::filesystem::path &);
-
-public:
-
-    /// List of supported texture extensions
-    static const std::unordered_map<std::string, AssetHandler> supportedTexture;
-
-    /// List of supported object extensions
-    static const std::unordered_map<std::string, AssetHandler> supportedObject;
-
     /// @brief Represent a mesh in the buffers
     struct Mesh {
         /// Starting offset of the mesh in the vertex buffer
@@ -115,9 +104,11 @@ public:
     /// @copydoc BuildFlagBits
     using BuildFlags = Flags<BuildFlagBits>;
 
-private:
     struct CPUStorage {
         CPUStorage();
+
+        std::unordered_map<std::string, Model> modelStorage;
+        std::unordered_map<std::string, Prefab> prefabStorage;
         std::vector<Vertex> vertexStagingBuffer;
         std::vector<std::uint32_t> indexStagingBuffer;
         IndexedStorage<std::string, CPUTexture> textureStaging;
@@ -132,6 +123,7 @@ private:
     static constexpr auto missing_material_name = "internal/missing_material";
     /// name of the default quad mesh
     static constexpr auto quad_mesh = "internal/quad_mesh";
+
 public:
     /// Constructor
     AssetStorage(VulkanBase &device);
@@ -299,6 +291,36 @@ private:
     AllocatedBuffer<gpu_object::AABB> AABBBuffer;
     AllocatedBuffer<gpu_object::Material> materialBuffer;
 };
+
+namespace loaders
+{
+    /// @brief The function signature of an asset handler
+    using AssetHandler = bool (*)(const std::filesystem::path &, AssetStorage::CPUStorage &);
+
+    /// Load models
+    bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
+    bool loadGltfModel(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
+
+    /// Load texture
+    bool loadPngTexture(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
+    bool loadJpgTexture(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
+    bool loadKtxImage(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
+
+    /// List of supported texture extensions
+
+    const std::unordered_map<std::string, loaders::AssetHandler> supportedTexture = {
+        {".png", &loadPngTexture},
+        {".jpg", &loadJpgTexture},
+        {".ktx", &loadKtxImage},
+    };
+
+    /// List of supported object extensions
+    const std::unordered_map<std::string, AssetHandler> supportedObject = {
+        {".obj", &loadObjModel},
+        {".gltf", &loadGltfModel},
+    };
+
+}    // namespace loaders
 
 #ifndef PIVOT_ASSETSTORAGE_TEMPLATE_INITIALIZED
     #define PIVOT_ASSETSTORAGE_TEMPLATE_INITIALIZED

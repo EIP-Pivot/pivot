@@ -4,10 +4,10 @@
 
 #include <stb_image.h>
 
-namespace pivot::graphics
+namespace pivot::graphics::loaders
 {
 
-bool AssetStorage::loadPngTexture(const std::filesystem::path &path)
+bool loadPngTexture(const std::filesystem::path &path, AssetStorage::CPUStorage &storage)
 {
     DEBUG_FUNCTION
     int texWidth, texHeight, texChannels;
@@ -23,15 +23,15 @@ bool AssetStorage::loadPngTexture(const std::filesystem::path &path)
     std::memcpy(image.data(), pixels, imageSize);
     stbi_image_free(pixels);
 
-    cpuStorage.textureStaging.add(path.stem().string(), CPUTexture{
-                                                            .image = std::move(image),
-                                                            .size =
-                                                                {
-                                                                    .width = static_cast<uint32_t>(texWidth),
-                                                                    .height = static_cast<uint32_t>(texHeight),
-                                                                    .depth = 1,
-                                                                },
-                                                        });
+    storage.textureStaging.add(path.stem().string(), {
+                                                         .image = std::move(image),
+                                                         .size =
+                                                             {
+                                                                 .width = static_cast<uint32_t>(texWidth),
+                                                                 .height = static_cast<uint32_t>(texHeight),
+                                                                 .depth = 1,
+                                                             },
+                                                     });
     return true;
 }
 

@@ -32,12 +32,17 @@ void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
         cpuStorage.modelPaths.insert(modelPaths.begin(), modelPaths.end());
         cpuStorage.texturePaths.insert(texturePaths.begin(), texturePaths.end());
     }
+    /// Model must be loaded first, as they may add new texture to load
     for (const auto &i: cpuStorage.modelPaths) {
         if (!loadModel(i.second)) logger.warn("Asset Storage") << "Model failed to load: " << i.second;
     }
     for (const auto &i: cpuStorage.texturePaths) {
         if (!loadTexture(i.second)) logger.warn("Asset Storage") << "Texture failed to load: " << i.second;
     }
+    modelStorage.swap(cpuStorage.modelStorage);
+    prefabStorage.swap(cpuStorage.prefabStorage);
+    modelPaths.swap(cpuStorage.modelPaths);
+    texturePaths.swap(cpuStorage.texturePaths);
 
     logger.info("Asset Storage") << prefabStorage.size() << " prefab loaded";
     logger.info("Asset Storage") << "Pushing " << modelStorage.size() << " models onto the GPU";
@@ -51,8 +56,6 @@ void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
 
     createDescriptorSet(builder);
 
-    modelPaths.swap(cpuStorage.modelPaths);
-    texturePaths.swap(cpuStorage.texturePaths);
     cpuStorage = {};
 }
 

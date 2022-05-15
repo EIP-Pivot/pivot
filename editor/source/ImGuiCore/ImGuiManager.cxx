@@ -105,7 +105,7 @@ void ImGuiManager::loadScript(pivot::Engine &engine)
     if (ImGui::Button("Load Script")) {
         NFD::Guard nfd_guard;
         NFD::UniquePath scriptPath;
-        nfdfilteritem_t filterItemScript[] = {{"Script", ".pivotscript"}};
+        nfdfilteritem_t filterItemScript[] = {{"PivotScript", "pivotscript"}};
         auto resultSave = NFD::OpenDialog(scriptPath, filterItemScript, 1);
 
         switch (resultSave) {

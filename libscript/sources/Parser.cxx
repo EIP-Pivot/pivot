@@ -627,13 +627,22 @@ void Parser::consumeSystemExpression(Node &result, Token &lastToken)
     // We will single-traverse the expression, and translate it to a postfix architecture
     // This takes care of precedence of operation and eases the work of the interpreter
     // The postfix result is represented as the result's children
+    int parenthesesCounts = 0;
     std::stack<Token> _stack;    // storage for operators during postfix
-    while (_tokens.size() > 0 && _tokens.front().line_nb == result.line_nb &&
-           _tokens.front().value != ",") {    // an expression runs until the next line, or until stopping symbol
-        if (_tokens.front().type != TokenType::Symbol)
-            consumeSystemVariable(result, lastToken);    // consume operand as variable into postfix result
-        if (_tokens.empty() || _tokens.front().line_nb != result.line_nb ||
-            _tokens.front().value == ",") {    // no more tokens/operators, end of expression
+    while (!_tokens.empty() && _tokens.front().line_nb == result.line_nb && _tokens.front().value != "," &&
+           (_tokens.front().value != ")" || parenthesesCounts != 0)) {    // an expression runs until the next line
+                                                                          // or until stopping symbol (','
+                                                                          //  or ')' that hasn't been opened)
+        if (_tokens.front().type != TokenType::Symbol) {
+            // consumeSystemVariable(result, lastToken);    // consume operand as variable into postfix result
+            // if (!_tokens.empty() && _tokens.front().value == "(") {
+            //     std::cout << "function call " << std::endl;
+            // }
+            consumeSystemVarOrFunc(result, lastToken);
+        }
+        if (_tokens.empty() || _tokens.front().line_nb != result.line_nb || _tokens.front().value == "," ||
+            (_tokens.front().value == ")" &&
+             parenthesesCounts == 0)) {    // no more tokens/operators, end of expression
             while (
                 !_stack.empty()) {    // At the end of infix expression, we push all stack operators into postfix result
                 result.children.push_back(Node{.type = NodeType::Operator,
@@ -651,10 +660,12 @@ void Parser::consumeSystemExpression(Node &result, Token &lastToken)
             throw UnexpectedTokenTypeException("Expected operator symbol or end of expression");
         }
         if (_tokens.front().value == "(") {    // opening parentheses
+            parenthesesCounts++;               // count opening parentheses
             _stack.push(_tokens.front());
             lastToken = _tokens.front();
             _tokens.pop();                            // delete parentheses token
         } else if (_tokens.front().value == ")") {    // closing parentheses
+            parenthesesCounts--;                      // un-count opening parentheses
             while (!_stack.empty() &&
                    _stack.top().value !=
                        "(") {    // pop all operators to postfix result until innermost opening parentheses
@@ -709,8 +720,9 @@ void Parser::consumeSystemFuncParams(Node &result, Token &lastToken)
     // Function parameters is either nothing, or a list of expressions, separated by commas, until a ')' symbol
     // TODO : handle parentheses '(' ')'
     while (_tokens.size() > 0 && _tokens.front().value != ")") {    // an expression runs until a ')' symbol
-        consumeSystemVariable(paramsResult, lastToken);             // consume variable
-        if (_tokens.empty() || _tokens.front().value == ")")        // no more variables, end of expression
+        // consumeSystemVariable(paramsResult, lastToken);             // consume variable
+        consumeSystemExpression(paramsResult, lastToken);
+        if (_tokens.empty() || _tokens.front().value == ")")    // no more variables, end of expression
             break;
         if (_tokens.front().value != ",") {    // token is not an comma
             logger.err("ERROR") << " at line " << _tokens.front().line_nb << " char " << _tokens.front().char_nb
@@ -724,6 +736,25 @@ void Parser::consumeSystemFuncParams(Node &result, Token &lastToken)
     }
     expectSystemTokenValue(")", lastToken, true);
     result.children.push_back(paramsResult);
+}
+
+void Parser::consumeSystemVarOrFunc(Node &result, Token &lastToken)
+{
+    if (_tokens.empty()) {
+        logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
+                            << lastToken.value << "'";
+        throw UnexpectedEOFException("Expected variable or function call");
+    }
+    Token &token = _tokens.front();
+    Node resultNode = {.line_nb = token.line_nb, .char_nb = token.char_nb};
+    consumeSystemVariable(resultNode, lastToken);              // expect a variable
+    if (!_tokens.empty() && _tokens.front().value == "(") {    // function call
+        resultNode.type = NodeType::FunctionCall;
+        consumeSystemFuncParams(resultNode, lastToken);
+        result.children.push_back(resultNode);                   // push a function call node
+    } else {                                                     // only variable
+        result.children.push_back(resultNode.children.at(0));    // push a variable node
+    }
 }
 
 void Parser::expectSystemToken(TokenType expectedType, Token &lastToken, bool consume)

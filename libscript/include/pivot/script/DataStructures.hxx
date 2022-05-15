@@ -42,6 +42,7 @@ enum class NodeType {
     LiteralNumberVariable,
     DoubleQuotedStringVariable,
     Boolean,
+    FunctionCall,
     FunctionParams,
     Operator,
     Type,

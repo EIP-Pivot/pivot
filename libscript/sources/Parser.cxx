@@ -223,8 +223,15 @@ void Parser::tokens_from_file(const std::string &file, bool isContent, bool verb
                                        .char_nb = lcursor + 1});
                     isLiteral = true;
                 } catch (const std::invalid_argument &) {    // token is not a number
-                    _tokens.push(Token{
-                        .type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
+                    if (tokenStr == "True" || tokenStr == "False") {
+                        _tokens.push(Token{
+                            .type = TokenType::Boolean, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
+                    } else {
+                        _tokens.push(Token{.type = TokenType::Identifier,
+                                           .value = tokenStr,
+                                           .line_nb = lineNb,
+                                           .char_nb = lcursor + 1});
+                    }
                 } catch (const std::out_of_range &) {    // token is invalid number
                     // std::cerr << std::format("Token {} is too big to go into a double. Will be stored as literal
                     // string.", tokenStr) << std::endl;
@@ -246,21 +253,29 @@ void Parser::tokens_from_file(const std::string &file, bool isContent, bool verb
             }
         }
         if (lcursor < line.size()) {    // TODO : handle last token more elegantly ?
-            std::string tokenStr = line.substr(lcursor, line.size() - lcursor);
-            try {    // if token is a literal number, store it as that
-                std::stod(tokenStr);
+            std::string tokenStr = line.substr(lcursor, rcursor - lcursor);
+            bool isLiteral = false;
+            try {                       // if token is a literal number, store it as that
+                std::stod(tokenStr);    // check integral part is a number
                 _tokens.push(Token{
                     .type = TokenType::LiteralNumber, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
+                isLiteral = true;
             } catch (const std::invalid_argument &) {    // token is not a number
-                _tokens.push(
-                    Token{.type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
+                if (tokenStr == "True" || tokenStr == "False") {
+                    _tokens.push(Token{
+                        .type = TokenType::Boolean, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
+                } else {
+                    _tokens.push(Token{
+                        .type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
+                }
             } catch (const std::out_of_range &) {    // token is invalid number
                 // std::cerr << std::format("Token {} is too big to go into a double. Will be stored as literal
                 // string.", tokenStr) << std::endl;
                 logger.warn("Token ")
                     << tokenStr
-                    << " is too big to go into a double. Will be stored as literal string.";    // format not available
-                                                                                                // in c++20 gcc yet
+                    << " is too big to go into a double. Will be stored as literal string.";    // format not
+                                                                                                // available in
+                                                                                                // c++20 gcc yet
                 _tokens.push(
                     Token{.type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
             }
@@ -279,7 +294,7 @@ Node Parser::consumeComponent()
     if (_tokens.size() <= 1) {    // Tokens only contains ["component"]
         logger.err("ERROR") << " at line " << _tokens.front().line_nb << " char " << _tokens.front().char_nb << ": '"
                             << _tokens.front().value << "'";
-        throw UnexpectedEOFException("Expected component name");
+        throw UnexpectedEOFException("Expected new declaration");
     }
     Token last = _tokens.front();
     result.line_nb = last.line_nb;
@@ -320,7 +335,7 @@ void Parser::consumeComponentToken(Node &result, TokenType expectedType, NodeTyp
     if (_tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
-        throw UnexpectedEOFException("Expected component name");
+        throw UnexpectedEOFException("Expected component property type or end of declaration");
     }
     if (_tokens.front().type != expectedType) {
         logger.err("ERROR") << " at line " << _tokens.front().line_nb << " char " << _tokens.front().char_nb << ": '"
@@ -532,8 +547,8 @@ void Parser::consumeSystemBlock(Node &result, Token &lastToken)
 
     expectSystemToken(TokenType::Indent, lastToken, true);                     // start of block
     while (_tokens.size() > 0 && _tokens.front().type != TokenType::Dedent)    // loop over block
-        consumeSystemStatement(result, lastToken);            // recursively consume all statements in the block
-    expectSystemToken(TokenType::Dedent, lastToken, true);    // end of block
+        consumeSystemStatement(result, lastToken);    // recursively consume all statements in the block
+    if (_tokens.size() != 0) expectSystemToken(TokenType::Dedent, lastToken, true);    // end of block
 }
 void Parser::consumeSystemVariable(Node &result, Token &lastToken)
 {    // consume a variable and append it to children node
@@ -547,6 +562,11 @@ void Parser::consumeSystemVariable(Node &result, Token &lastToken)
     if (token.type == TokenType::LiteralNumber) {    // literal number
         variableResult.type = NodeType::LiteralNumberVariable;
         variableResult.value = token.value;    // store the value directly
+        lastToken = _tokens.front();
+        _tokens.pop();
+    } else if (token.type == TokenType::Boolean) {    // Boolean, "True" "False"
+        variableResult.type = NodeType::Boolean;
+        variableResult.value = token.value;
         lastToken = _tokens.front();
         _tokens.pop();
     } else if (token.type == TokenType::DoubleQuotedString) {    // "string"

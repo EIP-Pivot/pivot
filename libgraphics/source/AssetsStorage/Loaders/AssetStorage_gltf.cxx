@@ -105,7 +105,7 @@ static inline void fillIndexBuffer(const tinygltf::Buffer &buffer, const tinyglt
     indexBuffer.insert(indexBuffer.end(), buf.begin(), buf.end());
 }
 
-namespace pivot::graphics
+namespace pivot::graphics::loaders
 {
 
 static std::vector<std::pair<std::string, AssetStorage::Model>>
@@ -247,28 +247,28 @@ loadGltfMaterial(const IndexedStorage<std::string, AssetStorage::CPUTexture> &te
     return std::make_pair(mat.name, material);
 }
 
-bool AssetStorage::loadGltfModel(const std::filesystem::path &path)
+bool loadGltfModel(const std::filesystem::path &path, AssetStorage::CPUStorage &storage)
 try {
     DEBUG_FUNCTION
 
     tinygltf::Model gltfModel;
     tinygltf::TinyGLTF gltfContext;
     std::string error, warning;
-    Prefab prefab;
+    AssetStorage::Prefab prefab;
 
     bool isLoaded = gltfContext.LoadASCIIFromFile(&gltfModel, &error, &warning, path.string());
     if (!warning.empty()) logger.warn("Asset Storage/GLTF") << warning;
     if (!error.empty()) logger.err("Asset Storage/GLTF") << error;
     if (!isLoaded) return false;
 
-    const auto offset = cpuStorage.textureStaging.size();
+    const auto offset = storage.textureStaging.size();
     for (const auto &image: gltfModel.images) {
         const auto filepath = path.parent_path() / image.uri;
-        loadTexture(filepath);
+        supportedTexture.at(filepath.extension().string())(filepath, std::ref(storage));
     }
     for (const auto &material: gltfModel.materials) {
-        const auto mat = loadGltfMaterial(cpuStorage.textureStaging, gltfModel, material, offset);
-        cpuStorage.materialStaging.add(std::move(mat));
+        const auto mat = loadGltfMaterial(storage.textureStaging, gltfModel, material, offset);
+        storage.materialStaging.add(std::move(mat));
     }
     if (gltfModel.scenes.empty()) {
         logger.warn("Asset Storage/GLTF") << "GLTF file does not contains scene.";
@@ -277,21 +277,21 @@ try {
     const auto &scene = gltfModel.scenes[0];
     for (const auto &idx: scene.nodes) {
         const auto &node = gltfModel.nodes.at(idx);
-        for (const auto &i: loadGltfNode(gltfModel, node, cpuStorage.vertexStagingBuffer, cpuStorage.indexStagingBuffer,
-                                         glm::mat4(1.0f))) {
+        for (const auto &i:
+             loadGltfNode(gltfModel, node, storage.vertexStagingBuffer, storage.indexStagingBuffer, glm::mat4(1.0f))) {
             prefab.modelIds.push_back(i.first);
-            modelStorage.insert(i);
+            storage.modelStorage.insert(i);
         }
     }
 
-    prefabStorage.insert(std::make_pair(path.stem().string(), prefab));
+    storage.prefabStorage[path.stem().string()] = prefab;
     return true;
 } catch (const PivotException &ase) {
     logger.err(ase.getScope()) << "Error while loaded GLTF file : " << ase.what();
     return false;
 } catch (const std::logic_error &le) {
-    logger.err("THROW/Asset Storage/Invalid GLTF file") << "The GLTF file is malformed. Reason :" << le.what();
+    logger.err("THROW/Asset Storage/Invalid GLTF file") << "The GLTF file is malformed. Reason : " << le.what();
     return false;
 }
 
-}    // namespace pivot::graphics
+}    // namespace pivot::graphics::loaders

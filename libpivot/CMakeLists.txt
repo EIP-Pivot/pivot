@@ -13,6 +13,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC include/)
 target_link_libraries(${PROJECT_NAME} PUBLIC
   pivot-graphics
   pivot-ecs
+  pivot-script
   )
 
 build_tests(${PROJECT_NAME}

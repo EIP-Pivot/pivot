@@ -45,21 +45,6 @@ public:
     /// Error type for the AssetStorage
     LOGIC_ERROR(AssetStorage);
 
-    /// @brief The function signature of an asset handler
-    using AssetHandler = bool (AssetStorage::*)(const std::filesystem::path &);
-
-public:
-    /// name of the fallback texture if missing
-    static constexpr auto missing_texture_name = "internal/missing_texture";
-    /// name of the default material if missing
-    static constexpr auto missing_material_name = "internal/missing_material";
-
-    /// List of supported texture extensions
-    static const std::unordered_map<std::string, AssetHandler> supportedTexture;
-
-    /// List of supported object extensions
-    static const std::unordered_map<std::string, AssetHandler> supportedObject;
-
     /// @brief Represent a mesh in the buffers
     struct Mesh {
         /// Starting offset of the mesh in the vertex buffer
@@ -119,16 +104,28 @@ public:
     /// @copydoc BuildFlagBits
     using BuildFlags = Flags<BuildFlagBits>;
 
-private:
+    /// Represent the loaded assets before being uploaded to the GPU
     struct CPUStorage {
+        /// @cond
         CPUStorage();
+
+        std::unordered_map<std::string, Model> modelStorage;
+        std::unordered_map<std::string, Prefab> prefabStorage;
         std::vector<Vertex> vertexStagingBuffer;
         std::vector<std::uint32_t> indexStagingBuffer;
         IndexedStorage<std::string, CPUTexture> textureStaging;
         IndexedStorage<std::string, CPUMaterial> materialStaging;
         std::unordered_map<std::string, std::filesystem::path> modelPaths;
         std::unordered_map<std::string, std::filesystem::path> texturePaths;
+        /// @endcond
     };
+
+    /// name of the fallback texture if missing
+    static constexpr auto missing_texture_name = "internal/missing_texture";
+    /// name of the default material if missing
+    static constexpr auto missing_material_name = "internal/missing_material";
+    /// name of the default quad mesh
+    static constexpr auto quad_mesh = "internal/quad_mesh";
 
 public:
     /// Constructor
@@ -297,6 +294,38 @@ private:
     AllocatedBuffer<gpu_object::AABB> AABBBuffer;
     AllocatedBuffer<gpu_object::Material> materialBuffer;
 };
+
+namespace loaders
+{
+    /// @brief The function signature of an asset handler
+    using AssetHandler = std::function<bool(const std::filesystem::path &, AssetStorage::CPUStorage &)>;
+
+    /// Load a .obj file
+    bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
+    /// Load a .gltf file
+    bool loadGltfModel(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
+
+    /// Load a .png file
+    bool loadPngTexture(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
+    /// Load a .jpg file
+    bool loadJpgTexture(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
+    /// Load a .ktx file
+    bool loadKtxImage(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
+
+    /// List of supported texture extensions
+    const std::unordered_map<std::string, loaders::AssetHandler> supportedTexture = {
+        {".png", &loadPngTexture},
+        {".jpg", &loadJpgTexture},
+        {".ktx", &loadKtxImage},
+    };
+
+    /// List of supported object extensions
+    const std::unordered_map<std::string, AssetHandler> supportedObject = {
+        {".obj", &loadObjModel},
+        {".gltf", &loadGltfModel},
+    };
+
+}    // namespace loaders
 
 #ifndef PIVOT_ASSETSTORAGE_TEMPLATE_INITIALIZED
     #define PIVOT_ASSETSTORAGE_TEMPLATE_INITIALIZED

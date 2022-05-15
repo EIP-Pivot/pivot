@@ -4,7 +4,7 @@
 
 #include <tiny_obj_loader.h>
 
-namespace pivot::graphics
+namespace pivot::graphics::loaders
 {
 
 static std::pair<std::string, AssetStorage::CPUMaterial> loadMaterial(const tinyobj::material_t &material)
@@ -25,7 +25,7 @@ static std::pair<std::string, AssetStorage::CPUMaterial> loadMaterial(const tiny
     return std::make_pair(material.name, std::move(materia));
 }
 
-bool AssetStorage::loadObjModel(const std::filesystem::path &path)
+bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &storage)
 {
     DEBUG_FUNCTION
     auto base_dir = path.parent_path();
@@ -42,20 +42,21 @@ bool AssetStorage::loadObjModel(const std::filesystem::path &path)
     if (!loadSuccess) return false;
 
     for (const auto &m: materials) {
-        if (!m.diffuse_texname.empty() && cpuStorage.textureStaging.getIndex(m.diffuse_texname) == -1) {
-            loadTexture(base_dir / m.diffuse_texname);
+        if (!m.diffuse_texname.empty() && storage.textureStaging.getIndex(m.diffuse_texname) == -1) {
+            const auto filepath = base_dir / m.diffuse_texname;
+            supportedTexture.at(filepath.extension().string())(filepath, std::ref(storage));
         }
-        cpuStorage.materialStaging.add(loadMaterial(m));
+        storage.materialStaging.add(loadMaterial(m));
     }
 
     std::unordered_map<Vertex, uint32_t> uniqueVertices{};
-    Prefab prefab;
+    AssetStorage::Prefab prefab;
     for (const auto &shape: shapes) {
-        Model model{
+        AssetStorage::Model model{
             .mesh =
                 {
-                    .vertexOffset = static_cast<uint32_t>(cpuStorage.vertexStagingBuffer.size()),
-                    .indicesOffset = static_cast<uint32_t>(cpuStorage.indexStagingBuffer.size()),
+                    .vertexOffset = static_cast<uint32_t>(storage.vertexStagingBuffer.size()),
+                    .indicesOffset = static_cast<uint32_t>(storage.indexStagingBuffer.size()),
                 },
         };
         if (!shape.mesh.material_ids.empty() && shape.mesh.material_ids.at(0) >= 0) {
@@ -95,18 +96,18 @@ bool AssetStorage::loadObjModel(const std::filesystem::path &path)
 
             if (!uniqueVertices.contains(vertex)) {
                 uniqueVertices.insert(
-                    std::make_pair(vertex, cpuStorage.vertexStagingBuffer.size() - model.mesh.vertexOffset));
-                cpuStorage.vertexStagingBuffer.push_back(vertex);
+                    std::make_pair(vertex, storage.vertexStagingBuffer.size() - model.mesh.vertexOffset));
+                storage.vertexStagingBuffer.push_back(vertex);
             }
-            cpuStorage.indexStagingBuffer.push_back(uniqueVertices.at(vertex));
+            storage.indexStagingBuffer.push_back(uniqueVertices.at(vertex));
         }
-        model.mesh.indicesSize = cpuStorage.indexStagingBuffer.size() - model.mesh.indicesOffset;
-        model.mesh.vertexSize = cpuStorage.vertexStagingBuffer.size() - model.mesh.vertexOffset;
+        model.mesh.indicesSize = storage.indexStagingBuffer.size() - model.mesh.indicesOffset;
+        model.mesh.vertexSize = storage.vertexStagingBuffer.size() - model.mesh.vertexOffset;
         prefab.modelIds.push_back(shape.name);
-        modelStorage.insert({shape.name, model});
+        storage.modelStorage.insert({shape.name, model});
     }
-    prefabStorage.insert({path.stem().string(), prefab});
+    storage.prefabStorage.insert({path.stem().string(), prefab});
     return true;
 }
 
-}    // namespace pivot::graphics
+}    // namespace pivot::graphics::loaders

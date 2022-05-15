@@ -129,23 +129,38 @@ void extract_assets(const data::Value &value, std::set<std::string> &assets,
 }
 }    // namespace
 
-void Scene::save(const std::filesystem::path &path, std::optional<AssetTranslator> assetTranslator) const
+void Scene::save(const std::filesystem::path &path, std::optional<AssetTranslator> assetTranslator,
+                 std::optional<ScriptTranslator> scriptTranslator) const
 {
     // serialize scene
     nlohmann::json output;
     std::set<std::string> scriptUsed;
     std::set<std::string> assets;
+
+    auto addScript = [&scriptUsed, &scriptTranslator](const std::string &name) {
+        if (scriptTranslator) {
+            auto script = scriptTranslator.value()(name);
+            if (script.has_value()) scriptUsed.insert(script.value());
+        } else {
+            scriptUsed.insert(name);
+        }
+    };
+
     output["name"] = name;
     for (auto &[entity, _]: mEntityManager.getEntities()) {
         for (pivot::ecs::component::ComponentRef ref: mComponentManager.GetAllComponents(entity)) {
             auto &provenance = ref.description().provenance;
-            if (provenance.isExternalRessource()) scriptUsed.insert(provenance.getExternalRessource());
+            if (provenance.isExternalRessource()) addScript(provenance.getExternalRessource());
             output["components"][entity][ref.description().name] = nlohmann::json(ref.get());
             extract_assets(ref.get(), assets, assetTranslator);
         }
     }
     std::vector<std::string> systems;
-    for (auto &[systemName, _]: mSystemManager) { systems.push_back(systemName); }
+    for (auto &[systemName, systemDescription]: mSystemManager) {
+        if (systemDescription.provenance.isExternalRessource())
+            addScript(systemDescription.provenance.getExternalRessource());
+        systems.push_back(systemName);
+    }
     output["systems"] = systems;
     output["scripts"] = scriptUsed;
     output["assets"] = assets;

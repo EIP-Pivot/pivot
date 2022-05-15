@@ -116,9 +116,19 @@ void executeSystem(const Node &systemEntry, const systems::Description &desc,
         componentIndex++;    // go to next component
     }
     stack.push(desc.entityName, inputEntity);
+    // Push payload to stack
+    stack.push(trigger.event.description.payloadName, trigger.event.payload);
 
     for (const Node &statement: systemEntry.children) {    // execute all statements
         executeStatement(statement, stack);
+    }
+
+    // Push stack data to the component array
+    const data::Record &newInputEntity = std::get<data::Record>(stack.find(desc.entityName));
+    componentIndex = 0;
+    for (const std::string &componentString: desc.systemComponents) {
+        entity[componentIndex].set(newInputEntity.at(componentString));
+        componentIndex++;
     }
 }
 
@@ -439,8 +449,17 @@ data::Value valueOf(const Node &var, const Stack &stack)
         return data::Value(std::stod(var.value));
     else if (var.type == NodeType::DoubleQuotedStringVariable)
         return data::Value(var.value);
-    else if (var.type == NodeType::ExistingVariable) {    // Named variable
-        return stack.find(var.value);                     // find it in the stack
+    else if (var.type == NodeType::Boolean) {
+        if (var.value == "True")
+            return data::Value(true);
+        else if (var.value == "False")
+            return data::Value(false);
+        else {
+            logger.err("ERROR") << " with variable " << var.value;
+            throw std::invalid_argument("Unsupported Feature: A Boolean is either 'True' or 'False'.");
+        }
+    } else if (var.type == NodeType::ExistingVariable) {    // Named variable
+        return stack.find(var.value);                       // find it in the stack
     } else {
         logger.err("ERROR") << " with variable " << var.value;
         throw std::invalid_argument("Unsupported Feature: This type of variable is not supported yet.");

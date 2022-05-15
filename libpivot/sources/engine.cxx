@@ -26,6 +26,7 @@ Engine::Engine()
     m_vulkan_application.addRenderer<pivot::graphics::CullingRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::GraphicsRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::ImGuiRenderer>();
+    m_vulkan_application.init();
 }
 
 void Engine::run()
@@ -150,6 +151,7 @@ ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
         m_scripting_engine.loadFile(scriptPath.string(), false, true);
     }
     m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eClear);
+    m_vulkan_application.buildAssetStorage();
     return this->registerScene(std::move(scene));
 }
 

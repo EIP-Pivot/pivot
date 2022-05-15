@@ -41,7 +41,8 @@ const std::unordered_map<std::string, std::pair<BuiltinFunctionCallback, Paramet
     {"print",
      {interpreter::builtins::builtin_print,
       {std::numeric_limits<size_t>::max(),
-       {{data::BasicType::String, data::BasicType::Number, data::BasicType::Boolean}}}}}};
+       {{data::BasicType::String, data::BasicType::Number, data::BasicType::Integer, data::BasicType::Boolean,
+         data::BasicType::Asset, data::BasicType::Vec3}}}}}};
 
 // Public functions ( can be called anywhere )
 

@@ -1,8 +1,8 @@
-#include "pivot/script/Builtins.hxx"
-#include "Logger.hpp"
-#include "pivot/script/Exceptions.hxx"
-
+#include <Logger.hpp>
 #include <iostream>
+
+#include "pivot/script/Builtins.hxx"
+#include "pivot/script/Exceptions.hxx"
 
 namespace pivot::ecs::script::interpreter::builtins
 {
@@ -13,18 +13,34 @@ data::Value builtin_isPressed(const std::vector<data::Value> &params)
     return data::Value(true);
 }
 
-data::Value builtin_print(const std::vector<data::Value> &params)
+data::Value builtin_print(const std::vector<data::Value> &params) { return builtin_print_stream(params, std::cout); }
+
+data::Value builtin_print_stream(const std::vector<data::Value> &params, std::ostream &stream)
 {
+    bool first = true;
     for (const data::Value &param: params) {    // print has unlimited number of parameters
-        data::BasicType varType = std::get<data::BasicType>(param.type());
-        switch (varType) {
-            case data::BasicType::Number: std::cout << std::get<double>(param) << " "; break;
-            case data::BasicType::String: std::cout << std::get<std::string>(param) << " "; break;
-            case data::BasicType::Boolean: std::cout << (std::get<bool>(param) ? "true" : "false") << " "; break;
-            default: throw(std::runtime_error("Code branch shouldn't execute."));
-        }
+        std::visit(
+            [&first, &stream](auto &value) {
+                if (!first) { stream << " "; }
+                first = false;
+
+                using type = std::decay_t<decltype(value)>;
+                if constexpr (std::is_same_v<type, double> || std::is_same_v<type, std::string> ||
+                              std::is_same_v<type, int>) {
+                    stream << value;
+                } else if constexpr (std::is_same_v<type, bool>) {
+                    stream << std::boolalpha << value;
+                } else if constexpr (std::is_same_v<type, pivot::ecs::data::Asset>) {
+                    stream << "Asset(" << value.name << ")";
+                } else if constexpr (std::is_same_v<type, glm::vec3>) {
+                    stream << "vec3(" << value.x << "," << value.y << "," << value.z << ")";
+                } else {
+                    throw std::runtime_error("Code branch shouldn't execute.");
+                }
+            },
+            static_cast<const data::Value::variant &>(param));
     }
-    std::cout << "\n";
+    stream << std::endl;
     return data::Value();
 }
 

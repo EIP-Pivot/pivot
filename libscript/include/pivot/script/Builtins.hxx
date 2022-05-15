@@ -1,8 +1,9 @@
 #pragma once
 
-#include "pivot/ecs/Core/Data/value.hxx"
-
+#include <iostream>
 #include <vector>
+
+#include "pivot/ecs/Core/Data/value.hxx"
 
 namespace pivot::ecs::script::interpreter::builtins
 {
@@ -17,6 +18,9 @@ data::Value builtin_isPressed(const std::vector<data::Value> &params);
 // void	print(String/Number/Boolean param1, ...)
 //		print the parameters on a single line, ending with a newline
 data::Value builtin_print(const std::vector<data::Value> &params);
+
+/// Same as above but take a ostream to write to
+data::Value builtin_print_stream(const std::vector<data::Value> &params, std::ostream &stream);
 
 // Operators
 

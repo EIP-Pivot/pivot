@@ -3,8 +3,34 @@
 #include "pivot/graphics/DebugMacros.hxx"
 
 #include <Logger.hpp>
+#include <magic_enum.hpp>
 #include <stb_image.h>
 #include <stdexcept>
+
+static int translate_key(int key, int scancode)
+{
+    // https://github.com/ocornut/imgui/blob/60bea052a92cbb4a93b221002fdf04f0da3698e1/backends/imgui_impl_glfw.cpp#L294
+    if (key >= GLFW_KEY_KP_0 && key <= GLFW_KEY_KP_EQUAL) return key;
+    const char *key_name = glfwGetKeyName(key, scancode);
+    if (key_name && key_name[0] != 0 && key_name[1] == 0) {
+        const char char_names[] = "`-=[]\\,;\'./";
+        const int char_keys[] = {GLFW_KEY_GRAVE_ACCENT,  GLFW_KEY_MINUS,     GLFW_KEY_EQUAL, GLFW_KEY_LEFT_BRACKET,
+                                 GLFW_KEY_RIGHT_BRACKET, GLFW_KEY_BACKSLASH, GLFW_KEY_COMMA, GLFW_KEY_SEMICOLON,
+                                 GLFW_KEY_APOSTROPHE,    GLFW_KEY_PERIOD,    GLFW_KEY_SLASH, 0};
+
+        assert(std::size(char_names) == std::size(char_keys));
+        if (key_name[0] >= '0' && key_name[0] <= '9') {
+            key = GLFW_KEY_0 + (key_name[0] - '0');
+        } else if (key_name[0] >= 'A' && key_name[0] <= 'Z') {
+            key = GLFW_KEY_A + (key_name[0] - 'A');
+        } else if (key_name[0] >= 'a' && key_name[0] <= 'z') {
+            key = GLFW_KEY_A + (key_name[0] - 'a');
+        } else if (const char *p = std::strchr(char_names, key_name[0])) {
+            key = char_keys[p - char_names];
+        }
+    }
+    return key;
+}
 
 namespace pivot::graphics
 {
@@ -116,6 +142,15 @@ glm::ivec2 Window::updateSize() const noexcept
     return size;
 };
 
+Window::Key Window::getTrueKey(const Window::Key &ex) const noexcept
+{
+    auto key = magic_enum::enum_integer(ex);
+    auto translate = translate_key(key, 0);
+    auto true_key = magic_enum::enum_cast<Window::Key>(translate);
+    if (true_key.has_value()) return true_key.value();
+    return Key::UNKNOWN;
+}
+
 void Window::error_callback(int code, const char *msg) noexcept { logger.err("Window") << msg; }
 
 void Window::cursor_callback(GLFWwindow *win, double xpos, double ypos)
@@ -124,10 +159,10 @@ void Window::cursor_callback(GLFWwindow *win, double xpos, double ypos)
     if (window->mouseCallback) (*window->mouseCallback)(*window, glm::dvec2(xpos, ypos));
 }
 
-void Window::keyboard_callback(GLFWwindow *win, int key, int, int action, int)
+void Window::keyboard_callback(GLFWwindow *win, int key, int scancode, int action, int mods)
 {
     auto window = (Window *)glfwGetWindowUserPointer(win);
-    auto _key = static_cast<Window::Key>(key);
+    auto _key = static_cast<Window::Key>(translate_key(key, scancode));
 
     switch (action) {
         case GLFW_PRESS:

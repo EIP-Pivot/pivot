@@ -216,6 +216,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC logger
                                       PUBLIC ktx
                                       PUBLIC tinygltf
                                       PUBLIC stb
+                                      PUBLIC magic_enum
                                       PUBLIC Vulkan::Vulkan
 )
 

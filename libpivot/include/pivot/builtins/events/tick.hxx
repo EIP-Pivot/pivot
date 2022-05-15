@@ -8,5 +8,7 @@ inline const pivot::ecs::event::Description tick = {
     .name = "Tick",
     .entities = {},
     .payload = pivot::ecs::data::BasicType::Number,
+    .payloadName = "delta",
+    .provenance = pivot::ecs::Provenance::builtin(),
 };
 }

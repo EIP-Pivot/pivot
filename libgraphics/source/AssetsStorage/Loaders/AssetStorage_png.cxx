@@ -35,4 +35,4 @@ bool loadPngTexture(const std::filesystem::path &path, AssetStorage::CPUStorage 
     return true;
 }
 
-}    // namespace pivot::graphics
+}    // namespace pivot::graphics::loaders

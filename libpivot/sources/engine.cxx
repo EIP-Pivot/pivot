@@ -135,7 +135,7 @@ ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
 
     std::ifstream scene_file{path};
     if (!scene_file.is_open()) {
-        logger.err() << "Could not open scene file: " << strerror(errno);
+        logger.err() << "Could not open scene file: " << std::strerror(errno);
         return 1;
     }
     auto scene_json = nlohmann::json::parse(scene_file);
@@ -147,13 +147,13 @@ ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
     }
     for (auto &script: scene_json["scripts"]) {
         auto scriptPath = scene_base_path / script.get<std::string>();
-        m_scripting_engine.loadFile(scriptPath, false, true);
+        m_scripting_engine.loadFile(scriptPath.string(), false, true);
     }
     m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eClear);
     return this->registerScene(std::move(scene));
 }
 
-void Engine::loadScript(const std::filesystem::path &path) { m_scripting_engine.loadFile(path, false, true); }
+void Engine::loadScript(const std::filesystem::path &path) { m_scripting_engine.loadFile(path.string(), false, true); }
 
 void Engine::loadAsset(const std::filesystem::path &path)
 {

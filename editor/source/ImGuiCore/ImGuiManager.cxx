@@ -10,7 +10,7 @@
 #include <Logger.hpp>
 #include <nfd.hpp>
 
-void ImGuiManager::newFrame(pivot::Engine &engine, pivot::graphics::VulkanApplication &vulkanApplication)
+void ImGuiManager::newFrame(pivot::Engine &engine)
 {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -23,7 +23,7 @@ void ImGuiManager::newFrame(pivot::Engine &engine, pivot::graphics::VulkanApplic
     ImGui::End();
 
     ImGui::Begin("Assets");
-    loadAsset(vulkanApplication);
+    loadAsset(engine);
     ImGui::End();
 }
 
@@ -103,9 +103,7 @@ void ImGuiManager::loadScene(pivot::Engine &engine)
     }
 }
 
-void ImGuiManager::render() { ImGui::Render(); }
-
-void ImGuiManager::loadAsset(pivot::graphics::VulkanApplication &vulkanApplication)
+void ImGuiManager::loadAsset(pivot::Engine &engine)
 {
     if (ImGui::Button("Load asset")) {
         NFD::Guard nfd_guard;
@@ -115,8 +113,7 @@ void ImGuiManager::loadAsset(pivot::graphics::VulkanApplication &vulkanApplicati
         switch (NFD::OpenDialog(path, filterItem, 2)) {
             case NFD_OKAY: {
                 logger.info("Load asset") << path;
-                vulkanApplication.assetStorage.addModel(path.get());
-                vulkanApplication.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
+                engine.loadAsset(path.get());
                 ImGui::OpenPopup("LoadAssetOK");
             } break;
             case NFD_ERROR: {
@@ -138,3 +135,4 @@ void ImGuiManager::loadAsset(pivot::graphics::VulkanApplication &vulkanApplicati
         ImGui::EndPopup();
     }
 }
+void ImGuiManager::render() { ImGui::Render(); }

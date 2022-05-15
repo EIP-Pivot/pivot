@@ -7,10 +7,10 @@ class ImGuiManager
 {
 public:
     ImGuiManager(const pivot::ecs::SceneManager &sceneManager): m_sceneManager(sceneManager){};
-    void newFrame(pivot::Engine &engine, pivot::graphics::VulkanApplication &vulkanApplication);
+    void newFrame(pivot::Engine &engine);
     void saveScene(pivot::Engine &engine);
     void loadScene(pivot::Engine &engine);
-    void loadAsset(pivot::graphics::VulkanApplication &vulkanApplication);
+    void loadAsset(pivot::Engine &engine);
     void render();
 
 private:

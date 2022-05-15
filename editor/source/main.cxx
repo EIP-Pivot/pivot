@@ -165,7 +165,7 @@ public:
 
     void onTick(float dt) override
     {
-        imGuiManager.newFrame(*this);
+        imGuiManager.newFrame(*this, m_vulkan_application);
 
         editor.create(*this, m_vulkan_application.pipelineStorage);
         m_paused = !editor.getRun();

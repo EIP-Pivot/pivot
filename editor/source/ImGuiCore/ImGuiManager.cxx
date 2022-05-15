@@ -10,7 +10,7 @@
 #include <Logger.hpp>
 #include <nfd.hpp>
 
-void ImGuiManager::newFrame(pivot::Engine &engine)
+void ImGuiManager::newFrame(pivot::Engine &engine, pivot::graphics::VulkanApplication &vulkanApplication)
 {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -21,6 +21,11 @@ void ImGuiManager::newFrame(pivot::Engine &engine)
     saveScene(engine);
     loadScene(engine);
     ImGui::End();
+
+    ImGui::Begin("Assets");
+    loadAsset(vulkanApplication);
+    ImGui::End();
+
 }
 
 void ImGuiManager::saveScene(pivot::Engine &engine)
@@ -100,3 +105,37 @@ void ImGuiManager::loadScene(pivot::Engine &engine)
 }
 
 void ImGuiManager::render() { ImGui::Render(); }
+
+void ImGuiManager::loadAsset(pivot::graphics::VulkanApplication &vulkanApplication)
+{
+    if (ImGui::Button("Load asset")) {
+        NFD::UniquePath path;
+        nfdfilteritem_t filterItem[] = {{"Model", "gltf"}, {"Model", "obj"}};
+
+        switch (NFD::OpenDialog(path, filterItem, 2)) {
+            case NFD_OKAY: {
+                logger.info("Load asset") << path;
+                vulkanApplication.assetStorage.addModel(path.get());
+                vulkanApplication.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
+                ImGui::OpenPopup("LoadAssetOK");
+            } break;
+            case NFD_ERROR: {
+                logger.err("File Dialog") << NFD::GetError();
+                NFD::ClearError();
+                ImGui::OpenPopup("LoadFail");
+            } break;
+            case NFD_CANCEL: break;
+        }
+    }
+    if (ImGui::BeginPopupModal("LoadAssetOK", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Asset loaded succefully !");
+        if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+        ImGui::EndPopup();
+    }
+    if (ImGui::BeginPopupModal("LoadFail", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Asset loading failed, please look at the logs.");
+        if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+        ImGui::EndPopup();
+    }
+}
+

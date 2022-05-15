@@ -41,6 +41,7 @@ enum class NodeType {
     ExistingVariable,
     LiteralNumberVariable,
     DoubleQuotedStringVariable,
+    Boolean,
     FunctionParams,
     Operator,
     Type,
@@ -61,6 +62,7 @@ enum class Precedence {
 enum class TokenType {
     Identifier,
     LiteralNumber,
+    Boolean,
     Symbol,
     Indent,
     DoubleQuotedString,

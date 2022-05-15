@@ -2,7 +2,7 @@
 #include <pivot/builtins/systems/PhysicSystem.hxx>
 #include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
 
-#include <pivot/builtins/components/RenderObject.hxx>
+#include <pivot/builtins/components/Transform.hxx>
 #include <pivot/ecs/Components/Gravity.hxx>
 #include <pivot/ecs/Components/RigidBody.hxx>
 
@@ -19,18 +19,18 @@ void physicsSystemImpl(const systems::Description &systemDescription, component:
     auto gravityArray = dynamic_cast<component::DenseTypedComponentArray<Gravity> &>(cmb.arrays()[0].get()).getData();
     auto rigidBodyArray =
         dynamic_cast<component::DenseTypedComponentArray<RigidBody> &>(cmb.arrays()[1].get()).getData();
-    auto renderObjectArray =
-        dynamic_cast<component::DenseTypedComponentArray<RenderObject> &>(cmb.arrays()[2].get()).getData();
+    auto transformArray =
+        dynamic_cast<component::DenseTypedComponentArray<Transform> &>(cmb.arrays()[2].get()).getData();
 
-    auto maxEntity = std::min({gravityArray.size(), rigidBodyArray.size(), renderObjectArray.size()});
+    auto maxEntity = std::min({gravityArray.size(), rigidBodyArray.size(), transformArray.size()});
     for (std::size_t entity = 0; entity <= maxEntity; entity++) {
         auto &gravity = gravityArray[entity];
         auto &rigidBody = rigidBodyArray[entity];
-        auto &renderObject = renderObjectArray[entity];
+        auto &transform = transformArray[entity];
 
         if (gravity.force != glm::vec3(0)) { rigidBody.acceleration = gravity.force; }
         rigidBody.velocity += rigidBody.acceleration * dt;
-        renderObject.transform.position += rigidBody.velocity * dt;
+        transform.position += rigidBody.velocity * dt;
     }
 }
 }    // namespace
@@ -43,7 +43,7 @@ const pivot::ecs::systems::Description physicSystem{
         {
             "Gravity",
             "RigidBody",
-            "RenderObject",
+            "Transform",
         },
     .eventListener = events::tick,
     .provenance = pivot::ecs::Provenance::builtin(),

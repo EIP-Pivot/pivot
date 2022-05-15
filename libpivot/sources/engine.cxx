@@ -9,6 +9,9 @@
 #include <pivot/builtins/events/tick.hxx>
 #include <pivot/builtins/systems/PhysicSystem.hxx>
 
+#include <pivot/builtins/components/RenderObject.hxx>
+#include <pivot/builtins/components/Transform.hxx>
+
 using namespace pivot;
 using namespace pivot::ecs;
 
@@ -20,6 +23,7 @@ Engine::Engine()
     m_component_index.registerComponent(builtins::components::Gravity::description);
     m_component_index.registerComponent(builtins::components::RigidBody::description);
     m_component_index.registerComponent(builtins::components::RenderObject::description);
+    m_component_index.registerComponent(builtins::components::Transform::description);
     m_event_index.registerEvent(builtins::events::tick);
     m_system_index.registerSystem(builtins::systems::physicSystem);
 
@@ -42,13 +46,9 @@ void Engine::run()
 
         auto aspectRatio = m_vulkan_application.getAspectRatio();
 
-        auto data = m_current_scene_render_object.value().get().getData();
-        // FIXME: Send data and existence vector directly to the graphic library
-        std::vector<std::reference_wrapper<const pivot::graphics::RenderObject>> objects;
-        objects.reserve(objects.size());
-        for (const auto &ro: data) { objects.push_back(ro); }
-
-        m_vulkan_application.draw(objects, pivot::internals::getGPUCameraData(m_camera, Engine::fov, aspectRatio));
+        if (m_current_scene_draw_command)
+            m_vulkan_application.draw(m_current_scene_draw_command.value(),
+                                      pivot::internals::getGPUCameraData(m_camera, Engine::fov, aspectRatio));
 
         if (!m_paused) {
             m_scene_manager.getCurrentScene().getEventManager().sendEvent(
@@ -61,18 +61,31 @@ void Engine::run()
     }
 }
 
+template <typename T>
+using Array = pivot::ecs::component::DenseTypedComponentArray<T>;
+
 void Engine::changeCurrentScene(ecs::SceneManager::SceneId sceneId)
 {
     m_scene_manager.setCurrentSceneId(sceneId);
 
     using RenderObject = pivot::builtins::components::RenderObject;
+    using Transform = pivot::builtins::components::Transform;
+
     auto &cm = m_scene_manager.getCurrentScene().getComponentManager();
-    if (auto renderobject_id = cm.GetComponentId(RenderObject::description.name)) {
-        auto &array = cm.GetComponentArray(*renderobject_id);
-        m_current_scene_render_object =
-            dynamic_cast<pivot::ecs::component::DenseTypedComponentArray<RenderObject> &>(array);
+    auto renderobject_id = cm.GetComponentId(RenderObject::description.name);
+    auto transform_id = cm.GetComponentId(Transform::description.name);
+    if (renderobject_id && transform_id) {
+        auto &ro_array = dynamic_cast<Array<pivot::graphics::RenderObject> &>(cm.GetComponentArray(*renderobject_id));
+        auto &transform_array = dynamic_cast<Array<pivot::graphics::Transform> &>(cm.GetComponentArray(*transform_id));
+        auto new_command = std::make_optional<graphics::DrawCallResolver::DrawSceneInformation>({
+            ro_array.getComponents(),
+            ro_array.getExistence(),
+            transform_array.getComponents(),
+            transform_array.getExistence(),
+        });
+        m_current_scene_draw_command.swap(new_command);
     } else {
-        m_current_scene_render_object = std::nullopt;
+        m_current_scene_draw_command = std::nullopt;
     }
 }
 
@@ -81,8 +94,12 @@ namespace
     void postSceneRegister(Scene &scene)
     {
         auto &cm = scene.getComponentManager();
-        if (cm.GetComponentId(builtins::components::RenderObject::description.name).has_value()) { return; }
-        cm.RegisterComponent(builtins::components::RenderObject::description);
+        if (!cm.GetComponentId(builtins::components::RenderObject::description.name).has_value()) {
+            cm.RegisterComponent(builtins::components::RenderObject::description);
+        }
+        if (!cm.GetComponentId(builtins::components::Transform::description.name).has_value()) {
+            cm.RegisterComponent(builtins::components::Transform::description);
+        }
     }
 }    // namespace
 
@@ -148,8 +165,9 @@ ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
         auto scriptPath = scene_base_path / script.get<std::string>();
         m_scripting_engine.loadFile(scriptPath.string(), false, true);
     }
-    m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eClear);
-    m_vulkan_application.buildAssetStorage();
+    m_vulkan_application.buildAssetStorage(scene_json["assets"].empty()
+                                               ? (graphics::AssetStorage::BuildFlagBits::eReloadOldAssets)
+                                               : (graphics::AssetStorage::BuildFlagBits::eClear));
     return this->registerScene(std::move(scene));
 }
 

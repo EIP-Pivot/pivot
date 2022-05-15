@@ -68,6 +68,18 @@ public:
         vk::DeviceSize currentDescriptorSetSize = defaultBufferSize;
     };
 
+    /// Informations needed to draw a scene. Including all objects and al lights
+    struct DrawSceneInformation {
+        /// The array of render object
+        std::reference_wrapper<const std::vector<RenderObject>> renderObjects;
+        /// Indicate which entities have the RenderObject compoenent
+        std::reference_wrapper<const std::vector<bool>> renderObjectExist;
+        /// The array of Transform
+        std::reference_wrapper<const std::vector<Transform>> transforms;
+        /// Indicate which entities have the RenderObject compoenent
+        std::reference_wrapper<const std::vector<bool>> transformExist;
+    };
+
 public:
     /// Constructor
     DrawCallResolver();
@@ -80,7 +92,7 @@ public:
     void destroy();
 
     /// Build the buffer for the draw
-    void prepareForDraw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation);
+    void prepareForDraw(DrawSceneInformation sceneInformation);
 
     /// Get the frame data of a given frame
     constexpr const Frame &getFrameData() const { return frame; }
@@ -98,5 +110,11 @@ private:
     Frame frame;
     vk::DescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
 };
+
+// void swap(DrawCallResolver::DrawSceneInformation &lhs, DrawCallResolver::DrawSceneInformation &rhs)
+// {
+//     std::swap(lhs.renderObjects, rhs.renderObjects);
+//     std::swap(lhs.transforms, rhs.transforms);
+// }
 
 }    // namespace pivot::graphics

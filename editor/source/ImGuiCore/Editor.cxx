@@ -7,6 +7,8 @@
 
 #include <numbers>
 
+#include <pivot/builtins/components/Transform.hxx>
+
 #include "ImGuiCore/Editor.hxx"
 
 using namespace pivot::ecs;
@@ -105,7 +107,7 @@ void Editor::setAspectRatio(float aspect) { aspectRatio = aspect; }
 
 void Editor::DisplayGuizmo(Entity entity, const pivot::builtins::Camera &camera)
 {
-    using RenderObject = pivot::builtins::components::RenderObject;
+    using Transform = pivot::builtins::components::Transform;
 
     const auto view = camera.getView();
     const auto projection = camera.getProjection(pivot::Engine::fov, aspectRatio);
@@ -115,11 +117,11 @@ void Editor::DisplayGuizmo(Entity entity, const pivot::builtins::Camera &camera)
 
     // TODO: Refactor this out, to compute only when the scene changes
     auto &cm = m_currentScene->getComponentManager();
-    auto &array = cm.GetComponentArray(cm.GetComponentId(RenderObject::description.name).value());
-    auto &ro_array = dynamic_cast<pivot::ecs::component::DenseTypedComponentArray<RenderObject> &>(array);
+    auto &array = cm.GetComponentArray(cm.GetComponentId(Transform::description.name).value());
+    auto &ro_array = dynamic_cast<pivot::ecs::component::DenseTypedComponentArray<pivot::graphics::Transform> &>(array);
     if (!ro_array.entityHasValue(entity)) return;
-    RenderObject &ro = ro_array.getData()[entity];
-    auto matrix = ro.transform.getModelMatrix();
+    pivot::graphics::Transform &transform = ro_array.getData()[entity];
+    auto matrix = transform.getModelMatrix();
     float *matrix_data = glm::value_ptr(matrix);
     ImGuiIO &io = ImGui::GetIO();
     ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
@@ -129,9 +131,9 @@ void Editor::DisplayGuizmo(Entity entity, const pivot::builtins::Camera &camera)
     if (!changed) return;
 
     glm::vec3 rotation_deg;
-    ImGuizmo::DecomposeMatrixToComponents(matrix_data, glm::value_ptr(ro.transform.position),
-                                          glm::value_ptr(rotation_deg), glm::value_ptr(ro.transform.scale));
-    ro.transform.rotation = rotation_deg * std::numbers::pi_v<float> / 180.0f;
+    ImGuizmo::DecomposeMatrixToComponents(matrix_data, glm::value_ptr(transform.position), glm::value_ptr(rotation_deg),
+                                          glm::value_ptr(transform.scale));
+    transform.rotation = rotation_deg * std::numbers::pi_v<float> / 180.0f;
 }
 
 void Editor::createPopUp(pivot::Engine &engine)

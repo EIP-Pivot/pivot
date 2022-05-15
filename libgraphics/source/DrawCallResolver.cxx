@@ -49,25 +49,34 @@ void DrawCallResolver::destroy()
     if (frame.spotLightBuffer) base_ref->get().allocator.destroyBuffer(frame.spotLightBuffer);
 }
 
-void DrawCallResolver::prepareForDraw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation)
+void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sceneInformation)
 {
-    frame.packedDraws.clear();
-    frame.pipelineBatch.clear();
     std::vector<gpu_object::UniformBufferObject> objectGPUData;
     std::uint32_t drawCount = 0;
 
-    std::ranges::sort(sceneInformation, {},
-                      [](const auto &info) { return std::make_tuple(info.get().pipelineID, info.get().meshID); });
+    frame.packedDraws.clear();
+    frame.pipelineBatch.clear();
+    // std::ranges::sort(sceneInformation, {},
+    //                   [](const auto &info) { return std::make_tuple(info.get().pipelineID, info.get().meshID); });
 
-    for (const auto &object: sceneInformation) {
-        if (frame.pipelineBatch.empty() || frame.pipelineBatch.back().pipelineID != object.get().pipelineID) {
+    assert(sceneInformation.renderObjects.get().size() == sceneInformation.renderObjectExist.get().size());
+    assert(sceneInformation.transforms.get().size() == sceneInformation.transformExist.get().size());
+    // assert(sceneInformation.renderObjects.get().size() == sceneInformation.transforms.get().size());
+    for (unsigned i = 0;
+         i < sceneInformation.renderObjects.get().size() && i < sceneInformation.transforms.get().size(); i++) {
+        if (!sceneInformation.renderObjectExist.get().at(i) || !sceneInformation.transformExist.get().at(i)) continue;
+        const auto &object = sceneInformation.renderObjects.get().at(i);
+        const auto &transform = sceneInformation.transforms.get().at(i);
+
+        // TODO: better Pipeline batch
+        if (frame.pipelineBatch.empty() || frame.pipelineBatch.back().pipelineID != object.pipelineID) {
             frame.pipelineBatch.push_back({
-                .pipelineID = object.get().pipelineID,
+                .pipelineID = object.pipelineID,
                 .first = drawCount,
                 .size = 0,
             });
         }
-        auto prefab = storage_ref->get().get_optional<AssetStorage::Prefab>(object.get().meshID);
+        auto prefab = storage_ref->get().get_optional<AssetStorage::Prefab>(object.meshID);
         if (prefab.has_value()) {
             for (const auto &model: prefab->get().modelIds) {
                 frame.pipelineBatch.back().size += 1;
@@ -76,9 +85,9 @@ void DrawCallResolver::prepareForDraw(std::vector<std::reference_wrapper<const R
                     .first = drawCount++,
                     .count = 1,
                 });
-                auto obj = object.get();
+                auto obj = object;
                 obj.meshID = model;
-                objectGPUData.push_back(gpu_object::UniformBufferObject(obj, *storage_ref));
+                objectGPUData.emplace_back(transform, obj, storage_ref->get());
             }
         }
     }

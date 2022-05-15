@@ -89,7 +89,40 @@ TEST_CASE("Scripting-Refacto-Engine")
                        {// lol<Velocity> event parameter
                         component::ComponentRef(*array2, 2)}}};
 
-    sysdescription.system(sysdescription, combinations, evt);
+    // sysdescription.system(sysdescription, combinations, evt);
 
     std::cout << "------Engine------end" << std::endl;
+}
+
+TEST_CASE("Scripting-Refacto-Interpreter_One")
+{
+    std::cout << "------Interpreter------start" << std::endl;
+
+    component::Index cind;
+    systems::Index sind;
+    script::Engine engine(sind, cind);
+    // std::string file = "../libscript/tests/tests/systems/interpreter/valid2.pvt";
+    // engine.loadFile(file);
+    std::string fileContent = "component C\n\tBoolean b\nsystem S(anyEntity<C>) event Tick(Number "
+                              "deltaTime)\n\tprint(anyEntity.C.b)\n\tanyEntity.C.b = True\n\tprint(anyEntity.C.b)\n";
+    engine.loadFile(fileContent, true);
+
+    REQUIRE(sind.getDescription("S").has_value());
+    REQUIRE(cind.getDescription("C").has_value());
+
+    auto Cdescription = cind.getDescription("C").value();
+    auto Sdescription = sind.getDescription("S").value();
+    auto array1 = Cdescription.createContainer(Cdescription);
+    std::vector<data::Value> entity = {data::Record{{"b", false}}};
+    array1->setValueForEntity(0, entity.at(0));
+    component::ArrayCombination combinations{{std::ref(*array1)}};
+    event::EventWithComponent evt = {
+        .event = event::Event{.description = Sdescription.eventListener, .entities = {1, 2}, .payload = 0.12}};
+
+    Sdescription.system(Sdescription, combinations, evt);
+
+    std::cout << "Returned " << std::get<bool>(std::get<data::Record>(array1->getValueForEntity(0).value()).at("b"))
+              << std::endl;
+
+    std::cout << "------Interpreter------end" << std::endl;
 }

@@ -108,6 +108,7 @@ void ImGuiManager::render() { ImGui::Render(); }
 void ImGuiManager::loadAsset(pivot::graphics::VulkanApplication &vulkanApplication)
 {
     if (ImGui::Button("Load asset")) {
+        NFD::Guard nfd_guard;
         NFD::UniquePath path;
         nfdfilteritem_t filterItem[] = {{"Model", "gltf"}, {"Model", "obj"}};
 

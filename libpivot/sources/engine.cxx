@@ -111,15 +111,23 @@ ecs::SceneManager::SceneId Engine::registerScene(std::unique_ptr<ecs::Scene> sce
 
 void Engine::saveScene(ecs::SceneManager::SceneId id, const std::filesystem::path &path)
 {
-    m_scene_manager.getSceneById(id).save(
-        path, std::make_optional(std::function([this, &path](const std::string &asset) -> std::optional<std::string> {
+    auto assetTranslator =
+        std::make_optional(std::function([this, &path](const std::string &asset) -> std::optional<std::string> {
             auto &assetStorage = m_vulkan_application.assetStorage;
             auto texturePath = assetStorage.getTexturePath(asset);
             auto modelPath = assetStorage.getModelPath(asset);
             if (!texturePath.has_value() && !modelPath.has_value()) return std::nullopt;
             std::filesystem::path assetPath = texturePath.value_or(modelPath.value());
             return assetPath.lexically_relative(path.parent_path()).string();
-        })));
+        }));
+
+    auto scriptTranslator =
+        std::make_optional(std::function([&path](const std::string &script) -> std::optional<std::string> {
+            std::filesystem::path scriptPath = script;
+            return scriptPath.lexically_relative(path.parent_path()).string();
+        }));
+
+    m_scene_manager.getSceneById(id).save(path, assetTranslator, scriptTranslator);
 }
 
 ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)

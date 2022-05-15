@@ -44,7 +44,7 @@ bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &s
     for (const auto &m: materials) {
         if (!m.diffuse_texname.empty() && storage.textureStaging.getIndex(m.diffuse_texname) == -1) {
             const auto filepath = base_dir / m.diffuse_texname;
-            std::apply(supportedTexture.at(filepath.extension()), std::make_tuple(filepath, std::ref(storage)));
+            supportedTexture.at(filepath.extension())(filepath, std::ref(storage));
         }
         storage.materialStaging.add(loadMaterial(m));
     }

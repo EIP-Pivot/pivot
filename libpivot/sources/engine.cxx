@@ -14,7 +14,8 @@ using namespace pivot::ecs;
 
 namespace pivot
 {
-Engine::Engine(): m_camera(builtins::Camera(glm::vec3(0, 200, 500)))
+Engine::Engine()
+    : m_scripting_engine(m_system_index, m_component_index), m_camera(builtins::Camera(glm::vec3(0, 200, 500)))
 {
     m_component_index.registerComponent(builtins::components::Gravity::description);
     m_component_index.registerComponent(builtins::components::RigidBody::description);
@@ -33,6 +34,8 @@ void Engine::run()
 
     float dt = 0.0f;
     FrameLimiter<60> fpsLimiter;
+    // FIXME: Move to constructor when default mesh is added
+    m_vulkan_application.init();
     while (!m_vulkan_application.window.shouldClose()) {
         auto startTime = std::chrono::high_resolution_clock::now();
         m_vulkan_application.window.pollEvent();
@@ -109,15 +112,23 @@ ecs::SceneManager::SceneId Engine::registerScene(std::unique_ptr<ecs::Scene> sce
 
 void Engine::saveScene(ecs::SceneManager::SceneId id, const std::filesystem::path &path)
 {
-    m_scene_manager.getSceneById(id).save(
-        path, std::make_optional(std::function([this, &path](const std::string &asset) -> std::optional<std::string> {
+    auto assetTranslator =
+        std::make_optional(std::function([this, &path](const std::string &asset) -> std::optional<std::string> {
             auto &assetStorage = m_vulkan_application.assetStorage;
             auto texturePath = assetStorage.getTexturePath(asset);
             auto modelPath = assetStorage.getModelPath(asset);
             if (!texturePath.has_value() && !modelPath.has_value()) return std::nullopt;
             std::filesystem::path assetPath = texturePath.value_or(modelPath.value());
             return assetPath.lexically_relative(path.parent_path()).string();
-        })));
+        }));
+
+    auto scriptTranslator =
+        std::make_optional(std::function([&path](const std::string &script) -> std::optional<std::string> {
+            std::filesystem::path scriptPath = script;
+            return scriptPath.lexically_relative(path.parent_path()).string();
+        }));
+
+    m_scene_manager.getSceneById(id).save(path, assetTranslator, scriptTranslator);
 }
 
 ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
@@ -125,14 +136,30 @@ ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
 
     std::ifstream scene_file{path};
     if (!scene_file.is_open()) {
-        logger.err() << "Could not open scene file: " << strerror(errno);
+        logger.err() << "Could not open scene file: " << std::strerror(errno);
         return 1;
     }
     auto scene_json = nlohmann::json::parse(scene_file);
     auto scene = Scene::load(scene_json, m_component_index, m_system_index);
-    m_vulkan_application.assetStorage.setAssetDirectory(path.parent_path());
-    for (auto &asset: scene_json["assets"]) m_vulkan_application.assetStorage.addAsset(asset.get<std::string>());
+    auto scene_base_path = path.parent_path();
+    for (auto &asset: scene_json["assets"]) {
+        auto assetPath = scene_base_path / asset.get<std::string>();
+        m_vulkan_application.assetStorage.addAsset(assetPath);
+    }
+    for (auto &script: scene_json["scripts"]) {
+        auto scriptPath = scene_base_path / script.get<std::string>();
+        m_scripting_engine.loadFile(scriptPath.string(), false, true);
+    }
+    m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eClear);
     m_vulkan_application.buildAssetStorage();
     return this->registerScene(std::move(scene));
+}
+
+void Engine::loadScript(const std::filesystem::path &path) { m_scripting_engine.loadFile(path.string(), false, true); }
+
+void Engine::loadAsset(const std::filesystem::path &path)
+{
+    m_vulkan_application.assetStorage.addAsset(path);
+    m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
 }
 }    // namespace pivot

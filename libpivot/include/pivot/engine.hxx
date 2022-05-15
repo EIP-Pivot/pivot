@@ -8,6 +8,8 @@
 
 #include <pivot/graphics/VulkanApplication.hxx>
 
+#include <pivot/script/Engine.hxx>
+
 #include <pivot/builtins/components/RenderObject.hxx>
 
 namespace pivot
@@ -26,6 +28,9 @@ public:
     void saveScene(ecs::SceneManager::SceneId id, const std::filesystem::path &path);
     ecs::SceneManager::SceneId loadScene(const std::filesystem::path &path);
 
+    void loadScript(const std::filesystem::path &path);
+    void loadAsset(const std::filesystem::path &path);
+
     static constexpr float fov = 80;
 
 protected:
@@ -33,6 +38,7 @@ protected:
     ecs::event::Index m_event_index;
     ecs::systems::Index m_system_index;
     graphics::VulkanApplication m_vulkan_application;
+    ecs::script::Engine m_scripting_engine;
     builtins::Camera m_camera;
     bool m_paused = true;
 

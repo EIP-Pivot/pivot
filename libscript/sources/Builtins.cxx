@@ -7,13 +7,15 @@
 namespace pivot::ecs::script::interpreter::builtins
 {
 
-data::Value builtin_isPressed(const std::vector<data::Value> &params)
+data::Value builtin_isPressed(const std::vector<data::Value> &params, const BuiltinContext &context)
 {
-    // TODO : find a way to pass Window * as parameter
-    return data::Value(true);
+    return context.isKeyPressed(std::get<std::string>(params.at(0)));
 }
 
-data::Value builtin_print(const std::vector<data::Value> &params) { return builtin_print_stream(params, std::cout); }
+data::Value builtin_print(const std::vector<data::Value> &params, const BuiltinContext &)
+{
+    return builtin_print_stream(params, std::cout);
+}
 
 data::Value builtin_print_stream(const std::vector<data::Value> &params, std::ostream &stream)
 {

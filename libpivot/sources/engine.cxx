@@ -1,3 +1,5 @@
+#include <magic_enum.hpp>
+
 #include <pivot/engine.hxx>
 
 #include <pivot/internal/FrameLimiter.hxx>
@@ -18,7 +20,10 @@ using namespace pivot::ecs;
 namespace pivot
 {
 Engine::Engine()
-    : m_scripting_engine(m_system_index, m_component_index), m_camera(builtins::Camera(glm::vec3(0, 200, 500)))
+    : m_scripting_engine(
+          m_system_index, m_component_index,
+          pivot::ecs::script::interpreter::builtins::BuiltinContext{std::bind_front(&Engine::isKeyPressed, this)}),
+      m_camera(builtins::Camera(glm::vec3(0, 200, 500)))
 {
     m_component_index.registerComponent(builtins::components::Gravity::description);
     m_component_index.registerComponent(builtins::components::RigidBody::description);
@@ -155,7 +160,6 @@ ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
         return 1;
     }
     auto scene_json = nlohmann::json::parse(scene_file);
-    auto scene = Scene::load(scene_json, m_component_index, m_system_index);
     auto scene_base_path = path.parent_path();
     for (auto &asset: scene_json["assets"]) {
         auto assetPath = scene_base_path / asset.get<std::string>();
@@ -165,6 +169,7 @@ ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
         auto scriptPath = scene_base_path / script.get<std::string>();
         m_scripting_engine.loadFile(scriptPath.string(), false, true);
     }
+    auto scene = Scene::load(scene_json, m_component_index, m_system_index);
     m_vulkan_application.buildAssetStorage(scene_json["assets"].empty()
                                                ? (graphics::AssetStorage::BuildFlagBits::eReloadOldAssets)
                                                : (graphics::AssetStorage::BuildFlagBits::eClear));
@@ -177,5 +182,15 @@ void Engine::loadAsset(const std::filesystem::path &path)
 {
     m_vulkan_application.assetStorage.addAsset(path);
     m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
+}
+
+bool Engine::isKeyPressed(const std::string &key) const
+{
+    auto key_cast = magic_enum::enum_cast<pivot::graphics::Window::Key>(key);
+    if (key_cast.has_value()) {
+        return this->m_vulkan_application.window.isKeyPressed(key_cast.value());
+    } else {
+        return false;
+    }
 }
 }    // namespace pivot

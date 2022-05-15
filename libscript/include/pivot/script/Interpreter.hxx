@@ -22,15 +22,29 @@ namespace pivot::ecs::script::interpreter
 // Parse a file syntax tree to register the component and system declarations
 std::vector<systems::Description> registerDeclarations(const Node &file, component::Index &componentIndex);
 
-// Execute a SystemEntryPoint node by executing all of its statements
-void executeSystem(const Node &systemEntry, const systems::Description &desc,
-                   component::ArrayCombination::ComponentCombination &entity, const event::EventWithComponent &trigger,
-                   Stack &stack);
+class Interpreter
+{
+public:
+    /// Creates a default interpreter
+    Interpreter() = default;
+
+    /// Creates an interpreter from a given context
+    Interpreter(builtins::BuiltinContext context): m_builtinContext(context) {}
+
+    // Execute a SystemEntryPoint node by executing all of its statements
+    void executeSystem(const Node &systemEntry, const systems::Description &desc,
+                       component::ArrayCombination::ComponentCombination &entity,
+                       const event::EventWithComponent &trigger, Stack &stack);
+
+private:
+    // Execute a statement (used for recursion for blocks)
+    void executeStatement(const Node &statement, Stack &stack);
+
+    /// Reference to the Window to get the input
+    builtins::BuiltinContext m_builtinContext;
+};
 
 // Private functions
-
-// Execute a statement (used for recursion for blocks)
-void executeStatement(const Node &statement, Stack &stack);
 
 // Validate the parameters for a builtin
 void validateParams(const std::vector<data::Value> &toValidate, size_t expectedSize,

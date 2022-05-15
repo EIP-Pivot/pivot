@@ -264,7 +264,7 @@ try {
     const auto offset = storage.textureStaging.size();
     for (const auto &image: gltfModel.images) {
         const auto filepath = path.parent_path() / image.uri;
-        std::apply(supportedTexture.at(filepath.extension()), std::make_tuple(filepath, std::ref(storage)));
+        supportedTexture.at(filepath.extension().string())(filepath, std::ref(storage));
     }
     for (const auto &material: gltfModel.materials) {
         const auto mat = loadGltfMaterial(storage.textureStaging, gltfModel, material, offset);

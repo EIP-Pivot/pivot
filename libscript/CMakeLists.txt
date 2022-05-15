@@ -18,4 +18,5 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 build_tests(${PROJECT_NAME}
   tests/test_parser.cxx
   tests/test_interpreter.cxx
+  tests/test_builtins.cxx
   )

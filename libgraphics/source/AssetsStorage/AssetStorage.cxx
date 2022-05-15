@@ -9,17 +9,6 @@
 namespace pivot::graphics
 {
 
-const std::unordered_map<std::string, AssetStorage::AssetHandler> AssetStorage::supportedTexture = {
-    {".png", &AssetStorage::loadPngTexture},
-    {".jpg", &AssetStorage::loadJpgTexture},
-    {".ktx", &AssetStorage::loadKtxImage},
-};
-
-const std::unordered_map<std::string, AssetStorage::AssetHandler> AssetStorage::supportedObject = {
-    {".obj", &AssetStorage::loadObjModel},
-    {".gltf", &AssetStorage::loadGltfModel},
-};
-
 static const AssetStorage::CPUTexture default_texture_data{
 
     .image =
@@ -47,6 +36,34 @@ static const AssetStorage::CPUTexture default_texture_data{
     .size = {2, 2, 1},
 };
 
+static const std::vector<Vertex> quad_vertices = {
+    {
+        .pos = {-0.5f, -0.5f, 0.f},
+        .normal = {0.f, 0.f, 0.f},
+        .color = {1.0f, 0.0f, 0.0f},
+        .texCoord = {-0.5f, -0.5f},
+    },
+    {
+        .pos = {0.5f, -0.5f, 0.f},
+        .normal = {0.f, 0.f, 0.f},
+        .color = {0.0f, 1.0f, 0.0f},
+        .texCoord = {0.5f, -0.5f},
+    },
+    {
+        .pos = {0.5f, 0.5f, 0.f},
+        .normal = {0.f, 0.f, 0.f},
+        .color = {0.0f, 0.0f, 1.0f},
+        .texCoord = {0.5f, 0.5f},
+    },
+    {
+        .pos = {-0.5f, 0.5f, 0.f},
+        .normal = {0.f, 0.f, 0.f},
+        .color = {1.0f, 1.0f, 1.0f},
+        .texCoord = {-0.5f, 0.5f},
+    },
+};
+static const std::vector<std::uint32_t> quad_indices = {0, 1, 2, 2, 3, 0};
+
 AssetStorage::CPUStorage::CPUStorage()
 {
     textureStaging.add(missing_texture_name, default_texture_data);
@@ -55,6 +72,19 @@ AssetStorage::CPUStorage::CPUStorage()
                                                });
 
     materialStaging.add("white", {});
+
+    vertexStagingBuffer.insert(vertexStagingBuffer.end(), quad_vertices.begin(), quad_vertices.end());
+    indexStagingBuffer.insert(indexStagingBuffer.end(), quad_indices.begin(), quad_indices.end());
+    modelStorage[quad_mesh] = {
+        .mesh =
+            {
+                .vertexOffset = 0,
+                .vertexSize = static_cast<uint32_t>(quad_vertices.size()),
+                .indicesOffset = 0,
+                .indicesSize = static_cast<uint32_t>(quad_indices.size()),
+            },
+        .default_material = std::nullopt,
+    };
 }
 
 AssetStorage::AssetStorage(VulkanBase &base): base_ref(base) {}
@@ -84,11 +114,11 @@ bool AssetStorage::bindForCompute(vk::CommandBuffer &cmd, const vk::PipelineLayo
 bool AssetStorage::addAsset(const std::filesystem::path &path)
 {
     DEBUG_FUNCTION
-    auto iterModel = supportedObject.find(path.extension().string());
-    if (iterModel != supportedObject.end()) { return addModel(path); }
+    auto iterModel = loaders::supportedObject.find(path.extension().string());
+    if (iterModel != loaders::supportedObject.end()) { return addModel(path); }
 
-    auto iterTexture = supportedTexture.find(path.extension().string());
-    if (iterTexture != supportedTexture.end()) { return addTexture(path); }
+    auto iterTexture = loaders::supportedTexture.find(path.extension().string());
+    if (iterTexture != loaders::supportedTexture.end()) { return addTexture(path); }
 
     logger.err("AssetStorage/addAsset") << "Not supported asset extension: " << path.extension();
     return false;
@@ -105,8 +135,8 @@ bool AssetStorage::addAsset(const std::vector<std::filesystem::path> &path)
 bool AssetStorage::addModel(const std::filesystem::path &path)
 {
     DEBUG_FUNCTION
-    auto iter = supportedObject.find(path.extension().string());
-    if (iter == supportedObject.end()) {
+    auto iter = loaders::supportedObject.find(path.extension().string());
+    if (iter == loaders::supportedObject.end()) {
         logger.err("AssetStorage/addModel") << "Not supported model extension: " << path.extension();
         return false;
     }
@@ -125,8 +155,8 @@ bool AssetStorage::addModel(const std::vector<std::filesystem::path> &path)
 bool AssetStorage::addTexture(const std::filesystem::path &path)
 {
     DEBUG_FUNCTION
-    const auto iter = supportedTexture.find(path.extension().string());
-    if (iter == supportedTexture.end()) {
+    const auto iter = loaders::supportedTexture.find(path.extension().string());
+    if (iter == loaders::supportedTexture.end()) {
         logger.err("Load Texture") << "Not supported texture extension: " << path.extension();
         return false;
     }
@@ -144,17 +174,15 @@ bool AssetStorage::addTexture(const std::vector<std::filesystem::path> &path)
 bool AssetStorage::loadModel(const std::filesystem::path &path)
 {
     auto extension = path.extension().string();
-    assert(supportedObject.contains(extension));
     logger.debug("Asset Storage") << "Loading model at : " << path;
-    return std::apply(supportedObject.at(extension), std::make_tuple(this, path));
+    return std::apply(loaders::supportedObject.at(extension), std::make_tuple(path, std::ref(cpuStorage)));
 }
 
 bool AssetStorage::loadTexture(const std::filesystem::path &path)
 {
     auto extension = path.extension().string();
-    assert(supportedTexture.contains(extension));
     logger.debug("Asset Storage") << "Loading texture at : " << path;
-    return std::apply(supportedTexture.at(extension), std::make_tuple(this, path));
+    return std::apply(loaders::supportedTexture.at(extension), std::make_tuple(path, std::ref(cpuStorage)));
 }
 
 }    // namespace pivot::graphics

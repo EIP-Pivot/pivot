@@ -46,6 +46,7 @@ const pivot::ecs::systems::Description physicSystem{
             "Transform",
         },
     .eventListener = events::tick,
+    .provenance = pivot::ecs::Provenance::builtin(),
     .system = &physicsSystemImpl,
 };
 }

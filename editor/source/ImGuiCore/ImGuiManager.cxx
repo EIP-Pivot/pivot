@@ -20,6 +20,7 @@ void ImGuiManager::newFrame(pivot::Engine &engine)
     ImGui::Begin("Load/Save");
     saveScene(engine);
     loadScene(engine);
+    loadScript(engine);
     ImGui::End();
 }
 
@@ -94,6 +95,45 @@ void ImGuiManager::loadScene(pivot::Engine &engine)
     }
     if (ImGui::BeginPopupModal("LoadFail", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Text("Scene loading failed, please look at the logs.");
+        if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+        ImGui::EndPopup();
+    }
+}
+
+void ImGuiManager::loadScript(pivot::Engine &engine)
+{
+    if (ImGui::Button("Load Script")) {
+        NFD::Guard nfd_guard;
+        NFD::UniquePath scriptPath;
+        nfdfilteritem_t filterItemScript[] = {{"Script", ".pivotscript"}};
+        auto resultSave = NFD::OpenDialog(scriptPath, filterItemScript, 1);
+
+        switch (resultSave) {
+            case NFD_OKAY: {
+                logger.info("Load Script") << scriptPath;
+                try {
+                    engine.loadScript(scriptPath.get());
+                    ImGui::OpenPopup("LoadScriptOk");
+                } catch (const std::exception &e) {
+                    logger.err() << e.what();
+                    ImGui::OpenPopup("LoadScriptFail");
+                }
+            } break;
+            case NFD_ERROR: {
+                logger.err("File Dialog") << NFD::GetError();
+                NFD::ClearError();
+                ImGui::OpenPopup("LoadScriptFail");
+            } break;
+            case NFD_CANCEL: break;
+        }
+    }
+    if (ImGui::BeginPopupModal("LoadScriptOk", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Script loaded succefully !");
+        if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+        ImGui::EndPopup();
+    }
+    if (ImGui::BeginPopupModal("LoadScriptFail", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Script loading failed, please look at the logs.");
         if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
         ImGui::EndPopup();
     }

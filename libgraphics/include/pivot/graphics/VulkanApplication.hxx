@@ -15,6 +15,7 @@
 #include "pivot/graphics/types/vk_types.hxx"
 #include "pivot/graphics/vk_debug.hxx"
 
+#include "pivot/graphics/DrawCallResolver.hxx"
 #include "pivot/graphics/Renderer/CullingRenderer.hxx"
 #include "pivot/graphics/Renderer/GraphicsRenderer.hxx"
 #include "pivot/graphics/Renderer/ImGuiRenderer.hxx"
@@ -71,7 +72,7 @@ public:
     /// @arg camera The information about the camera
     ///
     /// You must have already loaded your models and texture !
-    void draw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation, const CameraData &camera);
+    void draw(DrawCallResolver::DrawSceneInformation sceneInformation, const CameraData &camera);
 
     /// @brief get Swapchain aspect ratio
     constexpr float getAspectRatio() const noexcept { return swapchain.getAspectRatio(); }

@@ -17,8 +17,6 @@ struct RenderObject {
     std::string pipelineID = "";
     /// The name of the material to use on the object
     std::string materialIndex = "";
-    /// The object transform
-    Transform transform;
 
     /// Default comparison operator
     auto operator<=>(const RenderObject &) const = default;

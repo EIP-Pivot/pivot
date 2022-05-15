@@ -12,22 +12,6 @@ using namespace nlohmann;
 using namespace pivot::ecs::data;
 using namespace pivot::ecs::component;
 using namespace pivot::builtins::components;
-using Transform = pivot::graphics::Transform;
-
-TEST_CASE("transform adapter work", "[graphics]")
-{
-    Transform transform;
-
-    Value transform_value = json::parse(R"({"scale": [1,2,3], "position": [5, 5, 5], "rotation": [0, 2.7, 0.4]})");
-    helpers::Helpers<Transform>::updateTypeWithValue(transform, transform_value);
-
-    Transform expected{{5, 5, 5}, {0, 2.7, 0.4}, {1, 2, 3}};
-    Value expected_value = helpers::Helpers<Transform>::createValueFromType(expected);
-
-    REQUIRE(transform_value.type() == expected_value.type());
-    REQUIRE(transform_value == expected_value);
-    REQUIRE(transform == expected);
-}
 
 TEST_CASE("RenderObject component works", "[graphics][component]")
 {
@@ -47,39 +31,17 @@ TEST_CASE("RenderObject component works", "[graphics][component]")
     "asset": {
       "name": "blue"
     }
-  },
-  "transform": {
-    "scale": [
-      1,
-      2,
-      3
-    ],
-    "position": [
-      5,
-      5,
-      5
-    ],
-    "rotation": [
-      0,
-      2.7,
-      0.4
-    ]
   }
 }
 )";
 
     REQUIRE_NOTHROW(array->setValueForEntity(0, json::parse(data).get<Value>()));
 
-    const RenderObject expected{"sponza", "default", "blue", {{5, 5, 5}, {0, 2.7, 0.4}, {1, 2, 3}}};
-
-    const RenderObject &renderObject = dynamic_cast<DenseTypedComponentArray<RenderObject> &>(*array).getData().front();
+    const pivot::graphics::RenderObject expected{"sponza", "default", "blue"};
+    const pivot::graphics::RenderObject &renderObject =
+        dynamic_cast<DenseTypedComponentArray<pivot::graphics::RenderObject> &>(*array).getData().front();
     REQUIRE(renderObject == expected);
 
     REQUIRE(description.defaultValue ==
-            Value{Record{{"meshID", Asset{"cube"}},
-                         {"pipelineID", Value{""}},
-                         {"materialIndex", Asset{""}},
-                         {"transform", Value{Record{{"position", Value{glm::vec3{0, 0, 0}}},
-                                                    {"rotation", Value{glm::vec3{0, 0, 0}}},
-                                                    {"scale", Value{glm::vec3{1, 1, 1}}}}}}}});
+            Value{Record{{"meshID", Asset{"cube"}}, {"pipelineID", Value{""}}, {"materialIndex", Asset{""}}}});
 }

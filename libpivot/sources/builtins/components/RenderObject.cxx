@@ -6,36 +6,29 @@
 #include <boost/fusion/include/adapt_struct.hpp>
 
 using namespace pivot::builtins::components;
-using namespace pivot::ecs::data;
-using Transform = pivot::graphics::Transform;
-
-BOOST_FUSION_ADAPT_STRUCT(Transform, position, rotation, scale);
-
-template struct pivot::ecs::component::helpers::Helpers<Transform>;
 
 namespace
 {
 struct RenderObjectAsset {
     RenderObjectAsset() = default;
 
-    RenderObjectAsset(const RenderObject &ro)
-        : meshID({ro.meshID}), pipelineID(ro.pipelineID), materialIndex({ro.materialIndex}), transform(ro.transform)
+    RenderObjectAsset(const pivot::graphics::RenderObject &ro)
+        : meshID({ro.meshID}), pipelineID(ro.pipelineID), materialIndex({ro.materialIndex})
     {
     }
 
-    RenderObject toRenderObject() const
+    pivot::graphics::RenderObject toRenderObject() const
     {
-        return RenderObject{this->meshID.name, this->pipelineID, this->materialIndex.name, this->transform};
+        return RenderObject{this->meshID.name, this->pipelineID, this->materialIndex.name};
     }
 
-    Asset meshID;
+    pivot::ecs::data::Asset meshID;
     std::string pipelineID = "";
-    Asset materialIndex;
-    Transform transform;
+    pivot::ecs::data::Asset materialIndex;
 };
 }    // namespace
 
-BOOST_FUSION_ADAPT_STRUCT(RenderObjectAsset, meshID, pipelineID, materialIndex, transform);
+BOOST_FUSION_ADAPT_STRUCT(RenderObjectAsset, meshID, pipelineID, materialIndex);
 
 namespace pivot::ecs::component::helpers
 {
@@ -43,16 +36,16 @@ namespace pivot::ecs::component::helpers
 template struct Helpers<RenderObjectAsset>;
 
 template <>
-struct Helpers<RenderObject> {
+struct Helpers<pivot::graphics::RenderObject> {
 
     static data::Type getType() { return Helpers<RenderObjectAsset>::getType(); }
 
-    static data::Value createValueFromType(const RenderObject &v)
+    static data::Value createValueFromType(const pivot::graphics::RenderObject &v)
     {
         return Helpers<RenderObjectAsset>::createValueFromType(v);
     }
 
-    static void updateTypeWithValue(RenderObject &data, const data::Value &value)
+    static void updateTypeWithValue(pivot::graphics::RenderObject &data, const data::Value &value)
     {
         RenderObjectAsset roa;
         Helpers<RenderObjectAsset>::updateTypeWithValue(roa, value);
@@ -62,5 +55,6 @@ struct Helpers<RenderObject> {
 
 }    // namespace pivot::ecs::component::helpers
 
-BOOST_FUSION_ADAPT_STRUCT(RenderObject, meshID, pipelineID, materialIndex, transform);
-PIVOT_REGISTER_COMPONENT(RenderObject, DenseTypedComponentArray<RenderObject>);
+BOOST_FUSION_ADAPT_STRUCT(pivot::graphics::RenderObject, meshID, pipelineID, materialIndex);
+PIVOT_REGISTER_WRAPPED_COMPONENT(RenderObject, pivot::graphics::RenderObject,
+                                 DenseTypedComponentArray<pivot::graphics::RenderObject>);

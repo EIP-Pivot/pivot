@@ -14,9 +14,8 @@ namespace pivot::graphics::gpu_object
 ///
 /// @brief Hold all the information of the 3D object
 struct UniformBufferObject {
-    /// @param info The object information
-    /// @param assetStorage The AssetStorage used to get the indexes
-    UniformBufferObject(const RenderObject &info, const AssetStorage &assetStorage);
+    /// Create a UBO for the provided object
+    UniformBufferObject(const Transform &transform, const RenderObject &info, const AssetStorage &assetStorage);
     /// The model matrix
     alignas(16) glm::mat4 modelMatrix;
     /// The index of the material in the buffer

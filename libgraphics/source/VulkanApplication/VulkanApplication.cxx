@@ -152,8 +152,7 @@ void VulkanApplication::recreateSwapchain()
     postInitialization();
 }
 
-void VulkanApplication::draw(std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
-                             const CameraData &cameraData)
+void VulkanApplication::draw(DrawCallResolver::DrawSceneInformation sceneInformation, const CameraData &cameraData)
 try {
     assert(!graphicsRenderer.empty() && !computeRenderer.empty());
     assert(currentFrame < MaxFrameInFlight);

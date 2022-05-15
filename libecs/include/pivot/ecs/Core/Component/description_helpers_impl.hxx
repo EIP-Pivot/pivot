@@ -103,14 +103,17 @@ Description build_component_description(const char *name)
 }    // namespace pivot::ecs::component::helpers
 
 /// Registers a component
-#define PIVOT_REGISTER_COMPONENT(component_type, array_type)                                                      \
-    namespace pivot::ecs::component::helpers                                                                      \
-    {                                                                                                             \
-        template <>                                                                                               \
-        constexpr const char *component_name<component_type> = #component_type;                                   \
-                                                                                                                  \
-        template struct Helpers<component_type>;                                                                  \
-        static auto description_value = build_component_description<component_type, array_type>(#component_type); \
-    }                                                                                                             \
-    const pivot::ecs::component::Description component_type::description =                                        \
+#define PIVOT_REGISTER_WRAPPED_COMPONENT(wrapper_type, component_type, array_type)                              \
+    namespace pivot::ecs::component::helpers                                                                    \
+    {                                                                                                           \
+        template <>                                                                                             \
+        constexpr const char *component_name<wrapper_type> = #wrapper_type;                                     \
+                                                                                                                \
+        template struct Helpers<component_type>;                                                                \
+        static auto description_value = build_component_description<component_type, array_type>(#wrapper_type); \
+    }                                                                                                           \
+    const pivot::ecs::component::Description wrapper_type::description =                                        \
         pivot::ecs::component::helpers::description_value;
+
+#define PIVOT_REGISTER_COMPONENT(component_type, array_type) \
+    PIVOT_REGISTER_WRAPPED_COMPONENT(component_type, component_type, array_type)

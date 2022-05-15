@@ -25,7 +25,6 @@ void ImGuiManager::newFrame(pivot::Engine &engine, pivot::graphics::VulkanApplic
     ImGui::Begin("Assets");
     loadAsset(vulkanApplication);
     ImGui::End();
-
 }
 
 void ImGuiManager::saveScene(pivot::Engine &engine)
@@ -138,4 +137,3 @@ void ImGuiManager::loadAsset(pivot::graphics::VulkanApplication &vulkanApplicati
         ImGui::EndPopup();
     }
 }
-

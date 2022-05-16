@@ -39,6 +39,8 @@ using ParameterPair = std::pair<size_t, std::vector<std::vector<data::Type>>>;
 /// This map will map the name of a builtin, to its callback paired with its signature
 const std::unordered_map<std::string, std::pair<BuiltinFunctionCallback, ParameterPair>> gBuiltinsCallbacks = {
     {"isPressed", {interpreter::builtins::builtin_isPressed, {1, {{data::BasicType::String}}}}},
+    {"cos", {interpreter::builtins::builtin_cos, {1, {{data::BasicType::Number}}}}},
+    {"sin", {interpreter::builtins::builtin_sin, {1, {{data::BasicType::Number}}}}},
     {"print",
      {interpreter::builtins::builtin_print,
       {std::numeric_limits<size_t>::max(),
@@ -140,23 +142,7 @@ void Interpreter::executeSystem(const Node &systemEntry, const systems::Descript
 void Interpreter::executeStatement(const Node &statement, Stack &stack)
 {
     if (statement.value == "functionCall") {
-        if (statement.children.size() != 2) {    // should be [Variable, FunctionParams]
-            logger.err("ERROR") << " at node " << statement.value;
-            throw InvalidException("Invalid Function Statement: Expected callee and params children node.");
-        }
-        const Node &callee = statement.children.at(0);
-        if (!gBuiltinsCallbacks.contains(callee.value)) {    // Only support builtin functions for now
-            logger.err("ERROR") << " at node " << callee.value;
-            throw InvalidException("Unknown Function: Pivotscript only supports built-in functions for now.");
-        }
-        std::vector<data::Value> parameters;
-        for (const Node &param: statement.children.at(1).children)    // get all the parameters for the callback
-            parameters.push_back(valueOf(param, stack));
-        // validate the parameters and call the callback for the built-in function
-        validateParams(parameters, gBuiltinsCallbacks.at(callee.value).second.first,
-                       gBuiltinsCallbacks.at(callee.value).second.second,
-                       callee.value);    // pair is <size_t numberOfParams, vector<data::Type> types>
-        gBuiltinsCallbacks.at(callee.value).first(parameters, m_builtinContext);
+        executeFunction(statement, stack);
     } else if (statement.value == "if") {
         if (statement.children.size() < 2 || statement.children.at(0).type != NodeType::Expression) {
             logger.err("ERROR") << " at node " << statement.value;
@@ -256,6 +242,33 @@ void Interpreter::executeStatement(const Node &statement, Stack &stack)
         logger.err("ERROR") << " at node " << statement.value;
         throw InvalidException("Invalid Statement: Unsupported statement.");
     }
+}
+
+// Execute a function
+data::Value Interpreter::executeFunction(const Node &functionCall, const Stack &stack)
+{
+    if (functionCall.children.size() != 2) {    // should be [Variable, FunctionParams]
+        logger.err("ERROR") << " at node " << functionCall.value;
+        throw InvalidException("Invalid Function Statement: Expected callee and params children node.");
+    }
+    const Node &callee = functionCall.children.at(0);
+    if (!gBuiltinsCallbacks.contains(callee.value)) {    // Only support builtin functions for now
+        logger.err("ERROR") << " at node " << callee.value;
+        throw InvalidException("Unknown Function: Pivotscript only supports built-in functions for now.");
+    }
+    std::vector<data::Value> parameters;
+    for (const Node &param: functionCall.children.at(1).children) {    // get all the parameters for the callback
+        if (param.type == NodeType::FunctionCall)                      // parameter is function call
+            parameters.push_back(executeFunction(param, stack));
+        else    // parameter is variable
+            parameters.push_back(valueOf(param, stack));
+    }
+    // validate the parameters and call the callback for the built-in function
+    validateParams(parameters, gBuiltinsCallbacks.at(callee.value).second.first,
+                   gBuiltinsCallbacks.at(callee.value).second.second,
+                   callee.value);    // pair is <size_t numberOfParams, vector<data::Type> types>
+    return gBuiltinsCallbacks.at(callee.value)
+        .first(parameters, m_builtinContext);    // return the return value of the built-in
 }
 
 // Validate the parameters for a builtin
@@ -476,11 +489,16 @@ data::Value evaluateFactor(const data::Value &left, const data::Value &right, co
     }
     return gOperatorCallbacks.at(op)(left, right);
 }
-data::Value evaluateExpression(const Node &expr, const Stack &stack)
+
+data::Value Interpreter::evaluateExpression(const Node &expr, const Stack &stack)
 {    // evaluate a postfix expression
     // assume expr.type is NodeType::Expression
-    if (expr.children.size() == 1)    // only one variable in the expression, no operators
-        return valueOf(expr.children.at(0), stack);
+    if (expr.children.size() == 1) {    // only one variable in the expression, no operators
+        if (expr.children.at(0).type == NodeType::FunctionCall)
+            return executeFunction(expr.children.at(0), stack);
+        else
+            return valueOf(expr.children.at(0), stack);
+    }
     // Expression has operators, evaluate the postfix expression
 
     // vector to hold operands/operators during evaluation
@@ -488,6 +506,8 @@ data::Value evaluateExpression(const Node &expr, const Stack &stack)
     for (const Node &n: expr.children) {    // fill the vector
         if (n.type == NodeType::Operator)
             ops.push_back(ExpressionOp{.isOperator = true, .operatorStr = n.value});
+        else if (n.type == NodeType::FunctionCall)
+            ops.push_back(ExpressionOp{.isOperator = false, .operand = executeFunction(n, stack)});
         else
             ops.push_back(ExpressionOp{.isOperator = false, .operand = valueOf(n, stack)});
     }

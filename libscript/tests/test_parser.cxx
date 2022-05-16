@@ -1,5 +1,6 @@
 #include "pivot/script/Parser.hxx"
 #include <catch2/catch_test_macros.hpp>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -81,3 +82,33 @@ TEST_CASE("Scripting-Refacto-Lexer")
         }
     }
 }
+
+TEST_CASE("Scripting-Parser-ValidFiles")
+{
+    // std::vector<std::string> fileNames = {
+    //     "../libscript/tests/tests/components/parser/valid1.pvt",
+    //     "../libscript/tests/tests/components/parser/valid2.pvt",
+    //     "../libscript/tests/tests/components/parser/valid3.pvt",
+    // };
+    std::vector<std::string> fileContents = {
+        "component id\n\tNumber age\n\tString name\n",
+        "component id\n\tNumber age\n\tString name\n\nsystem test(e<id>) event Tick(Number deltaTime)\n\tNumber mdr = "
+        "e.age\n\tString aze = name\n\taze = \"mdr\"\n",
+        "component id\n\tBoolean isHuman\n\nsystem test(e<id>) event Tick(Number deltaTime)\n\tBoolean mdr = "
+        "e.isHuman\n\tBoolean test = True\n\ttest = mdr\n\tif test\n\t\tprint(\"test\")\n",
+    };
+    script::parser::Parser parser;
+    // for (const std::string &file: fileNames) { REQUIRE_NOTHROW(parser.ast_from_file(file, false, false)); }
+    for (const std::string &file: fileContents) { REQUIRE_NOTHROW(parser.ast_from_file(file, true, false)); }
+}
+
+// TEST_CASE("Scripting-Parser-InvalidFiles")
+// {
+//     std::cout << "------Parser/Invalidfiles------start" << std::endl;
+//     std::vector<std::string> fileNames = {
+//         "../libscript/tests/tests/components/parser/invalid1.pvt",
+//     };
+//     script::parser::Parser parser;
+//     for (const std::string &file: fileNames) { REQUIRE_THROWS(parser.ast_from_file(file, false, false)); }
+//     std::cout << "------Parser/Invalidfiles------end" << std::endl;
+// }

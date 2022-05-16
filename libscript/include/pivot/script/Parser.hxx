@@ -46,6 +46,8 @@ private:
     void consumeSystemExpression(Node &result, Token &lastToken);
     /// Consume function parameters and append them to children node
     void consumeSystemFuncParams(Node &result, Token &lastToken);
+    /// Consume what can be either a variable or a function call
+    void consumeSystemVarOrFunc(Node &result, Token &lastToken);
 
     /// Check that token exists, and is of correct type (and potentially consume it from tokens)
     void expectSystemToken(TokenType expectedType, Token &lastToken, bool consume);

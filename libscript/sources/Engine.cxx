@@ -1,6 +1,8 @@
 #include "pivot/script/Engine.hxx"
 #include "Logger.hpp"
 #include "pivot/script/Exceptions.hxx"
+#include <cstdlib>
+#include <ctime>
 
 namespace pivot::ecs::script
 {
@@ -9,6 +11,7 @@ Engine::Engine(systems::Index &systemIndex, component::Index &componentIndex,
                interpreter::builtins::BuiltinContext context)
     : _systemIndex(systemIndex), _componentIndex(componentIndex), _interpreter(context)
 {
+    std::srand(std::time(nullptr));    // for built-in rand_int
 }
 
 std::string Engine::loadFile(const std::string &file, bool isContent, bool verbose)

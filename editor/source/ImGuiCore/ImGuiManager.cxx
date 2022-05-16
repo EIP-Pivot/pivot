@@ -21,6 +21,7 @@ void ImGuiManager::newFrame(pivot::Engine &engine)
     saveScene(engine);
     loadScene(engine);
     loadScript(engine);
+    loadAsset(engine);
     ImGui::End();
 }
 

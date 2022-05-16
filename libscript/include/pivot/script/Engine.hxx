@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "pivot/script/Builtins.hxx"
 #include "pivot/script/Interpreter.hxx"
 #include "pivot/script/Parser.hxx"
 
@@ -19,7 +20,8 @@ class Engine
 public:
     ~Engine() = default;
     /// An engine needs a reference to the indexes to register components and systems
-    Engine(systems::Index &systemIndex, component::Index &componentIndex);
+    Engine(systems::Index &systemIndex, component::Index &componentIndex,
+           interpreter::builtins::BuiltinContext context);
 
     ///	Parse a file to generate the abstract tree from it
     ///	Interpret the tree to register component and system declaration
@@ -36,6 +38,7 @@ private:
     std::unordered_map<std::string, Node> _systems;
     interpreter::Stack _stack;
     parser::Parser _parser;
+    interpreter::Interpreter _interpreter;
 
     // Find entry point (TODO: make system decl into a node to avoid searching)
     Node getEntryPointFor(const std::string &systemName, const Node &file);

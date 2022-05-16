@@ -31,7 +31,8 @@ const std::map<std::string, std::function<data::Value(const data::Value &, const
     {"||", interpreter::builtins::builtin_operator<builtins::Operator::LogicalOr>}};
 
 /// Builtins are callbacks taking values as parameters and returning a single value
-using BuiltinFunctionCallback = std::function<data::Value(const std::vector<data::Value> &)>;
+using BuiltinFunctionCallback =
+    std::function<data::Value(const std::vector<data::Value> &, const builtins::BuiltinContext &)>;
 /// The signature can be represented as a number of parameters, and to each their possible types
 using ParameterPair = std::pair<size_t, std::vector<std::vector<data::Type>>>;
 
@@ -101,9 +102,9 @@ std::vector<systems::Description> registerDeclarations(const Node &file, compone
 }
 
 // This will execute a SystemEntryPoint node by executing all of its statements
-void executeSystem(const Node &systemEntry, const systems::Description &desc,
-                   component::ArrayCombination::ComponentCombination &entity, const event::EventWithComponent &trigger,
-                   Stack &stack)
+void Interpreter::executeSystem(const Node &systemEntry, const systems::Description &desc,
+                                component::ArrayCombination::ComponentCombination &entity,
+                                const event::EventWithComponent &trigger, Stack &stack)
 {
     // systemComponents : [ "Position", "Velocity" ]
     // entity : [ PositionRecord, VelocityRecord ]
@@ -136,7 +137,7 @@ void executeSystem(const Node &systemEntry, const systems::Description &desc,
 // Private functions (never called elsewhere than this file and tests)
 
 // Execute a statement (used for recursion for blocks)
-void executeStatement(const Node &statement, Stack &stack)
+void Interpreter::executeStatement(const Node &statement, Stack &stack)
 {
     if (statement.value == "functionCall") {
         if (statement.children.size() != 2) {    // should be [Variable, FunctionParams]
@@ -155,7 +156,7 @@ void executeStatement(const Node &statement, Stack &stack)
         validateParams(parameters, gBuiltinsCallbacks.at(callee.value).second.first,
                        gBuiltinsCallbacks.at(callee.value).second.second,
                        callee.value);    // pair is <size_t numberOfParams, vector<data::Type> types>
-        gBuiltinsCallbacks.at(callee.value).first(parameters);
+        gBuiltinsCallbacks.at(callee.value).first(parameters, m_builtinContext);
     } else if (statement.value == "if") {
         if (statement.children.size() < 2 || statement.children.at(0).type != NodeType::Expression) {
             logger.err("ERROR") << " at node " << statement.value;

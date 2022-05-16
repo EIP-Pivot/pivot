@@ -5,8 +5,9 @@
 namespace pivot::ecs::script
 {
 
-Engine::Engine(systems::Index &systemIndex, component::Index &componentIndex)
-    : _systemIndex(systemIndex), _componentIndex(componentIndex)
+Engine::Engine(systems::Index &systemIndex, component::Index &componentIndex,
+               interpreter::builtins::BuiltinContext context)
+    : _systemIndex(systemIndex), _componentIndex(componentIndex), _interpreter(context)
 {
 }
 
@@ -67,7 +68,7 @@ void Engine::systemCallback(const systems::Description &system, component::Array
     for (auto entity: entities) {                          // For every entity, execute the system with it as parameter
         try {
             _stack.clear();
-            interpreter::executeSystem(systemEntry, system, entity, trigger, _stack);
+            _interpreter.executeSystem(systemEntry, system, entity, trigger, _stack);
         } catch (const InvalidOperation &e) {
             logger.err("Invalid Operation: ") << e.what();
         } catch (const InvalidException &e) {

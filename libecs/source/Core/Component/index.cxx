@@ -14,6 +14,7 @@ void Index::registerComponent(const Description &description)
 {
     description.validate();
     if (m_components.contains(description.name)) { throw DuplicateError(description.name); }
+    logger.debug() << "Registering component " << description.type;
     m_components.insert({description.name, description});
 }
 

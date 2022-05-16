@@ -4,6 +4,8 @@
 #include "pivot/script/Builtins.hxx"
 #include "pivot/script/Exceptions.hxx"
 
+#include <math.h>
+
 namespace pivot::ecs::script::interpreter::builtins
 {
 
@@ -54,6 +56,35 @@ data::Value builtin_cos(const std::vector<data::Value> &params, const BuiltinCon
 data::Value builtin_sin(const std::vector<data::Value> &params, const BuiltinContext &)
 {
     return std::sin(std::get<double>(params.at(0)));
+}
+
+data::Value builtin_randint(const std::vector<data::Value> &params, const BuiltinContext &)
+{
+    int max = std::get<double>(params.at(0));
+    double random_variable = std::rand() % max;
+    return data::Value(random_variable);
+}
+
+data::Value builtin_power(const std::vector<data::Value> &params, const BuiltinContext &)
+{
+    return data::Value(pow(std::get<double>(params[0]), std::get<double>(params[1])));
+}
+
+data::Value builtin_sqrt(const std::vector<data::Value> &params, const BuiltinContext &)
+{
+    double rooted = std::get<double>(params[0]);
+    if (rooted >= 0)
+        return data::Value(sqrt(rooted));
+    else {
+        std::cerr << "ValueError: math domain error -- sqrt of a negative Number" << std::endl;
+        throw(std::runtime_error("Code shouldn't execute."));
+    }
+}
+
+data::Value builtin_abs(const std::vector<data::Value> &params, const BuiltinContext &)
+{
+    auto absVal = std::get<double>(params[0]) > 0 ? std::get<double>(params[0]) : -std::get<double>(params[0]);
+    return data::Value(absVal);
 }
 
 // Builtin binary (which take two operands) operators

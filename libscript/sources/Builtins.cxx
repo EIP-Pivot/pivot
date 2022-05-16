@@ -7,13 +7,15 @@
 namespace pivot::ecs::script::interpreter::builtins
 {
 
-data::Value builtin_isPressed(const std::vector<data::Value> &params)
+data::Value builtin_isPressed(const std::vector<data::Value> &params, const BuiltinContext &context)
 {
-    // TODO : find a way to pass Window * as parameter
-    return data::Value(true);
+    return context.isKeyPressed(std::get<std::string>(params.at(0)));
 }
 
-data::Value builtin_print(const std::vector<data::Value> &params) { return builtin_print_stream(params, std::cout); }
+data::Value builtin_print(const std::vector<data::Value> &params, const BuiltinContext &)
+{
+    return builtin_print_stream(params, std::cout);
+}
 
 data::Value builtin_print_stream(const std::vector<data::Value> &params, std::ostream &stream)
 {
@@ -44,9 +46,15 @@ data::Value builtin_print_stream(const std::vector<data::Value> &params, std::os
     return data::Value();
 }
 
-data::Value builtin_cos(const std::vector<data::Value> &params) { return std::cos(std::get<double>(params.at(0))); }
+data::Value builtin_cos(const std::vector<data::Value> &params, const BuiltinContext &)
+{
+    return std::cos(std::get<double>(params.at(0)));
+}
 
-data::Value builtin_sin(const std::vector<data::Value> &params) { return std::sin(std::get<double>(params.at(0))); }
+data::Value builtin_sin(const std::vector<data::Value> &params, const BuiltinContext &)
+{
+    return std::sin(std::get<double>(params.at(0)));
+}
 
 // Builtin binary (which take two operands) operators
 // TOOD: find a better (template?) solution to handle these cases

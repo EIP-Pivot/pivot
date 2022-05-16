@@ -50,5 +50,7 @@ protected:
 private:
     ecs::SceneManager m_scene_manager;
     std::optional<graphics::DrawCallResolver::DrawSceneInformation> m_current_scene_draw_command;
+
+    bool isKeyPressed(const std::string &key) const;
 };
 }    // namespace pivot

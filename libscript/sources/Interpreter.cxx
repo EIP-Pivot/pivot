@@ -31,7 +31,8 @@ const std::map<std::string, std::function<data::Value(const data::Value &, const
     {"||", interpreter::builtins::builtin_operator<builtins::Operator::LogicalOr>}};
 
 /// Builtins are callbacks taking values as parameters and returning a single value
-using BuiltinFunctionCallback = std::function<data::Value(const std::vector<data::Value> &)>;
+using BuiltinFunctionCallback =
+    std::function<data::Value(const std::vector<data::Value> &, const builtins::BuiltinContext &)>;
 /// The signature can be represented as a number of parameters, and to each their possible types
 using ParameterPair = std::pair<size_t, std::vector<std::vector<data::Type>>>;
 
@@ -103,9 +104,9 @@ std::vector<systems::Description> registerDeclarations(const Node &file, compone
 }
 
 // This will execute a SystemEntryPoint node by executing all of its statements
-void executeSystem(const Node &systemEntry, const systems::Description &desc,
-                   component::ArrayCombination::ComponentCombination &entity, const event::EventWithComponent &trigger,
-                   Stack &stack)
+void Interpreter::executeSystem(const Node &systemEntry, const systems::Description &desc,
+                                component::ArrayCombination::ComponentCombination &entity,
+                                const event::EventWithComponent &trigger, Stack &stack)
 {
     // systemComponents : [ "Position", "Velocity" ]
     // entity : [ PositionRecord, VelocityRecord ]
@@ -138,26 +139,9 @@ void executeSystem(const Node &systemEntry, const systems::Description &desc,
 // Private functions (never called elsewhere than this file and tests)
 
 // Execute a statement (used for recursion for blocks)
-void executeStatement(const Node &statement, Stack &stack)
+void Interpreter::executeStatement(const Node &statement, Stack &stack)
 {
     if (statement.value == "functionCall") {
-        // if (statement.children.size() != 2) {    // should be [Variable, FunctionParams]
-        //     logger.err("ERROR") << " at node " << statement.value;
-        //     throw InvalidException("Invalid Function Statement: Expected callee and params children node.");
-        // }
-        // const Node &callee = statement.children.at(0);
-        // if (!gBuiltinsCallbacks.contains(callee.value)) {    // Only support builtin functions for now
-        //     logger.err("ERROR") << " at node " << callee.value;
-        //     throw InvalidException("Unknown Function: Pivotscript only supports built-in functions for now.");
-        // }
-        // std::vector<data::Value> parameters;
-        // for (const Node &param: statement.children.at(1).children)    // get all the parameters for the callback
-        //     parameters.push_back(valueOf(param, stack));
-        // // validate the parameters and call the callback for the built-in function
-        // validateParams(parameters, gBuiltinsCallbacks.at(callee.value).second.first,
-        //                gBuiltinsCallbacks.at(callee.value).second.second,
-        //                callee.value);    // pair is <size_t numberOfParams, vector<data::Type> types>
-        // gBuiltinsCallbacks.at(callee.value).first(parameters);
         executeFunction(statement, stack);
     } else if (statement.value == "if") {
         if (statement.children.size() < 2 || statement.children.at(0).type != NodeType::Expression) {
@@ -261,7 +245,7 @@ void executeStatement(const Node &statement, Stack &stack)
 }
 
 // Execute a function
-data::Value executeFunction(const Node &functionCall, const Stack &stack)
+data::Value Interpreter::executeFunction(const Node &functionCall, const Stack &stack)
 {
     if (functionCall.children.size() != 2) {    // should be [Variable, FunctionParams]
         logger.err("ERROR") << " at node " << functionCall.value;
@@ -283,7 +267,8 @@ data::Value executeFunction(const Node &functionCall, const Stack &stack)
     validateParams(parameters, gBuiltinsCallbacks.at(callee.value).second.first,
                    gBuiltinsCallbacks.at(callee.value).second.second,
                    callee.value);    // pair is <size_t numberOfParams, vector<data::Type> types>
-    return gBuiltinsCallbacks.at(callee.value).first(parameters);    // return the return value of the built-in
+    return gBuiltinsCallbacks.at(callee.value)
+        .first(parameters, m_builtinContext);    // return the return value of the built-in
 }
 
 // Validate the parameters for a builtin
@@ -504,7 +489,8 @@ data::Value evaluateFactor(const data::Value &left, const data::Value &right, co
     }
     return gOperatorCallbacks.at(op)(left, right);
 }
-data::Value evaluateExpression(const Node &expr, const Stack &stack)
+
+data::Value Interpreter::evaluateExpression(const Node &expr, const Stack &stack)
 {    // evaluate a postfix expression
     // assume expr.type is NodeType::Expression
     if (expr.children.size() == 1) {    // only one variable in the expression, no operators

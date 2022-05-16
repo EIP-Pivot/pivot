@@ -22,18 +22,36 @@ namespace pivot::ecs::script::interpreter
 // Parse a file syntax tree to register the component and system declarations
 std::vector<systems::Description> registerDeclarations(const Node &file, component::Index &componentIndex);
 
-// Execute a SystemEntryPoint node by executing all of its statements
-void executeSystem(const Node &systemEntry, const systems::Description &desc,
-                   component::ArrayCombination::ComponentCombination &entity, const event::EventWithComponent &trigger,
-                   Stack &stack);
+/// Main class of the script interpreter
+class Interpreter
+{
+public:
+    /// Creates a default interpreter
+    Interpreter() = default;
+
+    /// Creates an interpreter from a given context
+    Interpreter(builtins::BuiltinContext context): m_builtinContext(context) {}
+
+    /// Execute a SystemEntryPoint node by executing all of its statements
+    void executeSystem(const Node &systemEntry, const systems::Description &desc,
+                       component::ArrayCombination::ComponentCombination &entity,
+                       const event::EventWithComponent &trigger, Stack &stack);
+
+private:
+    /// Execute a statement (used for recursion for blocks)
+    void executeStatement(const Node &statement, Stack &stack);
+
+    // Execute a statement (used for recursion for blocks)
+    data::Value executeFunction(const Node &functionCall, const Stack &stack);
+
+    /// evaluate a postfix expression
+    data::Value evaluateExpression(const Node &expr, const Stack &stack);
+
+    /// Reference to the Window to get the input
+    builtins::BuiltinContext m_builtinContext;
+};
 
 // Private functions
-
-// Execute a statement (used for recursion for blocks)
-void executeStatement(const Node &statement, Stack &stack);
-
-// Execute a function
-data::Value executeFunction(const Node &functionCall, const Stack &stack);
 
 // Validate the parameters for a builtin
 void validateParams(const std::vector<data::Value> &toValidate, size_t expectedSize,
@@ -51,7 +69,6 @@ void consumeNode(const std::vector<Node> &children, size_t &childIndex, systems:
 data::Value valueOf(const Node &var, const Stack &stack);    // get value of variable
 data::Value evaluateFactor(const data::Value &left, const data::Value &right,
                            const std::string &op);    // Return the result of the operation op on left and right
-data::Value evaluateExpression(const Node &expr, const Stack &stack);    // evaluate a postfix expression
 
 // Expect node to have a certain type, value or both (throw if not)
 void expectNodeTypeValue(const std::vector<Node> &children, size_t &childIndex, NodeType expectedType,

@@ -53,7 +53,10 @@ void Scene::setCamera(std::uint16_t camera) { mCurrentCamera = camera; }
 
 void Scene::addCamera(Entity camera) { mCamera.push_back(camera); }
 
-void Scene::switchCamera() { mCurrentCamera = (mCurrentCamera + 1) % mCamera.size(); }
+void Scene::switchCamera()
+{
+    if (mCamera.size() > 0) mCurrentCamera = (mCurrentCamera + 1) % mCamera.size();
+}
 
 pivot::builtins::Camera &Scene::getCamera()
 {

@@ -53,7 +53,7 @@ TEST_CASE("Scripting-Refacto-Engine")
         "	# anyEntity.Position.pos_z = anyEntity.Position.pos_z + anyEntity.Velocity.vel_z# * deltaTime\n";
     component::Index cind;
     systems::Index sind;
-    script::Engine engine(sind, cind);
+    script::Engine engine(sind, cind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
     engine.loadFile(file, true);
 
     REQUIRE(sind.getDescription("onTickPhysics").has_value());
@@ -100,7 +100,7 @@ TEST_CASE("Scripting-Refacto-Interpreter_One")
 
     component::Index cind;
     systems::Index sind;
-    script::Engine engine(sind, cind);
+    script::Engine engine(sind, cind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
     // std::string file = "../libscript/tests/tests/systems/interpreter/valid2.pvt";
     // engine.loadFile(file);
     std::string fileContent = "component C\n\tBoolean b\nsystem S(anyEntity<C>) event Tick(Number "

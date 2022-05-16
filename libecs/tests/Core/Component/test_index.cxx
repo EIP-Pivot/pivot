@@ -10,7 +10,11 @@ std::unique_ptr<IComponentArray> emptyCreateContainer(Description) { return std:
 
 Description emptyComponent(const std::string &name)
 {
-    return {name, {}, pivot::ecs::Provenance::builtin(), pivot::ecs::data::Value{0}, emptyCreateContainer};
+    return {name,
+            {pivot::ecs::data::BasicType::Integer},
+            pivot::ecs::Provenance::builtin(),
+            pivot::ecs::data::Value{0},
+            emptyCreateContainer};
 }
 }    // namespace
 

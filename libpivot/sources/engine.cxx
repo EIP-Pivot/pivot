@@ -8,6 +8,7 @@
 #include <pivot/ecs/Components/Gravity.hxx>
 #include <pivot/ecs/Components/RigidBody.hxx>
 
+#include <pivot/builtins/events/key_press.hxx>
 #include <pivot/builtins/events/tick.hxx>
 #include <pivot/builtins/systems/PhysicSystem.hxx>
 
@@ -30,12 +31,21 @@ Engine::Engine()
     m_component_index.registerComponent(builtins::components::RenderObject::description);
     m_component_index.registerComponent(builtins::components::Transform::description);
     m_event_index.registerEvent(builtins::events::tick);
+    m_event_index.registerEvent(builtins::events::keyPress);
     m_system_index.registerSystem(builtins::systems::physicSystem);
 
     m_vulkan_application.addRenderer<pivot::graphics::CullingRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::GraphicsRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::ImGuiRenderer>();
     m_vulkan_application.init();
+
+    // FIXME: Register for all keys
+    using Key = pivot::graphics::Window::Key;
+    for (auto key: {
+             Key::Z, Key::E, Key::R, Key::T, Key::Y, Key::U, Key::I, Key::O, Key::P, Key::Q, Key::F,
+             Key::G, Key::H, Key::J, Key::K, Key::L, Key::M, Key::X, Key::C, Key::V, Key::B, Key::N,
+         })
+        m_vulkan_application.window.setKeyPressCallback(key, std::bind_front(&Engine::onKeyPressed, this));
 }
 
 void Engine::run()
@@ -189,6 +199,14 @@ bool Engine::isKeyPressed(const std::string &key) const
         return this->m_vulkan_application.window.isKeyPressed(key_cast.value());
     } else {
         return false;
+    }
+}
+
+void Engine::onKeyPressed(graphics::Window &window, const graphics::Window::Key key)
+{
+    if (!m_paused) {
+        m_scene_manager.getCurrentScene().getEventManager().sendEvent(
+            {pivot::builtins::events::keyPress, {}, data::Value(std::string(magic_enum::enum_name(key)))});
     }
 }
 }    // namespace pivot

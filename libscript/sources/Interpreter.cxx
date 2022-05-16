@@ -345,6 +345,7 @@ void registerComponentDeclaration(const Node &component, component::Index &compo
         }
     }
     r.provenance = Provenance::externalRessource(fileName);
+    r.defaultValue = r.type.defaultValue();
     componentIndex.registerComponent(r);
 }
 // Register a system declaration node

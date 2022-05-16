@@ -9,6 +9,7 @@ namespace pivot::ecs::component
 void Description::validate() const
 {
     if (this->name.empty()) { throw ValidationError("Empty component name"); }
+    if (this->defaultValue.type() != this->type) { throw ValidationError("Invalid default value"); }
 }
 
 bool Description::operator==(const Description &rhs) const

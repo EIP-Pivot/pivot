@@ -22,6 +22,7 @@ namespace pivot::ecs::script::interpreter
 // Parse a file syntax tree to register the component and system declarations
 std::vector<systems::Description> registerDeclarations(const Node &file, component::Index &componentIndex);
 
+/// Main class of the script interpreter
 class Interpreter
 {
 public:
@@ -31,13 +32,13 @@ public:
     /// Creates an interpreter from a given context
     Interpreter(builtins::BuiltinContext context): m_builtinContext(context) {}
 
-    // Execute a SystemEntryPoint node by executing all of its statements
+    /// Execute a SystemEntryPoint node by executing all of its statements
     void executeSystem(const Node &systemEntry, const systems::Description &desc,
                        component::ArrayCombination::ComponentCombination &entity,
                        const event::EventWithComponent &trigger, Stack &stack);
 
 private:
-    // Execute a statement (used for recursion for blocks)
+    /// Execute a statement (used for recursion for blocks)
     void executeStatement(const Node &statement, Stack &stack);
 
     /// Reference to the Window to get the input

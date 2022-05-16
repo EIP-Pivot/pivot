@@ -249,14 +249,17 @@ data::Value builtin_operator<Operator::Multiplication>(const data::Value &left, 
 {    // multiplication operator '*'
     try {
         if (std::get<data::BasicType>(left.type()) == data::BasicType::Number &&
-            std::get<data::BasicType>(right.type()) == data::BasicType::Number)
+            std::get<data::BasicType>(right.type()) == data::BasicType::Number) {
             return data::Value(std::get<double>(left) *
                                std::get<double>(right));    // perform arithmetic multiplication
-        else if (std::get<data::BasicType>(left.type()) == data::BasicType::Vec3 &&
-                 std::get<data::BasicType>(right.type()) == data::BasicType::Vec3)
+        } else if (std::get<data::BasicType>(left.type()) == data::BasicType::Vec3 &&
+                   std::get<data::BasicType>(right.type()) == data::BasicType::Vec3) {
             return data::Value(std::get<glm::vec3>(left) *
                                std::get<glm::vec3>(right));    // let glm multiply the vectors
-        else {                                                 // unsupported
+        } else if (std::get<data::BasicType>(left.type()) == data::BasicType::Vec3 &&
+                   std::get<data::BasicType>(right.type()) == data::BasicType::Number) {
+            return data::Value(std::get<glm::vec3>(left) * (float)std::get<double>(right));
+        } else {    // unsupported
             logger.err("ERROR") << " by '" << left.type().toString() << "' and '" << right.type().toString() << "'";
             throw InvalidOperation("Invalid multiplication '*' operator between these types.");
         }

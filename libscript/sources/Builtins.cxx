@@ -287,7 +287,39 @@ data::Value builtin_operator<Operator::Multiplication>(const data::Value &left, 
                  std::get<data::BasicType>(right.type()) == data::BasicType::Vec3)
             return data::Value(std::get<glm::vec3>(left) *
                                std::get<glm::vec3>(right));    // let glm multiply the vectors
-        else {                                                 // unsupported
+        else if (std::get<data::BasicType>(left.type()) == data::BasicType::Number &&
+                 std::get<data::BasicType>(right.type()) == data::BasicType::Vec3) {
+            glm::vec3 result = std::get<glm::vec3>(right);
+            double factor = std::get<double>(left);
+            result.x *= factor;
+            result.y *= factor;
+            result.z *= factor;
+            return data::Value(result);
+        } else if (std::get<data::BasicType>(left.type()) == data::BasicType::Vec3 &&
+                   std::get<data::BasicType>(right.type()) == data::BasicType::Number) {
+            glm::vec3 result = std::get<glm::vec3>(left);
+            double factor = std::get<double>(right);
+            result.x *= factor;
+            result.y *= factor;
+            result.z *= factor;
+            return data::Value(result);
+        } else if (std::get<data::BasicType>(left.type()) == data::BasicType::Integer &&
+                   std::get<data::BasicType>(right.type()) == data::BasicType::Vec3) {
+            glm::vec3 result = std::get<glm::vec3>(right);
+            int factor = std::get<int>(left);
+            result.x *= factor;
+            result.y *= factor;
+            result.z *= factor;
+            return data::Value(result);
+        } else if (std::get<data::BasicType>(left.type()) == data::BasicType::Vec3 &&
+                   std::get<data::BasicType>(right.type()) == data::BasicType::Integer) {
+            glm::vec3 result = std::get<glm::vec3>(left);
+            int factor = std::get<int>(right);
+            result.x *= factor;
+            result.y *= factor;
+            result.z *= factor;
+            return data::Value(result);
+        } else {    // unsupported
             logger.err("ERROR") << " by '" << left.type().toString() << "' and '" << right.type().toString() << "'";
             throw InvalidOperation("Invalid multiplication '*' operator between these types.");
         }

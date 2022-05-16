@@ -52,5 +52,6 @@ private:
     std::optional<graphics::DrawCallResolver::DrawSceneInformation> m_current_scene_draw_command;
 
     bool isKeyPressed(const std::string &key) const;
+    void onKeyPressed(graphics::Window &window, const graphics::Window::Key key);
 };
 }    // namespace pivot

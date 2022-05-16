@@ -139,4 +139,37 @@ void ImGuiManager::loadScript(pivot::Engine &engine)
     }
 }
 
+void ImGuiManager::loadAsset(pivot::Engine &engine)
+{
+    if (ImGui::Button("Load asset")) {
+        NFD::Guard nfd_guard;
+        NFD::UniquePath path;
+        nfdfilteritem_t filterItem[] = {{"Model", "gltf"}, {"Model", "obj"}};
+
+        switch (NFD::OpenDialog(path, filterItem, 2)) {
+            case NFD_OKAY: {
+                logger.info("Load asset") << path;
+                engine.loadAsset(path.get());
+                ImGui::OpenPopup("LoadAssetOK");
+            } break;
+            case NFD_ERROR: {
+                logger.err("File Dialog") << NFD::GetError();
+                NFD::ClearError();
+                ImGui::OpenPopup("LoadFail");
+            } break;
+            case NFD_CANCEL: break;
+        }
+    }
+    if (ImGui::BeginPopupModal("LoadAssetOK", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Asset loaded succefully !");
+        if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+        ImGui::EndPopup();
+    }
+    if (ImGui::BeginPopupModal("LoadFail", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Asset loading failed, please look at the logs.");
+        if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+        ImGui::EndPopup();
+    }
+}
+
 void ImGuiManager::render() { ImGui::Render(); }

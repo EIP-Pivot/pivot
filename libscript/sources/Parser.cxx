@@ -243,7 +243,7 @@ void Parser::tokens_from_file(const std::string &file, bool isContent, bool verb
                     _tokens.push(Token{
                         .type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
                 }
-                if (!isLiteral && !std::isspace(line.at(rcursor)))
+                if (!std::isspace(line.at(rcursor)))
                     _tokens.push(Token{.type = TokenType::Symbol,
                                        .value = line.substr(rcursor, 1),
                                        .line_nb = lineNb,

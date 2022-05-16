@@ -22,6 +22,16 @@ data::Value builtin_print(const std::vector<data::Value> &params);
 /// Same as above but take a ostream to write to
 data::Value builtin_print_stream(const std::vector<data::Value> &params, std::ostream &stream);
 
+// Math built-ins
+/// Number cos(Number radAngle)
+///		Returns the cosine of the parameter (in radian)
+data::Value builtin_cos(const std::vector<data::Value> &params);
+
+// Math built-ins
+/// Number sin(Number radAngle)
+///		Returns the sine of the parameter (in radian)
+data::Value builtin_sin(const std::vector<data::Value> &params);
+
 // Operators
 
 enum class Operator {

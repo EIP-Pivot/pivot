@@ -44,6 +44,10 @@ data::Value builtin_print_stream(const std::vector<data::Value> &params, std::os
     return data::Value();
 }
 
+data::Value builtin_cos(const std::vector<data::Value> &params) { return std::cos(std::get<double>(params.at(0))); }
+
+data::Value builtin_sin(const std::vector<data::Value> &params) { return std::sin(std::get<double>(params.at(0))); }
+
 // Builtin binary (which take two operands) operators
 // TOOD: find a better (template?) solution to handle these cases
 

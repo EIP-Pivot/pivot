@@ -20,10 +20,11 @@ void physicsSystemImpl(const systems::Description &systemDescription, component:
     auto rigidBodyArray =
         dynamic_cast<component::DenseTypedComponentArray<RigidBody> &>(cmb.arrays()[1].get()).getData();
     auto transformArray =
-        dynamic_cast<component::DenseTypedComponentArray<Transform> &>(cmb.arrays()[2].get()).getData();
+        dynamic_cast<component::DenseTypedComponentArray<pivot::graphics::Transform> &>(cmb.arrays()[2].get())
+            .getData();
 
     auto maxEntity = std::min({gravityArray.size(), rigidBodyArray.size(), transformArray.size()});
-    for (std::size_t entity = 0; entity <= maxEntity; entity++) {
+    for (std::size_t entity = 0; entity < maxEntity; entity++) {
         auto &gravity = gravityArray[entity];
         auto &rigidBody = rigidBodyArray[entity];
         auto &transform = transformArray[entity];

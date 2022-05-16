@@ -14,6 +14,7 @@ public:
     {
         m_vulkan_application.assetStorage.addModel("cube.obj");
         m_vulkan_application.assetStorage.addTexture("violet.png");
+        m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eClear);
     }
 };
 

@@ -15,6 +15,6 @@ BOOST_FUSION_ADAPT_STRUCT(pivot::graphics::PointLight, color, intensity, falloff
 PIVOT_REGISTER_WRAPPED_COMPONENT(PointLight, pivot::graphics::PointLight,
                                  DenseTypedComponentArray<pivot::graphics::PointLight>);
 
-BOOST_FUSION_ADAPT_STRUCT(pivot::graphics::SpotLight, color, cutOff, outerCutOff);
+BOOST_FUSION_ADAPT_STRUCT(pivot::graphics::SpotLight, color, cutOff, outerCutOff, intensity);
 PIVOT_REGISTER_WRAPPED_COMPONENT(SpotLight, pivot::graphics::SpotLight,
                                  DenseTypedComponentArray<pivot::graphics::SpotLight>);

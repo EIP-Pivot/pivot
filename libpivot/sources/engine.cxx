@@ -155,16 +155,14 @@ ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
         return 1;
     }
     auto scene_json = nlohmann::json::parse(scene_file);
-    auto scene = Scene::load(scene_json, m_component_index, m_system_index);
     auto scene_base_path = path.parent_path();
-    for (auto &asset: scene_json["assets"]) {
-        auto assetPath = scene_base_path / asset.get<std::string>();
-        m_vulkan_application.assetStorage.addAsset(assetPath);
-    }
     for (auto &script: scene_json["scripts"]) {
         auto scriptPath = scene_base_path / script.get<std::string>();
         m_scripting_engine.loadFile(scriptPath.string(), false, true);
     }
+    m_vulkan_application.assetStorage.setAssetDirectory(scene_base_path);
+    for (auto &asset: scene_json["assets"]) m_vulkan_application.assetStorage.addAsset(asset.get<std::string>());
+    auto scene = Scene::load(scene_json, m_component_index, m_system_index);
     m_vulkan_application.buildAssetStorage(scene_json["assets"].empty()
                                                ? (graphics::AssetStorage::BuildFlagBits::eReloadOldAssets)
                                                : (graphics::AssetStorage::BuildFlagBits::eClear));

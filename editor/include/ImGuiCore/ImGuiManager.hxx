@@ -11,6 +11,7 @@ public:
     void saveScene(pivot::Engine &engine);
     void loadScene(pivot::Engine &engine);
     void loadAsset(pivot::Engine &engine);
+    void loadScript(pivot::Engine &engine);
     void render();
 
 private:

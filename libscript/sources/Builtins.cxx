@@ -287,8 +287,8 @@ data::Value builtin_operator<Operator::Multiplication>(const data::Value &left, 
                    std::get<data::BasicType>(right.type()) == data::BasicType::Vec3) {
             return data::Value(std::get<glm::vec3>(left) *
                                std::get<glm::vec3>(right));    // let glm multiply the vectors
-        else if (std::get<data::BasicType>(left.type()) == data::BasicType::Number &&
-                 std::get<data::BasicType>(right.type()) == data::BasicType::Vec3) {
+        } else if (std::get<data::BasicType>(left.type()) == data::BasicType::Number &&
+                   std::get<data::BasicType>(right.type()) == data::BasicType::Vec3) {
             glm::vec3 result = std::get<glm::vec3>(right);
             double factor = std::get<double>(left);
             result.x *= factor;

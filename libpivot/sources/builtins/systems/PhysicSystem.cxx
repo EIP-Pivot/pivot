@@ -24,7 +24,7 @@ void physicsSystemImpl(const systems::Description &systemDescription, component:
             .getData();
 
     auto maxEntity = std::min({gravityArray.size(), rigidBodyArray.size(), transformArray.size()});
-    for (std::size_t entity = 0; entity <= maxEntity; entity++) {
+    for (std::size_t entity = 0; entity < maxEntity; entity++) {
         auto &gravity = gravityArray[entity];
         auto &rigidBody = rigidBodyArray[entity];
         auto &transform = transformArray[entity];

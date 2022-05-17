@@ -67,12 +67,16 @@ public:
         vk::DeviceSize currentBufferSize = defaultBufferSize;
         /// The current size of the buffer that is exposed through the descriptor set.
         vk::DeviceSize currentDescriptorSetSize = defaultBufferSize;
+        /// The number of pointlight in the buffers
         vk::DeviceSize pointLightCount = 0;
+        /// The number of directional in the buffers
         vk::DeviceSize directionalLightCount = 0;
+        /// The number of spotlight in the buffers
         vk::DeviceSize spotLightCount = 0;
     };
 
     template <class T>
+    /// Wrapper for the T/bool pair returned from the ECS
     struct Object {
         /// The array of component
         std::reference_wrapper<const std::vector<T>> objects;
@@ -82,11 +86,13 @@ public:
 
     /// Informations needed to draw a scene. Including all objects and al lights
     struct DrawSceneInformation {
+        /// @cond
         Object<RenderObject> renderObjects;
         Object<PointLight> pointLight;
         Object<DirectionalLight> directionalLight;
         Object<SpotLight> spotLight;
         Object<Transform> transform;
+        ///@endcond
     };
 
 public:

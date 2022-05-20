@@ -26,7 +26,7 @@ class LogicError : public PivotException
 class RuntimeError : public PivotException
 {
     using PivotException::PivotException;
-    const std::string_view getKind() const noexcept final { return "Logic"; };
+    const std::string_view getKind() const noexcept final { return "Runtime"; };
 };
 
 }    // namespace pivot

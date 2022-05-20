@@ -48,8 +48,8 @@ VulkanApplication::~VulkanApplication()
     if (swapchain) swapchain.destroy();
     assetStorage.destroy();
 
-    std::ranges::for_each(graphicsRenderer, [this](auto &pair) { pair.first->onStop(*this); });
-    std::ranges::for_each(computeRenderer, [this](auto &pair) { pair.first->onStop(*this); });
+    std::ranges::for_each(graphicsRenderer, [this](auto &rendy) { rendy->onStop(*this); });
+    std::ranges::for_each(computeRenderer, [this](auto &rendy) { rendy->onStop(*this); });
     std::ranges::for_each(frames, [&](Frame &fr) { fr.destroy(*this, commandPool); });
 
     swapchainDeletionQueue.flush();
@@ -87,15 +87,13 @@ void VulkanApplication::initVulkanRessources()
     createRenderPass();
     createFramebuffers();
 
-    std::ranges::for_each(graphicsRenderer, [this](auto &pair) {
-        pair.first->onInit(swapchain.getSwapchainExtent(), *this, frames[0].drawResolver.getDescriptorSetLayout(),
-                           renderPass.getRenderPass());
+    std::ranges::for_each(graphicsRenderer, [this](auto &rendy) {
+        rendy->onInit(swapchain.getSwapchainExtent(), *this, frames[0].drawResolver.getDescriptorSetLayout(),
+                      renderPass.getRenderPass());
     });
-    std::ranges::for_each(computeRenderer, [this](auto &pair) {
-        pair.first->onInit(*this, frames[0].drawResolver.getDescriptorSetLayout());
-    });
+    std::ranges::for_each(computeRenderer,
+                          [this](auto &pair) { pair->onInit(*this, frames[0].drawResolver.getDescriptorSetLayout()); });
 
-    createCommandBuffers();
     postInitialization();
     logger.info("Vulkan Application") << "Initialisation complete !";
 }
@@ -107,13 +105,13 @@ void VulkanApplication::buildAssetStorage(AssetStorage::BuildFlags flags)
     device.waitIdle();
 
     assetStorage.build(DescriptorBuilder(layoutCache, descriptorAllocator), flags);
-    std::ranges::for_each(computeRenderer, [this](auto &pair) {
-        pair.first->onRecreate(swapchain.getSwapchainExtent(), *this, frames[0].drawResolver.getDescriptorSetLayout(),
-                               renderPass.getRenderPass());
+    std::ranges::for_each(computeRenderer, [this](auto &rendy) {
+        rendy->onRecreate(swapchain.getSwapchainExtent(), *this, frames[0].drawResolver.getDescriptorSetLayout(),
+                          renderPass.getRenderPass());
     });
-    std::ranges::for_each(graphicsRenderer, [this](auto &pair) {
-        pair.first->onRecreate(swapchain.getSwapchainExtent(), *this, frames[0].drawResolver.getDescriptorSetLayout(),
-                               renderPass.getRenderPass());
+    std::ranges::for_each(graphicsRenderer, [this](auto &rendy) {
+        rendy->onRecreate(swapchain.getSwapchainExtent(), *this, frames[0].drawResolver.getDescriptorSetLayout(),
+                          renderPass.getRenderPass());
     });
     logger.info("Vulkan Application") << "Asset Storage rebuild !";
 }
@@ -137,11 +135,10 @@ void VulkanApplication::recreateSwapchain()
     createColorResources();
     createDepthResources();
     createRenderPass();
-    createCommandBuffers();
     auto layout = frames[0].drawResolver.getDescriptorSetLayout();
 
-    std::ranges::for_each(graphicsRenderer, [&](std::pair<std::unique_ptr<IGraphicsRenderer>, CommandVector> &pair) {
-        pair.first->onRecreate(swapchain.getSwapchainExtent(), *this, layout, renderPass.getRenderPass());
+    std::ranges::for_each(graphicsRenderer, [&](auto &rendy) {
+        rendy->onRecreate(swapchain.getSwapchainExtent(), *this, layout, renderPass.getRenderPass());
     });
 
     createFramebuffers();
@@ -166,38 +163,9 @@ try {
     device.resetFences(frame.inFlightFences);
     cmd.reset();
 
-    std::vector<vk::CommandBuffer> secondaryBuffer;
     std::vector<vk::CommandBuffer> computeBuffer;
-    vk::CommandBufferInheritanceInfo inheritanceInfo{
-        .renderPass = renderPass.getRenderPass(),
-        .subpass = 0,
-        .framebuffer = swapChainFramebuffers.at(imageIndex),
-    };
-    vk::CommandBufferBeginInfo drawBeginInfo{
-        .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit | vk::CommandBufferUsageFlagBits::eRenderPassContinue,
-        .pInheritanceInfo = &inheritanceInfo,
-    };
-    vk::CommandBufferBeginInfo computeInfo{
-        .pInheritanceInfo = &inheritanceInfo,
-    };
 
     frame.drawResolver.prepareForDraw(sceneInformation);
-    for (auto &[rendy, buffers]: computeRenderer) {
-        auto &cmdBuf = buffers.at(currentFrame);
-        cmdBuf.reset();
-        vk_utils::vk_try(cmdBuf.begin(&computeInfo));
-        rendy->onDraw(cameraData, frame.drawResolver, cmdBuf);
-        cmdBuf.end();
-        computeBuffer.push_back(cmdBuf);
-    }
-    for (auto &[rendy, buffers]: graphicsRenderer) {
-        auto &cmdBuf = buffers.at(currentFrame);
-        cmdBuf.reset();
-        vk_utils::vk_try(cmdBuf.begin(&drawBeginInfo));
-        rendy->onDraw(cameraData, frame.drawResolver, cmdBuf);
-        cmdBuf.end();
-        secondaryBuffer.push_back(cmdBuf);
-    }
 
     const std::array<float, 4> vClearColor = {0.0f, 0.0f, 0.0f, 1.0f};
     std::array<vk::ClearValue, 2> clearValues{};
@@ -215,14 +183,14 @@ try {
         .pClearValues = clearValues.data(),
     };
     vk::CommandBufferBeginInfo beginInfo{
-        .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit | vk::CommandBufferUsageFlagBits::eRenderPassContinue,
+        .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit,
 
     };
     vk_utils::vk_try(cmd.begin(&beginInfo));
     vk_debug::beginRegion(cmd, "main command", {1.f, 1.f, 1.f, 1.f});
-    cmd.executeCommands(computeBuffer);
-    cmd.beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
-    cmd.executeCommands(secondaryBuffer);
+    for (auto &rendy: computeRenderer) rendy->onDraw(cameraData, frame.drawResolver, cmd);
+    cmd.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+    for (auto &rendy: graphicsRenderer) rendy->onDraw(cameraData, frame.drawResolver, cmd);
     cmd.endRenderPass();
     vk_debug::endRegion(cmd);
     cmd.end();

@@ -6,18 +6,6 @@ include(CheckIPOSupported)
 include(cmake/find_linker.cmake)
 include(cmake/tests.cmake)
 
-option(CODE_COVERAGE "Enable code coverage report" OFF)
-if(CODE_COVERAGE AND CMAKE_COMPILER_IS_GNUCXX)
-    include(cmake/CodeCoverage.cmake)
-    set(COVERAGE_LCOV_EXCLUDES ${CMAKE_CURRENT_BINARY_DIR}/_deps/* /usr/*)
-    append_coverage_compiler_flags()
-    message(STATUS "Code coverage - enabled")
-elseif(NOT CODE_COVERAGE)
-    message(STATUS "Code coverage - disabled")
-elseif(NOT CMAKE_COMPILER_IS_GNUCXX)
-    message(STATUS "Code coverage - unavailable")
-endif()
-
 find_linker()
 check_ipo_supported(RESULT supported)
 if(supported)
@@ -171,6 +159,28 @@ add_library(pivot::pivot ALIAS pivot)
 add_library(pivot::graphics ALIAS pivot-graphics)
 add_library(pivot::ecs ALIAS pivot-ecs)
 add_library(pivot::script ALIAS pivot-script)
+
+option(CODE_COVERAGE "Enable code coverage report" OFF)
+if(CODE_COVERAGE AND BUILD_TESTING AND CMAKE_COMPILER_IS_GNUCXX)
+    include(cmake/CodeCoverage.cmake)
+    set(COVERAGE_EXCLUDES ${CMAKE_BINARY_DIR}/_deps/* /usr/* **/tests/**)
+    append_coverage_compiler_flags()
+    setup_target_for_coverage_lcov(
+        NAME
+        coverage
+        EXECUTABLE
+        ctest
+        DEPENDENCIES
+        pivot::pivot
+        LCOV_ARGS
+        "--no-external"
+    )
+    message(STATUS "Code coverage - enabled")
+elseif(NOT CODE_COVERAGE)
+    message(STATUS "Code coverage - disabled")
+elseif(NOT CMAKE_COMPILER_IS_GNUCXX)
+    message(STATUS "Code coverage - unavailable")
+endif()
 
 target_compile_options(
     pivot-ecs

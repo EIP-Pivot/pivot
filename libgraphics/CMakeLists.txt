@@ -233,6 +233,7 @@ target_link_libraries(
     PUBLIC ktx
     PUBLIC tinygltf
     PUBLIC stb
+    PUBLIC magic_enum
     PUBLIC Vulkan::Vulkan
 )
 

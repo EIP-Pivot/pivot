@@ -12,5 +12,15 @@ function(build_tests TARGET)
         else()
             catch_discover_tests(${TEST_NAME})
         endif()
+        if(CODE_COVERAGE AND CMAKE_COMPILER_IS_GNUCXX)
+            setup_target_for_coverage_lcov(
+                NAME
+                ${TARGET}_coverage
+                EXECUTABLE
+                ${TEST_NAME}
+                DEPENDENCIES
+                ${TEST_NAME}
+            )
+        endif()
     endif()
 endfunction()

@@ -31,7 +31,7 @@ constexpr void vk_try(VkResult res) { vk_try(vk::Result(res)); }
 /// Read a whole file into a vector of byte.
 std::vector<std::byte> readFile(const std::string &filename);
 /// Create a vk::ShaderModule from bytecode.
-vk::ShaderModule createShaderModule(const vk::Device &device, const std::span<std::byte> &code);
+vk::ShaderModule createShaderModule(const vk::Device &device, std::span<const std::byte> code);
 
 /// Return the max MSAA sample supported by the device
 vk::SampleCountFlagBits getMaxUsableSampleCount(vk::PhysicalDevice &physical_device);

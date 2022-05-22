@@ -47,7 +47,7 @@ vk::ImageViewCreateInfo vk_init::populateVkImageViewCreateInfo(vk::Image &img, v
     };
 }
 
-vk::ShaderModuleCreateInfo vk_init::populateVkShaderModuleCreateInfo(const std::span<std::byte> &code)
+vk::ShaderModuleCreateInfo vk_init::populateVkShaderModuleCreateInfo(std::span<const std::byte> code)
 {
     return vk::ShaderModuleCreateInfo{
         .codeSize = code.size(),
@@ -66,9 +66,9 @@ vk::PipelineShaderStageCreateInfo vk_init::populateVkPipelineShaderStageCreateIn
     };
 }
 
-vk::PipelineVertexInputStateCreateInfo vk_init::populateVkPipelineVertexInputStateCreateInfo(
-    const std::span<const vk::VertexInputBindingDescription> &binding,
-    const std::span<const vk::VertexInputAttributeDescription> &attribute)
+vk::PipelineVertexInputStateCreateInfo
+vk_init::populateVkPipelineVertexInputStateCreateInfo(std::span<const vk::VertexInputBindingDescription> binding,
+                                                      std::span<const vk::VertexInputAttributeDescription> attribute)
 {
     return vk::PipelineVertexInputStateCreateInfo{
         .vertexBindingDescriptionCount = static_cast<uint32_t>(binding.size()),
@@ -133,8 +133,8 @@ vk::PipelineColorBlendAttachmentState vk_init::populateVkPipelineColorBlendAttac
 }
 
 vk::PipelineLayoutCreateInfo
-vk_init::populateVkPipelineLayoutCreateInfo(const std::span<const vk::DescriptorSetLayout> &setLayout,
-                                            const std::span<const vk::PushConstantRange> &pushLayout)
+vk_init::populateVkPipelineLayoutCreateInfo(std::span<const vk::DescriptorSetLayout> setLayout,
+                                            std::span<const vk::PushConstantRange> pushLayout)
 {
     vk::PipelineLayoutCreateInfo createInfo;
 

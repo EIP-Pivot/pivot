@@ -31,26 +31,20 @@ std::uint32_t VulkanBase::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT m
                                         VkDebugUtilsMessageTypeFlagsEXT messageType,
                                         const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *)
 {
-    decltype(&Logger::debug) severity;
-    switch (messageSeverity) {
-        case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-            severity = &Logger::debug;
-            break;
-        case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-            severity = &Logger::err;
-            break;
-        case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-            severity = &Logger::warn;
-            break;
-        case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-            severity = &Logger::info;
-            break;
-        default: severity = &Logger::err; break;
-    }
-    vk::to_string(vk::DebugUtilsMessageTypeFlagsEXT(messageType));
-    (logger.*severity)(to_string_message_type(messageType)) << pCallbackData->pMessage;
-
+#define LOGGER_LVL(name)                          \
+    logger.name(type) << pCallbackData->pMessage; \
     return VK_FALSE;
+
+    auto type = vk::to_string(vk::DebugUtilsMessageTypeFlagsEXT(messageType));
+
+    switch (messageSeverity) {
+        case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT: LOGGER_LVL(debug)
+        case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: LOGGER_LVL(err)
+        case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT: LOGGER_LVL(warn)
+        case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: LOGGER_LVL(info)
+        default: LOGGER_LVL(err)
+    }
+#undef LOGGER_LVL
 }
 
 bool VulkanBase::checkValidationLayerSupport(const std::vector<const char *> &validationLayers)
@@ -76,8 +70,8 @@ bool VulkanBase::isDeviceSuitable(const vk::PhysicalDevice &gpu, const vk::Surfa
 {
     DEBUG_FUNCTION
 #define IS_VALID(var, message) \
-    isValid |= bool(var);      \
-    if (!isValid) logger.debug("VulkanBase::isDeviceSuitable") << message;
+    isValid |= bool((var));    \
+    if (!isValid) logger.debug("VulkanBase::isDeviceSuitable") << (message);
 
     auto indices = QueueFamilyIndices::findQueueFamilies(gpu, surface);
     bool extensionsSupported = checkDeviceExtensionSupport(gpu, deviceExtensions);

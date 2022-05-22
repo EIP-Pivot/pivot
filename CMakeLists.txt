@@ -170,7 +170,7 @@ if(CODE_COVERAGE AND BUILD_TESTING AND CMAKE_COMPILER_IS_GNUCXX)
         EXECUTABLE
         ctest
         DEPENDENCIES
-        pivot::pivot
+        tests
         LCOV_ARGS
         "--no-external"
     )

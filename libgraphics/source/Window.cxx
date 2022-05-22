@@ -53,9 +53,14 @@ vk::SurfaceKHR Window::createSurface(const vk::Instance &instance)
     return surface;
 }
 
-void Window::setKeyPressCallback(Window::Key key, Window::KeyEvent event) { keyPressMap.insert({key, event}); }
-void Window::setKeyReleaseCallback(Window::Key key, Window::KeyEvent event) { keyReleaseMap.insert({key, event}); }
-void Window::setMouseMovementCallback(Window::MouseEvent event) { mouseCallback = event; }
+void Window::addKeyPressCallback(Window::Key key, Window::KeyEvent event) { keyPressMap[key].push_back(event); }
+
+void Window::addGlobalKeyPressCallback(Window::KeyEvent event) { globalKeyPressMap.push_back(event); }
+
+void Window::addKeyReleaseCallback(Window::Key key, Window::KeyEvent event) { keyReleaseMap[key].push_back(event); }
+void Window::addGlobalKeyReleaseCallback(Window::KeyEvent event) { globalKeyReleaseMap.push_back(event); }
+
+void Window::addMouseMovementCallback(Window::MouseEvent event) { mouseCallback.push_back(event); }
 
 void Window::setTitle(const std::string &t) noexcept
 {
@@ -63,12 +68,12 @@ void Window::setTitle(const std::string &t) noexcept
     glfwSetWindowTitle(window, windowName.c_str());
 }
 
-void Window::setIcon(const std::span<GLFWimage> &images) noexcept
+void Window::setIcon(const std::span<const GLFWimage> &images) noexcept
 {
     glfwSetWindowIcon(window, images.size(), images.data());
 }
 
-void Window::setIcon(const std::vector<std::string> &windowIcons)
+void Window::setIcon(const std::span<const std::string> &windowIcons)
 {
     std::vector<GLFWimage> images;
     for (const auto &icon: windowIcons) {
@@ -156,22 +161,29 @@ void Window::error_callback(int code, const char *msg) noexcept { logger.err("Wi
 void Window::cursor_callback(GLFWwindow *win, double xpos, double ypos)
 {
     auto window = (Window *)glfwGetWindowUserPointer(win);
-    if (window->mouseCallback) (*window->mouseCallback)(*window, glm::dvec2(xpos, ypos));
+    for (auto &&fn: window->mouseCallback) fn(*window, glm::dvec2(xpos, ypos));
 }
 
 void Window::keyboard_callback(GLFWwindow *win, int key, int scancode, int action, int mods)
 {
+#define FOR_EACH(vec) \
+    for (auto &&fn: vec) fn(*window, _key);
+
     auto window = (Window *)glfwGetWindowUserPointer(win);
     auto _key = static_cast<Window::Key>(translate_key(key, scancode));
 
     switch (action) {
         case GLFW_PRESS:
-            if (window->keyPressMap.contains(_key)) window->keyPressMap.at(_key)(*window, _key);
+            FOR_EACH(window->globalKeyPressMap);
+            if (window->keyPressMap.contains(_key)) FOR_EACH(window->keyPressMap.at(_key));
             break;
         case GLFW_RELEASE:
-            if (window->keyReleaseMap.contains(_key)) window->keyReleaseMap.at(_key)(*window, _key);
+            FOR_EACH(window->globalKeyReleaseMap);
+            if (window->keyReleaseMap.contains(_key))
+                if (window->keyReleaseMap.contains(_key)) FOR_EACH(window->keyReleaseMap.at(_key));
             break;
         default: break;
     }
+#undef FOR_EACH
 }
 }    // namespace pivot::graphics

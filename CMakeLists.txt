@@ -8,15 +8,6 @@ include(cmake/CompileShaders.cmake)
 include(cmake/tests.cmake)
 
 find_linker()
-check_ipo_supported(RESULT supported)
-if(supported)
-    message(STATUS "LTO enabled")
-    cmake_policy(SET CMP0069 NEW)
-    set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
-    set_property(GLOBAL PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-else()
-    message(STATUS "LTO not supported")
-endif()
 
 if(MSVC
    AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.29.30129
@@ -29,6 +20,83 @@ endif()
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+check_ipo_supported(RESULT supported)
+if(supported)
+    message(STATUS "LTO enabled")
+    cmake_policy(SET CMP0069 NEW)
+    set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
+    set_property(GLOBAL PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+else()
+    message(STATUS "LTO not supported")
+endif()
+
+option(BUILD_TESTING "Build the unit tests" ON)
+if(BUILD_TESTING)
+    if(DEFINED ENV{CI})
+        message(STATUS "CI Unit tests enabled")
+    else()
+        message(STATUS "Unit tests enabled")
+    endif()
+    fetchcontent_declare(
+        catch2
+        GIT_REPOSITORY https://github.com/catchorg/Catch2
+        GIT_TAG ed6b38b096eac9a976e1fdeee5320fa913146af7
+    )
+    if(NOT catch2_POPULATED)
+        message(STATUS "Populating Catch2")
+        fetchcontent_populate(catch2)
+        add_subdirectory(${catch2_SOURCE_DIR} ${catch2_BINARY_DIR})
+    endif()
+    list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+    include(CTest)
+    include(Catch)
+endif()
+
+option(CODE_COVERAGE "Enable code coverage report" OFF)
+if(CODE_COVERAGE
+   AND BUILD_TESTING
+   AND CMAKE_COMPILER_IS_GNUCXX
+)
+    include(cmake/CodeCoverage.cmake)
+    set(COVERAGE_EXCLUDES ${CMAKE_BINARY_DIR}/_deps/* /usr/* **/tests/**)
+    append_coverage_compiler_flags()
+    setup_target_for_coverage_lcov(
+        NAME
+        coverage
+        EXECUTABLE
+        ctest
+        DEPENDENCIES
+        tests
+        LCOV_ARGS
+        "--no-external"
+    )
+    message(STATUS "Code coverage - enabled")
+elseif(NOT CODE_COVERAGE)
+    message(STATUS "Code coverage - disabled")
+elseif(NOT CMAKE_COMPILER_IS_GNUCXX)
+    message(STATUS "Code coverage - unavailable")
+endif()
+
+option(BUILD_DOCUMENTATION "Build the HTML documentation" OFF)
+if(BUILD_DOCUMENTATION)
+    message(STATUS "Documentation building using Doxygen enabled")
+    find_package(Doxygen)
+    if(DOXYGEN_FOUND)
+        set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
+        set(DOXYGEN_WARN_LOGFILE ${CMAKE_BINARY_DIR}/doxygen-warnings.log)
+        set(DOXYGEN_PREDEFINED DOXYGEN_SHOULD_SKIP_THIS)
+        doxygen_add_docs(
+            doc
+            libgraphics/include
+            libecs/include
+            libscript/include
+            README.md
+        )
+    else()
+        message(SEND_ERROR "Doxygen needs to be installed to build the documentation")
+    endif()
+endif()
 
 option(COMPILER_PROFILING "Enable clang profiling" OFF)
 if(COMPILER_PROFILING)
@@ -97,48 +165,6 @@ if(NOT magic_enum_POPULATED)
     add_subdirectory(${magic_enum_SOURCE_DIR} ${magic_enum_BINARY_DIR})
 endif()
 
-option(BUILD_TESTING "Build the unit tests" ON)
-if(BUILD_TESTING)
-    if(DEFINED ENV{CI})
-        message(STATUS "CI Unit tests enabled")
-    else()
-        message(STATUS "Unit tests enabled")
-    endif()
-    fetchcontent_declare(
-        catch2
-        GIT_REPOSITORY https://github.com/catchorg/Catch2
-        GIT_TAG ed6b38b096eac9a976e1fdeee5320fa913146af7
-    )
-    if(NOT catch2_POPULATED)
-        message(STATUS "Populating Catch2")
-        fetchcontent_populate(catch2)
-        add_subdirectory(${catch2_SOURCE_DIR} ${catch2_BINARY_DIR})
-    endif()
-    list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
-    include(CTest)
-    include(Catch)
-endif()
-
-option(BUILD_DOCUMENTATION "Build the HTML documentation" OFF)
-if(BUILD_DOCUMENTATION)
-    message(STATUS "Documentation building using Doxygen enabled")
-    find_package(Doxygen)
-    if(DOXYGEN_FOUND)
-        set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
-        set(DOXYGEN_WARN_LOGFILE ${CMAKE_BINARY_DIR}/doxygen-warnings.log)
-        set(DOXYGEN_PREDEFINED DOXYGEN_SHOULD_SKIP_THIS)
-        doxygen_add_docs(
-            doc
-            libgraphics/include
-            libecs/include
-            libscript/include
-            README.md
-        )
-    else()
-        message(SEND_ERROR "Doxygen needs to be installed to build the documentation")
-    endif()
-endif()
-
 add_subdirectory(libecs/)
 add_subdirectory(libgraphics/)
 add_subdirectory(libscript/)
@@ -159,33 +185,12 @@ add_library(pivot::graphics ALIAS pivot-graphics)
 add_library(pivot::ecs ALIAS pivot-ecs)
 add_library(pivot::script ALIAS pivot-script)
 
-option(CODE_COVERAGE "Enable code coverage report" OFF)
-if(CODE_COVERAGE AND BUILD_TESTING AND CMAKE_COMPILER_IS_GNUCXX)
-    include(cmake/CodeCoverage.cmake)
-    set(COVERAGE_EXCLUDES ${CMAKE_BINARY_DIR}/_deps/* /usr/* **/tests/**)
-    append_coverage_compiler_flags()
-    setup_target_for_coverage_lcov(
-        NAME
-        coverage
-        EXECUTABLE
-        ctest
-        DEPENDENCIES
-        tests
-        LCOV_ARGS
-        "--no-external"
-    )
-    message(STATUS "Code coverage - enabled")
-elseif(NOT CODE_COVERAGE)
-    message(STATUS "Code coverage - disabled")
-elseif(NOT CMAKE_COMPILER_IS_GNUCXX)
-    message(STATUS "Code coverage - unavailable")
-endif()
-
- set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-            -Wall>
-            $<$<CXX_COMPILER_ID:MSVC>:
-            /W3
-            /wd4267
-            /wd4201
-            /wd4244>"
+add_compile_options(
+    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+    -Wall>
+    $<$<CXX_COMPILER_ID:MSVC>:
+    /W3
+    /wd4267
+    /wd4201
+    /wd4244>
 )

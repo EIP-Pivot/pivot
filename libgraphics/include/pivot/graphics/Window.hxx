@@ -35,7 +35,8 @@ class Window
 {
 public:
     /// Enum of the different key input
-    enum class Key : std::size_t {
+    enum class Key {
+        UNKNOWN = GLFW_KEY_UNKNOWN,
         A = GLFW_KEY_A,
         Z = GLFW_KEY_Z,
         E = GLFW_KEY_E,
@@ -122,15 +123,17 @@ public:
     /// Tell wether or not a key is pressed
     ///
     /// @return true if the key is pressed, otherwise false
-    inline bool isKeyPressed(Key key) const noexcept
+    inline bool isKeyPressed(Key _key) const noexcept
     {
+        auto key = getTrueKey(_key);
         return glfwGetKey(this->window, static_cast<unsigned>(key)) == GLFW_PRESS;
     }
     /// Tell wether or not a key is not pressed
     ///
     /// @return true if the key is not pressed, otherwise false
-    inline bool isKeyReleased(Key key) const noexcept
+    inline bool isKeyReleased(Key _key) const noexcept
     {
+        auto key = getTrueKey(_key);
         return glfwGetKey(this->window, static_cast<unsigned>(key)) == GLFW_RELEASE;
     }
 
@@ -201,10 +204,11 @@ private:
     void setUserPointer(void *ptr) noexcept;
     void initWindow(const unsigned width, const unsigned height);
     glm::ivec2 updateSize() const noexcept;
+    Key getTrueKey(const Key &ex) const noexcept;
 
     static void error_callback(int code, const char *msg) noexcept;
     static void cursor_callback(GLFWwindow *win, double xpos, double ypos);
-    static void keyboard_callback(GLFWwindow *win, int key, int, int action, int);
+    static void keyboard_callback(GLFWwindow *win, int key, int scancode, int action, int mods);
 
 private:
     std::optional<MouseEvent> mouseCallback = {};

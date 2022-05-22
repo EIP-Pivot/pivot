@@ -181,46 +181,11 @@ elseif(NOT CMAKE_COMPILER_IS_GNUCXX)
     message(STATUS "Code coverage - unavailable")
 endif()
 
-target_compile_options(
-    pivot-ecs
-    PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
             -Wall>
             $<$<CXX_COMPILER_ID:MSVC>:
             /W3
             /wd4267
             /wd4201
-            /wd4244>
-)
-
-target_compile_options(
-    pivot-graphics
-    PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-            -Wall>
-            $<$<CXX_COMPILER_ID:MSVC>:
-            /W3
-            /wd4267
-            /wd4201
-            /wd4244>
-)
-
-target_compile_options(
-    pivot-script
-    PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-            -Wall>
-            $<$<CXX_COMPILER_ID:MSVC>:
-            /W3
-            /wd4267
-            /wd4201
-            /wd4244>
-)
-
-target_compile_options(
-    pivot
-    PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-            -Wall>
-            $<$<CXX_COMPILER_ID:MSVC>:
-            /W3
-            /wd4267
-            /wd4201
-            /wd4244>
+            /wd4244>"
 )

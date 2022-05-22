@@ -68,7 +68,7 @@ data::Value builtin_operator<Operator::Equal>(const data::Value &left_value, con
         [&left_value, &right_value](const auto &left, const auto &right) -> bool {
             using L = std::decay_t<decltype(left)>;
             using R = std::decay_t<decltype(right)>;
-            if constexpr (std::equality_comparable_with<L, R>) { return left == right; }
+            if constexpr (std::predicate<std::equal_to<void>, L, R>) { return std::equal_to<void>()(left, right); }
             logger.err("ERROR") << " by '" << left_value.type().toString() << "' and '" << right_value.type().toString()
                                 << "'";
             throw InvalidOperation("Invalid equal to '==' operator between these types.");
@@ -76,30 +76,44 @@ data::Value builtin_operator<Operator::Equal>(const data::Value &left_value, con
         static_cast<const data::Value::variant &>(left_value), static_cast<const data::Value::variant &>(right_value));
 }
 template <>
-data::Value builtin_operator<Operator::NotEqual>(const data::Value &left, const data::Value &right)
+data::Value builtin_operator<Operator::NotEqual>(const data::Value &left_value, const data::Value &right_value)
 {    // not equal to operator '!='
-    try {
-        if (std::get<data::BasicType>(left.type()) == data::BasicType::Number &&
-            std::get<data::BasicType>(right.type()) == data::BasicType::Number)
-            return data::Value(std::get<double>(left) != std::get<double>(right));    // perform arithmetic comparison
-        else if (std::get<data::BasicType>(left.type()) == data::BasicType::String &&
-                 std::get<data::BasicType>(right.type()) == data::BasicType::String)
-            return data::Value(std::get<std::string>(left) !=
-                               std::get<std::string>(right));    // perform alphabetical comparison
-        else if (std::get<data::BasicType>(left.type()) == data::BasicType::Boolean &&
-                 std::get<data::BasicType>(right.type()) == data::BasicType::Boolean)
-            return data::Value(std::get<bool>(left) != std::get<bool>(right));    // perform arithmetic comparison
-        else if (std::get<data::BasicType>(left.type()) == data::BasicType::Vec3 &&
-                 std::get<data::BasicType>(right.type()) == data::BasicType::Vec3)
-            return data::Value(std::get<glm::vec3>(left) != std::get<glm::vec3>(right));    // let glm do the comparison
-        else {                                                                              // unsupported
-            logger.err("ERROR") << " by '" << left.type().toString() << "' and '" << right.type().toString() << "'";
-            throw InvalidOperation("Invalid not equal to '!=' operator between these types.");
-        }
-    } catch (const std::bad_variant_access &) {
-        logger.err("ERROR") << " by '" << left.type().toString() << "' and '" << right.type().toString() << "'";
-        throw InvalidOperation("Invalid not equal to '!=' operator between these types.");
-    }
+    return std::visit(
+        [&left_value, &right_value](const auto &left, const auto &right) -> bool {
+            using L = std::decay_t<decltype(left)>;
+            using R = std::decay_t<decltype(right)>;
+            if constexpr (std::predicate<std::not_equal_to<void>, L, R>) {
+                return std::not_equal_to<void>()(left, right);
+            }
+            logger.err("ERROR") << " by '" << left_value.type().toString() << "' and '" << right_value.type().toString()
+                                << "'";
+            throw InvalidOperation("Invalid equal to '=!' operator between these types.");
+        },
+        static_cast<const data::Value::variant &>(left_value), static_cast<const data::Value::variant &>(right_value));
+    // try {
+    //     if (std::get<data::BasicType>(left.type()) == data::BasicType::Number &&
+    //         std::get<data::BasicType>(right.type()) == data::BasicType::Number)
+    //         return data::Value(std::get<double>(left) != std::get<double>(right));    // perform arithmetic
+    //         comparison
+    //     else if (std::get<data::BasicType>(left.type()) == data::BasicType::String &&
+    //              std::get<data::BasicType>(right.type()) == data::BasicType::String)
+    //         return data::Value(std::get<std::string>(left) !=
+    //                            std::get<std::string>(right));    // perform alphabetical comparison
+    //     else if (std::get<data::BasicType>(left.type()) == data::BasicType::Boolean &&
+    //              std::get<data::BasicType>(right.type()) == data::BasicType::Boolean)
+    //         return data::Value(std::get<bool>(left) != std::get<bool>(right));    // perform arithmetic comparison
+    //     else if (std::get<data::BasicType>(left.type()) == data::BasicType::Vec3 &&
+    //              std::get<data::BasicType>(right.type()) == data::BasicType::Vec3)
+    //         return data::Value(std::get<glm::vec3>(left) != std::get<glm::vec3>(right));    // let glm do the
+    //         comparison
+    //     else {                                                                              // unsupported
+    //         logger.err("ERROR") << " by '" << left.type().toString() << "' and '" << right.type().toString() << "'";
+    //         throw InvalidOperation("Invalid not equal to '!=' operator between these types.");
+    //     }
+    // } catch (const std::bad_variant_access &) {
+    //     logger.err("ERROR") << " by '" << left.type().toString() << "' and '" << right.type().toString() << "'";
+    //     throw InvalidOperation("Invalid not equal to '!=' operator between these types.");
+    // }
 }
 // TODO : try function blocks
 template <>

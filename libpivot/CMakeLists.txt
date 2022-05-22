@@ -7,6 +7,7 @@ add_library(
     sources/builtins/systems/ControlSystem.cxx
     sources/builtins/systems/PhysicSystem.cxx
     sources/builtins/components/RenderObject.cxx
+    sources/builtins/components/Light.cxx
     sources/builtins/components/Transform.cxx
 )
 

@@ -22,7 +22,7 @@ template <BufferValid T>
 class AllocatedBuffer
 {
 public:
-    /// get the size of the buffer
+    /// get the number of valid item in the buffer
     auto getSize() const noexcept { return size; }
     /// get the allocated size (can be different from the size)
     auto getAllocatedSize() const noexcept { return info.size; }

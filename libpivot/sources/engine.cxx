@@ -15,6 +15,8 @@
 #include <pivot/builtins/components/RenderObject.hxx>
 #include <pivot/builtins/components/Transform.hxx>
 
+#include <pivot/builtins/components/Light.hxx>
+
 using namespace pivot;
 using namespace pivot::ecs;
 
@@ -30,6 +32,10 @@ Engine::Engine()
     m_component_index.registerComponent(builtins::components::RigidBody::description);
     m_component_index.registerComponent(builtins::components::RenderObject::description);
     m_component_index.registerComponent(builtins::components::Transform::description);
+    m_component_index.registerComponent(builtins::components::PointLight::description);
+    m_component_index.registerComponent(builtins::components::DirectionalLight::description);
+    m_component_index.registerComponent(builtins::components::SpotLight::description);
+
     m_event_index.registerEvent(builtins::events::tick);
     m_event_index.registerEvent(builtins::events::keyPress);
     m_system_index.registerSystem(builtins::systems::physicSystem);
@@ -83,22 +89,49 @@ void Engine::changeCurrentScene(ecs::SceneManager::SceneId sceneId)
 {
     m_scene_manager.setCurrentSceneId(sceneId);
 
-    using RenderObject = pivot::builtins::components::RenderObject;
-    using Transform = pivot::builtins::components::Transform;
+    using namespace pivot::builtins::components;
 
     auto &cm = m_scene_manager.getCurrentScene().getComponentManager();
     auto renderobject_id = cm.GetComponentId(RenderObject::description.name);
     auto transform_id = cm.GetComponentId(Transform::description.name);
-    if (renderobject_id && transform_id) {
+    auto pointlight_id = cm.GetComponentId(PointLight::description.name);
+    auto directional_id = cm.GetComponentId(DirectionalLight::description.name);
+    auto spotlight_id = cm.GetComponentId(SpotLight::description.name);
+    if (renderobject_id && transform_id && pointlight_id && directional_id && spotlight_id) {
         auto &ro_array = dynamic_cast<Array<pivot::graphics::RenderObject> &>(cm.GetComponentArray(*renderobject_id));
         auto &transform_array = dynamic_cast<Array<pivot::graphics::Transform> &>(cm.GetComponentArray(*transform_id));
-        auto new_command = std::make_optional<graphics::DrawCallResolver::DrawSceneInformation>({
-            ro_array.getComponents(),
-            ro_array.getExistence(),
-            transform_array.getComponents(),
-            transform_array.getExistence(),
-        });
-        m_current_scene_draw_command.swap(new_command);
+        auto &point_array = dynamic_cast<Array<pivot::graphics::PointLight> &>(cm.GetComponentArray(*pointlight_id));
+        auto &directional_array =
+            dynamic_cast<Array<pivot::graphics::DirectionalLight> &>(cm.GetComponentArray(*directional_id));
+        auto &spotlight_array = dynamic_cast<Array<pivot::graphics::SpotLight> &>(cm.GetComponentArray(*spotlight_id));
+
+        m_current_scene_draw_command = {
+            .renderObjects =
+                {
+                    .objects = ro_array.getComponents(),
+                    .exist = ro_array.getExistence(),
+                },
+            .pointLight =
+                {
+                    .objects = point_array.getComponents(),
+                    .exist = point_array.getExistence(),
+                },
+            .directionalLight =
+                {
+                    .objects = directional_array.getComponents(),
+                    .exist = directional_array.getExistence(),
+                },
+            .spotLight =
+                {
+                    .objects = spotlight_array.getComponents(),
+                    .exist = spotlight_array.getExistence(),
+                },
+            .transform =
+                {
+                    .objects = transform_array.getComponents(),
+                    .exist = transform_array.getExistence(),
+                },
+        };
     } else {
         m_current_scene_draw_command = std::nullopt;
     }
@@ -114,6 +147,15 @@ namespace
         }
         if (!cm.GetComponentId(builtins::components::Transform::description.name).has_value()) {
             cm.RegisterComponent(builtins::components::Transform::description);
+        }
+        if (!cm.GetComponentId(builtins::components::PointLight::description.name).has_value()) {
+            cm.RegisterComponent(builtins::components::PointLight::description);
+        }
+        if (!cm.GetComponentId(builtins::components::DirectionalLight::description.name).has_value()) {
+            cm.RegisterComponent(builtins::components::DirectionalLight::description);
+        }
+        if (!cm.GetComponentId(builtins::components::SpotLight::description.name).has_value()) {
+            cm.RegisterComponent(builtins::components::SpotLight::description);
         }
     }
 }    // namespace

@@ -61,7 +61,6 @@ data::Value builtin_sin(const std::vector<data::Value> &params, const BuiltinCon
 
 // Relational operators -- start
 
-
 // TODO : try function blocks
 template <>
 data::Value builtin_operator<Operator::GreaterThan>(const data::Value &left, const data::Value &right)

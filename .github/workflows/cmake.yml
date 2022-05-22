@@ -88,14 +88,17 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Create build directory
+        run: mkdir -p ${{ github.workspace }}/build/
+
       - name: Configure CMake
-        run: cmake
-          -B ${{github.workspace}}/build
+        working-directory: ${{ github.workspace }}/build/
+        run: cmake ..
           -D BUILD_DOCUMENTATION=ON
 
       - name: Build doc
-        run: cmake
-          --build ${{github.workspace}}/build
+        working-directory: ${{ github.workspace }}/build/
+        run: cmake --build .
           --target doc
 
       - name: Check no warnings
@@ -131,7 +134,7 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: ${{ github.workspace }}/build/_deps/
-          key: ${{ matrix.config.os }}-build-${{ matrix.build_type }}-${{ github.ref_name }}-${{ hashFiles('.github/workflows/cmake.yml') }}
+          key: ubuntu-20.04-build-Debug-${{ github.ref_name }}-${{ hashFiles('.github/workflows/cmake.yml') }}
 
       - name: Configure CMake
         working-directory: ${{ github.workspace }}/build/
@@ -141,7 +144,9 @@ jobs:
 
       - name: Build lib
         working-directory: ${{ github.workspace }}/build/
-        run: make coverage
+        run: cmake --build .
+          --config Debug
+          --target coverage
 
       - uses: actions/upload-artifact@v2
         with:

@@ -25,10 +25,14 @@ const std::map<std::string, std::function<data::Value(const data::Value &, const
     {"<=", interpreter::builtins::builtin_operator<builtins::Operator::LowerOrEqual>},
     {">", interpreter::builtins::builtin_operator<builtins::Operator::GreaterThan>},
     {">=", interpreter::builtins::builtin_operator<builtins::Operator::GreaterOrEqual>},
-    {"==", interpreter::builtins::builtin_operator<builtins::Operator::Equal>},
-    {"!=", interpreter::builtins::builtin_operator<builtins::Operator::NotEqual>},
-    {"&&", interpreter::builtins::builtin_operator<builtins::Operator::LogicalAnd>},
-    {"||", interpreter::builtins::builtin_operator<builtins::Operator::LogicalOr>}};
+    // {"<", interpreter::builtins::generic_builtin_comparator(std::less<void>{}, "<")},
+    // {"<=", interpreter::builtins::generic_builtin_comparator(std::less_equal<void>{}, "<=")},
+    // {">", interpreter::builtins::generic_builtin_comparator(std::greater<void>{}, ">")},
+    // {">=", interpreter::builtins::generic_builtin_comparator(std::greater_equal<void>{}, ">=")},
+    {"==", interpreter::builtins::generic_builtin_comparator(std::equal_to<void>{}, "==")},
+    {"!=", interpreter::builtins::generic_builtin_comparator(std::not_equal_to<void>{}, "!=")},
+    {"&&", interpreter::builtins::generic_builtin_comparator(std::logical_and<void>{}, "&&")},
+    {"||", interpreter::builtins::generic_builtin_comparator(std::logical_or<void>{}, "||")}};
 
 /// Builtins are callbacks taking values as parameters and returning a single value
 using BuiltinFunctionCallback =

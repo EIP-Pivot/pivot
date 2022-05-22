@@ -5,7 +5,10 @@
 #include <iostream>
 #include <vector>
 
+#include <Logger.hpp>
+
 #include "pivot/ecs/Core/Data/value.hxx"
+#include "pivot/script/Exceptions.hxx"
 
 namespace pivot::ecs::script::interpreter::builtins
 {
@@ -60,5 +63,23 @@ enum class Operator {
 
 template <Operator O>
 data::Value builtin_operator(const data::Value &left, const data::Value &right);
+
+constexpr auto generic_builtin_comparator(auto op, const std::string &op_string)
+{
+    return [op, op_string](const data::Value &left_value, const data::Value &right_value) {
+        return std::visit(
+            [&left_value, &right_value, &op_string, &op](const auto &left, const auto &right) -> bool {
+                using L = std::decay_t<decltype(left)>;
+                using R = std::decay_t<decltype(right)>;
+                if constexpr (std::predicate<decltype(op), L, R>) { return op(left, right); }
+                logger.err("ERROR") << " by '" << left_value.type().toString() << "' and '"
+                                    << right_value.type().toString() << "'";
+                throw InvalidOperation(std::string("Invalid equal to '") + op_string +
+                                       "'operator between these types.");
+            },
+            static_cast<const data::Value::variant &>(left_value),
+            static_cast<const data::Value::variant &>(right_value));
+    };
+}
 
 }    // end of namespace pivot::ecs::script::interpreter::builtins

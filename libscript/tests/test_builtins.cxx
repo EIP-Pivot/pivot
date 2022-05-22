@@ -24,15 +24,9 @@ TEST_CASE("Builtin print", "[script][builtin]")
     REQUIRE(print({glm::vec3(1, 2, 3)}) == "vec3(1,2,3)\n");
 }
 
-template <Operator O>
-bool test_operator(const data::Value &left, const data::Value &right)
-{
-    return std::get<bool>(builtin_operator<O>(left, right));
-}
-
 TEST_CASE("Builtin equal", "[script][builtin]")
 {
-    auto equal = test_operator<Operator::Equal>;
+    auto equal = generic_builtin_comparator(std::equal_to<void>{}, "==");
 
     REQUIRE(equal(Value{3}, Value{3}));
     REQUIRE(equal(Value{"test"}, Value{"test"}));
@@ -42,7 +36,7 @@ TEST_CASE("Builtin equal", "[script][builtin]")
 
 TEST_CASE("Builtin not equal", "[script][builtin]")
 {
-    auto equal = test_operator<Operator::NotEqual>;
+    auto equal = generic_builtin_comparator(std::not_equal_to<void>{}, "!");
 
     REQUIRE_FALSE(equal(Value{3}, Value{3}));
     REQUIRE_FALSE(equal(Value{"test"}, Value{"test"}));

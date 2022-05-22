@@ -102,12 +102,11 @@ void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sce
 
     auto bufferCmp = objectGPUData.size() <=> frame.currentBufferSize;
     auto descriptorCmp = objectGPUData.size() <=> frame.currentDescriptorSetSize;
-    if (objectGPUData.size() == 0) {
-        return;
-    } else if (std::is_gt(bufferCmp)) {
+    if (objectGPUData.empty()) return;
+    if (std::is_gt(bufferCmp)) {
         createBuffer(objectGPUData.size());
         updateDescriptorSet(objectGPUData.size());
-    } else if (objectGPUData.size() > 0 && (std::is_lt(bufferCmp) || std::is_gt(descriptorCmp))) {
+    } else if (std::is_lt(bufferCmp) || std::is_gt(descriptorCmp)) {
         updateDescriptorSet(objectGPUData.size());
     }
 

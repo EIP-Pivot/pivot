@@ -27,7 +27,7 @@ jobs:
             extra_cmake: ' -A "x64"'
             compiler: 'cl'
 
-          - os: ubuntu-22.04
+          - os: ubuntu-20.04
             working_directory: /build/
             extra_cmake: ''
             compiler: 'g++-11'

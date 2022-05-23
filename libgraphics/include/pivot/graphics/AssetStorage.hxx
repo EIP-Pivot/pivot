@@ -419,6 +419,14 @@ inline OptionalRef<const AssetStorage::Prefab> AssetStorage::get_optional(const 
 }
 
 template <>
+/// @copydoc AssetStorage::get_optional
+inline OptionalRef<const gpu_object::AABB> AssetStorage::get_optional(const std::string &p) const
+{
+    if (meshAABBStorage.contains(p)) { return std::make_optional(std::ref(meshAABBStorage.get(p))); }
+    return std::nullopt;
+}
+
+template <>
 /// @copydoc AssetStorage::get
 inline const AssetStorage::Model &AssetStorage::get(const std::string &p) const
 {

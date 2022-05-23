@@ -6,6 +6,7 @@ add_library(
     sources/internal/camera.cxx
     sources/builtins/systems/ControlSystem.cxx
     sources/builtins/systems/PhysicSystem.cxx
+    sources/builtins/systems/CollisionSystem.cxx
     sources/builtins/components/RenderObject.cxx
     sources/builtins/components/Light.cxx
     sources/builtins/components/Transform.cxx

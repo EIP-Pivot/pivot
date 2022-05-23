@@ -10,6 +10,7 @@
 
 #include <pivot/builtins/events/key_press.hxx>
 #include <pivot/builtins/events/tick.hxx>
+#include <pivot/builtins/systems/CollisionSystem.hxx>
 #include <pivot/builtins/systems/PhysicSystem.hxx>
 
 #include <pivot/builtins/components/Collidable.hxx>
@@ -41,6 +42,7 @@ Engine::Engine()
     m_event_index.registerEvent(builtins::events::tick);
     m_event_index.registerEvent(builtins::events::keyPress);
     m_system_index.registerSystem(builtins::systems::physicSystem);
+    m_system_index.registerSystem(builtins::systems::makeCollisionSystem(m_vulkan_application.assetStorage));
 
     m_vulkan_application.addRenderer<pivot::graphics::CullingRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::GraphicsRenderer>();

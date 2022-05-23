@@ -92,7 +92,7 @@ void VulkanApplication::initVulkanRessources()
                       renderPass.getRenderPass());
     });
     std::ranges::for_each(computeRenderer,
-                          [this](auto &pair) { pair->onInit(*this, frames[0].drawResolver.getDescriptorSetLayout()); });
+                          [this](auto &rendy) { rendy->onInit(*this, frames[0].drawResolver.getDescriptorSetLayout()); });
 
     postInitialization();
     logger.info("Vulkan Application") << "Initialisation complete !";

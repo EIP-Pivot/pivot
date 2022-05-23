@@ -31,7 +31,7 @@ VulkanApplication::VulkanApplication()
         bEnableValidationLayers = false;
     }
     window.setIcon(iconFilepath);
-    window.setKeyPressCallback(Window::Key::ESCAPE,
+    window.addKeyPressCallback(Window::Key::ESCAPE,
                                [](Window &window, const Window::Key) { window.shouldClose(true); });
 }
 

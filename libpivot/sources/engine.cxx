@@ -45,13 +45,7 @@ Engine::Engine()
     m_vulkan_application.addRenderer<pivot::graphics::ImGuiRenderer>();
     m_vulkan_application.init();
 
-    // FIXME: Register for all keys
-    using Key = pivot::graphics::Window::Key;
-    for (auto key: {
-             Key::Z, Key::E, Key::R, Key::T, Key::Y, Key::U, Key::I, Key::O, Key::P, Key::Q, Key::F,
-             Key::G, Key::H, Key::J, Key::K, Key::L, Key::M, Key::X, Key::C, Key::V, Key::B, Key::N,
-         })
-        m_vulkan_application.window.setKeyPressCallback(key, std::bind_front(&Engine::onKeyPressed, this));
+    m_vulkan_application.window.addGlobalKeyPressCallback(std::bind_front(&Engine::onKeyPressed, this));
 }
 
 void Engine::run()

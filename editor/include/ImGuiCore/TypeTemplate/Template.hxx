@@ -21,6 +21,8 @@ void draw(double &value, const std::string &name) { ImGui::InputDouble(name.c_st
 
 void draw(pivot::ecs::data::Asset &asset, const std::string &name) { ImGui::InputText(name.c_str(), &asset.name); }
 
+void draw(pivot::ecs::data::Void &, const std::string &) { ImGui::Text("This component has no data"); }
+
 void draw(pivot::ecs::data::Value &value, const std::string &name);
 void draw(pivot::ecs::data::Record &values, const std::string &)
 {

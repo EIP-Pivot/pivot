@@ -20,6 +20,12 @@ void to_json(nlohmann::json &json, const Asset &value);
 
 /// Deserialize an Asset from json
 void from_json(const nlohmann::json &json, Asset &value);
+
+/// Serialize Void to json
+void to_json(nlohmann::json &json, const Void &value);
+
+/// Deserialize Void from json
+void from_json(const nlohmann::json &json, Void &value);
 }    // namespace pivot::ecs::data
 
 namespace nlohmann

@@ -31,20 +31,28 @@ std::uint32_t VulkanBase::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT m
                                         VkDebugUtilsMessageTypeFlagsEXT messageType,
                                         const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *)
 {
-#define LOGGER_LVL(name)                          \
-    logger.name(type) << pCallbackData->pMessage; \
-    return VK_FALSE;
+    using Level = cpplogger::Logger::Level;
 
     auto type = vk::to_string(vk::DebugUtilsMessageTypeFlagsEXT(messageType));
+    auto level = Level::Trace;
 
     switch (messageSeverity) {
-        case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT: LOGGER_LVL(debug)
-        case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: LOGGER_LVL(err)
-        case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT: LOGGER_LVL(warn)
-        case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: LOGGER_LVL(info)
-        default: LOGGER_LVL(err)
+        case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+            level = Level::Debug;
+            break;
+        case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+            level = Level::Error;
+            break;
+        case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+            level = Level::Warn;
+            break;
+        case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+            level = Level::Info;
+            break;
+        default: level = Level::Trace;
     }
-#undef LOGGER_LVL
+    logger.level(level, type) << pCallbackData->pMessage;
+    return VK_FALSE;
 }
 
 bool VulkanBase::checkValidationLayerSupport(const std::vector<const char *> &validationLayers)
@@ -116,7 +124,9 @@ bool VulkanBase::checkDeviceExtensionSupport(const vk::PhysicalDevice &device,
     auto availableExtensions = device.enumerateDeviceExtensionProperties();
 
     std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
-    for (const auto &extension: availableExtensions) { requiredExtensions.erase(extension.extensionName); }
+    for (const auto &extension: availableExtensions) requiredExtensions.erase(extension.extensionName);
+
+    for (const auto &required: requiredExtensions) logger.debug("VulkanBase/Missing device extension") << required;
     return requiredExtensions.empty();
 }
 

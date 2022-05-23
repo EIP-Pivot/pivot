@@ -12,6 +12,7 @@
 #include <pivot/builtins/events/tick.hxx>
 #include <pivot/builtins/systems/PhysicSystem.hxx>
 
+#include <pivot/builtins/components/Collidable.hxx>
 #include <pivot/builtins/components/RenderObject.hxx>
 #include <pivot/builtins/components/Transform.hxx>
 
@@ -35,6 +36,7 @@ Engine::Engine()
     m_component_index.registerComponent(builtins::components::PointLight::description);
     m_component_index.registerComponent(builtins::components::DirectionalLight::description);
     m_component_index.registerComponent(builtins::components::SpotLight::description);
+    m_component_index.registerComponent(builtins::components::Collidable::description);
 
     m_event_index.registerEvent(builtins::events::tick);
     m_event_index.registerEvent(builtins::events::keyPress);

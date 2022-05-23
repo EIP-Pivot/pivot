@@ -9,6 +9,7 @@ add_library(
     sources/builtins/components/RenderObject.cxx
     sources/builtins/components/Light.cxx
     sources/builtins/components/Transform.cxx
+    sources/builtins/components/Collidable.cxx
 )
 
 

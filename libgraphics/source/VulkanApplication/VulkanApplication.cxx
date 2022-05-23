@@ -91,8 +91,9 @@ void VulkanApplication::initVulkanRessources()
         rendy->onInit(swapchain.getSwapchainExtent(), *this, frames[0].drawResolver.getDescriptorSetLayout(),
                       renderPass.getRenderPass());
     });
-    std::ranges::for_each(computeRenderer,
-                          [this](auto &rendy) { rendy->onInit(*this, frames[0].drawResolver.getDescriptorSetLayout()); });
+    std::ranges::for_each(computeRenderer, [this](auto &rendy) {
+        rendy->onInit(*this, frames[0].drawResolver.getDescriptorSetLayout());
+    });
 
     postInitialization();
     logger.info("Vulkan Application") << "Initialisation complete !";

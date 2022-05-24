@@ -14,9 +14,7 @@ namespace pivot::graphics
 class GraphicsPipelineBuilder final : public internal::IPipelineBuilder
 {
 public:
-    GraphicsPipelineBuilder() = delete;
-    /// Construct a pipeline with a predefined extent
-    GraphicsPipelineBuilder(const vk::Extent2D &);
+    GraphicsPipelineBuilder();
     ~GraphicsPipelineBuilder();
 
     GraphicsPipelineBuilder &setPipelineLayout(vk::PipelineLayout &) noexcept;
@@ -40,6 +38,10 @@ public:
     GraphicsPipelineBuilder &setPolygonMode(const vk::PolygonMode &) noexcept;
     /// Set the rasterizer' face culling config, can be chained
     GraphicsPipelineBuilder &setFaceCulling(const vk::CullModeFlags &, const vk::FrontFace &) noexcept;
+    /// Set the viewport of the pipeline. If none is provided, it will be considered as dynamic state
+    GraphicsPipelineBuilder &setViewPort(const vk::Viewport &port);
+    /// Set the scissor of the pipeline. If none is provided, it will be considered as dynamic state
+    GraphicsPipelineBuilder &setScissor(const vk::Rect2D &scissor);
 
     /// Return the vertex description vector
     std::vector<vk::VertexInputBindingDescription> &getVertexDescription() noexcept;
@@ -63,8 +65,8 @@ private:
     vk::PipelineMultisampleStateCreateInfo multisampling;
     vk::PipelineDepthStencilStateCreateInfo depthStencil;
     vk::PipelineRasterizationStateCreateInfo rasterizer;
-    vk::Viewport viewport;
-    vk::Rect2D scissor;
+    std::optional<vk::Viewport> viewport;
+    std::optional<vk::Rect2D> scissor;
     vk::PipelineLayout pipelineLayout;
     vk::RenderPass renderPass;
     std::vector<vk::VertexInputBindingDescription> vertexDescription;

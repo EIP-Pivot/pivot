@@ -15,6 +15,17 @@ bool GraphicsRenderer::onInit(const vk::Extent2D &size, VulkanBase &base_ref,
                               const vk::DescriptorSetLayout &resolverLayout, vk::RenderPass &pass)
 {
     bIsMultiDraw = base_ref.deviceFeature.multiDrawIndirect;
+    viewport = vk::Viewport{
+        .x = 0.0f,
+        .y = 0.0f,
+        .width = static_cast<float>(size.width),
+        .height = static_cast<float>(size.height),
+        .minDepth = 0.0f,
+        .maxDepth = 1.0f,
+    };
+    scissor = vk::Rect2D{
+        .extent = size,
+    };
     createPipelineLayout(base_ref.device, resolverLayout);
     createPipeline(base_ref, pass, size);
     return true;
@@ -59,6 +70,8 @@ bool GraphicsRenderer::onDraw(const CameraData &cameraData, DrawCallResolver &re
                                                         sizeof(gpu_object::VertexPushConstant), fragmentCamera);
     for (const auto &packedPipeline: resolver.getFrameData().pipelineBatch) {
         cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, stor.getGraphics(packedPipeline.pipelineID));
+        cmd.setViewport(0, viewport);
+        cmd.setScissor(0, scissor);
 
         if (bIsMultiDraw) {
             cmd.drawIndexedIndirect(resolver.getFrameData().indirectBuffer.buffer,
@@ -97,7 +110,7 @@ void GraphicsRenderer::createPipeline(VulkanBase &base_ref, vk::RenderPass &pass
 {
     DEBUG_FUNCTION
 
-    GraphicsPipelineBuilder builder(size);
+    GraphicsPipelineBuilder builder;
     builder.setPipelineLayout(pipelineLayout)
         .setRenderPass(pass)
         .setMsaaSample(base_ref.maxMsaaSample)

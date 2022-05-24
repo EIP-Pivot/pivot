@@ -35,7 +35,7 @@ static int translate_key(int key, int scancode)
 namespace pivot::graphics
 {
 
-Window::Window(std::string n, unsigned w, unsigned h): windowName(n) { initWindow(w, h); }
+Window::Window(std::string n, unsigned w, unsigned h): windowName(std::move(n)) { initWindow(w, h); }
 
 Window::~Window()
 {
@@ -160,7 +160,7 @@ void Window::error_callback(int code, const char *msg) noexcept { logger.err("Wi
 
 void Window::cursor_callback(GLFWwindow *win, double xpos, double ypos)
 {
-    auto window = (Window *)glfwGetWindowUserPointer(win);
+    auto window = static_cast<Window *>(glfwGetWindowUserPointer(win));
     for (auto &&fn: window->mouseCallback) fn(*window, glm::dvec2(xpos, ypos));
 }
 
@@ -169,7 +169,7 @@ void Window::keyboard_callback(GLFWwindow *win, int key, int scancode, int actio
 #define FOR_EACH(vec) \
     for (auto &&fn: vec) fn(*window, _key);
 
-    auto window = (Window *)glfwGetWindowUserPointer(win);
+    auto window = static_cast<Window *>(glfwGetWindowUserPointer(win));
     auto _key = static_cast<Window::Key>(translate_key(key, scancode));
 
     switch (action) {

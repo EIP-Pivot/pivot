@@ -47,13 +47,10 @@ const std::vector<const char *> deviceExtensions = {
 class VulkanApplication : public VulkanBase
 {
 public:
-    /// Alias for a vector of command buffer
-    using CommandVector = std::vector<vk::CommandBuffer>;
-
     template <typename T>
     /// Alias for storing a Renderer and its associated command buffer
     requires std::is_base_of_v<IRenderer, T>
-    using RendererStorage = std::vector<std::pair<std::unique_ptr<T>, CommandVector>>;
+    using RendererStorage = std::vector<std::unique_ptr<T>>;
 
 public:
     /// Default constructor
@@ -88,9 +85,9 @@ public:
         auto rendy = std::make_unique<T>(pipelineStorage, assetStorage);
         auto &ret = *rendy;
         if constexpr (std::is_base_of_v<IGraphicsRenderer, T>) {
-            graphicsRenderer.emplace_back(std::move(rendy), CommandVector());
+            graphicsRenderer.emplace_back(std::move(rendy));
         } else if constexpr (std::is_base_of_v<IComputeRenderer, T>) {
-            computeRenderer.emplace_back(std::move(rendy), CommandVector());
+            computeRenderer.emplace_back(std::move(rendy));
         } else {
             throw std::logic_error("Unsuported Renderer : " + rendy->getType());
         }

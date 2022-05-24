@@ -31,25 +31,27 @@ std::uint32_t VulkanBase::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT m
                                         VkDebugUtilsMessageTypeFlagsEXT messageType,
                                         const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *)
 {
-    decltype(&Logger::debug) severity;
+    using Level = cpplogger::Logger::Level;
+
+    auto type = vk::to_string(vk::DebugUtilsMessageTypeFlagsEXT(messageType));
+    auto level = Level::Trace;
+
     switch (messageSeverity) {
         case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-            severity = &Logger::debug;
+            level = Level::Debug;
             break;
         case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-            severity = &Logger::err;
+            level = Level::Error;
             break;
         case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-            severity = &Logger::warn;
+            level = Level::Warn;
             break;
         case VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-            severity = &Logger::info;
+            level = Level::Info;
             break;
-        default: severity = &Logger::err; break;
+        default: level = Level::Trace;
     }
-    vk::to_string(vk::DebugUtilsMessageTypeFlagsEXT(messageType));
-    (logger.*severity)(to_string_message_type(messageType)) << pCallbackData->pMessage;
-
+    logger.level(level, type) << pCallbackData->pMessage;
     return VK_FALSE;
 }
 
@@ -76,8 +78,8 @@ bool VulkanBase::isDeviceSuitable(const vk::PhysicalDevice &gpu, const vk::Surfa
 {
     DEBUG_FUNCTION
 #define IS_VALID(var, message) \
-    isValid |= bool(var);      \
-    if (!isValid) logger.debug("VulkanBase::isDeviceSuitable") << message;
+    isValid |= bool((var));    \
+    if (!isValid) logger.debug("VulkanBase::isDeviceSuitable") << (message);
 
     auto indices = QueueFamilyIndices::findQueueFamilies(gpu, surface);
     bool extensionsSupported = checkDeviceExtensionSupport(gpu, deviceExtensions);
@@ -122,7 +124,9 @@ bool VulkanBase::checkDeviceExtensionSupport(const vk::PhysicalDevice &device,
     auto availableExtensions = device.enumerateDeviceExtensionProperties();
 
     std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
-    for (const auto &extension: availableExtensions) { requiredExtensions.erase(extension.extensionName); }
+    for (const auto &extension: availableExtensions) requiredExtensions.erase(extension.extensionName);
+
+    for (const auto &required: requiredExtensions) logger.debug("VulkanBase/Missing device extension") << required;
     return requiredExtensions.empty();
 }
 

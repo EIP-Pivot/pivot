@@ -35,18 +35,15 @@ vk::DescriptorSetLayout DescriptorLayoutCache::createDescriptorLayout(vk::Descri
     std::ranges::sort(layoutinfo.bindings, {}, [](const auto &i) { return i.binding; });
 
     auto it = layoutCache.find(layoutinfo);
-    if (it != layoutCache.end()) {
-        return it->second;
-    } else {
-        vk::DescriptorSetLayout layout = device_ref.createDescriptorSetLayout(info);
-        layoutCache[layoutinfo] = layout;
-        return layout;
-    }
+    if (it != layoutCache.end()) return it->second;
+    vk::DescriptorSetLayout layout = device_ref.createDescriptorSetLayout(info);
+    layoutCache[layoutinfo] = layout;
+    return layout;
 }
 
 void DescriptorLayoutCache::cleanup()
 {
-    for (auto pair: layoutCache) vkDestroyDescriptorSetLayout(device_ref, pair.second, nullptr);
+    for (const auto &pair: layoutCache) device_ref.destroyDescriptorSetLayout(pair.second);
 }
 
 }    // namespace pivot::graphics

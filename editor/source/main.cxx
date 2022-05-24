@@ -110,10 +110,12 @@ public:
             pivot::builtins::systems::ControlSystem::processMouseMovement(m_camera, glm::dvec2(xoffset, yoffset));
         });
 
+        m_vulkan_application.assetStorage.setAssetDirectory(PIVOT_ASSET_DEFAULT_DIRECTORY);
         m_vulkan_application.assetStorage.addModel("cube.obj");
         m_vulkan_application.assetStorage.addTexture("violet.png");
-        m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eClear);
+        m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
     }
+
     void processKeyboard(const pivot::builtins::Camera::Movement direction, float dt) noexcept
     {
         using Camera = pivot::builtins::Camera;

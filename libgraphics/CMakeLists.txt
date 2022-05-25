@@ -195,6 +195,9 @@ add_library(
     source/culling.cxx
     source/DrawCallResolver.cxx
     source/PipelineStorage.cxx
+    source/TransientRessourceSystem/RenderPassBuilder.cxx
+    source/TransientRessourceSystem/FrameGraph.cxx
+    source/TransientRessourceSystem/Ticket.cxx
 )
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE <vulkan/vulkan.hpp> <vk_mem_alloc.hpp>)

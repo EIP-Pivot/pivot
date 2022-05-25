@@ -47,5 +47,6 @@ public:
     uint32_t mipLevels = 1;
     /// @endcond
 };
+static_assert(std::is_trivially_copyable_v<AllocatedImage>);
 
 }    // namespace pivot::graphics

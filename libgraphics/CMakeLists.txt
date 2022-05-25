@@ -205,6 +205,9 @@ add_library(
     source/culling.cxx
     source/DrawCallResolver.cxx
     source/PipelineStorage.cxx
+    source/TransientRessourceSystem/RenderPassBuilder.cxx
+    source/TransientRessourceSystem/FrameGraph.cxx
+    source/TransientRessourceSystem/Ticket.cxx
 )
 
 target_compile_options(

@@ -8,17 +8,24 @@ namespace pivot::graphics
 {
 
 template <typename T>
-/// Only accept hashable type
-concept BufferValid =
+/// Check if the type is safe to use in a GLSL shader
+concept GLSL_safe =
     std::is_standard_layout_v<T> && std::is_trivially_copyable_v<T> && std::is_trivially_destructible_v<T> && requires
 {
     sizeof(T) % 4 == 0;
 };
 
+template <typename T>
+/// Check if the type is usable in a GLSL shader and allow the void type
+concept BufferValid = GLSL_safe<T> || std::is_same_v<T, void>;
+
 template <BufferValid T>
 /// @class AllocatedBuffer
 ///
 /// @brief Utility class to keep track of a Vulkan buffer and its allocated memory
+///
+/// A correct type T is prefered, but giving void is allowed.
+/// With `void` as template parameter, you will disable all type checking and memory safety
 class AllocatedBuffer
 {
 public:
@@ -26,8 +33,16 @@ public:
     auto getSize() const noexcept { return size; }
     /// get the allocated size (can be different from the size)
     auto getAllocatedSize() const noexcept { return info.size; }
-    /// get the byte size
-    auto getBytesSize() const noexcept { return getSize() * sizeof(T); }
+
+    /// @brief get the byte size
+    ///
+    /// When `T` is `void`, the size of buffer will be multiplied by `sizeof(T)`
+    auto getBytesSize() const noexcept requires(!std::is_same_v<T, void>) { return getSize() * sizeof(T); }
+    /// @copybrief getBytesSize
+    ///
+    /// When `T` is `void`, the size of buffer will be returned; as void does not have a size, we assume it is a buffer
+    /// of bytes
+    auto getBytesSize() const noexcept requires(std::is_same_v<T, void>) { return getSize(); }
 
     /// return the info struct used when creating a descriptor set
     /// @see DescriptorBuilder::bindBuffer
@@ -57,6 +72,20 @@ public:
 
     /// Test if the Vulkan buffer is created
     operator bool() const noexcept { return buffer && memory && size > 0; }
+
+    template <BufferValid O>
+    /// Allow to convert AllocatedBuffer<void> to AllocatedBuffer<T>
+    requires std::is_same_v<T, void>
+    operator AllocatedBuffer<O>() const noexcept { return *this; }
+
+    template <BufferValid O>
+    /// Allow to convert AllocatedBuffer<void> to AllocatedBuffer<T>
+    requires std::is_same_v<T, void> AllocatedBuffer<T>
+    operator=(const AllocatedBuffer<O> &other) const noexcept
+    {
+        *this = other;
+        return *this;
+    }
 
 public:
     //// @cond

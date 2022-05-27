@@ -14,14 +14,16 @@
 
 constexpr static const char *to_string_message_type(const VkDebugUtilsMessageTypeFlagsEXT &s)
 {
-    if (s == 7) return "General | Validation | Performance";
-    if (s == 6) return "Validation | Performance";
-    if (s == 5) return "General | Performance";
-    if (s == 4 /*VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT*/) return "Performance";
-    if (s == 3) return "General | Validation";
-    if (s == 2 /*VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT*/) return "Validation";
-    if (s == 1 /*VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT*/) return "General";
-    return "Unknown";
+    switch (s) {
+        case 7: return "General | Validation | Performance";
+        case 6: return "Validation | Performance";
+        case 5: return "General | Performance";
+        case 4 /*VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT*/: return "Performance";
+        case 3: return "General | Validation";
+        case 2 /*VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT*/: return "Validation";
+        case 1 /*VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT*/: return "General";
+        default: return "Unknown";
+    }
 }
 
 namespace pivot::graphics
@@ -33,7 +35,7 @@ std::uint32_t VulkanBase::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT m
 {
     using Level = cpplogger::Logger::Level;
 
-    auto type = vk::to_string(vk::DebugUtilsMessageTypeFlagsEXT(messageType));
+    auto type = to_string_message_type(messageType);
     auto level = Level::Trace;
 
     switch (messageSeverity) {

@@ -71,7 +71,7 @@ bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &s
                         attrib.vertices[3 * index.vertex_index + 1],
                         attrib.vertices[3 * index.vertex_index + 2],
                     },
-                .color = {1.0f, 1.0f, 1.0f},
+                .color = {1.0f, 1.0f, 1.0f, 1.0f},
             };
             if (!attrib.normals.empty() && index.normal_index >= 0) {
                 vertex.normal = {
@@ -91,6 +91,7 @@ bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &s
                     attrib.colors[3 * index.vertex_index + 0],
                     attrib.colors[3 * index.vertex_index + 1],
                     attrib.colors[3 * index.vertex_index + 2],
+                    1.0f,
                 };
             }
 

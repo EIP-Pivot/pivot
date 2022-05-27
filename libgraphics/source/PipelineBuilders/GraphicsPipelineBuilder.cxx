@@ -16,7 +16,8 @@ GraphicsPipelineBuilder::GraphicsPipelineBuilder()
       depthStencil(vk_init::populateVkPipelineDepthStencilStateCreateInfo()),
       rasterizer(vk_init::populateVkPipelineRasterizationStateCreateInfo(vk::PolygonMode::eFill)),
       vertexDescription({Vertex::getBindingDescription()}),
-      vertexAttributes(Vertex::getAttributeDescriptons())
+      vertexAttributes(Vertex::getInputAttributeDescriptions(
+          0, VertexComponentFlagBits::Position | VertexComponentFlagBits::Normal | VertexComponentFlagBits::UV))
 {
 }
 

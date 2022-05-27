@@ -17,29 +17,76 @@ vk::VertexInputBindingDescription Vertex::getBindingDescription() noexcept
     };
 }
 
-std::vector<vk::VertexInputAttributeDescription> Vertex::getAttributeDescriptons() noexcept
+vk::VertexInputAttributeDescription Vertex::inputAttributeDescription(uint32_t binding, uint32_t location,
+                                                                      VertexComponentFlagBits component)
 {
-    std::vector<vk::VertexInputAttributeDescription> attributeDescriptions(4);
-
-    attributeDescriptions[0].binding = 0;
-    attributeDescriptions[0].location = 0;
-    attributeDescriptions[0].format = vk::Format::eR32G32B32Sfloat;
-    attributeDescriptions[0].offset = offsetof(Vertex, pos);
-
-    attributeDescriptions[1].binding = 0;
-    attributeDescriptions[1].location = 1;
-    attributeDescriptions[1].format = vk::Format::eR32G32B32Sfloat;
-    attributeDescriptions[1].offset = offsetof(Vertex, normal);
-
-    attributeDescriptions[2].binding = 0;
-    attributeDescriptions[2].location = 2;
-    attributeDescriptions[2].format = vk::Format::eR32G32B32Sfloat;
-    attributeDescriptions[2].offset = offsetof(Vertex, color);
-
-    attributeDescriptions[3].binding = 0;
-    attributeDescriptions[3].location = 3;
-    attributeDescriptions[3].format = vk::Format::eR32G32Sfloat;
-    attributeDescriptions[3].offset = offsetof(Vertex, texCoord);
-    return attributeDescriptions;
+    switch (component) {
+        case VertexComponentFlagBits::Position:
+            return {
+                location,
+                binding,
+                vk::Format::eR32G32B32Sfloat,
+                offsetof(Vertex, pos),
+            };
+        case VertexComponentFlagBits::Normal:
+            return {
+                location,
+                binding,
+                vk::Format::eR32G32B32Sfloat,
+                offsetof(Vertex, normal),
+            };
+        case VertexComponentFlagBits::UV:
+            return {
+                location,
+                binding,
+                vk::Format::eR32G32Sfloat,
+                offsetof(Vertex, texCoord),
+            };
+        case VertexComponentFlagBits::Color:
+            return {
+                location,
+                binding,
+                vk::Format::eR32G32B32A32Sfloat,
+                offsetof(Vertex, color),
+            };
+        case VertexComponentFlagBits::Tangent:
+            return {
+                location,
+                binding,
+                vk::Format::eR32G32B32A32Sfloat,
+                offsetof(Vertex, tangent),
+            };
+    }
+    return {};
 }
+
+std::vector<vk::VertexInputAttributeDescription>
+Vertex::getInputAttributeDescriptions(uint32_t binding, const VertexComponentFlags components)
+{
+    std::vector<vk::VertexInputAttributeDescription> result;
+    uint32_t location = 0;
+
+    if (components & VertexComponentFlagBits::Position) {
+        result.push_back(Vertex::inputAttributeDescription(binding, location, VertexComponentFlagBits::Position));
+        location++;
+    }
+    if (components & VertexComponentFlagBits::Normal) {
+        result.push_back(Vertex::inputAttributeDescription(binding, location, VertexComponentFlagBits::Normal));
+        location++;
+    }
+    if (components & VertexComponentFlagBits::UV) {
+        result.push_back(Vertex::inputAttributeDescription(binding, location, VertexComponentFlagBits::UV));
+        location++;
+    }
+    if (components & VertexComponentFlagBits::Color) {
+        result.push_back(Vertex::inputAttributeDescription(binding, location, VertexComponentFlagBits::Color));
+        location++;
+    }
+    if (components & VertexComponentFlagBits::Tangent) {
+        result.push_back(Vertex::inputAttributeDescription(binding, location, VertexComponentFlagBits::Tangent));
+        location++;
+    }
+    return result;
+}
+
 }    // namespace pivot::graphics

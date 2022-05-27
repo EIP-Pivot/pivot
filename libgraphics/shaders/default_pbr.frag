@@ -44,9 +44,8 @@ struct pushConstantStruct {
 
 layout(location = 0) in vec3 fragPosition;
 layout(location = 1) in vec3 fragNormal;
-layout(location = 2) in vec3 fragColor;
-layout(location = 3) in vec2 fragTextCoords;
-layout(location = 4) in flat uint materialIndex;
+layout(location = 2) in vec2 fragTextCoords;
+layout(location = 3) in flat uint materialIndex;
 
 layout(location = 0) out vec4 outColor;
 

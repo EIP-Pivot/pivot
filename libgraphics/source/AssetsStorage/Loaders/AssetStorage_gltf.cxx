@@ -155,6 +155,8 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
                 getPrimitiveAttribute<glm::vec2>(gltfModel, primitive, "TEXCOORD_0");
             const auto &[colorBuffer, colorAccessor] =
                 getPrimitiveAttribute<glm::vec3>(gltfModel, primitive, "COLOR_0");
+            const auto &[tangentBuffer, tangentAccessor] =
+                getPrimitiveAttribute<glm::vec4>(gltfModel, primitive, "TANGENT");
 
             if (positionBuffer.empty()) throw std::logic_error("No verticies found in a mesh node");
             if (!colorBuffer.empty() && colorAccessor.type != TINYGLTF_PARAMETER_TYPE_FLOAT_VEC3)
@@ -172,7 +174,8 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
                 vert.normal = normalsBuffer.empty() ? glm::vec4(0.0f)
                                                     : (glm::normalize(glm::vec4(normalsBuffer.at(v), 1.0f) * matrix));
                 vert.texCoord = texCoordsBuffer.empty() ? glm::vec3(0.0f) : texCoordsBuffer.at(v);
-                vert.color = colorBuffer.empty() ? glm::vec3(1.0f) : colorBuffer.at(v);
+                vert.color = colorBuffer.empty() ? glm::vec4(1.0f) : glm::vec4(colorBuffer.at(v), 1.0f);
+                vert.tangent = tangentBuffer.empty() ? glm::vec4(0.0f) : tangentBuffer.at(v);
                 vertexBuffer.push_back(vert);
             }
         }

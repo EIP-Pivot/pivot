@@ -40,26 +40,30 @@ static const std::vector<Vertex> quad_vertices = {
     {
         .pos = {-0.5f, -0.5f, 0.f},
         .normal = {0.f, 0.f, 0.f},
-        .color = {1.0f, 0.0f, 0.0f},
         .texCoord = {-0.5f, -0.5f},
+        .color = {1.0f, 0.0f, 0.0f, 0.0f},
+        .tangent = {0.0f, 0.0f, 0.0f, 0.0f},
     },
     {
         .pos = {0.5f, -0.5f, 0.f},
         .normal = {0.f, 0.f, 0.f},
-        .color = {0.0f, 1.0f, 0.0f},
         .texCoord = {0.5f, -0.5f},
+        .color = {0.0f, 1.0f, 0.0f, 0.0f},
+        .tangent = {0.0f, 0.0f, 0.0f, 0.0f},
     },
     {
         .pos = {0.5f, 0.5f, 0.f},
         .normal = {0.f, 0.f, 0.f},
-        .color = {0.0f, 0.0f, 1.0f},
         .texCoord = {0.5f, 0.5f},
+        .color = {0.0f, 0.0f, 1.0f, 0.0f},
+        .tangent = {0.0f, 0.0f, 0.0f, 0.0f},
     },
     {
         .pos = {-0.5f, 0.5f, 0.f},
         .normal = {0.f, 0.f, 0.f},
-        .color = {1.0f, 1.0f, 1.0f},
         .texCoord = {-0.5f, 0.5f},
+        .color = {1.0f, 1.0f, 1.0f, 0.0f},
+        .tangent = {0.0f, 0.0f, 0.0f, 0.0f},
     },
 };
 static const std::vector<std::uint32_t> quad_indices = {0, 1, 2, 2, 3, 0};

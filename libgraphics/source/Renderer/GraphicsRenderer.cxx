@@ -114,11 +114,7 @@ void GraphicsRenderer::createPipeline(VulkanBase &base_ref, vk::RenderPass &pass
     builder.setPipelineLayout(pipelineLayout)
         .setRenderPass(pass)
         .setMsaaSample(base_ref.maxMsaaSample)
-        .setFaceCulling(vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise)
-        .setVertexShaderPath("shaders/default_pbr.vert.spv")
-        .setFragmentShaderPath("shaders/default_pbr.frag.spv");
-    stor.newGraphicsPipeline("pbr", builder);
-    stor.setDefault("pbr");
+        .setFaceCulling(vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise);
 
     builder.setVertexShaderPath("shaders/default.vert.spv").setFragmentShaderPath("shaders/default_lit.frag.spv");
     stor.newGraphicsPipeline("lit", builder);
@@ -131,6 +127,16 @@ void GraphicsRenderer::createPipeline(VulkanBase &base_ref, vk::RenderPass &pass
 
     builder.setPolygonMode(vk::PolygonMode::eFill);
     builder.setFaceCulling(vk::CullModeFlagBits::eFront, vk::FrontFace::eCounterClockwise);
+
+    builder.setFaceCulling(vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise)
+        .setVertexAttributes(Vertex::getInputAttributeDescriptions(
+            0, VertexComponentFlagBits::Position | VertexComponentFlagBits::Normal | VertexComponentFlagBits::UV |
+                   VertexComponentFlagBits::Tangent))
+        .setVertexShaderPath("shaders/default_pbr.vert.spv")
+        .setFragmentShaderPath("shaders/default_pbr.frag.spv");
+    stor.newGraphicsPipeline("pbr", builder);
+    stor.setDefault("pbr");
+
     stor.newGraphicsPipeline("skybox", builder);
 }
 

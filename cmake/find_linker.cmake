@@ -4,8 +4,6 @@ function(find_linker)
         return()
     endif()
 
-    set(SELECTED_LINKER "ld")
-
     message(STATUS "Looking for mold")
     find_program(MOLD_FOUND mold)
     if(MOLD_FOUND)
@@ -33,7 +31,10 @@ function(find_linker)
         set(SELECTED_LINKER "lld")
     endif()
 
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=${SELECTED_LINKER}" PARENT_SCOPE)
-    message(STATUS "Linker used - ${SELECTED_LINKER}")
+    if(DEFINED SELECTED_LINKER)
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=${SELECTED_LINKER}" PARENT_SCOPE)
+        message(STATUS "Linker used - ${SELECTED_LINKER}")
+    endif()
+
 
 endfunction(find_linker)

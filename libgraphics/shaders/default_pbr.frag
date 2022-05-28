@@ -50,28 +50,37 @@ layout(location = 4) in flat uint materialIndex;
 
 layout(location = 0) out vec4 outColor;
 
-layout (push_constant) uniform readonly constants {
+layout(push_constant) uniform readonly constants
+{
     layout(offset = 64) pushConstantStruct push;
-} cameraData;
+}
+cameraData;
 
-layout (std140, set = 0, binding = 1) readonly buffer ObjectMaterials {
+layout(std140, set = 0, binding = 1) readonly buffer ObjectMaterials
+{
     Material materials[];
-} objectMaterials;
+}
+objectMaterials;
 
 layout(set = 0, binding = 2) uniform sampler2D texSampler[];
 
-layout(std140, set = 1, binding = 2) readonly buffer LightBuffer {
+layout(std140, set = 1, binding = 2) readonly buffer LightBuffer
+{
     PointLight pointLightArray[];
-}  omniLight;
+}
+omniLight;
 
-layout(std140, set = 1, binding = 3) readonly buffer DirectLight {
+layout(std140, set = 1, binding = 3) readonly buffer DirectLight
+{
     DirectionalLight directionalLightArray[];
-}  directLight;
+}
+directLight;
 
-layout(std140, set = 1, binding = 4) readonly buffer SpoLight {
+layout(std140, set = 1, binding = 4) readonly buffer SpoLight
+{
     SpotLight spotLightArray[];
-}  spotLight;
-
+}
+spotLight;
 
 #define PI 3.1415926535897932384626433832795
 #define SAMPLE_OPTIONAL_WITH_DEFAULT(name, swizzle, defaultValue)                                         \
@@ -111,7 +120,10 @@ float GeometrySchlickGGX(float dotNL, float dotNV, float roughness)
     return GL * GV;
 }
 
-vec3 fresnelSchlick(float cosTheta, vec3 F0) { return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0); }
+vec3 fresnelSchlick(float cosTheta, vec3 F0)
+{
+    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+}
 
 vec3 fresnelSchlickR(float cosTheta, vec3 F0, float roughness)
 {

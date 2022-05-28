@@ -1,6 +1,6 @@
 #version 460
 
-layout (local_size_x = 256) in;
+layout(local_size_x = 256) in;
 
 struct UniformBufferObject {
     mat4 modelMatrix;
@@ -8,46 +8,49 @@ struct UniformBufferObject {
     uint boundingBoxIndex;
 };
 
-layout (std140, set = 1, binding = 0) readonly buffer ObjectBuffer {
+layout(std140, set = 1, binding = 0) readonly buffer ObjectBuffer
+{
     UniformBufferObject objects[];
-} objectBuffer;
+}
+objectBuffer;
 
 struct DrawIndexedIndirect {
-    uint    indexCount;
-    uint    instanceCount;
-    uint    firstIndex;
-    int     vertexOffset;
-    uint    firstInstance;
+    uint indexCount;
+    uint instanceCount;
+    uint firstIndex;
+    int vertexOffset;
+    uint firstInstance;
 };
 
-layout (set = 1, binding = 1) buffer DrawIndexedIndirectBuffer {
+layout(set = 1, binding = 1) buffer DrawIndexedIndirectBuffer
+{
     DrawIndexedIndirect drawIndexedIndirect[];
-} drawIndexedIndirectBuffer;
+}
+drawIndexedIndirectBuffer;
 
 struct AABB {
     vec3 low;
     vec3 high;
 };
 
-layout (set = 0, binding = 0) readonly buffer ObjectAABB {
+layout(set = 0, binding = 0) readonly buffer ObjectAABB
+{
     AABB boundingBoxes[];
-} objectAABB;
+}
+objectAABB;
 
-layout (push_constant) uniform readonly constants {
-	mat4 viewproj;
+layout(push_constant) uniform readonly constants
+{
+    mat4 viewproj;
     uint drawCount;
-} cameraData;
+}
+cameraData;
 
-const vec4 planes[6] = vec4[](
-    vec4(-1, 0, 0, 1),
-    vec4(1, 0, 0, 1),
-    vec4(0, -1, 0, 1),
-    vec4(0, 1, 0, 1),
-    vec4(0, 0, -1, 1),
-    vec4(0, 0, 1, 0)
-);
+const vec4 planes[6] = vec4[](vec4(-1, 0, 0, 1), vec4(1, 0, 0, 1), vec4(0, -1, 0, 1), vec4(0, 1, 0, 1),
+                              vec4(0, 0, -1, 1), vec4(0, 0, 1, 0));
 
-void generateAllAABBPoints(in AABB box, inout vec3 points[8]) {
+void generateAllAABBPoints(in AABB box, inout vec3 points[8])
+{
     points[0] = box.low;
     points[1] = vec3(box.high.x, box.low.yz);
     points[2] = vec3(box.low.x, box.high.y, box.low.z);
@@ -58,7 +61,8 @@ void generateAllAABBPoints(in AABB box, inout vec3 points[8]) {
     points[7] = box.high;
 }
 
-void main() {
+void main()
+{
     uint gID = gl_GlobalInvocationID.x;
 
     if (gID < cameraData.drawCount) {
@@ -72,7 +76,7 @@ void main() {
         for (uint i = 0; i < 8; i++) {
             boundingBoxProjection[i] = vpm * vec4(points[i], 1.0);
         }
-        
+
         bool visible = true;
         for (uint i = 0; i < 6; i++) {
             bool one_point_inside = false;
@@ -82,9 +86,6 @@ void main() {
             visible = visible && one_point_inside;
         }
         atomicAdd(drawIndexedIndirectBuffer.drawIndexedIndirect[gID].instanceCount, visible ? 1 : 0);
-        //atomicAdd(drawIndexedIndirectBuffer.drawIndexedIndirect[gID].instanceCount, 1);
+        // atomicAdd(drawIndexedIndirectBuffer.drawIndexedIndirect[gID].instanceCount, 1);
     }
-
-
-
 }

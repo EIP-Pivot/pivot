@@ -6,14 +6,11 @@ layout(location = 1) in vec3 inNormal;
 layout(location = 2) in vec2 inTextCoords;
 layout(location = 3) in vec4 inTangent;
 
-
 layout(location = 0) out vec3 fragPosition;
 layout(location = 1) out vec3 fragNormal;
 layout(location = 2) out vec2 fragTextCoords;
 layout(location = 3) out vec4 fragTangent;
 layout(location = 4) out uint materialIndex;
-
-
 
 struct UniformBufferObject {
     mat4 modelMatrix;
@@ -21,16 +18,20 @@ struct UniformBufferObject {
     uint boundingBoxIndex;
 };
 
-layout (std140, set = 1, binding = 0) readonly buffer ObjectBuffer {
+layout(std140, set = 1, binding = 0) readonly buffer ObjectBuffer
+{
     UniformBufferObject objects[];
-} objectBuffer;
+}
+objectBuffer;
 
-layout (push_constant) uniform readonly constants {
-	mat4 viewproj;
-} cameraData;
+layout(push_constant) uniform readonly constants
+{
+    mat4 viewproj;
+}
+cameraData;
 
-
-void main() {
+void main()
+{
     mat4 matrix = objectBuffer.objects[gl_BaseInstance].modelMatrix;
 
     fragTextCoords = inTextCoords;

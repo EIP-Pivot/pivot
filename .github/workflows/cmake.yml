@@ -62,10 +62,13 @@ jobs:
       - name: Create build directory
         run: mkdir -p ${{ github.workspace }}${{ matrix.config.working_directory }}
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/build/_deps/
           key: ${{ matrix.config.os }}-${{ matrix.config.compiler }}-${{ matrix.build_type }}-${{ github.ref_name }}-${{ hashFiles('.github/workflows/cmake.yml') }}
+          restore-keys: |
+              ${{ matrix.config.os }}-${{ matrix.config.compiler }}-${{ matrix.build_type }}-dev-${{ hashFiles('.github/workflows/cmake.yml') }}
+              ${{ matrix.config.os }}-${{ matrix.config.compiler }}-${{ matrix.build_type }}-dev-
 
       - name: Configure CMake
         working-directory: ${{ github.workspace }}${{ matrix.config.working_directory }}

@@ -11,6 +11,7 @@
 namespace pivot::graphics
 {
 
+/// Select which Vertex component are required for the vulkan pipeline
 enum class VertexComponentFlagBits : FlagsType {
     Position = BIT(1),
     Normal = BIT(2),
@@ -18,6 +19,7 @@ enum class VertexComponentFlagBits : FlagsType {
     Color = BIT(4),
     Tangent = BIT(5),
 };
+/// Flag type of VertexComponentFlagBits
 using VertexComponentFlags = Flags<VertexComponentFlagBits>;
 
 /// @struct Vertex
@@ -41,8 +43,12 @@ struct Vertex {
 
     /// Get the description for Vulkan pipeline input binding
     static vk::VertexInputBindingDescription getBindingDescription() noexcept;
+
+    /// Return the input attribute for the given vertex component
     static vk::VertexInputAttributeDescription inputAttributeDescription(std::uint32_t binding, std::uint32_t location,
                                                                          VertexComponentFlagBits component);
+
+    /// Return the vertex input attribute needed for the vulkan pipeline
     static std::vector<vk::VertexInputAttributeDescription>
     getInputAttributeDescriptions(std::uint32_t binding, const VertexComponentFlags components);
 };

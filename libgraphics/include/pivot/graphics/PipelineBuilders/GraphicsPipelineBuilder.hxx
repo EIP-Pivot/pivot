@@ -92,11 +92,13 @@ public:
         return *this;
     }
 
+    /// Set the Vertex Descriptions for the pipeline
     GraphicsPipelineBuilder &setVertexDescription(const std::vector<vk::VertexInputBindingDescription> &description)
     {
         vertexDescription = description;
         return *this;
     }
+    /// Set the Vertex Attributes for the pipeline
     GraphicsPipelineBuilder &setVertexAttributes(const std::vector<vk::VertexInputAttributeDescription> &attributes)
     {
         vertexAttributes = attributes;

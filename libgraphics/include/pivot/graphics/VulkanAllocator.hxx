@@ -110,7 +110,6 @@ public:
         auto *mapped = mapMemory<T>(buffer);
         std::memcpy(mapped + offset, data, data_size);
         unmapMemory(buffer);
-        buffer.size = (data_size + offset) / sizeof(T);
     }
 
     template <typename T>

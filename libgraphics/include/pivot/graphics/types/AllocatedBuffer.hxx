@@ -36,13 +36,15 @@ public:
 
     /// @brief get the byte size
     ///
-    /// When `T` is `void`, the size of buffer will be multiplied by `sizeof(T)`
-    auto getBytesSize() const noexcept requires(!std::is_same_v<T, void>) { return getSize() * sizeof(T); }
-    /// @copybrief getBytesSize
-    ///
-    /// When `T` is `void`, the size of buffer will be returned; as void does not have a size, we assume it is a buffer
-    /// of bytes
-    auto getBytesSize() const noexcept requires(std::is_same_v<T, void>) { return getSize(); }
+    /// When `T` is not `void`, the size of buffer will be multiplied by `sizeof(T)`
+    auto getBytesSize() const noexcept
+    {
+        if constexpr (std::is_same_v<T, void>) {
+            return getSize();
+        } else {
+            return getSize() * sizeof(T);
+        }
+    }
 
     /// return the info struct used when creating a descriptor set
     /// @see DescriptorBuilder::bindBuffer

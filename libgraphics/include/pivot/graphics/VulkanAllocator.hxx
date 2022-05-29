@@ -113,6 +113,7 @@ public:
     }
 
     template <BufferValid T>
+    /// Copy the vector into the buffer
     void copyBuffer(AllocatedBuffer<T> &buffer, const std::span<T> &data, std::size_t offset = 0)
     {
         return copyBuffer(buffer, data.data(), data.size_bytes(), offset);
@@ -124,6 +125,7 @@ public:
     {
         if (buffer) allocator.destroyBuffer(buffer.buffer, buffer.memory);
     }
+
     /// Destroy an image. Does not destroy its image view
     void destroyImage(AllocatedImage &image) { allocator.destroyImage(image.image, image.memory); }
 

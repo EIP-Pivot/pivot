@@ -27,7 +27,7 @@ public:
 
 private:
     void createPipelineLayout(vk::Device &device, const vk::DescriptorSetLayout &resolverLayout);
-    void createPipeline(vk::Device &device);
+    void createPipeline();
 
 private:
     QueueFamilyIndices indices;

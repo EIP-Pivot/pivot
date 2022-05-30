@@ -54,7 +54,6 @@ vk::SurfaceKHR Window::createSurface(const vk::Instance &instance)
 }
 
 void Window::addKeyPressCallback(Window::Key key, Window::KeyEvent event) { keyPressMap[key].push_back(event); }
-
 void Window::addGlobalKeyPressCallback(Window::KeyEvent event) { globalKeyPressMap.push_back(event); }
 
 void Window::addKeyReleaseCallback(Window::Key key, Window::KeyEvent event) { keyReleaseMap[key].push_back(event); }
@@ -156,7 +155,7 @@ Window::Key Window::getTrueKey(const Window::Key &ex) const noexcept
     return Key::UNKNOWN;
 }
 
-void Window::error_callback(int code, const char *msg) noexcept { logger.err("Window") << msg; }
+void Window::error_callback(int, const char *msg) noexcept { logger.err("Window") << msg; }
 
 void Window::cursor_callback(GLFWwindow *win, double xpos, double ypos)
 {
@@ -164,7 +163,7 @@ void Window::cursor_callback(GLFWwindow *win, double xpos, double ypos)
     for (auto &&fn: window->mouseCallback) fn(*window, glm::dvec2(xpos, ypos));
 }
 
-void Window::keyboard_callback(GLFWwindow *win, int key, int scancode, int action, int mods)
+void Window::keyboard_callback(GLFWwindow *win, int key, int scancode, int action, int)
 {
 #define FOR_EACH(vec) \
     for (auto &&fn: vec) fn(*window, _key);

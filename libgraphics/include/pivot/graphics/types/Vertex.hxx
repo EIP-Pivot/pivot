@@ -28,13 +28,13 @@ struct Vertex {
     /// Position of the vertex
     glm::vec3 pos;
     /// Normal of the vertex
-    glm::vec3 normal;
+    glm::vec3 normal = glm::vec3(0.0f);
     /// UV coordinate of the vertex
-    glm::vec2 texCoord;
+    glm::vec2 texCoord = glm::vec2(0.0f);
     /// Color of the vertex, ignored if a texture is provided
-    glm::vec4 color;
+    glm::vec4 color = glm::vec4(1.0f);
     /// Tangent of the vertex
-    glm::vec4 tangent;
+    glm::vec4 tangent = glm::vec4(0.0f);
 
     /// Equality operator overload
     /// @param other The other object to compare

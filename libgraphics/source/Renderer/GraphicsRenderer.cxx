@@ -27,7 +27,7 @@ bool GraphicsRenderer::onInit(const vk::Extent2D &size, VulkanBase &base_ref,
         .extent = size,
     };
     createPipelineLayout(base_ref.device, resolverLayout);
-    createPipeline(base_ref, pass, size);
+    createPipeline(base_ref, pass);
     return true;
 }
 
@@ -106,7 +106,7 @@ void GraphicsRenderer::createPipelineLayout(vk::Device &device, const vk::Descri
     vk_debug::setObjectName(device, pipelineLayout, "Graphics pipeline Layout");
 }
 
-void GraphicsRenderer::createPipeline(VulkanBase &base_ref, vk::RenderPass &pass, const vk::Extent2D &size)
+void GraphicsRenderer::createPipeline(VulkanBase &base_ref, vk::RenderPass &pass)
 {
     DEBUG_FUNCTION
 

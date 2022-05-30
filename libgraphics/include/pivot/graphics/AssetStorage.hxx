@@ -63,11 +63,11 @@ public:
         float metallic = 1.0f;
         float roughness = 1.0f;
         glm::vec4 baseColor = glm::vec4(1.0f);
-        std::string baseColorTexture;
-        std::string metallicRoughnessTexture;
-        std::string normalTexture;
-        std::string occlusionTexture;
-        std::string emissiveTexture;
+        std::string baseColorTexture = "";
+        std::string metallicRoughnessTexture = "";
+        std::string normalTexture = "";
+        std::string occlusionTexture = "";
+        std::string emissiveTexture = "";
         ///@endcond
     };
 

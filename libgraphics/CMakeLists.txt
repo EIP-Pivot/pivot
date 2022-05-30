@@ -7,6 +7,7 @@ fetchcontent_declare(
     GIT_REPOSITORY https://github.com/glfw/glfw.git
     GIT_TAG 3.3.7
 )
+fetchcontent_getproperties(glfw)
 if(NOT glfw_POPULATED)
     message(STATUS "Populating glfw")
     fetchcontent_populate(glfw)
@@ -19,6 +20,7 @@ fetchcontent_declare(
     GIT_REPOSITORY https://github.com/KhronosGroup/KTX-Software.git
     GIT_TAG v4.0.0
 )
+fetchcontent_getproperties(ktx)
 if(NOT ktx_POPULATED)
     message(STATUS "Populating ktx")
     fetchcontent_populate(ktx)
@@ -34,7 +36,7 @@ if(NOT ktx_POPULATED)
         OFF
         CACHE INTERNAL "" FORCE
     )
-    add_subdirectory(${ktx_SOURCE_DIR} ${ktx_SOURCE_DIR})
+    add_subdirectory(${ktx_SOURCE_DIR} ${ktx_BINARY_DIR})
 endif()
 
 fetchcontent_declare(
@@ -42,6 +44,7 @@ fetchcontent_declare(
     GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
     GIT_TAG 912856823dcb2badf2074055b6d006f7bb3800b8
 )
+fetchcontent_getproperties(tinygltf)
 if(NOT tinygltf_POPULATED)
     message(STATUS "Populating tinygltf")
     fetchcontent_populate(tinygltf)
@@ -57,7 +60,7 @@ if(NOT tinygltf_POPULATED)
         OFF
         CACHE INTERNAL "" FORCE
     )
-    add_subdirectory(${tinygltf_SOURCE_DIR} ${tinygltf_SOURCE_DIR})
+    add_subdirectory(${tinygltf_SOURCE_DIR} ${tinygltf_BINARY_DIR})
     target_compile_definitions(
         tinygltf
         PUBLIC TINYGLTF_NO_STB_IMAGE
@@ -74,6 +77,7 @@ fetchcontent_declare(
     GIT_REPOSITORY https://github.com/YaaZ/VulkanMemoryAllocator-Hpp.git
     GIT_TAG da6ea76eecf12a1decc76f58a3e096bcc555bd94
 )
+fetchcontent_getproperties(vma)
 if(NOT vma_POPULATED)
     message(STATUS "Populating vma")
     fetchcontent_populate(vma)
@@ -90,6 +94,7 @@ fetchcontent_declare(
     GIT_REPOSITORY https://github.com/nothings/stb.git
     GIT_TAG af1a5bc352164740c1cc1354942b1c6b72eacb8a
 )
+fetchcontent_getproperties(stb)
 if(NOT stb_POPULATED)
     message(STATUS "Populating stb")
     fetchcontent_populate(stb)
@@ -105,6 +110,7 @@ fetchcontent_declare(
     GIT_REPOSITORY https://github.com/tinyobjloader/tinyobjloader.git
     GIT_TAG 8322e00ae685ea623ab6ac5a6cebcfa2d22fbf93
 )
+fetchcontent_getproperties(tinyobjloader)
 if(NOT tinyobjloader_POPULATED)
     message(STATUS "Populating tinyobjloader")
     fetchcontent_populate(tinyobjloader)
@@ -116,6 +122,7 @@ fetchcontent_declare(
     GIT_REPOSITORY https://github.com/ocornut/imgui.git
     GIT_TAG 377b864bb4a9ed9a25674b04f64f63baf221060d
 )
+fetchcontent_getproperties(imgui)
 if(NOT imgui_POPULATED)
     message(STATUS "Populating imgui")
     fetchcontent_populate(imgui)
@@ -139,6 +146,7 @@ fetchcontent_declare(
     GIT_REPOSITORY https://github.com/CedricGuillemet/ImGuizmo.git
     GIT_TAG 1.83
 )
+fetchcontent_getproperties(imguizmo)
 if(NOT imguizmo_POPULATED)
     message(STATUS "Populating imguizmo")
     fetchcontent_populate(imguizmo)
@@ -152,6 +160,142 @@ if(NOT imguizmo_POPULATED)
     )
     target_include_directories(imguizmo PUBLIC ${imguizmo_SOURCE_DIR}/)
     target_link_libraries(imguizmo PRIVATE imgui)
+endif()
+
+fetchcontent_declare(
+    spirvheaders
+    GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Headers.git
+    GIT_TAG 5a121866927a16ab9d49bed4788b532c7fcea766
+)
+fetchcontent_getproperties(spirvheaders)
+if(NOT spirvheaders_POPULATED)
+    message(STATUS "Populating SPIRV-Header")
+    fetchcontent_populate(spirvheaders)
+    set(SPIRV_HEADERS_SKIP_EXAMPLES
+        ON
+        CACHE BOOL "" FORCE
+    )
+    set(SPIRV_HEADERS_SKIP_INSTALL
+        ON
+        CACHE BOOL "" FORCE
+    )
+    add_subdirectory(${spirvheaders_SOURCE_DIR} ${spirvheaders_BINARY_DIR})
+endif()
+
+fetchcontent_declare(
+    spirvtools
+    GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Tools.git
+    GIT_TAG 05745cc9d46d411bac41f7c8a389c61154ec10dd
+)
+fetchcontent_getproperties(spirvtools)
+if(NOT spirvtools_POPULATED)
+    message(STATUS "Populating SPIRV-Tools")
+    fetchcontent_populate(spirvtools)
+    set(SPIRV-Headers_SOURCE_DIR
+        "${spirvheaders_SOURCE_DIR}"
+        CACHE STRING "SPIRV-Headers path"
+    )
+    set(SPIRV_SKIP_EXECUTABLES
+        ON
+        CACHE BOOL "" FORCE
+    )
+    set(SPIRV_SKIP_TESTS
+        OFF
+        CACHE BOOL "" FORCE
+    )
+    add_subdirectory(${spirvtools_SOURCE_DIR} ${spirvtools_BINARY_DIR})
+endif()
+
+fetchcontent_declare(
+    spirvcross
+    GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Cross.git
+    GIT_TAG 50b4d5389b6a06f86fb63a2848e1a7da6d9755ca
+)
+fetchcontent_getproperties(spirvcross)
+if(NOT spirvcross_POPULATED)
+    message(STATUS "Populating SPIRV-Cross")
+    fetchcontent_populate(spirvcross)
+    set(SPIRV_WERROR
+        OFF
+        CACHE BOOL "" FORCE
+    )
+    set(SPIRV_CROSS_CLI
+        OFF
+        CACHE BOOL "" FORCE
+    )
+    set(SPIRV_CROSS_ENABLE_TESTS
+        OFF
+        CACHE BOOL "" FORCE
+    )
+    set(ENABLE_RTTI
+        ON
+        CACHE BOOL "" FORCE
+    )
+    set(ENABLE_PCH
+        ON
+        CACHE BOOL "" FORCE
+    )
+    set(ENABLE_CTEST
+        OFF
+        CACHE BOOL "" FORCE
+    )
+    add_subdirectory(${spirvcross_SOURCE_DIR} ${spirvcross_BINARY_DIR})
+endif()
+
+fetchcontent_declare(
+    glslang
+    GIT_REPOSITORY https://github.com/KhronosGroup/glslang.git
+    GIT_TAG 870c75479f5a2e218e950681f817683423760218
+)
+fetchcontent_getproperties(glslang)
+if(NOT glslang_POPULATED)
+    message(STATUS "Populating glslang")
+    fetchcontent_populate(glslang)
+    set(ENABLE_GLSLANG_BINARIES
+        OFF
+        CACHE BOOL "" FORCE
+    )
+    set(ENABLE_RTTI
+        ON
+        CACHE BOOL "" FORCE
+    )
+    set(ENABLE_EXCEPTIONS
+        ON
+        CACHE BOOL "" FORCE
+    )
+    set(ENABLE_PCH
+        ON
+        CACHE BOOL "" FORCE
+    )
+    add_subdirectory(${glslang_SOURCE_DIR} ${glslang_BINARY_DIR})
+endif()
+
+fetchcontent_declare(
+    shaderc
+    GIT_REPOSITORY https://github.com/google/shaderc.git
+    GIT_TAG 1bbf43f210941ba69a2cd05cf3529063f1ff5bb9
+)
+fetchcontent_getproperties(shaderc)
+if(NOT shaderc_POPULATED)
+    message(STATUS "Populating shaderc")
+    fetchcontent_populate(shaderc)
+    set(SHADERC_ENABLE_EXAMPLES
+        OFF
+        CACHE BOOL "" FORCE
+    )
+    set(SHADERC_SKIP_COPYRIGHT_CHECK
+        ON
+        CACHE BOOL "" FORCE
+    )
+    set(SHADERC_SKIP_INSTALL
+        ON
+        CACHE BOOL "" FORCE
+    )
+    set(SHADERC_SKIP_TESTS
+        ON
+        CACHE BOOL "" FORCE
+    )
+    add_subdirectory(${shaderc_SOURCE_DIR} ${shaderc_BINARY_DIR})
 endif()
 
 add_library(
@@ -197,6 +341,18 @@ add_library(
     source/PipelineStorage.cxx
 )
 
+target_compile_options(
+    ${PROJECT_NAME}
+    PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+            -Wall
+            -Wextra>
+            $<$<CXX_COMPILER_ID:MSVC>:
+            /W4
+            /wd4267
+            /wd4201
+            /wd4244>
+)
+
 target_precompile_headers(${PROJECT_NAME} PRIVATE <vulkan/vulkan.hpp> <vk_mem_alloc.hpp>)
 
 set(PIVOT_ASSET_DEFAULT_DIRECTORY
@@ -235,6 +391,14 @@ target_link_libraries(
     PUBLIC tinygltf
     PUBLIC stb
     PUBLIC magic_enum
+    PUBLIC shaderc
+    PUBLIC shaderc_util
+    PUBLIC OSDependent
+    PUBLIC OGLCompiler
+    PUBLIC SPIRV
+    PUBLIC SPIRV-Tools
+    PUBLIC SPIRV-Tools-opt
+    PUBLIC glslang
     PUBLIC Vulkan::Vulkan
 )
 

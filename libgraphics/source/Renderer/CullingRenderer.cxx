@@ -13,7 +13,7 @@ bool CullingRenderer::onInit(VulkanBase &base_ref, const vk::DescriptorSetLayout
 {
     indices = base_ref.queueIndices;
     createPipelineLayout(base_ref.device, resolverLayout);
-    createPipeline(base_ref.device);
+    createPipeline();
     return true;
 }
 
@@ -22,8 +22,8 @@ void CullingRenderer::onStop(VulkanBase &base_ref)
     if (cullingLayout) base_ref.device.destroyPipelineLayout(cullingLayout);
 }
 
-bool CullingRenderer::onRecreate(const vk::Extent2D &size, VulkanBase &base_ref,
-                                 const vk::DescriptorSetLayout &resolverLayout, vk::RenderPass &pass)
+bool CullingRenderer::onRecreate(const vk::Extent2D &, VulkanBase &base_ref,
+                                 const vk::DescriptorSetLayout &resolverLayout, vk::RenderPass &)
 {
     onStop(base_ref);
     stor.removePipeline("culling");
@@ -77,7 +77,7 @@ void CullingRenderer::createPipelineLayout(vk::Device &device, const vk::Descrip
     vk_debug::setObjectName(device, cullingLayout, "Culling pipeline Layout");
 }
 
-void CullingRenderer::createPipeline(vk::Device &device)
+void CullingRenderer::createPipeline()
 {
     DEBUG_FUNCTION
     ComputePipelineBuilder builder;

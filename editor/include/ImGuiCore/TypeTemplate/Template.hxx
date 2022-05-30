@@ -22,7 +22,7 @@ void draw(double &value, const std::string &name) { ImGui::InputDouble(name.c_st
 void draw(pivot::ecs::data::Asset &asset, const std::string &name) { ImGui::InputText(name.c_str(), &asset.name); }
 
 void draw(pivot::ecs::data::Value &value, const std::string &name);
-void draw(pivot::ecs::data::Record &values, const std::string &name)
+void draw(pivot::ecs::data::Record &values, const std::string &)
 {
     for (auto &[name, value]: values) draw(value, name);
 }

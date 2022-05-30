@@ -116,6 +116,7 @@ fetchcontent_declare(
     GIT_REPOSITORY https://github.com/zcorniere/logger-cpp.git
     GIT_TAG v0.8.0
 )
+fetchcontent_getproperties(logger)
 if(NOT logger_POPULATED)
     message(STATUS "Populating logger")
     fetchcontent_populate(logger)
@@ -128,6 +129,7 @@ fetchcontent_declare(
     GIT_REPOSITORY https://github.com/g-truc/glm.git
     GIT_TAG cc98465e3508535ba8c7f6208df934c156a018dc
 )
+fetchcontent_getproperties(glm)
 if(NOT glm_POPULATED)
     message(STATUS "Populating glm")
     fetchcontent_populate(glm)
@@ -184,13 +186,3 @@ add_library(pivot::pivot ALIAS pivot)
 add_library(pivot::graphics ALIAS pivot-graphics)
 add_library(pivot::ecs ALIAS pivot-ecs)
 add_library(pivot::script ALIAS pivot-script)
-
-add_compile_options(
-    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-    -Wall>
-    $<$<CXX_COMPILER_ID:MSVC>:
-    /W3
-    /wd4267
-    /wd4201
-    /wd4244>
-)

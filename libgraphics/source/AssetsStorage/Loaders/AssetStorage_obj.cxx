@@ -56,12 +56,14 @@ bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &s
             .mesh =
                 {
                     .vertexOffset = static_cast<uint32_t>(storage.vertexStagingBuffer.size()),
+                    .vertexSize = 0,
                     .indicesOffset = static_cast<uint32_t>(storage.indexStagingBuffer.size()),
+                    .indicesSize = 0,
                 },
+            .default_material = ((!shape.mesh.material_ids.empty() && shape.mesh.material_ids.at(0) >= 0)
+                                     ? (materials.at(shape.mesh.material_ids.at(0)).name)
+                                     : ("white")),
         };
-        if (!shape.mesh.material_ids.empty() && shape.mesh.material_ids.at(0) >= 0) {
-            model.default_material = materials.at(shape.mesh.material_ids.at(0)).name;
-        }
         for (const auto &index: shape.mesh.indices) {
             assert(index.vertex_index >= 0);
             Vertex vertex{

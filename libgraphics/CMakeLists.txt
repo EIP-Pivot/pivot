@@ -7,6 +7,7 @@ fetchcontent_declare(
     GIT_REPOSITORY https://github.com/glfw/glfw.git
     GIT_TAG 3.3.7
 )
+fetchcontent_getproperties(glfw)
 if(NOT glfw_POPULATED)
     message(STATUS "Populating glfw")
     fetchcontent_populate(glfw)
@@ -19,6 +20,7 @@ fetchcontent_declare(
     GIT_REPOSITORY https://github.com/KhronosGroup/KTX-Software.git
     GIT_TAG v4.0.0
 )
+fetchcontent_getproperties(ktx)
 if(NOT ktx_POPULATED)
     message(STATUS "Populating ktx")
     fetchcontent_populate(ktx)
@@ -34,7 +36,7 @@ if(NOT ktx_POPULATED)
         OFF
         CACHE INTERNAL "" FORCE
     )
-    add_subdirectory(${ktx_SOURCE_DIR} ${ktx_SOURCE_DIR})
+    add_subdirectory(${ktx_SOURCE_DIR} ${ktx_BINARY_DIR})
 endif()
 
 fetchcontent_declare(
@@ -42,6 +44,7 @@ fetchcontent_declare(
     GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
     GIT_TAG 912856823dcb2badf2074055b6d006f7bb3800b8
 )
+fetchcontent_getproperties(tinygltf)
 if(NOT tinygltf_POPULATED)
     message(STATUS "Populating tinygltf")
     fetchcontent_populate(tinygltf)
@@ -57,7 +60,7 @@ if(NOT tinygltf_POPULATED)
         OFF
         CACHE INTERNAL "" FORCE
     )
-    add_subdirectory(${tinygltf_SOURCE_DIR} ${tinygltf_SOURCE_DIR})
+    add_subdirectory(${tinygltf_SOURCE_DIR} ${tinygltf_BINARY_DIR})
     target_compile_definitions(
         tinygltf
         PUBLIC TINYGLTF_NO_STB_IMAGE
@@ -74,6 +77,7 @@ fetchcontent_declare(
     GIT_REPOSITORY https://github.com/YaaZ/VulkanMemoryAllocator-Hpp.git
     GIT_TAG da6ea76eecf12a1decc76f58a3e096bcc555bd94
 )
+fetchcontent_getproperties(vma)
 if(NOT vma_POPULATED)
     message(STATUS "Populating vma")
     fetchcontent_populate(vma)
@@ -90,6 +94,7 @@ fetchcontent_declare(
     GIT_REPOSITORY https://github.com/nothings/stb.git
     GIT_TAG af1a5bc352164740c1cc1354942b1c6b72eacb8a
 )
+fetchcontent_getproperties(stb)
 if(NOT stb_POPULATED)
     message(STATUS "Populating stb")
     fetchcontent_populate(stb)
@@ -105,6 +110,7 @@ fetchcontent_declare(
     GIT_REPOSITORY https://github.com/tinyobjloader/tinyobjloader.git
     GIT_TAG 8322e00ae685ea623ab6ac5a6cebcfa2d22fbf93
 )
+fetchcontent_getproperties(tinyobjloader)
 if(NOT tinyobjloader_POPULATED)
     message(STATUS "Populating tinyobjloader")
     fetchcontent_populate(tinyobjloader)
@@ -116,6 +122,7 @@ fetchcontent_declare(
     GIT_REPOSITORY https://github.com/ocornut/imgui.git
     GIT_TAG 377b864bb4a9ed9a25674b04f64f63baf221060d
 )
+fetchcontent_getproperties(imgui)
 if(NOT imgui_POPULATED)
     message(STATUS "Populating imgui")
     fetchcontent_populate(imgui)
@@ -139,6 +146,7 @@ fetchcontent_declare(
     GIT_REPOSITORY https://github.com/CedricGuillemet/ImGuizmo.git
     GIT_TAG 1.83
 )
+fetchcontent_getproperties(imguizmo)
 if(NOT imguizmo_POPULATED)
     message(STATUS "Populating imguizmo")
     fetchcontent_populate(imguizmo)
@@ -195,6 +203,18 @@ add_library(
     source/culling.cxx
     source/DrawCallResolver.cxx
     source/PipelineStorage.cxx
+)
+
+target_compile_options(
+    ${PROJECT_NAME}
+    PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+            -Wall
+            -Wextra>
+            $<$<CXX_COMPILER_ID:MSVC>:
+            /W4
+            /wd4267
+            /wd4201
+            /wd4244>
 )
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE <vulkan/vulkan.hpp> <vk_mem_alloc.hpp>)

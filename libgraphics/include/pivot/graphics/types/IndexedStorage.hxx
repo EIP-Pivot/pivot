@@ -91,7 +91,7 @@ public:
         throw std::out_of_range("Out of range index: " + std::to_string(idx));
     }
     /// return the index of an item name
-    inline const std::int32_t getIndex(const Key &i) const noexcept
+    inline std::int32_t getIndex(const Key &i) const noexcept
     {
         if (index.contains(i))
             return index.at(i);

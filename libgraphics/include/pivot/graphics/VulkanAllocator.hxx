@@ -110,12 +110,10 @@ public:
         auto *mapped = mapMemory<T>(buffer);
         std::memcpy(mapped + offset, data, data_size);
         unmapMemory(buffer);
-        buffer.size = (data_size + offset) / sizeof(T);
     }
 
-    template <typename T>
+    template <BufferValid T>
     /// Copy the vector into the buffer
-    requires std::is_standard_layout_v<T>
     void copyBuffer(AllocatedBuffer<T> &buffer, const std::span<T> &data, std::size_t offset = 0)
     {
         return copyBuffer(buffer, data.data(), data.size_bytes(), offset);
@@ -127,8 +125,21 @@ public:
     {
         if (buffer) allocator.destroyBuffer(buffer.buffer, buffer.memory);
     }
+
     /// Destroy an image. Does not destroy its image view
     void destroyImage(AllocatedImage &image) { allocator.destroyImage(image.image, image.memory); }
+
+    template <BufferValid T>
+    /// Set allocation name
+    void setAllocationName(AllocatedBuffer<T> &buffer, const std::string &name) const
+    {
+        allocator.setAllocationName(buffer.memory, name.c_str());
+    }
+    /// @copydoc setAllocationName
+    void setAllocationName(AllocatedImage &image, const std::string &name) const
+    {
+        allocator.setAllocationName(image.memory, name.c_str());
+    }
 
     /// Print memory status to the logger
     void dumpStats();

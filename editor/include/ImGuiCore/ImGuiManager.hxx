@@ -3,6 +3,23 @@
 #include <pivot/ecs/Core/SceneManager.hxx>
 #include <pivot/engine.hxx>
 
+//to delete
+#include <imgui.h>
+
+#include <ImGuizmo.h>
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_vulkan.h>
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include <imgui_internal.h>
+
+#include <unistd.h>
+#include <sys/wait.h>
+#include <iostream>
+
+//
+
+void LoadingIndicatorCircle(const char *label, const float size);
+
 class ImGuiManager
 {
 public:

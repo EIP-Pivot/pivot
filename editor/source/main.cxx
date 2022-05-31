@@ -44,6 +44,9 @@
 #include <pivot/builtins/events/tick.hxx>
 #include <pivot/engine.hxx>
 
+#include <atomic>
+#include <thread>
+
 using namespace pivot::ecs;
 using Window = pivot::graphics::Window;
 
@@ -113,7 +116,10 @@ public:
         m_vulkan_application.assetStorage.setAssetDirectory(PIVOT_ASSET_DEFAULT_DIRECTORY);
         m_vulkan_application.assetStorage.addModel("cube.obj");
         m_vulkan_application.assetStorage.addTexture("violet.png");
-        m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
+        buildthread = std::jthread([&] {
+            m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
+            vulkanLoaded = true;
+        });
     }
 
     void processKeyboard(const pivot::builtins::Camera::Movement direction, float dt) noexcept
@@ -169,18 +175,20 @@ public:
     void onTick(float dt) override
     {
         imGuiManager.newFrame(*this);
-
-        editor.create(*this, m_vulkan_application.pipelineStorage);
-        m_paused = !editor.getRun();
-        if (m_paused) {
-            editor.setAspectRatio(m_vulkan_application.getAspectRatio());
-            entity.create();
-            entity.hasSelected() ? componentEditor.create(entity.getEntitySelected()) : componentEditor.create();
-            systemsEditor.create();
-
-            if (entity.hasSelected()) { editor.DisplayGuizmo(entity.getEntitySelected(), m_camera); }
+        if (!vulkanLoaded.load()) {
+            LoadingIndicatorCircle("##Circle", 25);
+        } else {
+            editor.create(*this, m_vulkan_application.pipelineStorage);
+            m_paused = !editor.getRun();
+            if (m_paused) {
+                editor.setAspectRatio(m_vulkan_application.getAspectRatio());
+                entity.create();
+                entity.hasSelected() ? componentEditor.create(entity.getEntitySelected()) : componentEditor.create();
+                systemsEditor.create();
+                if (entity.hasSelected()) { editor.DisplayGuizmo(entity.getEntitySelected(), m_camera); }
+            }
+            UpdateCamera(dt);
         }
-        UpdateCamera(dt);
         imGuiManager.render();
     }
 
@@ -194,6 +202,10 @@ public:
 
     bool bFirstMouse = true;
     std::bitset<UINT16_MAX> button;
+
+    std::atomic<bool> vulkanLoaded = false;
+
+    std::jthread buildthread;
 };
 
 int main(int argc, char *argv[])

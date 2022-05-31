@@ -63,7 +63,7 @@ VulkanApplication::~VulkanApplication()
 void VulkanApplication::init()
 {
     VulkanBase::init({}, deviceExtensions, validationLayers);
-    assetStorage.build(DescriptorBuilder(layoutCache, descriptorAllocator));
+    //assetStorage.build(DescriptorBuilder(layoutCache, descriptorAllocator));
     initVulkanRessources();
 }
 

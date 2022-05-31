@@ -173,4 +173,37 @@ void ImGuiManager::loadAsset(pivot::Engine &engine)
     }
 }
 
+void LoadingIndicatorCircle(const char *label, const float size)
+{
+    using namespace ImGui;
+    const float speed = 6;
+    const int circle_count = 10;
+    const ImU32 col = ImGui::GetColorU32(ImGuiCol_ButtonHovered);
+
+    ImGuiWindow *window = GetCurrentWindow();
+    if (window->SkipItems) { return; }
+
+    ImGuiContext &g = *GImGui;
+    const ImGuiID id = window->GetID(label);
+
+    const ImVec2 pos = window->DC.CursorPos;
+    const float circle_radius = size / 10.0f;
+    const ImRect bb(pos, ImVec2(pos.x + size * 2.0f, pos.y + size * 2.0f));
+    const ImGuiStyle &style = g.Style;
+    ItemSize(bb, style.FramePadding.y);
+    if (!ItemAdd(bb, id)) return;
+
+    // Render
+    const float t = g.Time;
+    const auto degree_offset = 2.0f * IM_PI / circle_count;
+
+    for (int i = 0; i < circle_count; ++i) {
+        const auto x = size * std::sin(degree_offset * i);
+        const auto y = size * std::cos(degree_offset * i);
+        const auto growth = std::max(0.0f, std::sin(t * speed - i * degree_offset));
+        window->DrawList->AddCircleFilled(ImVec2(pos.x + size + x, pos.y + size - y),
+                                          circle_radius + growth * circle_radius, GetColorU32(col));
+    }
+}
+
 void ImGuiManager::render() { ImGui::Render(); }

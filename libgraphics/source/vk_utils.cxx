@@ -7,23 +7,22 @@
 
 namespace pivot::graphics::vk_utils
 {
-
-std::vector<std::byte> readFile(const std::string &filename)
+std::string readFile(const std::string &filename)
 {
     size_t fileSize = 0;
-    std::vector<std::byte> fileContent;
+    std::string fileContent;
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
     if (!file.is_open()) { throw std::runtime_error("failed to open file " + filename); }
     fileSize = file.tellg();
     fileContent.resize(fileSize);
     file.seekg(0);
-    file.read((char *)fileContent.data(), fileSize);
+    file.read(fileContent.data(), fileSize);
     file.close();
     return fileContent;
 }
 
-vk::ShaderModule createShaderModule(const vk::Device &device, std::span<const std::byte> code)
+vk::ShaderModule createShaderModule(const vk::Device &device, std::span<const std::uint32_t> code)
 {
     auto createInfo = vk_init::populateVkShaderModuleCreateInfo(code);
     return device.createShaderModule(createInfo);

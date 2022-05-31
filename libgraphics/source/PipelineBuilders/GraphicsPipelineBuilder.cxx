@@ -1,6 +1,7 @@
 #include "pivot/graphics/PipelineBuilders/GraphicsPipelineBuilder.hxx"
 
 #include "pivot/graphics/DebugMacros.hxx"
+#include "pivot/graphics/VulkanShader.hxx"
 #include "pivot/graphics/types/Vertex.hxx"
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_init.hxx"
@@ -26,8 +27,11 @@ GraphicsPipelineBuilder::~GraphicsPipelineBuilder() {}
 static void loadShader(const std::string &path, const vk::ShaderStageFlagBits &stage, vk::Device &device,
                        std::vector<vk::PipelineShaderStageCreateInfo> &shaderStages) noexcept
 {
-    auto shaderCode = vk_utils::readFile(path);
-    auto shaderModule = vk_utils::createShaderModule(device, shaderCode);
+    VulkanShader shader(path);
+    if (!shader.isCompiled()) {
+        shader.compile(VulkanShader::VulkanVersion::e1_2, VulkanShader::OptimizationLevel::Performance);
+    }
+    auto shaderModule = vk_utils::createShaderModule(device, shader.getByteCode());
     vk_debug::setObjectName(device, shaderModule, path);
     shaderStages.push_back(vk_init::populateVkPipelineShaderStageCreateInfo(stage, shaderModule));
 }

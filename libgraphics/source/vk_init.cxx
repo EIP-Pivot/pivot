@@ -47,11 +47,11 @@ vk::ImageViewCreateInfo vk_init::populateVkImageViewCreateInfo(vk::Image &img, v
     };
 }
 
-vk::ShaderModuleCreateInfo vk_init::populateVkShaderModuleCreateInfo(std::span<const std::byte> code)
+vk::ShaderModuleCreateInfo vk_init::populateVkShaderModuleCreateInfo(std::span<const std::uint32_t> code)
 {
     return vk::ShaderModuleCreateInfo{
-        .codeSize = code.size(),
-        .pCode = reinterpret_cast<const uint32_t *>(code.data()),
+        .codeSize = code.size() * sizeof(std::uint32_t),
+        .pCode = code.data(),
     };
 }
 

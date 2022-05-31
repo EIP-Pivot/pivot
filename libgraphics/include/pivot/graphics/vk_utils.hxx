@@ -2,6 +2,7 @@
 
 #include <Logger.hpp>
 #include <cstddef>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <vulkan/vulkan.hpp>
@@ -29,9 +30,36 @@ constexpr void vk_try(vk::Result err)
 constexpr void vk_try(VkResult res) { vk_try(vk::Result(res)); }
 
 /// Read a whole file into a vector of byte.
-std::vector<std::byte> readFile(const std::string &filename);
+template <typename T = std::byte>
+std::vector<T> readBinaryFile(const std::string &filename)
+{
+    size_t fileSize = 0;
+    std::vector<T> fileContent;
+    std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+    if (!file.is_open()) { throw std::runtime_error("failed to open file " + filename); }
+    fileSize = file.tellg();
+    fileContent.resize(fileSize);
+    file.seekg(0);
+    file.read((char *)fileContent.data(), fileSize);
+    file.close();
+    return fileContent;
+}
+
+/// Read a whole file into a string
+std::string readFile(const std::string &filename);
+
+template <typename T = std::byte>
+std::size_t writeBinaryFile(const std::string &filename, const std::vector<T> &code)
+{
+    std::ofstream file(filename, std::ios::out | std::ios::binary);
+    file.write(reinterpret_cast<const char *>(code.data()), code.size());
+    file.close();
+    return code.size();
+}
+
 /// Create a vk::ShaderModule from bytecode.
-vk::ShaderModule createShaderModule(const vk::Device &device, std::span<const std::byte> code);
+vk::ShaderModule createShaderModule(const vk::Device &device, std::span<const std::uint32_t> code);
 
 /// Return the max MSAA sample supported by the device
 vk::SampleCountFlagBits getMaxUsableSampleCount(vk::PhysicalDevice &physical_device);

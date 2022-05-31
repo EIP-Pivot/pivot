@@ -1,5 +1,6 @@
 #include "pivot/graphics/PipelineBuilders/ComputePipelineBuilder.hxx"
 
+#include "pivot/graphics/VulkanShader.hxx"
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"
@@ -21,12 +22,14 @@ ComputePipelineBuilder &ComputePipelineBuilder::setComputeShaderPath(const std::
 
 vk::Pipeline ComputePipelineBuilder::build(vk::Device &device, vk::PipelineCache pipelineCache) const
 {
-    auto computeShaderCode = vk_utils::readFile(shaderPath);
-    auto computeShaderModule = vk_utils::createShaderModule(device, computeShaderCode);
+    VulkanShader shader(shaderPath);
+    if (!shader.isCompiled()) {
+        shader.compile(VulkanShader::VulkanVersion::e1_2, VulkanShader::OptimizationLevel::Performance);
+    }
+    auto shaderModule = vk_utils::createShaderModule(device, shader.getByteCode());
+    vk_debug::setObjectName(device, shaderModule, shaderPath);
     auto computeShaderStage =
-        vk_init::populateVkPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eCompute, computeShaderModule);
-    vk_debug::setObjectName(device, computeShaderModule, shaderPath);
-
+        vk_init::populateVkPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eCompute, shaderModule);
     vk::ComputePipelineCreateInfo pipelineInfo{
         .stage = computeShaderStage,
         .layout = pipelineLayout,
@@ -35,7 +38,7 @@ vk::Pipeline ComputePipelineBuilder::build(vk::Device &device, vk::PipelineCache
     vk::Pipeline newPipeline{};
     vk::Result result;
     std::tie(result, newPipeline) = device.createComputePipeline(pipelineCache, pipelineInfo);
-    device.destroy(computeShaderModule);
+    device.destroy(shaderModule);
     vk_utils::vk_try(result);
     return newPipeline;
 }

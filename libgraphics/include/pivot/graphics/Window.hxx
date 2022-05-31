@@ -143,30 +143,44 @@ public:
     /// @param event The callback function to call when an event occur
     ///
     /// @see KeyEvent
-    void setKeyPressCallback(Key key, KeyEvent event = {});
+    void addKeyPressCallback(Key key, KeyEvent event);
 
-    /// Setup a callback function for provided key when it is release
+    /// Setup a callback function when a key is pressed
+    ///
+    /// @param event The callback function to call when an event occur
+    ///
+    /// @see KeyEvent
+    void addGlobalKeyPressCallback(KeyEvent event);
+
+    /// Setup a callback function for provided key when it is released
     ///
     /// @param key Which key this callback is listening to
     /// @param event The callback function to call when an event occur
     ///
     /// @see KeyEvent
-    void setKeyReleaseCallback(Key key, KeyEvent event = {});
+    void addKeyReleaseCallback(Key key, KeyEvent event);
+
+    /// Setup a callback function when a key is released
+    ///
+    /// @param event The callback function to call when an event occur
+    ///
+    /// @see KeyEvent
+    void addGlobalKeyReleaseCallback(KeyEvent event);
 
     /// Setup a callback function for mouse movement
     /// @param event The callback function to call when the cursor move
     ///
     /// @see MouseEvent
-    void setMouseMovementCallback(MouseEvent event = {});
+    void addMouseMovementCallback(MouseEvent event);
 
     /// Set the title of the window
     /// @param title New title for the window
     void setTitle(const std::string &title) noexcept;
 
     /// Set the icon of the window
-    void setIcon(const std::span<GLFWimage> &) noexcept;
+    void setIcon(const std::span<const GLFWimage> &) noexcept;
     /// Set the icon of the window
-    void setIcon(const std::vector<std::string> &);
+    void setIcon(const std::span<const std::string> &);
 
     /// Get the title of the window
     /// @return The title of the window
@@ -211,9 +225,12 @@ private:
     static void keyboard_callback(GLFWwindow *win, int key, int scancode, int action, int mods);
 
 private:
-    std::optional<MouseEvent> mouseCallback = {};
-    std::unordered_map<Key, KeyEvent> keyPressMap;
-    std::unordered_map<Key, KeyEvent> keyReleaseMap;
+    std::vector<MouseEvent> mouseCallback = {};
+    std::vector<KeyEvent> globalKeyReleaseMap;
+    std::vector<KeyEvent> globalKeyPressMap;
+
+    std::unordered_map<Key, std::vector<KeyEvent>> keyPressMap;
+    std::unordered_map<Key, std::vector<KeyEvent>> keyReleaseMap;
 
     std::string windowName;
     GLFWwindow *window = nullptr;

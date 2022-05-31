@@ -67,12 +67,12 @@ public:
         Scene &scene = *getCurrentScene();
 
         window.captureCursor(true);
-        window.setKeyReleaseCallback(Window::Key::LEFT_ALT, [&](Window &window, const Window::Key key) {
+        window.addKeyReleaseCallback(Window::Key::LEFT_ALT, [&](Window &window, const Window::Key key) {
             window.captureCursor(!window.captureCursor());
             bFirstMouse = window.captureCursor();
             button.reset();
         });
-        window.setKeyReleaseCallback(Window::Key::V,
+        window.addKeyReleaseCallback(Window::Key::V,
                                      [&](Window &window, const Window::Key key) { scene.switchCamera(); });
 
         auto key_lambda_press = [&](Window &window, const Window::Key key) {
@@ -82,21 +82,21 @@ public:
             if (window.captureCursor()) button.reset(static_cast<std::size_t>(key));
         };
         // Press action
-        window.setKeyPressCallback(Window::Key::W, key_lambda_press);
-        window.setKeyPressCallback(Window::Key::S, key_lambda_press);
-        window.setKeyPressCallback(Window::Key::D, key_lambda_press);
-        window.setKeyPressCallback(Window::Key::A, key_lambda_press);
-        window.setKeyPressCallback(Window::Key::SPACE, key_lambda_press);
-        window.setKeyPressCallback(Window::Key::LEFT_SHIFT, key_lambda_press);
+        window.addKeyPressCallback(Window::Key::Z, key_lambda_press);
+        window.addKeyPressCallback(Window::Key::Q, key_lambda_press);
+        window.addKeyPressCallback(Window::Key::S, key_lambda_press);
+        window.addKeyPressCallback(Window::Key::D, key_lambda_press);
+        window.addKeyPressCallback(Window::Key::SPACE, key_lambda_press);
+        window.addKeyPressCallback(Window::Key::LEFT_SHIFT, key_lambda_press);
         // Release action
-        window.setKeyReleaseCallback(Window::Key::W, key_lambda_release);
-        window.setKeyReleaseCallback(Window::Key::S, key_lambda_release);
-        window.setKeyReleaseCallback(Window::Key::D, key_lambda_release);
-        window.setKeyReleaseCallback(Window::Key::A, key_lambda_release);
-        window.setKeyReleaseCallback(Window::Key::SPACE, key_lambda_release);
-        window.setKeyReleaseCallback(Window::Key::LEFT_SHIFT, key_lambda_release);
+        window.addKeyReleaseCallback(Window::Key::Z, key_lambda_release);
+        window.addKeyReleaseCallback(Window::Key::Q, key_lambda_release);
+        window.addKeyReleaseCallback(Window::Key::S, key_lambda_release);
+        window.addKeyReleaseCallback(Window::Key::D, key_lambda_release);
+        window.addKeyReleaseCallback(Window::Key::SPACE, key_lambda_release);
+        window.addKeyReleaseCallback(Window::Key::LEFT_SHIFT, key_lambda_release);
 
-        window.setMouseMovementCallback([&](Window &window, const glm::dvec2 pos) {
+        window.addMouseMovementCallback([&](Window &window, const glm::dvec2 pos) {
             if (!window.captureCursor()) return;
 
             if (bFirstMouse) {
@@ -110,10 +110,12 @@ public:
             pivot::builtins::systems::ControlSystem::processMouseMovement(m_camera, glm::dvec2(xoffset, yoffset));
         });
 
+        m_vulkan_application.assetStorage.setAssetDirectory(PIVOT_ASSET_DEFAULT_DIRECTORY);
         m_vulkan_application.assetStorage.addModel("cube.obj");
         m_vulkan_application.assetStorage.addTexture("violet.png");
-        m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eClear);
+        m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
     }
+
     void processKeyboard(const pivot::builtins::Camera::Movement direction, float dt) noexcept
     {
         using Camera = pivot::builtins::Camera;
@@ -145,12 +147,12 @@ public:
     {
         using Camera = pivot::builtins::Camera;
         try {
-            if (button.test(static_cast<std::size_t>(Window::Key::W)))
+            if (button.test(static_cast<std::size_t>(Window::Key::Z)))
                 processKeyboard(Camera::FORWARD, dt);
             else if (button.test(static_cast<std::size_t>(Window::Key::S)))
                 processKeyboard(Camera::BACKWARD, dt);
 
-            if (button.test(static_cast<std::size_t>(Window::Key::A)))
+            if (button.test(static_cast<std::size_t>(Window::Key::Q)))
                 processKeyboard(Camera::LEFT, dt);
             else if (button.test(static_cast<std::size_t>(Window::Key::D)))
                 processKeyboard(Camera::RIGHT, dt);

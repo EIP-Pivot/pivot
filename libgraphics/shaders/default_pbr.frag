@@ -6,8 +6,6 @@ struct PointLight {
     vec4 position;
     vec4 color;
     float intensity;
-    float minRadius;
-    float radius;
     float falloff;
 };
 
@@ -151,7 +149,7 @@ void main()
 
     // reflectance equation
     vec3 Lo = vec3(0.0);
-        for (uint i = 0; i < cameraData.push.directLightCount; i++) {
+    for (uint i = 0; i < cameraData.push.directLightCount; i++) {
         DirectionalLight light = directLight.directionalLightArray[i];
         vec3 L = normalize(-light.orientation.xyz);
         vec3 H = normalize(V + L);
@@ -208,7 +206,7 @@ void main()
         vec3 L = normalize(light.position.xyz - fragPosition);
         vec3 H = normalize(V + L);
         float distance = length(light.position.xyz - fragPosition);
-        float attenuation = 1.0 / (distance * distance);
+        float attenuation = 1.0 / ((distance * distance) * light.falloff);
         vec3 radiance = light.color.rgb * light.intensity * attenuation;
 
         // Cook-Torrance BRDF

@@ -6,8 +6,6 @@ struct PointLight {
     vec4 position;
     vec4 color;
     float intensity;
-    float minRadius;
-    float radius;
     float falloff;
 };
 
@@ -118,7 +116,7 @@ vec3 calculateLight(in  Material mat, in PointLight light) {
     vec3 refectDir = reflect(-lightDir, norm);
     float specular = pow(max(dot(norm, refectDir), 0.0), 32.0);
 
-    float attenuation = 1.0 / length(light.position.xyz - fragPosition);
+    float attenuation = 1.0 / length(light.position.xyz - fragPosition) * light.falloff;
     diffuse *= attenuation;
     specular *= attenuation;
 

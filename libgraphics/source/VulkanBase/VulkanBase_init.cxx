@@ -21,7 +21,7 @@ void VulkanBase::createInstance(const std::vector<const char *> &instanceExtensi
     DEBUG_FUNCTION
     auto debugInfo = vk_init::populateDebugUtilsMessengerCreateInfoEXT(&VulkanBase::debugCallback);
     auto extensions = Window::getRequiredExtensions();
-    for (auto &i: instanceExtensions) { extensions.push_back(i); }
+    std::copy(instanceExtensions.begin(), instanceExtensions.end(), std::back_inserter(extensions));
     if (bEnableValidationLayers) { extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME); }
 
     vk::ApplicationInfo applicationInfo{
@@ -102,9 +102,9 @@ void VulkanBase::createLogicalDevice(const std::vector<const char *> &deviceExte
     std::set<uint32_t> uniqueQueueFamilies{queueIndices.graphicsFamily.value(), queueIndices.presentFamily.value(),
                                            queueIndices.transferFamily.value()};
 
-    for (const uint32_t queueFamily: uniqueQueueFamilies) {
-        queueCreateInfos.push_back(vk_init::populateDeviceQueueCreateInfo(1, queueFamily, fQueuePriority));
-    }
+    std::ranges::transform(uniqueQueueFamilies, std::back_inserter(queueCreateInfos), [=](const auto &queueFamily) {
+        return vk_init::populateDeviceQueueCreateInfo(1, queueFamily, fQueuePriority);
+    });
 
     vk::PhysicalDeviceDescriptorIndexingFeatures descriptorIndex{
         .descriptorBindingVariableDescriptorCount = VK_TRUE,

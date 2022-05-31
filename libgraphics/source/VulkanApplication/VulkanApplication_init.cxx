@@ -84,32 +84,6 @@ void VulkanApplication::createCommandPool()
     mainDeletionQueue.push([&] { device.destroy(commandPool); });
 }
 
-void VulkanApplication::createCommandBuffers()
-{
-    DEBUG_FUNCTION
-    vk::CommandBufferAllocateInfo allocInfo{
-        .commandPool = commandPool,
-        .level = vk::CommandBufferLevel::eSecondary,
-        .commandBufferCount = swapchain.nbOfImage(),
-    };
-    for (auto &[rendy, buffers]: graphicsRenderer) {
-        buffers = device.allocateCommandBuffers(allocInfo);
-        const auto name = rendy->getName() + "/" + rendy->getType() + " Command Buffer (";
-        for (unsigned i = 0; i < buffers.size(); i++)
-            vk_debug::setObjectName(device, buffers[i], name + std::to_string(i) + ")");
-    }
-    for (auto &[rendy, buffers]: computeRenderer) {
-        buffers = device.allocateCommandBuffers(allocInfo);
-        const auto name = rendy->getName() + "/" + rendy->getType() + " Command Buffer (";
-        for (unsigned i = 0; i < buffers.size(); i++)
-            vk_debug::setObjectName(device, buffers[i], name + std::to_string(i) + ")");
-    }
-    swapchainDeletionQueue.push([&] {
-        for (auto &[_, buffers]: computeRenderer) device.freeCommandBuffers(commandPool, buffers);
-        for (auto &[_, buffers]: graphicsRenderer) device.freeCommandBuffers(commandPool, buffers);
-    });
-}
-
 void VulkanApplication::createDepthResources()
 {
     DEBUG_FUNCTION

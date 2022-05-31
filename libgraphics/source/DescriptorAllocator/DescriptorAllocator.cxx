@@ -23,8 +23,12 @@ vk::DescriptorPool createPool(vk::Device &device, std::uint32_t count, vk::Descr
     };
 
     std::vector<vk::DescriptorPoolSize> sizes;
-    sizes.reserve(poolSizes.size());
-    for (auto sz: poolSizes) { sizes.push_back({sz.first, uint32_t(sz.second * count)}); }
+    std::ranges::transform(poolSizes, std::back_inserter(sizes), [=](const auto &sz) {
+        return vk::DescriptorPoolSize{
+            .type = sz.first,
+            .descriptorCount = uint32_t(sz.second * count),
+        };
+    });
     vk::DescriptorPoolCreateInfo pool_info = {
         .flags = flags,
         .maxSets = count,
@@ -100,9 +104,8 @@ vk::DescriptorPool DescriptorAllocator::grabPool()
         vk::DescriptorPool pool = freePools.back();
         freePools.pop_back();
         return pool;
-    } else {
-        return createPool(device_ref, 1000, {});
     }
+    return createPool(device_ref, 1000, {});
 }
 
 }    // namespace pivot::graphics

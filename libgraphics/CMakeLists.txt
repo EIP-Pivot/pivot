@@ -370,12 +370,15 @@ target_compile_definitions(
            PIVOT_WINDOW_ICON_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../assets"
 )
 
-add_shader(${PROJECT_NAME} default.vert)
-add_shader(${PROJECT_NAME} default_pbr.vert)
-add_shader(${PROJECT_NAME} default_lit.frag)
-add_shader(${PROJECT_NAME} default_unlit.frag)
-add_shader(${PROJECT_NAME} default_pbr.frag)
-add_shader(${PROJECT_NAME} culling.comp)
+option(PIVOT_GRAPHICS_COMPILE_SHADERS "Should cmake compile the vulkan shaders ?" ON)
+if(PIVOT_GRAPHICS_COMPILE_SHADERS)
+    add_shader(${PROJECT_NAME} default.vert)
+    add_shader(${PROJECT_NAME} default_pbr.vert)
+    add_shader(${PROJECT_NAME} default_lit.frag)
+    add_shader(${PROJECT_NAME} default_unlit.frag)
+    add_shader(${PROJECT_NAME} default_pbr.frag)
+    add_shader(${PROJECT_NAME} culling.comp)
+endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 

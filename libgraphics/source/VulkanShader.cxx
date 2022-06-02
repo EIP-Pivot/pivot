@@ -34,7 +34,10 @@ VulkanShader::~VulkanShader() {}
 
 VulkanShader &VulkanShader::reload()
 {
-    source_code = vk_utils::readFile(shaderPath);
+    if (shaderPath.extension() == ".spv")
+        byte_code = vk_utils::readBinaryFile<std::uint32_t>(shaderPath);
+    else
+        source_code = vk_utils::readFile(shaderPath);
     return *this;
 }
 
@@ -54,6 +57,10 @@ std::string VulkanShader::pre_process(shaderc::CompileOptions options)
 
 void VulkanShader::compile(VulkanShader::VulkanVersion version, VulkanShader::OptimizationLevel level)
 {
+    if (isCompiled() && source_code.empty()) {
+        logger.warn("Vulkan Shader/compile") << "Can't compile a shader that was imported as bytecode!";
+        return;
+    }
     static shaderc::Compiler compiler;
 
     const auto options = getCompileOptions(version, level);

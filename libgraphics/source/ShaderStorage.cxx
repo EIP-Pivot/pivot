@@ -7,8 +7,6 @@ using namespace std::literals;
 namespace pivot::graphics
 {
 
-const std::filesystem::path ShaderStorage::cache_path = "./shaders_cache";
-
 ShaderStorage::ShaderStorage() { std::filesystem::create_directory(cache_path); }
 
 ShaderStorage::~ShaderStorage() {}
@@ -47,7 +45,7 @@ void ShaderStorage::load(const std::filesystem::path &path, const bool bForceCom
 std::optional<VulkanShader> ShaderStorage::getCacheBinary(const std::filesystem::path &path, const bool bForceCompile)
 {
     const auto filename = path.filename();
-    const std::filesystem::path cached_path = ShaderStorage::cache_path / (filename.string() + ".spv");
+    const std::filesystem::path cached_path = cache_path / (filename.string() + ".spv");
 
     if (!std::filesystem::exists(cached_path) && !bForceCompile) return std::nullopt;
     return VulkanShader(path, vk_utils::readBinaryFile<std::uint32_t>(cached_path));
@@ -55,9 +53,10 @@ std::optional<VulkanShader> ShaderStorage::getCacheBinary(const std::filesystem:
 
 VulkanShader ShaderStorage::compileAndCache(const std::filesystem::path &path)
 {
-    const std::filesystem::path cached_path = ShaderStorage::cache_path / (path.filename().string() + ".spv");
+    const std::filesystem::path true_path = shader_path / path;
+    const std::filesystem::path cached_path = cache_path / (path.filename().string() + ".spv");
 
-    VulkanShader shader(path);
+    VulkanShader shader(true_path);
     shader.compile(vulkanVersion, optimizationLevel);
     vk_utils::writeBinaryFile(cached_path, shader.getByteCode());
     return shader;

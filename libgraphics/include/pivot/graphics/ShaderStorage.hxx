@@ -7,14 +7,19 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#ifndef PIVOT_SHADER_DEFAULT_DIRECTORY
+    #define PIVOT_SHADER_DEFAULT_DIRECTORY "."
+#endif
+
+#ifndef PIVOT_SHADER_CACHE_DEFAULT_DIRECTORY
+    #define PIVOT_SHADER_CACHE_DEFAULT_DIRECTORY "./shaders_cache"
+#endif
+
 namespace pivot::graphics
 {
 
 class ShaderStorage
 {
-public:
-    static const std::filesystem::path cache_path;
-
 public:
     ShaderStorage();
     ~ShaderStorage();
@@ -30,6 +35,10 @@ public:
 private:
     std::optional<VulkanShader> getCacheBinary(const std::filesystem::path &path, const bool bForceCompile);
     VulkanShader compileAndCache(const std::filesystem::path &path);
+
+public:
+    std::filesystem::path shader_path = PIVOT_SHADER_DEFAULT_DIRECTORY;
+    std::filesystem::path cache_path = PIVOT_SHADER_CACHE_DEFAULT_DIRECTORY;
 
 private:
     VulkanShader::OptimizationLevel optimizationLevel = VulkanShader::OptimizationLevel::None;

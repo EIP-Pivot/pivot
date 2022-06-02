@@ -15,7 +15,7 @@ namespace pivot::graphics
 class GraphicsPipelineBuilder final : public internal::IPipelineBuilder
 {
 public:
-    GraphicsPipelineBuilder();
+    GraphicsPipelineBuilder(ShaderStorage &shader);
     ~GraphicsPipelineBuilder();
 
     GraphicsPipelineBuilder &setPipelineLayout(vk::PipelineLayout &layout) noexcept

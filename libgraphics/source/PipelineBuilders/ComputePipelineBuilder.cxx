@@ -22,11 +22,8 @@ ComputePipelineBuilder &ComputePipelineBuilder::setComputeShaderPath(const std::
 
 vk::Pipeline ComputePipelineBuilder::build(vk::Device &device, vk::PipelineCache pipelineCache) const
 {
-    VulkanShader shader(shaderPath);
-    if (!shader.isCompiled()) {
-        shader.compile(VulkanShader::VulkanVersion::e1_2, VulkanShader::OptimizationLevel::Performance);
-    }
-    auto shaderModule = vk_utils::createShaderModule(device, shader.getByteCode());
+    auto shaderId = shader.load(shaderPath);
+    auto shaderModule = vk_utils::createShaderModule(device, shader.get(shaderId).getByteCode());
     vk_debug::setObjectName(device, shaderModule, shaderPath);
     auto computeShaderStage =
         vk_init::populateVkPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eCompute, shaderModule);

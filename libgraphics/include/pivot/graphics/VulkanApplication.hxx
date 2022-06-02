@@ -82,7 +82,12 @@ public:
     T &addRenderer()
     {
         DEBUG_FUNCTION
-        auto rendy = std::make_unique<T>(pipelineStorage, assetStorage);
+        StorageUtils storage = {
+            .pipeline = pipelineStorage,
+            .assets = assetStorage,
+            .shader = shaderStorage,
+        };
+        auto rendy = std::make_unique<T>(storage);
         auto &ret = *rendy;
         if constexpr (std::is_base_of_v<IGraphicsRenderer, T>) {
             graphicsRenderer.emplace_back(std::move(rendy));
@@ -112,6 +117,8 @@ public:
     AssetStorage assetStorage;
     /// The application pipeline storage
     PipelineStorage pipelineStorage;
+    /// The application shader storage
+    ShaderStorage shaderStorage;
 
 private:
     DescriptorAllocator descriptorAllocator;

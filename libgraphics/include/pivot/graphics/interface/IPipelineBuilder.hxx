@@ -2,6 +2,8 @@
 
 #include <vulkan/vulkan.hpp>
 
+#include "pivot/graphics/ShaderStorage.hxx"
+
 namespace pivot::graphics::internal
 {
 
@@ -10,10 +12,14 @@ namespace pivot::graphics::internal
 class IPipelineBuilder
 {
 public:
+    IPipelineBuilder(ShaderStorage &shader): shader(shader) {}
     /// @brief Set the pipeline layout, can be chained
     virtual IPipelineBuilder &setPipelineLayout(vk::PipelineLayout &) = 0;
     /// @brief Build the pipeline
     virtual vk::Pipeline build(vk::Device &, vk::PipelineCache = VK_NULL_HANDLE) const = 0;
+
+protected:
+    ShaderStorage &shader;
 };
 
 }    // namespace pivot::graphics::internal

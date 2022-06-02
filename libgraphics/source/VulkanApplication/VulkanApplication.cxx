@@ -63,6 +63,7 @@ VulkanApplication::~VulkanApplication()
 void VulkanApplication::init()
 {
     VulkanBase::init({}, deviceExtensions, validationLayers);
+    shaderStorage.setOptions(VulkanShader::VulkanVersion::e1_2);
     assetStorage.build(DescriptorBuilder(layoutCache, descriptorAllocator));
     initVulkanRessources();
 }

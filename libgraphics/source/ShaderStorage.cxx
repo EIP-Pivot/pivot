@@ -7,7 +7,12 @@ using namespace std::literals;
 namespace pivot::graphics
 {
 
-ShaderStorage::ShaderStorage() { std::filesystem::create_directory(cache_path); }
+ShaderStorage::ShaderStorage()
+{
+    logger.debug("ShaderStorage") << "Shader path: " << shader_path;
+    logger.debug("ShaderStorage") << "Shader cache path: " << cache_path;
+    std::filesystem::create_directory(cache_path);
+}
 
 ShaderStorage::~ShaderStorage() {}
 
@@ -27,24 +32,25 @@ void ShaderStorage::recompile()
     for (const auto &[name, _]: shaderStorage) { recompile(name); }
 }
 
-void ShaderStorage::load(const std::filesystem::path &path, const bool bForceCompile)
+std::string ShaderStorage::load(const std::filesystem::path &path, const bool bForceCompile)
 {
     if (path.extension() == ".spv") {
         logger.warn("Shader Storage/load") << "Attempting to load an already compiled shader. Will be imported as is, "
                                               "and won't be able to be rebuild.";
-        shaderStorage.emplace(path.stem(), VulkanShader(path));
+        shaderStorage.emplace(path.stem().string(), VulkanShader(path));
     }
     auto res = getCacheBinary(path, bForceCompile);
     if (res.has_value()) {
-        shaderStorage.emplace(path.stem(), res.value());
+        shaderStorage.emplace(path.stem().string(), res.value());
     } else {
         try {
-            shaderStorage.emplace(path.stem(), compileAndCache(path));
+            shaderStorage.emplace(path.stem().string(), compileAndCache(path));
         } catch (const VulkanShader::VulkanShaderError &vse) {
             logger.err("Shader Storage/load") << vse.what();
-            return;
+            return "";
         }
     }
+    return path.stem().string();
 }
 
 std::optional<VulkanShader> ShaderStorage::getCacheBinary(const std::filesystem::path &path, const bool bForceCompile)

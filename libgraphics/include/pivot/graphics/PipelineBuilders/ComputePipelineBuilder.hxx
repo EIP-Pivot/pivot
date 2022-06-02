@@ -11,7 +11,7 @@ namespace pivot::graphics
 class ComputePipelineBuilder final : public internal::IPipelineBuilder
 {
 public:
-    ComputePipelineBuilder() = default;
+    using internal::IPipelineBuilder::IPipelineBuilder;
     ~ComputePipelineBuilder() = default;
 
     ComputePipelineBuilder &setPipelineLayout(vk::PipelineLayout &layout);

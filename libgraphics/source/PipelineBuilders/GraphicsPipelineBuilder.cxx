@@ -1,7 +1,6 @@
 #include "pivot/graphics/PipelineBuilders/GraphicsPipelineBuilder.hxx"
 
 #include "pivot/graphics/DebugMacros.hxx"
-#include "pivot/graphics/VulkanShader.hxx"
 #include "pivot/graphics/types/Vertex.hxx"
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_init.hxx"
@@ -10,8 +9,9 @@
 namespace pivot::graphics
 {
 
-GraphicsPipelineBuilder::GraphicsPipelineBuilder()
-    : inputAssembly(vk_init::populateVkPipelineInputAssemblyCreateInfo(vk::PrimitiveTopology::eTriangleList, VK_FALSE)),
+GraphicsPipelineBuilder::GraphicsPipelineBuilder(ShaderStorage &shader)
+    : internal::IPipelineBuilder(shader),
+      inputAssembly(vk_init::populateVkPipelineInputAssemblyCreateInfo(vk::PrimitiveTopology::eTriangleList, VK_FALSE)),
       colorBlendAttachment(vk_init::populateVkPipelineColorBlendAttachmentState()),
       multisampling(vk_init::populateVkPipelineMultisampleStateCreateInfo(vk::SampleCountFlagBits::e1)),
       depthStencil(vk_init::populateVkPipelineDepthStencilStateCreateInfo()),
@@ -24,15 +24,11 @@ GraphicsPipelineBuilder::GraphicsPipelineBuilder()
 
 GraphicsPipelineBuilder::~GraphicsPipelineBuilder() {}
 
-static void loadShader(const std::string &path, const vk::ShaderStageFlagBits &stage, vk::Device &device,
+static void loadShader(const VulkanShader &shader, const vk::ShaderStageFlagBits &stage, vk::Device &device,
                        std::vector<vk::PipelineShaderStageCreateInfo> &shaderStages) noexcept
 {
-    VulkanShader shader(path);
-    if (!shader.isCompiled()) {
-        shader.compile(VulkanShader::VulkanVersion::e1_2, VulkanShader::OptimizationLevel::Performance);
-    }
     auto shaderModule = vk_utils::createShaderModule(device, shader.getByteCode());
-    vk_debug::setObjectName(device, shaderModule, path);
+    vk_debug::setObjectName(device, shaderModule, shader.getPath());
     shaderStages.push_back(vk_init::populateVkPipelineShaderStageCreateInfo(stage, shaderModule));
 }
 
@@ -41,17 +37,24 @@ vk::Pipeline GraphicsPipelineBuilder::build(vk::Device &device, vk::PipelineCach
     DEBUG_FUNCTION
     std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
 
-    loadShader(vertexShaderPath, vk::ShaderStageFlagBits::eVertex, device, shaderStages);
-    if (fragmentShaderPath)
-        loadShader(fragmentShaderPath.value(), vk::ShaderStageFlagBits::eFragment, device, shaderStages);
-    if (tessellationControlShaderPath)
-        loadShader(tessellationControlShaderPath.value(), vk::ShaderStageFlagBits::eTessellationControl, device,
-                   shaderStages);
-    if (tessellationEvaluationShaderPath)
-        loadShader(tessellationEvaluationShaderPath.value(), vk::ShaderStageFlagBits::eTessellationEvaluation, device,
-                   shaderStages);
-    if (geometryShaderPath)
-        loadShader(geometryShaderPath.value(), vk::ShaderStageFlagBits::eGeometry, device, shaderStages);
+    auto vertexId = shader.load(vertexShaderPath);
+    loadShader(shader.get(vertexId), vk::ShaderStageFlagBits::eVertex, device, shaderStages);
+    if (fragmentShaderPath) {
+        auto id = shader.load(fragmentShaderPath.value());
+        loadShader(shader.get(id), vk::ShaderStageFlagBits::eFragment, device, shaderStages);
+    }
+    if (tessellationControlShaderPath) {
+        auto id = shader.load(tessellationControlShaderPath.value());
+        loadShader(shader.get(id), vk::ShaderStageFlagBits::eTessellationControl, device, shaderStages);
+    }
+    if (tessellationEvaluationShaderPath) {
+        auto id = shader.load(tessellationEvaluationShaderPath.value());
+        loadShader(shader.get(id), vk::ShaderStageFlagBits::eTessellationEvaluation, device, shaderStages);
+    }
+    if (geometryShaderPath) {
+        auto id = shader.load(geometryShaderPath.value());
+        loadShader(shader.get(id), vk::ShaderStageFlagBits::eGeometry, device, shaderStages);
+    }
 
     auto vertexInputInfo = vk_init::populateVkPipelineVertexInputStateCreateInfo(vertexDescription, vertexAttributes);
 

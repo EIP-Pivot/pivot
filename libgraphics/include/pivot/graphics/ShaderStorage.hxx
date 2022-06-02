@@ -28,7 +28,7 @@ public:
                     const VulkanShader::OptimizationLevel &op = VulkanShader::OptimizationLevel::None);
     void recompile(const std::string &name);
     void recompile();
-    void load(const std::filesystem::path &path, const bool bForceCompile = false);
+    std::string load(const std::filesystem::path &path, const bool bForceCompile = false);
 
     const VulkanShader &get(const std::string &shaderName) const { return shaderStorage.at(shaderName); }
 

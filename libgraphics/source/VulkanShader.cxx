@@ -15,14 +15,27 @@ constexpr static auto shaderStageToShaderC(const std::string &stage)
 namespace pivot::graphics
 {
 
-VulkanShader::VulkanShader(const std::filesystem::path &path): shaderPath(path) { reload(); }
+VulkanShader::VulkanShader(const std::filesystem::path &path): name(path.stem().string()), shaderPath(path)
+{
+    reload();
+}
+
+VulkanShader::VulkanShader(const std::filesystem::path &path, const std::string &code)
+    : name(path.stem().string()), shaderPath(path), source_code(code)
+{
+}
+
+VulkanShader::VulkanShader(const std::filesystem::path &path, const std::vector<std::uint32_t> &byte_code)
+    : name(path.stem().string()), shaderPath(path), byte_code(byte_code)
+{
+}
 
 VulkanShader::~VulkanShader() {}
 
-void VulkanShader::reload()
+VulkanShader &VulkanShader::reload()
 {
     source_code = vk_utils::readFile(shaderPath);
-    name = shaderPath.stem().string();
+    return *this;
 }
 
 std::string VulkanShader::pre_process(shaderc::CompileOptions options)

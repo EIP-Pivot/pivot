@@ -42,6 +42,8 @@ public:
 public:
     /// Ctor, load @arg path from disk
     VulkanShader(const std::filesystem::path &path);
+    VulkanShader(const std::filesystem::path &path, const std::string &code);
+    VulkanShader(const std::filesystem::path &path, const std::vector<std::uint32_t> &byte_code);
     /// Dtor
     ~VulkanShader();
 
@@ -63,7 +65,7 @@ public:
     void setMacro(const std::string &key, const std::string &value = "") { macros[key] = value; }
 
     /// Reload the source file from the disk
-    void reload();
+    VulkanShader &reload();
     /// @brief run only the preprocessor step.
     ///
     /// Return a string with the preprocess step.

@@ -311,6 +311,7 @@ add_library(
     source/vk_debug.cxx
     source/VulkanRenderPass.cxx
     source/VulkanShader.cxx
+    source/ShaderStorage.cxx
     source/SwapchainSupportDetails.cxx
     source/PipelineBuilders/GraphicsPipelineBuilder.cxx
     source/PipelineBuilders/ComputePipelineBuilder.cxx

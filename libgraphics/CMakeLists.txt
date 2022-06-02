@@ -365,10 +365,6 @@ set(PIVOT_SHADER_DEFAULT_DIRECTORY
     "${CMAKE_SOURCE_DIR}/libgraphics/shaders/"
     CACHE STRING "Path to the default lookup directory for the shaders loading"
 )
-set(PIVOT_SHADER_CACHE_DEFAULT_DIRECTORY
-    "${CMAKE_BUILD_DIR}/shader_cache/"
-    CACHE STRING "Path to the default lookup directory for the shaders cache loading"
-)
 
 target_compile_definitions(
     ${PROJECT_NAME}
@@ -377,8 +373,8 @@ target_compile_definitions(
            VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1
            PIVOT_ASSET_DEFAULT_DIRECTORY="${PIVOT_ASSET_DEFAULT_DIRECTORY}"
            PIVOT_SHADER_DEFAULT_DIRECTORY="${PIVOT_SHADER_DEFAULT_DIRECTORY}"
-           PIVOT_SHADER_CACHE_DEFAULT_DIRECTORY="${PIVOT_SHADER_CACHE_DEFAULT_DIRECTORY}"
-           PIVOT_WINDOW_ICON_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../assets"
+           PIVOT_SHADER_CACHE_DEFAULT_DIRECTORY="${CMAKE_BINARY_DIR}/shader_cache/"
+           PIVOT_WINDOW_ICON_PATH="${CMAKE_SOURCE_DIR}/assets"
 )
 
 option(PIVOT_GRAPHICS_COMPILE_SHADERS "Should cmake compile the vulkan shaders ?" ON)

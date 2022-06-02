@@ -22,15 +22,15 @@ VulkanShader::~VulkanShader() {}
 void VulkanShader::reload()
 {
     source_code = vk_utils::readFile(shaderPath);
-    name = shaderPath.stem();
+    name = shaderPath.stem().string();
 }
 
 std::string VulkanShader::pre_process(shaderc::CompileOptions options)
 {
     static shaderc::Compiler compiler;
 
-    const auto preProcessResult =
-        compiler.PreprocessGlsl(source_code, shaderStageToShaderC(shaderPath.extension()), getName().c_str(), options);
+    const auto preProcessResult = compiler.PreprocessGlsl(
+        source_code, shaderStageToShaderC(shaderPath.extension().string()), getName().c_str(), options);
     if (preProcessResult.GetCompilationStatus() != shaderc_compilation_status_success) {
         logger.err("Vulkan Shader/PreProcess") << "Failed to pre-process " << shaderPath << ": ";
         logger.err("Vulkan Shader/PreProcess") << preProcessResult.GetErrorMessage();
@@ -46,8 +46,8 @@ void VulkanShader::compile(VulkanShader::VulkanVersion version, VulkanShader::Op
     const auto options = getCompileOptions(version, level);
     const auto preprocess = pre_process(options);
     const auto filename = shaderPath.filename().string();
-    const auto result =
-        compiler.CompileGlslToSpv(preprocess, shaderStageToShaderC(shaderPath.extension()), getName().c_str(), options);
+    const auto result = compiler.CompileGlslToSpv(preprocess, shaderStageToShaderC(shaderPath.extension().string()),
+                                                  getName().c_str(), options);
 
     if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
         logger.err("Vulkan Shader/Compile") << "While compiling shader file: " << shaderPath << ": ";
@@ -69,7 +69,7 @@ shaderc::CompileOptions VulkanShader::getCompileOptions(VulkanVersion version, O
             options.SetOptimizationLevel(shaderc_optimization_level_performance);
             break;
     }
-    for (const auto &[name, value]: macros) options.AddMacroDefinition(name, value);
+    for (const auto &[key, value]: macros) options.AddMacroDefinition(key, value);
     return options;
 }
 

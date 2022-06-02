@@ -60,7 +60,7 @@ public:
     std::size_t getHash() const { return std::hash<std::string>{}(source_code); }
 
     /// @brief Set a macro to be set during the compilation
-    void setMacro(const std::string &name, const std::string &value = "") { macros[name] = value; }
+    void setMacro(const std::string &key, const std::string &value = "") { macros[key] = value; }
 
     /// Reload the source file from the disk
     void reload();

@@ -204,7 +204,7 @@ if(NOT spirvtools_POPULATED)
         CACHE BOOL "" FORCE
     )
     set(SPIRV_SKIP_TESTS
-        OFF
+        ON
         CACHE BOOL "" FORCE
     )
     add_subdirectory(${spirvtools_SOURCE_DIR} ${spirvtools_BINARY_DIR})

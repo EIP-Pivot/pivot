@@ -28,7 +28,7 @@ static void loadShader(const VulkanShader &shader, const vk::ShaderStageFlagBits
                        std::vector<vk::PipelineShaderStageCreateInfo> &shaderStages) noexcept
 {
     auto shaderModule = vk_utils::createShaderModule(device, shader.getByteCode());
-    vk_debug::setObjectName(device, shaderModule, shader.getPath(true));
+    vk_debug::setObjectName(device, shaderModule, shader.getPath(true).string());
     shaderStages.push_back(vk_init::populateVkPipelineShaderStageCreateInfo(stage, shaderModule));
 }
 

@@ -89,7 +89,7 @@ public:
     /// @brief Return true is the shader has already be compiled
     ///
     /// Does not take into account any change in the source code that wasn't recompiled.
-    constexpr bool isCompiled() const noexcept { return !byte_code.empty(); }
+    bool isCompiled() const noexcept { return !byte_code.empty(); }
     /// @brief Hash the source code
     std::size_t getHash() const { return std::hash<std::string>{}(source_code); }
 
@@ -108,7 +108,7 @@ public:
     void compile(VulkanVersion version, OptimizationLevel level);
 
     /// @see isCompiled
-    constexpr operator bool() const noexcept { return isCompiled(); }
+    operator bool() const noexcept { return isCompiled(); }
 
 private:
     shaderc::CompileOptions getCompileOptions(VulkanVersion version, OptimizationLevel level);

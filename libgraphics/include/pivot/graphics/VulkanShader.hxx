@@ -21,6 +21,15 @@ public:
     /// Error type for VulkanShader
     RUNTIME_ERROR(VulkanShader);
 
+    enum class Kind {
+        Vertex = shaderc_vertex_shader,
+        Fragment = shaderc_fragment_shader,
+        Compute = shaderc_compute_shader,
+        TesselationControl = shaderc_tess_control_shader,
+        TesselationEvaluation = shaderc_tess_evaluation_shader,
+        Geometry = shaderc_geometry_shader,
+    };
+
     /// Which optiomization level to use when compiling
     enum class OptimizationLevel {
         /// No optimization, enable debug symbols

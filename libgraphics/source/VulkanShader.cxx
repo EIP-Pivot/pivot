@@ -32,6 +32,15 @@ VulkanShader::VulkanShader(const std::filesystem::path &path, const std::vector<
 
 VulkanShader::~VulkanShader() {}
 
+VulkanShader::Kind VulkanShader::getKind() const
+{
+    const auto stage = shaderPath.extension();
+    if (stage == ".vert") return Kind::Vertex;
+    if (stage == ".frag") return Kind::Fragment;
+    if (stage == ".comp") return Kind::Compute;
+    throw std::runtime_error("Unsupported shader type");
+}
+
 VulkanShader &VulkanShader::reload()
 {
     if (shaderPath.extension() == ".spv")

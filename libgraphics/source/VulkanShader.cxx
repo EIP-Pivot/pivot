@@ -4,13 +4,6 @@
 
 #include <Logger.hpp>
 #include <fstream>
-constexpr static auto shaderStageToShaderC(const std::string &stage)
-{
-    if (stage == ".vert") return shaderc_vertex_shader;
-    if (stage == ".frag") return shaderc_fragment_shader;
-    if (stage == ".comp") return shaderc_compute_shader;
-    throw std::runtime_error("Unknown shader type");
-}
 
 namespace pivot::graphics
 {
@@ -21,12 +14,12 @@ VulkanShader::VulkanShader(const std::filesystem::path &path): name(path.stem().
 }
 
 VulkanShader::VulkanShader(const std::filesystem::path &path, const std::string &code)
-    : name(path.stem().string()), shaderPath(path), source_code(code)
+    : name(path.filename().string()), shaderPath(path), source_code(code)
 {
 }
 
 VulkanShader::VulkanShader(const std::filesystem::path &path, const std::vector<std::uint32_t> &byte_code)
-    : name(path.stem().string()), shaderPath(path), byte_code(byte_code)
+    : name(path.filename().string()), shaderPath(path), byte_code(byte_code)
 {
 }
 

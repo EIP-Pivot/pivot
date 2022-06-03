@@ -18,6 +18,7 @@ public:
     GraphicsPipelineBuilder();
     ~GraphicsPipelineBuilder();
 
+    /// Set the pipeline layout used by the pipeline, can be chained
     GraphicsPipelineBuilder &setPipelineLayout(vk::PipelineLayout &layout) noexcept
     {
         pipelineLayout = layout;

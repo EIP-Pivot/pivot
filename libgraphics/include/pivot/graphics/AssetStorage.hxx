@@ -130,6 +130,7 @@ public:
 public:
     /// Constructor
     AssetStorage(VulkanBase &device);
+    AssetStorage(const AssetStorage &) = delete;
     /// Destructor
     ~AssetStorage();
 

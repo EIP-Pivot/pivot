@@ -22,6 +22,7 @@ class ShaderStorage
 {
 public:
     ShaderStorage();
+    ShaderStorage(const ShaderStorage &) = delete;
     ~ShaderStorage();
 
     void setOptions(const VulkanShader::VulkanVersion &ver,

@@ -66,6 +66,7 @@ public:
     }
 
     Kind getKind() const;
+    shaderc_shader_kind getShadercKind() const { return static_cast<shaderc_shader_kind>(getKind()); }
 
     /// Return the name of the shader (the stem of the file)
     const std::string &getName() const noexcept { return name; }

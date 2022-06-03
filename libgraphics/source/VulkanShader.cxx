@@ -54,8 +54,7 @@ std::string VulkanShader::pre_process(shaderc::CompileOptions options)
 {
     static shaderc::Compiler compiler;
 
-    const auto preProcessResult = compiler.PreprocessGlsl(
-        source_code, shaderStageToShaderC(shaderPath.extension().string()), getName().c_str(), options);
+    const auto preProcessResult = compiler.PreprocessGlsl(source_code, getShadercKind(), getName().c_str(), options);
     if (preProcessResult.GetCompilationStatus() != shaderc_compilation_status_success) {
         logger.err("Vulkan Shader/Pre-Process") << "Failed to pre-process " << shaderPath << ": ";
         logger.err("Vulkan Shader/Pre-Process") << preProcessResult.GetErrorMessage();
@@ -75,8 +74,7 @@ void VulkanShader::compile(VulkanShader::VulkanVersion version, VulkanShader::Op
     const auto options = getCompileOptions(version, level);
     const auto preprocess = pre_process(options);
     const auto filename = shaderPath.filename().string();
-    const auto result = compiler.CompileGlslToSpv(preprocess, shaderStageToShaderC(shaderPath.extension().string()),
-                                                  getName().c_str(), options);
+    const auto result = compiler.CompileGlslToSpv(preprocess, getShadercKind(), getName().c_str(), options);
 
     if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
         logger.err("Vulkan Shader/Compile") << "While compiling shader file: " << shaderPath << ": ";

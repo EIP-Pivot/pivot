@@ -21,12 +21,19 @@ public:
     /// Error type for VulkanShader
     RUNTIME_ERROR(VulkanShader);
 
+    /// Kind the shader
     enum class Kind {
+        /// Vertex shader
         Vertex = shaderc_vertex_shader,
+        /// Frament shader
         Fragment = shaderc_fragment_shader,
+        /// Compute shader
         Compute = shaderc_compute_shader,
+        /// Tesselation control shader
         TesselationControl = shaderc_tess_control_shader,
+        /// Tesselation evaluation shader
         TesselationEvaluation = shaderc_tess_evaluation_shader,
+        /// Geometry shader
         Geometry = shaderc_geometry_shader,
     };
 
@@ -51,7 +58,9 @@ public:
 public:
     /// Ctor, load @arg path from disk
     VulkanShader(const std::filesystem::path &path);
+    /// Construct a VulkanShader, with explicit code
     VulkanShader(const std::filesystem::path &path, const std::string &code);
+    /// Construct a VulkanShader, with explicit byte code
     VulkanShader(const std::filesystem::path &path, const std::vector<std::uint32_t> &byte_code);
     /// Dtor
     ~VulkanShader();
@@ -65,7 +74,9 @@ public:
             return shaderPath;
     }
 
+    /// return the type of the shader
     Kind getKind() const;
+    /// return the type of the shader
     shaderc_shader_kind getShadercKind() const { return static_cast<shaderc_shader_kind>(getKind()); }
 
     /// Return the name of the shader (the stem of the file)

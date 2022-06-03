@@ -52,6 +52,10 @@ std::string ShaderStorage::load(const std::filesystem::path &path, const bool bF
     const auto filename = path.filename().string();
     const spvtools::SpirvTools tools(convert(vulkanVersion));
 
+    if (shaderStorage.contains(filename) && !bForceCompile) {
+        logger.debug("ShaderStorage/load") << "Shader \"" << filename << "\" is already loaded.";
+        return filename;
+    }
     if (path.extension() == ".spv") {
         logger.warn("Shader Storage/load") << "Attempting to load an already compiled shader. Will be imported as is, "
                                               "and won't be able to be rebuild.";

@@ -12,6 +12,7 @@ namespace pivot::graphics::internal
 class IPipelineBuilder
 {
 public:
+    /// Ctor
     IPipelineBuilder(ShaderStorage &shader): shader(shader) {}
     /// @brief Set the pipeline layout, can be chained
     virtual IPipelineBuilder &setPipelineLayout(vk::PipelineLayout &) = 0;
@@ -19,6 +20,7 @@ public:
     virtual vk::Pipeline build(vk::Device &, vk::PipelineCache = VK_NULL_HANDLE) const = 0;
 
 protected:
+    /// Reference to the ShaderStorage
     ShaderStorage &shader;
 };
 

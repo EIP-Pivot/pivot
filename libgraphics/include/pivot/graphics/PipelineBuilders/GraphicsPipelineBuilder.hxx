@@ -15,9 +15,12 @@ namespace pivot::graphics
 class GraphicsPipelineBuilder final : public internal::IPipelineBuilder
 {
 public:
+    /// Ctor
     GraphicsPipelineBuilder(ShaderStorage &shader);
+    /// Dtor
     ~GraphicsPipelineBuilder();
 
+    /// Set the pipeline layout used by the pipeline, can be chained
     GraphicsPipelineBuilder &setPipelineLayout(vk::PipelineLayout &layout) noexcept
     {
         pipelineLayout = layout;

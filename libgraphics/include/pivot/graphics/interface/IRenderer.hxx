@@ -11,9 +11,13 @@
 namespace pivot::graphics
 {
 
+/// Wrapper for all the "storage class"
 struct StorageUtils {
+    /// @see PipelineStorage
     std::reference_wrapper<PipelineStorage> pipeline;
+    /// @see AssetStorage
     std::reference_wrapper<AssetStorage> assets;
+    /// @see ShaderStorage
     std::reference_wrapper<ShaderStorage> shader;
 };
 
@@ -38,6 +42,7 @@ public:
                             const vk::DescriptorSetLayout &resolverLayout, vk::RenderPass &pass) = 0;
 
 protected:
+    /// All ref to the storage class
     StorageUtils storage;
 };
 

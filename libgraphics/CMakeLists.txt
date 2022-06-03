@@ -283,8 +283,8 @@ fetchcontent_getproperties(shaderc)
 if(NOT shaderc_POPULATED)
     message(STATUS "Populating shaderc")
     fetchcontent_populate(shaderc)
-    set(SHADERC_ENABLE_EXAMPLES
-        OFF
+    set(SHADERC_SKIP_EXAMPLES
+        ON
         CACHE BOOL "" FORCE
     )
     set(SHADERC_SKIP_COPYRIGHT_CHECK
@@ -297,6 +297,10 @@ if(NOT shaderc_POPULATED)
     )
     set(SHADERC_SKIP_TESTS
         ON
+        CACHE BOOL "" FORCE
+    )
+    set(SHADERC_ENABLE_WERROR_COMPILE
+        OFF
         CACHE BOOL "" FORCE
     )
     add_subdirectory(${shaderc_SOURCE_DIR} ${shaderc_BINARY_DIR})

@@ -57,7 +57,16 @@ public:
     ~VulkanShader();
 
     /// Return the path of the shader
-    const auto &getPath() const noexcept { return shaderPath; }
+    std::filesystem::path getPath(bool bRelative = false) const noexcept
+    {
+        if (bRelative)
+            return shaderPath.lexically_relative(std::filesystem::current_path());
+        else
+            return shaderPath;
+    }
+
+    Kind getKind() const;
+
     /// Return the name of the shader (the stem of the file)
     const std::string &getName() const noexcept { return name; }
     /// @brief Return the byte code of the shader.

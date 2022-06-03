@@ -57,8 +57,8 @@ std::string VulkanShader::pre_process(shaderc::CompileOptions options)
     const auto preProcessResult = compiler.PreprocessGlsl(
         source_code, shaderStageToShaderC(shaderPath.extension().string()), getName().c_str(), options);
     if (preProcessResult.GetCompilationStatus() != shaderc_compilation_status_success) {
-        logger.err("Vulkan Shader/PreProcess") << "Failed to pre-process " << shaderPath << ": ";
-        logger.err("Vulkan Shader/PreProcess") << preProcessResult.GetErrorMessage();
+        logger.err("Vulkan Shader/Pre-Process") << "Failed to pre-process " << shaderPath << ": ";
+        logger.err("Vulkan Shader/Pre-Process") << preProcessResult.GetErrorMessage();
         throw VulkanShaderError("Failed to pre-process");
     }
     return std::string(preProcessResult.begin(), preProcessResult.end());

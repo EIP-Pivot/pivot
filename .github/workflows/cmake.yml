@@ -2,14 +2,6 @@ name: CMake
 on: push
 
 jobs:
-  format:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: clang-format Check
-        uses: jidicula/clang-format-action@v4.6.0
-
   build:
     env:
       VULKAN_SDK: C:/VulkanSDK
@@ -80,8 +72,16 @@ jobs:
 
       - name: Run tests
         working-directory: ${{ github.workspace }}${{ matrix.config.working_directory }}
-        run: ctest --config ${{ matrix.build_type }} --output-on-failure
+        run: ctest -C ${{ matrix.build_type }} -T test --output-on-failure
 
+  format:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: clang-format Check
+        uses: jidicula/clang-format-action@v4.6.0
 
   documentation:
     needs: build

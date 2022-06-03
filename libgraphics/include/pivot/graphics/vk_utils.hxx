@@ -8,7 +8,6 @@
 #include <vector>
 #include <vulkan/vulkan.hpp>
 
-
 #include "pivot/graphics/PivotException.hxx"
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 

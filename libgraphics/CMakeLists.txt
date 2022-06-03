@@ -199,6 +199,10 @@ if(NOT spirvtools_POPULATED)
         ON
         CACHE BOOL "" FORCE
     )
+    set(SPIRV_WERROR
+        OFF
+        CACHE BOOL "" FORCE
+    )
     set(SPIRV_SKIP_TESTS
         OFF
         CACHE BOOL "" FORCE

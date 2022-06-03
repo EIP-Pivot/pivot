@@ -9,14 +9,12 @@ namespace pivot::graphics::vk_utils
 {
 std::string readFile(const std::filesystem::path &filename)
 {
-    size_t fileSize = 0;
     std::string fileContent;
-    std::ifstream file(filename, std::ios::ate | std::ios::binary);
+    std::ifstream file(filename);
+    size_t fileSize = std::filesystem::file_size(filename);
 
-    if (!file.is_open()) { throw std::runtime_error("failed to open file " + filename.string()); }
-    fileSize = file.tellg();
+    if (!file.is_open()) throw std::runtime_error("failed to open file " + filename.string());
     fileContent.resize(fileSize);
-    file.seekg(0);
     file.read(fileContent.data(), fileSize);
     file.close();
     return fileContent;

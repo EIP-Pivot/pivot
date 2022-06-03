@@ -16,6 +16,7 @@ void AImmediateCommand::init(vk::Device &device, const vk::PhysicalDevice &gpu, 
 
     createImmediateContext(queueFamilyIndex);
     immediateQueue = device_ref->get().getQueue(queueFamilyIndex, 0);
+    vk_debug::setObjectName(device_ref->get(), immediateQueue, "Immediate Command Queue");
 }
 
 void AImmediateCommand::destroy()
@@ -56,8 +57,18 @@ void AImmediateCommand::immediateCommand(std::function<void(vk::CommandBuffer &)
         .signalSemaphoreCount = 0,
         .pSignalSemaphores = nullptr,
     };
+#ifndef NDEBUG
+    vk::DebugUtilsLabelEXT label{
+        .pLabelName = location.function_name(),
+    };
+    immediateQueue.beginDebugUtilsLabelEXT(label);
+#endif
 
     immediateQueue.submit(submit, immediateFence);
+
+#ifndef NDEBUG
+    immediateQueue.endDebugUtilsLabelEXT();
+#endif
     vk_utils::vk_try(device_ref->get().waitForFences(immediateFence, VK_TRUE, UINT64_MAX));
     device_ref->get().resetFences(immediateFence);
     device_ref->get().resetCommandPool(immediateCommandPool);

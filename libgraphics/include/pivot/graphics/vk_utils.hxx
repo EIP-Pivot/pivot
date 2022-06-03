@@ -55,7 +55,7 @@ template <typename T = std::byte>
 std::size_t writeBinaryFile(const std::filesystem::path &filename, const std::vector<T> &code)
 {
     std::ofstream file(filename, std::ios::out | std::ios::binary);
-    file.write(reinterpret_cast<const char *>(code.data()), code.size());
+    file.write(reinterpret_cast<const char *>(code.data()), code.size() * sizeof(T));
     file.close();
     return code.size();
 }

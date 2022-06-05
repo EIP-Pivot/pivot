@@ -9,16 +9,42 @@
 namespace pivot::graphics
 {
 
+/// The CPU side point light representation
+/// @cond
+struct PointLight {
+    glm::vec3 color = {1.0f, 1.0f, 1.0f};
+    double intensity = 1.0f;
+    double falloff = 1.0f;
+};
+/// @endcond
+
+/// The CPU side Directional light representation
+/// @cond
+struct DirectionalLight {
+    glm::vec3 color = {1.0f, 1.0f, 1.0f};
+    double intensity = 1.0f;
+};
+/// @endcond
+
+/// The CPU side spot light representation
+/// @cond
+struct SpotLight {
+    glm::vec3 color = {1.0f, 1.0f, 1.0f};
+    double cutOff = glm::cos(glm::radians(12.5f));
+    double outerCutOff = glm::cos(glm::radians(17.5f));
+    double intensity = 1.0f;
+};
+/// @endcond
+
 namespace gpu_object
 {
     /// Represent a omnidirectional light
     /// @cond
     struct PointLight {
+        PointLight(const graphics::PointLight &light, const Transform &transform);
         alignas(16) glm::vec4 position;
         alignas(16) glm::vec4 color = {1.0f, 1.0f, 1.0f, 0.0f};
         alignas(4) float intensity = 1.0f;
-        alignas(4) float minRadius = 1.0f;
-        alignas(4) float radius = 10.0f;
         alignas(4) float falloff = 1.0f;
     };
     static_assert(sizeof(PointLight) % 4 == 0);
@@ -28,6 +54,7 @@ namespace gpu_object
     /// Represent a Directional Light
     /// @cond
     struct DirectionalLight {
+        DirectionalLight(const graphics::DirectionalLight &light, const Transform &transform);
         alignas(16) glm::vec4 orientation;
         alignas(16) glm::vec4 color = {1.0f, 1.0f, 1.0f, 0.0f};
         alignas(4) float intensity = 1.0f;
@@ -39,6 +66,8 @@ namespace gpu_object
     /// Represent a Spot Light
     /// @cond
     struct SpotLight {
+        SpotLight(const graphics::SpotLight &light, const Transform &transform);
+
         alignas(16) glm::vec4 position;
         alignas(16) glm::vec4 direction;
         alignas(16) glm::vec4 color = {1.0f, 1.0f, 1.0f, 0.0f};
@@ -52,36 +81,5 @@ namespace gpu_object
     static_assert(sizeof(SpotLight) == ((sizeof(float) * 4) * 3) + (sizeof(float) * 3) + 4);
 
 }    // namespace gpu_object
-
-/// The CPU side point light representation
-/// @cond
-struct PointLight {
-    Transform position;
-    glm::vec4 color = {1.0f, 1.0f, 1.0f, 1.0f};
-    float intensity = 1.0f;
-    float minRadius = 1.0f;
-    float radius = 10.0f;
-    float falloff = 1.0f;
-};
-/// @endcond
-
-/// The CPU side Directional light representation
-/// @cond
-struct DirectionalLight {
-    Transform position;
-    glm::vec3 color = {1.0f, 1.0f, 1.0f};
-    float intensity = 1.0f;
-    float radius = 0.5f;
-};
-/// @endcond
-
-/// The CPU side spot light representation
-/// @cond
-struct SpotLight {
-    Transform position;
-    glm::vec3 color = {1.0f, 1.0f, 1.0f};
-    float cutOff = 0.3f;
-};
-/// @endcond
 
 }    // namespace pivot::graphics

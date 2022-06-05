@@ -12,23 +12,26 @@ layout(location = 2) out vec3 fragColor;
 layout(location = 3) out vec2 fragTextCoords;
 layout(location = 4) out uint materialIndex;
 
-
 struct UniformBufferObject {
     mat4 modelMatrix;
     uint materialIndex;
     uint boundingBoxIndex;
 };
 
-layout (std140, set = 1, binding = 0) readonly buffer ObjectBuffer {
+layout(std140, set = 1, binding = 0) readonly buffer ObjectBuffer
+{
     UniformBufferObject objects[];
-} objectBuffer;
+}
+objectBuffer;
 
-layout (push_constant) uniform readonly constants {
-	mat4 viewproj;
-} cameraData;
+layout(push_constant) uniform readonly constants
+{
+    mat4 viewproj;
+}
+cameraData;
 
-
-void main() {
+void main()
+{
     fragColor = inColor;
     fragTextCoords = inTextCoords;
     materialIndex = objectBuffer.objects[gl_BaseInstance].materialIndex;

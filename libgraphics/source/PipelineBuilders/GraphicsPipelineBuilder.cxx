@@ -9,24 +9,12 @@
 namespace pivot::graphics
 {
 
-GraphicsPipelineBuilder::GraphicsPipelineBuilder(const vk::Extent2D &extent)
+GraphicsPipelineBuilder::GraphicsPipelineBuilder()
     : inputAssembly(vk_init::populateVkPipelineInputAssemblyCreateInfo(vk::PrimitiveTopology::eTriangleList, VK_FALSE)),
       colorBlendAttachment(vk_init::populateVkPipelineColorBlendAttachmentState()),
       multisampling(vk_init::populateVkPipelineMultisampleStateCreateInfo(vk::SampleCountFlagBits::e1)),
       depthStencil(vk_init::populateVkPipelineDepthStencilStateCreateInfo()),
       rasterizer(vk_init::populateVkPipelineRasterizationStateCreateInfo(vk::PolygonMode::eFill)),
-      viewport(vk::Viewport{
-          .x = 0.0f,
-          .y = 0.0f,
-          .width = static_cast<float>(extent.width),
-          .height = static_cast<float>(extent.height),
-          .minDepth = 0.0f,
-          .maxDepth = 1.0f,
-      }),
-      scissor(vk::Rect2D{
-          .offset = vk::Offset2D{0, 0},
-          .extent = extent,
-      }),
       vertexDescription({Vertex::getBindingDescription()}),
       vertexAttributes(Vertex::getAttributeDescriptons())
 {
@@ -94,6 +82,18 @@ GraphicsPipelineBuilder &GraphicsPipelineBuilder::setFaceCulling(const vk::CullM
     return *this;
 }
 
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::setViewPort(const vk::Viewport &port)
+{
+    viewport = port;
+    return *this;
+};
+
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::setScissor(const vk::Rect2D &scisso)
+{
+    scissor = scisso;
+    return *this;
+}
+
 std::vector<vk::VertexInputBindingDescription> &GraphicsPipelineBuilder::getVertexDescription() noexcept
 {
     return vertexDescription;
@@ -133,9 +133,9 @@ vk::Pipeline GraphicsPipelineBuilder::build(vk::Device &device, vk::PipelineCach
 
     vk::PipelineViewportStateCreateInfo viewportState{
         .viewportCount = 1,
-        .pViewports = &viewport,
+        .pViewports = (viewport.has_value()) ? (&(viewport.value())) : (nullptr),
         .scissorCount = 1,
-        .pScissors = &scissor,
+        .pScissors = (scissor.has_value()) ? (&(scissor.value())) : (nullptr),
     };
 
     vk::PipelineColorBlendStateCreateInfo colorBlending{
@@ -143,6 +143,14 @@ vk::Pipeline GraphicsPipelineBuilder::build(vk::Device &device, vk::PipelineCach
         .logicOp = vk::LogicOp::eCopy,
         .attachmentCount = 1,
         .pAttachments = &colorBlendAttachment,
+    };
+
+    std::vector<vk::DynamicState> dynamicStateVec;
+    if (!viewport.has_value()) dynamicStateVec.push_back(vk::DynamicState::eViewport);
+    if (!scissor.has_value()) dynamicStateVec.push_back(vk::DynamicState::eScissor);
+    vk::PipelineDynamicStateCreateInfo dynamicState{
+        .dynamicStateCount = static_cast<uint32_t>(dynamicStateVec.size()),
+        .pDynamicStates = dynamicStateVec.data(),
     };
 
     vk::GraphicsPipelineCreateInfo pipelineInfo{
@@ -155,6 +163,7 @@ vk::Pipeline GraphicsPipelineBuilder::build(vk::Device &device, vk::PipelineCach
         .pMultisampleState = &multisampling,
         .pDepthStencilState = &depthStencil,
         .pColorBlendState = &colorBlending,
+        .pDynamicState = &dynamicState,
         .layout = pipelineLayout,
         .renderPass = renderPass,
         .subpass = 0,

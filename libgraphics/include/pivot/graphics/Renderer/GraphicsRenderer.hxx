@@ -27,6 +27,8 @@ private:
 
 private:
     bool bIsMultiDraw = false;
+    vk::Viewport viewport;
+    vk::Rect2D scissor;
     vk::PipelineLayout pipelineLayout = VK_NULL_HANDLE;
 };
 }    // namespace pivot::graphics

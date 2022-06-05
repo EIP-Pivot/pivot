@@ -33,12 +33,14 @@ cameraData;
 void main()
 {
     mat4 matrix = objectBuffer.objects[gl_BaseInstance].modelMatrix;
+    vec3 locPos = vec3(matrix * vec4(inPosition, 1.0));
 
-    fragTextCoords = inTextCoords;
-    materialIndex = objectBuffer.objects[gl_BaseInstance].materialIndex;
-
-    fragTangent = vec4(mat3(matrix) * inTangent.xyz, inTangent.w);
     fragPosition = vec3(matrix * vec4(inPosition, 1.0));
     fragNormal = mat3(matrix) * inNormal;
+    fragTextCoords = inTextCoords;
+    fragTangent = vec4(mat3(matrix) * inTangent.xyz, inTangent.w);
+
+    materialIndex = objectBuffer.objects[gl_BaseInstance].materialIndex;
+
     gl_Position = cameraData.viewproj * vec4(fragPosition, 1.0);
 }

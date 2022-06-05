@@ -83,20 +83,38 @@ layout(std140, set = 1, binding = 4) readonly buffer SpoLight
 spotLight;
 
 #define PI 3.1415926535897932384626433832795
+
 #define SAMPLE_OPTIONAL_WITH_DEFAULT(name, swizzle, defaultValue)                                         \
     (material.name##Texture >= 0) ? (texture(texSampler[material.name##Texture], fragTextCoords).swizzle) \
                                   : (defaultValue)
+
 #define SAMPLE_OPTIONAL_WITH_DEFAULT_RGB(name, defaultValue) SAMPLE_OPTIONAL_WITH_DEFAULT(name, rgb, defaultValue)
 
 vec3 getNormalFromMap(const in Material material)
 {
-    vec3 tangentNormal = SAMPLE_OPTIONAL_WITH_DEFAULT_RGB(normal, vec3(1.0));
-    tangentNormal *= 2.0 - 1.0;
+    /// The tangent have an issue when loaded. Can't use atm.
+    // vec3 tangentNormal = SAMPLE_OPTIONAL_WITH_DEFAULT_RGB(normal, vec3(1.0));
+    // tangentNormal *= 2.0 - 1.0;
+
+    // vec3 N = normalize(fragNormal);
+    // vec3 T = normalize(fragTangent.xyz);
+    // vec3 B = normalize(cross(N, T));
+    // mat3 TBN = mat3(T, B, N);
+    // return normalize(TBN * tangentNormal);
+    vec3 tangentNormal = (material.normalTexture >= 0)
+                             ? (texture(texSampler[material.normalTexture], fragTextCoords).xyz)
+                             : (vec3(1.0)) * 2.0 - 1.0;
+
+    vec3 Q1 = dFdx(fragPosition);
+    vec3 Q2 = dFdy(fragPosition);
+    vec2 st1 = dFdx(fragTextCoords);
+    vec2 st2 = dFdy(fragTextCoords);
 
     vec3 N = normalize(fragNormal);
-    vec3 T = normalize(fragTangent.xyz);
-    vec3 B = normalize(cross(N, T));
+    vec3 T = normalize(Q1 * st2.t - Q2 * st1.t);
+    vec3 B = -normalize(cross(N, T));
     mat3 TBN = mat3(T, B, N);
+
     return normalize(TBN * tangentNormal);
 }
 
@@ -108,15 +126,15 @@ float DistributionGGX(float dotNH, float roughness)
     float nom = a2;
     float denom = dotNH * dotNH * (a2 - 1.0) + 1.0;
 
-    return nom / max(PI * denom * denom, 0.0001);
+    return nom / max(PI * denom * denom, 0.001);
 }
 
 float GeometrySchlickGGX(float dotNL, float dotNV, float roughness)
 {
     float r = (roughness + 1.0);
     float k = (r * r) / 8.0;
-    float GL = dotNL / max(dotNL * (1.0 - k) + k, 0.000001);
-    float GV = dotNV / max(dotNV * (1.0 - k) + k, 0.000001);
+    float GL = dotNL / max(dotNL * (1.0 - k) + k, 0.001);
+    float GV = dotNV / max(dotNV * (1.0 - k) + k, 0.001);
     return GL * GV;
 }
 
@@ -133,16 +151,17 @@ vec3 fresnelSchlickR(float cosTheta, vec3 F0, float roughness)
 vec3 specularContribution(vec3 L, vec3 V, vec3 N, vec3 F0, vec3 diffuseColor, float metallic, float roughness)
 {
     vec3 H = normalize(V + L);
-    float dotNH = clamp(dot(N, H), 0.0, 1.0);
-    float dotNV = clamp(dot(N, V), 0.0, 1.0);
-    float dotNL = clamp(dot(N, L), 0.0, 1.0);
+    float dotNH = max(dot(N, H), 0.001);
+    float dotNV = max(dot(N, V), 0.1);
+    float dotNL = max(dot(N, L), 0.0);
 
     vec3 color = vec3(0.0);
     if (dotNL > 0.0) {
         float D = DistributionGGX(dotNH, roughness);
         float G = GeometrySchlickGGX(dotNL, dotNV, roughness);
         vec3 F = fresnelSchlick(dotNV, F0);
-        vec3 spec = D * F * G / (4.0 * dotNL * dotNV + 0.0001);
+
+        vec3 spec = D * F * G / max(4.0 * dotNL * dotNV, 0.001);
         vec3 kD = (vec3(1.0) - F) * (1.0 - metallic);
 
         color += (kD * diffuseColor / PI + spec) * dotNL;
@@ -181,7 +200,7 @@ void main()
 
         float theta = dot(L, normalize(-light.direction.xyz));
         float epsilon = light.cutOff - light.outerCutOff;
-        float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0) * light.intensity;
+        float intensity = (theta - light.outerCutOff) / epsilon * light.intensity;
 
         float distance = length(light.position.xyz - fragPosition);
         float attenuation = 1.0 / (distance * distance);

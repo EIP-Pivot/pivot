@@ -4,6 +4,8 @@
 #include "pivot/script/Builtins.hxx"
 #include "pivot/script/Exceptions.hxx"
 
+#include <math.h>
+
 namespace pivot::ecs::script::interpreter::builtins
 {
 
@@ -54,6 +56,35 @@ data::Value builtin_cos(const std::vector<data::Value> &params, const BuiltinCon
 data::Value builtin_sin(const std::vector<data::Value> &params, const BuiltinContext &)
 {
     return std::sin(std::get<double>(params.at(0)));
+}
+
+data::Value builtin_randint(const std::vector<data::Value> &params, const BuiltinContext &)
+{
+    int max = std::get<double>(params.at(0));
+    double random_variable = std::rand() % max;
+    return data::Value(random_variable);
+}
+
+data::Value builtin_power(const std::vector<data::Value> &params, const BuiltinContext &)
+{
+    return data::Value(pow(std::get<double>(params[0]), std::get<double>(params[1])));
+}
+
+data::Value builtin_sqrt(const std::vector<data::Value> &params, const BuiltinContext &)
+{
+    double rooted = std::get<double>(params[0]);
+    if (rooted >= 0)
+        return data::Value(sqrt(rooted));
+    else {
+        std::cerr << "ValueError: math domain error -- sqrt of a negative Number" << std::endl;
+        throw(std::runtime_error("Code shouldn't execute."));
+    }
+}
+
+data::Value builtin_abs(const std::vector<data::Value> &params, const BuiltinContext &)
+{
+    auto absVal = std::get<double>(params[0]) > 0 ? std::get<double>(params[0]) : -std::get<double>(params[0]);
+    return data::Value(absVal);
 }
 
 // Builtin binary (which take two operands) operators
@@ -204,9 +235,38 @@ data::Value builtin_operator<Operator::Multiplication>(const data::Value &left, 
                    std::get<data::BasicType>(right.type()) == data::BasicType::Vec3) {
             return data::Value(std::get<glm::vec3>(left) *
                                std::get<glm::vec3>(right));    // let glm multiply the vectors
+        } else if (std::get<data::BasicType>(left.type()) == data::BasicType::Number &&
+                   std::get<data::BasicType>(right.type()) == data::BasicType::Vec3) {
+            glm::vec3 result = std::get<glm::vec3>(right);
+            double factor = std::get<double>(left);
+            result.x *= factor;
+            result.y *= factor;
+            result.z *= factor;
+            return data::Value(result);
         } else if (std::get<data::BasicType>(left.type()) == data::BasicType::Vec3 &&
                    std::get<data::BasicType>(right.type()) == data::BasicType::Number) {
-            return data::Value(std::get<glm::vec3>(left) * (float)std::get<double>(right));
+            glm::vec3 result = std::get<glm::vec3>(left);
+            double factor = std::get<double>(right);
+            result.x *= factor;
+            result.y *= factor;
+            result.z *= factor;
+            return data::Value(result);
+        } else if (std::get<data::BasicType>(left.type()) == data::BasicType::Integer &&
+                   std::get<data::BasicType>(right.type()) == data::BasicType::Vec3) {
+            glm::vec3 result = std::get<glm::vec3>(right);
+            int factor = std::get<int>(left);
+            result.x *= factor;
+            result.y *= factor;
+            result.z *= factor;
+            return data::Value(result);
+        } else if (std::get<data::BasicType>(left.type()) == data::BasicType::Vec3 &&
+                   std::get<data::BasicType>(right.type()) == data::BasicType::Integer) {
+            glm::vec3 result = std::get<glm::vec3>(left);
+            int factor = std::get<int>(right);
+            result.x *= factor;
+            result.y *= factor;
+            result.z *= factor;
+            return data::Value(result);
         } else {    // unsupported
             logger.err("ERROR") << " by '" << left.type().toString() << "' and '" << right.type().toString() << "'";
             throw InvalidOperation("Invalid multiplication '*' operator between these types.");

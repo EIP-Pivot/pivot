@@ -66,7 +66,11 @@ public:
     std::filesystem::path cache_path = PIVOT_SHADER_CACHE_DEFAULT_DIRECTORY;
 
 private:
+#ifndef NDEBUG
+    VulkanShader::OptimizationLevel optimizationLevel = VulkanShader::OptimizationLevel::Performance;
+#else
     VulkanShader::OptimizationLevel optimizationLevel = VulkanShader::OptimizationLevel::None;
+#endif
     VulkanShader::VulkanVersion vulkanVersion;
     std::unordered_map<std::string, VulkanShader> shaderStorage;
 };

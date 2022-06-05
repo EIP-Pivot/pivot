@@ -41,6 +41,11 @@ bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &s
     if (!err.empty()) logger.err("Asset Storage/OBJ") << err;
     if (!loadSuccess) return false;
 
+    if (shapes.empty()) {
+        logger.warn("Asset Storage/OBJ") << "No shapes was loaded, this is considered as a failure.";
+        return false;
+    }
+
     for (const auto &m: materials) {
         if (!m.diffuse_texname.empty() && storage.textureStaging.getIndex(m.diffuse_texname) == -1) {
             const auto filepath = base_dir / m.diffuse_texname;

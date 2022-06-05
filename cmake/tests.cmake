@@ -8,6 +8,7 @@ function(build_tests TARGET)
         set(TEST_NAME ${TARGET}_test)
         add_executable(${TEST_NAME} ${ARGN})
         target_include_directories(${TEST_NAME} PRIVATE tests/)
+        target_compile_definitions(${TEST_NAME} PRIVATE BASE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/")
         target_link_libraries(${TEST_NAME} PRIVATE Catch2::Catch2WithMain ${TARGET})
 
         add_dependencies(tests ${TEST_NAME})

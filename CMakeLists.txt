@@ -41,7 +41,7 @@ if(BUILD_TESTING)
     fetchcontent_declare(
         catch2
         GIT_REPOSITORY https://github.com/catchorg/Catch2
-        GIT_TAG ed6b38b096eac9a976e1fdeee5320fa913146af7
+        GIT_TAG v3.0.1
     )
     if(NOT catch2_POPULATED)
         message(STATUS "Populating Catch2")

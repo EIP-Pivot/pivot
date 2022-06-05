@@ -65,7 +65,7 @@ bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &s
                                      : ("white")),
         };
         for (const auto &index: shape.mesh.indices) {
-            assert(index.vertex_index >= 0);
+            assert(index.vertex_index != -1);
             Vertex vertex{
                 .pos =
                     {
@@ -73,8 +73,15 @@ bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &s
                         attrib.vertices[3 * index.vertex_index + 1],
                         attrib.vertices[3 * index.vertex_index + 2],
                     },
-                .color = {1.0f, 1.0f, 1.0f, 1.0f},
             };
+            if (!attrib.colors.empty()) {
+                vertex.color = {
+                    attrib.colors[3 * index.vertex_index + 0],
+                    attrib.colors[3 * index.vertex_index + 1],
+                    attrib.colors[3 * index.vertex_index + 2],
+                    1.0f,
+                };
+            }
             if (!attrib.normals.empty() && index.normal_index >= 0) {
                 vertex.normal = {
                     attrib.normals[3 * index.normal_index + 0],
@@ -88,18 +95,9 @@ bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &s
                     attrib.texcoords[2 * index.texcoord_index + 1],
                 };
             }
-            if (!attrib.colors.empty()) {
-                vertex.color = {
-                    attrib.colors[3 * index.vertex_index + 0],
-                    attrib.colors[3 * index.vertex_index + 1],
-                    attrib.colors[3 * index.vertex_index + 2],
-                    1.0f,
-                };
-            }
 
             if (!uniqueVertices.contains(vertex)) {
-                uniqueVertices.insert(
-                    std::make_pair(vertex, storage.vertexStagingBuffer.size() - model.mesh.vertexOffset));
+                uniqueVertices.emplace(vertex, storage.vertexStagingBuffer.size() - model.mesh.vertexOffset);
                 storage.vertexStagingBuffer.push_back(vertex);
             }
             storage.indexStagingBuffer.push_back(uniqueVertices.at(vertex));
@@ -107,9 +105,9 @@ bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &s
         model.mesh.indicesSize = storage.indexStagingBuffer.size() - model.mesh.indicesOffset;
         model.mesh.vertexSize = storage.vertexStagingBuffer.size() - model.mesh.vertexOffset;
         prefab.modelIds.push_back(shape.name);
-        storage.modelStorage.insert({shape.name, model});
+        storage.modelStorage.emplace(shape.name, model);
     }
-    storage.prefabStorage.insert({path.stem().string(), prefab});
+    storage.prefabStorage.emplace(path.stem().string(), prefab);
     return true;
 }
 

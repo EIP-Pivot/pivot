@@ -65,6 +65,12 @@ TEST_CASE("Indexed Storage", "[indexedStorage]")
         REQUIRE(testIndex(storage, key4, value4, 3));
     }
 
+    SECTION("Test clear()")
+    {
+        storage.clear();
+        REQUIRE(storage.size() == 0);
+    }
+
     SECTION("Test reserve()")
     {
         auto previous_size = storage.size();
@@ -89,5 +95,12 @@ TEST_CASE("Indexed Storage", "[indexedStorage]")
             REQUIRE(storage.size() == 4);
             REQUIRE(testIndex(storage, "Nope", std::string(), 3));
         }
+    }
+
+    SECTION("Test comparaison operator")
+    {
+        auto copy = storage;
+        REQUIRE(copy == storage);
+        REQUIRE_FALSE(copy != storage);
     }
 }

@@ -9,7 +9,7 @@
 namespace pivot::graphics
 {
 
-static const AssetStorage::CPUTexture default_texture_data{
+const AssetStorage::CPUTexture AssetStorage::default_texture_data{
 
     .image =
         {
@@ -36,7 +36,7 @@ static const AssetStorage::CPUTexture default_texture_data{
     .size = {2, 2, 1},
 };
 
-static const std::vector<Vertex> quad_vertices = {
+const std::vector<Vertex> AssetStorage::quad_vertices = {
     {
         .pos = {-0.5f, -0.5f, 0.f},
         .normal = {0.f, 0.f, 0.f},
@@ -66,7 +66,7 @@ static const std::vector<Vertex> quad_vertices = {
         .tangent = {0.0f, 0.0f, 0.0f, 0.0f},
     },
 };
-static const std::vector<std::uint32_t> quad_indices = {0, 1, 2, 2, 3, 0};
+const std::vector<std::uint32_t> AssetStorage::quad_indices = {0, 1, 2, 2, 3, 0};
 
 AssetStorage::CPUStorage::CPUStorage()
 {

@@ -20,6 +20,11 @@ void setObjectName(vk::Device &device, const T &object, const std::string &name)
         .pObjectName = name.c_str(),
     };
     device.setDebugUtilsObjectNameEXT(nameInfo);
+#else
+    // Mute unused vars warning
+    (void)device;
+    (void)object;
+    (void)name;
 #endif
 }
 
@@ -35,12 +40,17 @@ void setObjectTag(vk::Device &device, const T &object, const std::span<D> &tag)
         .pTag = tag.data(),
     };
     device.setDebugUtilsObjectTagEXT(tagInfo);
+#else
+    // Mute unused vars warning
+    (void)device;
+    (void)object;
+    (void)tag;
 #endif
 }
 
 /// Begin a new debug region
 void beginRegion(vk::CommandBuffer &cmdbuffer, const char *pMarkerName, const std::array<float, 4> color);
 /// End a debug region
-void endRegion(vk::CommandBuffer cmdBuffer);
+void endRegion(vk::CommandBuffer &cmdBuffer);
 
 };    // namespace pivot::graphics::vk_debug

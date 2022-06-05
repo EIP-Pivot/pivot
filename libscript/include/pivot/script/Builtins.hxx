@@ -40,6 +40,22 @@ data::Value builtin_cos(const std::vector<data::Value> &params, const BuiltinCon
 ///		Returns the sine of the parameter (in radian)
 data::Value builtin_sin(const std::vector<data::Value> &params, const BuiltinContext &context);
 
+/// Number  randint(max x)
+///     Returns a pseudo-random integral value in [0, x]
+data::Value builtin_randint(const std::vector<data::Value> &params, const BuiltinContext &context);
+
+/// Number  pow(Number x, Number y)
+///     Returns the power of a number.
+data::Value builtin_power(const std::vector<data::Value> &params, const BuiltinContext &context);
+
+/// Number  sqrt(Number x)
+///     Returns the square root of the given Number
+data::Value builtin_sqrt(const std::vector<data::Value> &params, const BuiltinContext &context);
+
+/// Number  abs(Number x)
+///     Returns the absolute value of the given Number
+data::Value builtin_abs(const std::vector<data::Value> &params, const BuiltinContext &context);
+
 // Operators
 
 enum class Operator {

@@ -50,34 +50,44 @@ layout(location = 4) in flat uint materialIndex;
 
 layout(location = 0) out vec4 outColor;
 
-
-layout (push_constant) uniform readonly constants {
+layout(push_constant) uniform readonly constants
+{
     layout(offset = 64) pushConstantStruct push;
-} cameraData;
+}
+cameraData;
 
-layout(std140, set = 0, binding = 1) readonly buffer ObjectMaterials {
+layout(std140, set = 0, binding = 1) readonly buffer ObjectMaterials
+{
     Material materials[];
-} objectMaterials;
+}
+objectMaterials;
 
 layout(set = 0, binding = 2) uniform sampler2D texSampler[];
 
-layout(std140, set = 1, binding = 2) readonly buffer LightBuffer {
+layout(std140, set = 1, binding = 2) readonly buffer LightBuffer
+{
     PointLight pointLightArray[];
-}  omniLight;
+}
+omniLight;
 
-layout(std140, set = 1, binding = 3) readonly buffer DirectLight {
+layout(std140, set = 1, binding = 3) readonly buffer DirectLight
+{
     DirectionalLight directionalLightArray[];
-}  directLight;
+}
+directLight;
 
-layout(std140, set = 1, binding = 4) readonly buffer SpoLight {
+layout(std140, set = 1, binding = 4) readonly buffer SpoLight
+{
     SpotLight spotLightArray[];
-}  spotLight;
+}
+spotLight;
 
-vec3 calculateSpotLight(in Material mat, in SpotLight light) {
+vec3 calculateSpotLight(in Material mat, in SpotLight light)
+{
     vec3 lightDir = normalize(light.position.xyz - fragPosition);
     float theta = dot(lightDir, normalize(-light.direction.xyz));
     float epsilon = light.cutOff - light.outerCutOff;
-    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0) * light.intensity;    
+    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0) * light.intensity;
 
     vec3 norm = normalize(fragNormal);
 
@@ -91,7 +101,8 @@ vec3 calculateSpotLight(in Material mat, in SpotLight light) {
     return light.color.rgb * ((diffuse + specular) * intensity);
 }
 
-vec3 calculateDirectionalLight(in Material mat, in DirectionalLight light) {
+vec3 calculateDirectionalLight(in Material mat, in DirectionalLight light)
+{
     vec3 lightDir = normalize(-light.orientation.xyz);
     vec3 norm = normalize(fragNormal);
 
@@ -105,7 +116,8 @@ vec3 calculateDirectionalLight(in Material mat, in DirectionalLight light) {
     return light.color.rgb * ((diffuse + specular) * light.intensity);
 }
 
-vec3 calculateLight(in  Material mat, in PointLight light) {
+vec3 calculateLight(in Material mat, in PointLight light)
+{
     vec3 lightDir = normalize(light.position.xyz - fragPosition);
     vec3 norm = normalize(fragNormal);
 
@@ -123,10 +135,13 @@ vec3 calculateLight(in  Material mat, in PointLight light) {
     return light.color.rgb * ((diffuse + specular) * light.intensity);
 }
 
-void main() {
+void main()
+{
     Material material = objectMaterials.materials[materialIndex];
-    vec3 diffuseColor = (material.baseColorTexture >= 0) ? (texture(texSampler[material.baseColorTexture], fragTextCoords).rgb) : (material.baseColor.rgb);
-    
+    vec3 diffuseColor = (material.baseColorTexture >= 0)
+                            ? (texture(texSampler[material.baseColorTexture], fragTextCoords).rgb)
+                            : (material.baseColor.rgb);
+
     vec3 light = vec3(0.1);
     for (uint i = 0; i < cameraData.push.directLightCount; i++) {
         light += calculateDirectionalLight(material, directLight.directionalLightArray[i]);
@@ -137,8 +152,8 @@ void main() {
     for (uint i = 0; i < cameraData.push.pointLightCount; i++) {
         light += calculateLight(material, omniLight.pointLightArray[i]);
     }
-    outColor =  vec4(light * diffuseColor, 1.0);
+    outColor = vec4(light * diffuseColor, 1.0);
 
     float gamma = 2.2;
-    outColor.rgb = pow(outColor.rgb, vec3(1.0/gamma));
+    outColor.rgb = pow(outColor.rgb, vec3(1.0 / gamma));
 }

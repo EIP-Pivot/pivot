@@ -1,0 +1,9 @@
+---
+Language:        Cpp
+BasedOnStyle:  InheritParentConfig
+AllowShortFunctionsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
+...
+

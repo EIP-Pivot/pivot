@@ -26,9 +26,6 @@ private:
     using size_type = typename std::vector<Value>::size_type;
 
 public:
-    IndexedStorage() = default;
-    ~IndexedStorage() = default;
-
     /// return an iterator over the indexes
     auto begin() { return index.begin(); }
     /// return the end iterator
@@ -62,7 +59,7 @@ public:
     {
         if (contains(i)) throw std::runtime_error("Index already in use !");
         storage.push_back(std::move(value));
-        index.insert(std::make_pair(i, storage.size() - 1));
+        index.emplace(i, storage.size() - 1);
     }
     /// @copydoc add
     inline void add(const std::pair<Key, Value> &value) { add(value.first, std::move(value.second)); }
@@ -113,6 +110,7 @@ public:
         if (!index.contains(i)) add(i, {});
         return get(i);
     }
+    bool operator==(const IndexedStorage &) const = default;
 
 private:
     std::vector<Value> storage;

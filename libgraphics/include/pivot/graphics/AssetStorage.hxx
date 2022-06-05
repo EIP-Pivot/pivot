@@ -55,6 +55,7 @@ public:
         std::uint32_t indicesOffset;
         /// Number of indice forming the mesh.
         std::uint32_t indicesSize;
+        constexpr bool operator==(const Mesh &other) const = default;
     };
 
     /// @brief Represent a CPU-side material
@@ -68,6 +69,7 @@ public:
         std::string normalTexture = "";
         std::string occlusionTexture = "";
         std::string emissiveTexture = "";
+        bool operator==(const CPUMaterial &) const = default;
         ///@endcond
     };
 
@@ -77,12 +79,14 @@ public:
         Mesh mesh;
         /// Default material id
         std::optional<std::string> default_material;
+        bool operator==(const Model &) const = default;
     };
 
     /// @brief A group of model
     struct Prefab {
         /// The ids of the composing models
         std::vector<std::string> modelIds;
+        bool operator==(const Prefab &) const = default;
     };
 
     /// @brief Represent a CPU-side Texture
@@ -91,6 +95,7 @@ public:
         std::vector<std::byte> image;
         /// The size of the texture
         vk::Extent3D size;
+        bool operator==(const CPUTexture &) const = default;
     };
 
     /// Alias for AllocatedImage
@@ -105,10 +110,14 @@ public:
     using BuildFlags = Flags<BuildFlagBits>;
 
     /// Represent the loaded assets before being uploaded to the GPU
-    struct CPUStorage {
+    class CPUStorage
+    {
+    public:
         /// @cond
         CPUStorage();
+        bool operator==(const CPUStorage &) const = default;
 
+    public:
         std::unordered_map<std::string, Model> modelStorage;
         std::unordered_map<std::string, Prefab> prefabStorage;
         std::vector<Vertex> vertexStagingBuffer;
@@ -122,10 +131,13 @@ public:
 
     /// name of the fallback texture if missing
     static constexpr auto missing_texture_name = "internal/missing_texture";
+    static const CPUTexture default_texture_data;
     /// name of the default material if missing
     static constexpr auto missing_material_name = "internal/missing_material";
     /// name of the default quad mesh
     static constexpr auto quad_mesh = "internal/quad_mesh";
+    static const std::vector<Vertex> quad_vertices;
+    static const std::vector<std::uint32_t> quad_indices;
 
 public:
     /// Constructor

@@ -128,8 +128,8 @@ bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &s
         }
         model.mesh.indicesSize = storage.indexStagingBuffer.size() - model.mesh.indicesOffset;
         model.mesh.vertexSize = storage.vertexStagingBuffer.size() - model.mesh.vertexOffset;
-        prefab.modelIds.push_back(shape.name);
-        storage.modelStorage.emplace(shape.name, model);
+        prefab.modelIds.push_back(shape.name + std::to_string(model.mesh.vertexOffset));
+        storage.modelStorage.emplace(shape.name + std::to_string(model.mesh.vertexOffset), model);
     }
     storage.prefabStorage.emplace(path.stem().string(), prefab);
     return true;

@@ -263,6 +263,8 @@ build_tests(
     tests/culling.cxx
     tests/bounding_box.cxx
     tests/indexed_storage.cxx
-    tests/asset_loading.cxx
+    tests/asset_storage_cpu_storage.cxx
+    tests/asset_loading_gltf.cxx
+    tests/asset_loading_obj.cxx
     tests/flags.cxx
 )

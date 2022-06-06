@@ -15,7 +15,7 @@ using AABB = pivot::graphics::gpu_object::AABB;
 
 namespace
 {
-void collisionSystemImpl(const pivot::graphics::AssetStorage &assetStorage,
+void collisionSystemImpl(std::reference_wrapper<const pivot::graphics::AssetStorage> assetStorage,
                          const systems::Description &systemDescription, component::ArrayCombination &cmb,
                          const event::EventWithComponent &event)
 {
@@ -33,11 +33,13 @@ void collisionSystemImpl(const pivot::graphics::AssetStorage &assetStorage,
         // TODO: Do the collision checks I guess ?
         glm::vec3 position = transformArray[entity].position;
         auto &mesh = renderObjectArray[entity].meshID;
-        auto bounding_box = assetStorage.get_optional<AABB>(mesh);
+        auto bounding_box = assetStorage.get().get_optional<AABB>(mesh);
         if (bounding_box.has_value()) {
             entityAABB.emplace_back(bounding_box->get().low + position, bounding_box->get().high + position, entity);
         }
     }
+
+    // logger.debug() << "entities " << collidableStorage.getData().size() << " aabb " << entityAABB.size();
 
     auto collisions = getEntityCollisions(entityAABB);
 
@@ -78,7 +80,7 @@ namespace details
 
 const pivot::ecs::systems::Description makeCollisionSystem(const pivot::graphics::AssetStorage &assetStorage)
 {
-    return {
+    return pivot::ecs::systems::Description{
         .name = "Collision System",
         .systemComponents =
             {
@@ -88,7 +90,7 @@ const pivot::ecs::systems::Description makeCollisionSystem(const pivot::graphics
             },
         .eventListener = events::tick,
         .provenance = pivot::ecs::Provenance::builtin(),
-        .system = std::bind_front(collisionSystemImpl, assetStorage),
+        .system = std::bind_front(collisionSystemImpl, std::cref(assetStorage)),
     };
 }
 }    // namespace pivot::builtins::systems

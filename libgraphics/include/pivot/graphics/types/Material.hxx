@@ -11,7 +11,9 @@ namespace pivot::graphics::gpu_object
 struct Material {
     /// Base color of the material, if no baseColorTexture is provided
     alignas(16) glm::vec4 baseColor = glm::vec4(1.0f);
+    /// Base color Factor
     alignas(16) glm::vec4 baseColorFactor = glm::vec4(1.0f);
+    /// Emissive Factor
     alignas(16) glm::vec4 emissiveFactor = glm::vec4(1.0f);
     /// Metalic factor
     alignas(4) float metallicFactor = 1.0f;

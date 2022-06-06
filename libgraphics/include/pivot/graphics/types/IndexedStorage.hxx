@@ -110,6 +110,7 @@ public:
         if (!index.contains(i)) add(i, {});
         return get(i);
     }
+    /// Equality operator
     bool operator==(const IndexedStorage &) const = default;
 
 private:

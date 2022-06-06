@@ -55,6 +55,7 @@ public:
         std::uint32_t indicesOffset;
         /// Number of indice forming the mesh.
         std::uint32_t indicesSize;
+        /// Equality operator
         constexpr bool operator==(const Mesh &other) const = default;
     };
 
@@ -81,6 +82,7 @@ public:
         Mesh mesh;
         /// Default material id
         std::optional<std::string> default_material;
+        /// Equality operator
         bool operator==(const Model &) const = default;
     };
 
@@ -88,6 +90,7 @@ public:
     struct Prefab {
         /// The ids of the composing models
         std::vector<std::string> modelIds;
+        /// Equality operator
         bool operator==(const Prefab &) const = default;
     };
 
@@ -97,6 +100,7 @@ public:
         std::vector<std::byte> image;
         /// The size of the texture
         vk::Extent3D size;
+        /// Equality operator
         bool operator==(const CPUTexture &) const = default;
     };
 
@@ -117,6 +121,7 @@ public:
     public:
         /// @cond
         CPUStorage();
+        /// Equality operator
         bool operator==(const CPUStorage &) const = default;
 
     public:
@@ -133,12 +138,15 @@ public:
 
     /// name of the fallback texture if missing
     static constexpr auto missing_texture_name = "internal/missing_texture";
+    /// data of the default texture
     static const CPUTexture default_texture_data;
     /// name of the default material if missing
     static constexpr auto missing_material_name = "internal/missing_material";
     /// name of the default quad mesh
     static constexpr auto quad_mesh = "internal/quad_mesh";
+    /// Vertices of the default mesh
     static const std::vector<Vertex> quad_vertices;
+    /// Indeices of the default mesh
     static const std::vector<std::uint32_t> quad_indices;
 
 public:

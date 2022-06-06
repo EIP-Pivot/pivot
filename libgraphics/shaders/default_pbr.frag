@@ -24,6 +24,8 @@ struct SpotLight {
 
 struct Material {
     vec4 baseColor;
+    vec4 baseColorFactor;
+    vec4 emissiveFactor;
     float metallic;
     float roughness;
     int baseColorTexture;
@@ -172,12 +174,13 @@ vec3 specularContribution(vec3 L, vec3 V, vec3 N, vec3 F0, vec3 diffuseColor, fl
 void main()
 {
     Material material = objectMaterials.materials[materialIndex];
-    vec3 diffuseColor = SAMPLE_OPTIONAL_WITH_DEFAULT_RGB(baseColor, material.baseColor.rgb);
+    vec3 diffuseColor_ = SAMPLE_OPTIONAL_WITH_DEFAULT_RGB(baseColor, material.baseColor.rgb);
     vec3 metallicRoughness = SAMPLE_OPTIONAL_WITH_DEFAULT_RGB(metallicRoughness, vec3(1.0));
     float occlusion = SAMPLE_OPTIONAL_WITH_DEFAULT(occlusion, r, 1.0);
 
     float metallic = metallicRoughness.b * material.metallic;
     float roughness = metallicRoughness.g * material.roughness;
+    vec3 diffuseColor = diffuseColor_ * material.baseColorFactor.rgb;
 
     vec3 N = getNormalFromMap(material);
     vec3 V = normalize(cameraData.push.position - fragPosition);

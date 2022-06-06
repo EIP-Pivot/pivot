@@ -219,35 +219,35 @@ static std::pair<std::string, AssetStorage::CPUMaterial>
 loadGltfMaterial(const IndexedStorage<std::string, AssetStorage::CPUTexture> &texture, const tinygltf::Material &mat,
                  const unsigned offset)
 {
+#define GET_MATERIAL_TEXTURE(value, name)                                             \
+    if (mat.value.find(#name) != mat.value.end()) {                                   \
+        material.name = texture.getName(mat.value.at(#name).TextureIndex() + offset); \
+    }
+#define GET_MATERIAL_COLOR(value, name)                                           \
+    if (mat.value.find(#name) != mat.value.end()) {                               \
+        material.name = glm::make_vec4(mat.value.at(#name).ColorFactor().data()); \
+    }
+#define GET_MATERIAL_FACTOR(value, name) \
+    if (mat.value.find(#name) != mat.value.end()) { material.name = mat.value.at(#name).Factor(); }
+
     DEBUG_FUNCTION
     AssetStorage::CPUMaterial material;
-    if (mat.values.find("baseColorTexture") != mat.values.end()) {
-        material.baseColorTexture = texture.getName(mat.values.at("baseColorTexture").TextureIndex() + offset);
-    }
-    // Metallic roughness workflow
-    if (mat.values.find("metallicRoughnessTexture") != mat.values.end()) {
-        material.metallicRoughnessTexture =
-            texture.getName(mat.values.at("metallicRoughnessTexture").TextureIndex() + offset);
-    }
-    if (mat.values.find("roughnessFactor") != mat.values.end()) {
-        material.roughness = mat.values.at("roughnessFactor").Factor();
-    }
-    if (mat.values.find("metallicFactor") != mat.values.end()) {
-        material.metallic = mat.values.at("metallicFactor").Factor();
-    }
-    if (mat.values.find("baseColorFactor") != mat.values.end()) {
-        material.baseColor = glm::make_vec4(mat.values.at("baseColorFactor").ColorFactor().data());
-    }
-    if (mat.additionalValues.find("normalTexture") != mat.additionalValues.end()) {
-        material.normalTexture = texture.getName(mat.additionalValues.at("normalTexture").TextureIndex() + offset);
-    }
-    if (mat.additionalValues.find("emissiveTexture") != mat.additionalValues.end()) {
-        material.emissiveTexture = texture.getName(mat.additionalValues.at("emissiveTexture").TextureIndex() + offset);
-    }
-    if (mat.additionalValues.find("occlusionTexture") != mat.additionalValues.end()) {
-        material.occlusionTexture =
-            texture.getName(mat.additionalValues.at("occlusionTexture").TextureIndex() + offset);
-    }
+
+    GET_MATERIAL_COLOR(values, baseColorFactor);
+    GET_MATERIAL_COLOR(additionalValues, emissiveFactor);
+
+    GET_MATERIAL_FACTOR(values, roughnessFactor);
+    GET_MATERIAL_FACTOR(values, metallicFactor);
+
+    GET_MATERIAL_TEXTURE(values, baseColorTexture);
+    GET_MATERIAL_TEXTURE(values, metallicRoughnessTexture);
+    GET_MATERIAL_TEXTURE(additionalValues, normalTexture);
+    GET_MATERIAL_TEXTURE(additionalValues, occlusionTexture);
+    GET_MATERIAL_TEXTURE(additionalValues, emissiveTexture);
+
+#undef GET_MATERIAL_TEXTURE
+#undef GET_MATERIAL_COLOR
+#undef GET_MATERIAL_FACTOR
     return std::make_pair(mat.name, material);
 }
 

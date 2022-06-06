@@ -61,9 +61,11 @@ public:
     /// @brief Represent a CPU-side material
     struct CPUMaterial {
         /// @cond
-        float metallic = 1.0f;
-        float roughness = 1.0f;
         glm::vec4 baseColor = glm::vec4(1.0f);
+        glm::vec4 baseColorFactor = glm::vec4(1.0f);
+        glm::vec4 emissiveFactor = glm::vec4(1.0f);
+        float metallicFactor = 1.0f;
+        float roughnessFactor = 1.0f;
         std::string baseColorTexture = "";
         std::string metallicRoughnessTexture = "";
         std::string normalTexture = "";

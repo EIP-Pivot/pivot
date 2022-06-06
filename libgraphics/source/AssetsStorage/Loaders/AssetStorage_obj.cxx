@@ -2,6 +2,7 @@
 
 #include "pivot/graphics/DebugMacros.hxx"
 
+#include <glm/gtc/type_ptr.hpp>
 #include <tiny_obj_loader.h>
 
 namespace pivot::graphics::loaders
@@ -10,19 +11,37 @@ namespace pivot::graphics::loaders
 static std::pair<std::string, AssetStorage::CPUMaterial> loadMaterial(const tinyobj::material_t &material)
 {
     std::filesystem::path diffuse = material.diffuse_texname;
-    AssetStorage::CPUMaterial materia{
-        .metallic = material.metallic,
-        .roughness = material.roughness,
-        .baseColor =
-            {
-                material.diffuse[0],
-                material.diffuse[1],
-                material.diffuse[2],
-                0.0f,
-            },
-        .baseColorTexture = diffuse.stem().string(),
-    };
-    return std::make_pair(material.name, std::move(materia));
+    std::filesystem::path normal = material.normal_texname;
+    std::filesystem::path emissive = material.emissive_texname;
+
+    return std::make_pair(material.name, AssetStorage::CPUMaterial{
+                                             .baseColor =
+                                                 {
+                                                     material.diffuse[0],
+                                                     material.diffuse[1],
+                                                     material.diffuse[2],
+                                                     1.0f,
+                                                 },
+                                             .baseColorFactor =
+                                                 {
+                                                     material.diffuse_texopt.scale[0],
+                                                     material.diffuse_texopt.scale[1],
+                                                     material.diffuse_texopt.scale[2],
+                                                     1.0f,
+                                                 },
+                                             .emissiveFactor =
+                                                 {
+                                                     material.emissive_texopt.scale[0],
+                                                     material.emissive_texopt.scale[1],
+                                                     material.emissive_texopt.scale[2],
+                                                     1.0f,
+                                                 },
+                                             .metallicFactor = material.metallic,
+                                             .roughnessFactor = material.roughness,
+                                             .baseColorTexture = diffuse.stem().string(),
+                                             .normalTexture = normal.stem().string(),
+                                             .emissiveTexture = emissive.stem().string(),
+                                         });
 }
 
 bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &storage)

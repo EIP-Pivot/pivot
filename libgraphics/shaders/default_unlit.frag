@@ -2,6 +2,8 @@
 
 struct Material {
     vec4 baseColor;
+    vec4 baseColorFactor;
+    vec4 emissiveFactor;
     float metallic;
     float roughness;
     int baseColorTexture;

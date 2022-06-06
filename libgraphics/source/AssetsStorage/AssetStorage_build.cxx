@@ -181,8 +181,10 @@ void AssetStorage::pushMaterialOnGPU()
             name,
             {
                 .baseColor = mat.baseColor,
-                .metallic = mat.metallic,
-                .roughness = mat.roughness,
+                .baseColorFactor = mat.baseColorFactor,
+                .emissiveFactor = mat.emissiveFactor,
+                .metallicFactor = mat.metallicFactor,
+                .roughnessFactor = mat.roughnessFactor,
                 .baseColorTexture =
                     (mat.baseColorTexture.empty()) ? (-1) : (textureStorage.getIndex(mat.baseColorTexture)),
                 .metallicRoughnessTexture = (mat.metallicRoughnessTexture.empty())

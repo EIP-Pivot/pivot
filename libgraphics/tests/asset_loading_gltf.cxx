@@ -1,4 +1,6 @@
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+
 #include <cstdio>
 #include <fstream>
 #include <iostream>
@@ -14,8 +16,9 @@ const std::string pathToObj = BASE_PATH "test_models/basic_cube.obj";
 
 using namespace pivot::graphics;
 
-#define VERTEX_CHECK_VECTOR_(index, champ, field, value) \
-    REQUIRE(storage.vertexStagingBuffer.at(index).champ.field == value);
+#define VERTEX_CHECK_VECTOR_(index, champ, field, value)         \
+    REQUIRE(storage.vertexStagingBuffer.at(index).champ.field == \
+            Catch::Approx(value).epsilon(std::numeric_limits<float>::epsilon()));
 
 #define VERTEX_CHECK_VEC2(index, champ, x_, y_) \
     VERTEX_CHECK_VECTOR_(index, champ, x, x_)   \

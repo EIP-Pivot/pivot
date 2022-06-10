@@ -79,7 +79,7 @@ void VulkanBase::selectPhysicalDevice(const std::vector<const char *> &deviceExt
     }
     if (!ratedGpus.empty() && ratedGpus.rbegin()->first > 0) {
         physical_device = ratedGpus.rbegin()->second;
-        maxMsaaSample = pivot::graphics::vk_utils::getMaxUsableSampleCount(physical_device);
+
     } else {
         throw VulkanBaseError("failed to find a suitable GPU!");
     }
@@ -87,6 +87,19 @@ void VulkanBase::selectPhysicalDevice(const std::vector<const char *> &deviceExt
     logger.info("Physical Device") << "Device extensions: " << deviceExtensions;
     const auto deviceProperties = physical_device.getProperties();
     logger.info("Physical Device") << vk::to_string(deviceProperties.deviceType) << ": " << deviceProperties.deviceName;
+
+    depthFormat =
+        vk_utils::findSupportedFormat(physical_device,
+                                      {
+                                          vk::Format::eD24UnormS8Uint,
+                                          vk::Format::eD32Sfloat,
+                                          vk::Format::eD32SfloatS8Uint,
+                                      },
+                                      vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
+    logger.info("Physical Device") << "Depth format: " << vk::to_string(depthFormat);
+
+    maxMsaaSample = vk_utils::getMaxUsableSampleCount(physical_device);
+    logger.info("Physical Device") << "MSAA Sample count: " << vk::to_string(maxMsaaSample);
 
     deviceFeature = physical_device.getFeatures();
     logger.info("Physical Device") << "multiDrawIndirect available: " << std::boolalpha

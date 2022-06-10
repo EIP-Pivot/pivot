@@ -66,6 +66,7 @@ public:
     VulkanAllocator allocator;
     /// Maximum support msaaSample value.
     vk::SampleCountFlagBits maxMsaaSample = vk::SampleCountFlagBits::e1;
+    vk::Format depthFormat;
     /// List of GPU features
     vk::PhysicalDeviceFeatures deviceFeature{};
     /// Indices of the selected queues

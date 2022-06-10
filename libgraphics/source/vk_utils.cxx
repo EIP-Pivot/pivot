@@ -48,9 +48,9 @@ vk::Format findSupportedFormat(vk::PhysicalDevice &gpu, const std::vector<vk::Fo
 {
     for (vk::Format format: candidates) {
         vk::FormatProperties props = gpu.getFormatProperties(format);
-        if (tiling == vk::ImageTiling::eLinear && (props.linearTilingFeatures & features) == features) {
+        if (tiling == vk::ImageTiling::eOptimal && (props.optimalTilingFeatures & features) == features) {
             return format;
-        } else if (tiling == vk::ImageTiling::eOptimal && (props.optimalTilingFeatures & features) == features) {
+        } else if (tiling == vk::ImageTiling::eLinear && (props.linearTilingFeatures & features) == features) {
             return format;
         }
     }

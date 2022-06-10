@@ -9,6 +9,7 @@
 #include <vulkan/vulkan.hpp>
 
 #include "pivot/graphics/PivotException.hxx"
+#include "pivot/graphics/PivotFlags.hxx"
 
 namespace pivot::graphics
 {
@@ -76,14 +77,23 @@ public:
         RIGHT = GLFW_KEY_RIGHT,
         LEFT = GLFW_KEY_LEFT,
     };
+
+    enum class ModifierBits : FlagsType {
+        Alt = GLFW_MOD_ALT,
+        Ctrl = GLFW_MOD_CONTROL,
+        Shift = GLFW_MOD_SHIFT,
+        Super = GLFW_MOD_SUPER,
+    };
+    using Modifier = Flags<ModifierBits>;
+
     /// Enum of the different key state
-    enum class KeyAction : std::uint8_t {
+    enum class Action {
         Pressed = GLFW_PRESS,
         Release = GLFW_RELEASE,
     };
 
     /// Keyboard event callback signature
-    using KeyEvent = std::function<void(Window &window, const Key key)>;
+    using KeyEvent = std::function<void(Window &window, const Key key, const Modifier modifier)>;
     /// Mouse movement event callback signature
     using MouseEvent = std::function<void(Window &window, const glm::dvec2 pos)>;
 
@@ -236,3 +246,5 @@ private:
     GLFWwindow *window = nullptr;
 };
 }    // namespace pivot::graphics
+
+ENABLE_FLAGS_FOR_ENUM(pivot::graphics::Window::ModifierBits);

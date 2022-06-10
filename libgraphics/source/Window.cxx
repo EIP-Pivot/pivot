@@ -163,13 +163,14 @@ void Window::cursor_callback(GLFWwindow *win, double xpos, double ypos)
     for (auto &&fn: window->mouseCallback) fn(*window, glm::dvec2(xpos, ypos));
 }
 
-void Window::keyboard_callback(GLFWwindow *win, int key, int scancode, int action, int)
+void Window::keyboard_callback(GLFWwindow *win, int key, int scancode, int action, int modifier)
 {
 #define FOR_EACH(vec) \
-    for (auto &&fn: vec) fn(*window, _key);
+    for (auto &&fn: vec) fn(*window, _key, _modifier);
 
     auto window = static_cast<Window *>(glfwGetWindowUserPointer(win));
     auto _key = static_cast<Window::Key>(translate_key(key, scancode));
+    auto _modifier = static_cast<Window::Modifier>(modifier);
 
     switch (action) {
         case GLFW_PRESS:

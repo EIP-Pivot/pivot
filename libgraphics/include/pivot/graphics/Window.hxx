@@ -78,12 +78,14 @@ public:
         LEFT = GLFW_KEY_LEFT,
     };
 
+    /// Represent the modifier key
     enum class ModifierBits : FlagsType {
         Alt = GLFW_MOD_ALT,
         Ctrl = GLFW_MOD_CONTROL,
         Shift = GLFW_MOD_SHIFT,
         Super = GLFW_MOD_SUPER,
     };
+    /// Flag type
     using Modifier = Flags<ModifierBits>;
 
     /// Enum of the different key state

@@ -31,6 +31,7 @@ public:
         uint64_t free = 0;
     };
 
+    /// The path where the json mem dump file will be written to.
     constexpr static auto memory_dump_file_name = "./vma_mem_dump.json";
 
 public:
@@ -72,6 +73,7 @@ public:
     }
 
     template <typename T>
+    /// Create a CPU mappable buffer
     AllocatedBuffer<T> createMappedBuffer(std::size_t bufferSize, const std::string &debug_name = "",
                                           vk::BufferUsageFlags usage = {})
     {

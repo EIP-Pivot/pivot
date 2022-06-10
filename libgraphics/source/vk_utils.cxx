@@ -21,6 +21,14 @@ std::string readFile(const std::filesystem::path &filename)
     return fileContent;
 }
 
+std::size_t writeFile(const std::filesystem::path &filename, const std::string_view &content)
+{
+    std::ofstream file(filename);
+    file << content;
+    file.close();
+    return content.size();
+}
+
 vk::ShaderModule createShaderModule(const vk::Device &device, std::span<const std::byte> code)
 {
     auto createInfo = vk_init::populateVkShaderModuleCreateInfo(code);

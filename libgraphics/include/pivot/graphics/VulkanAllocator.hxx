@@ -31,6 +31,8 @@ public:
         uint64_t free = 0;
     };
 
+    constexpr static auto memory_dump_file_name = "./vma_mem_dump.json";
+
 public:
     /// Constructor
     VulkanAllocator();
@@ -44,7 +46,8 @@ public:
 
     template <typename T>
     /// Create a buffer.
-    AllocatedBuffer<T> createBuffer(std::size_t size, vk::BufferUsageFlags usage, vma::MemoryUsage memoryUsage,
+    AllocatedBuffer<T> createBuffer(std::size_t size, vk::BufferUsageFlags usage,
+                                    vma::MemoryUsage memoryUsage = vma::MemoryUsage::eAuto,
                                     vma::AllocationCreateFlags flags = {}, const std::string &debug_name = "")
     {
         assert(size != 0);
@@ -60,8 +63,22 @@ public:
         vmaallocInfo.usage = memoryUsage;
         vmaallocInfo.flags = flags;
         std::tie(buffer.buffer, buffer.memory) = allocator.createBuffer(bufferInfo, vmaallocInfo, buffer.info);
-        if (!debug_name.empty()) vk_debug::setObjectName(device, buffer.buffer, debug_name);
+        if (!debug_name.empty()) {
+            vk_debug::setObjectName(device, buffer.buffer, debug_name);
+            vk_debug::setObjectName(device, buffer.info.deviceMemory, debug_name + " Memory");
+            allocator.setAllocationName(buffer.memory, debug_name.c_str());
+        }
         return buffer;
+    }
+
+    template <typename T>
+    AllocatedBuffer<T> createMappedBuffer(std::size_t bufferSize, const std::string &debug_name = "",
+                                          vk::BufferUsageFlags usage = {})
+    {
+        return createBuffer<T>(bufferSize, vk::BufferUsageFlagBits::eStorageBuffer | usage, vma::MemoryUsage::eAuto,
+                               vma::AllocationCreateFlagBits::eMapped |
+                                   vma::AllocationCreateFlagBits::eHostAccessSequentialWrite,
+                               debug_name);
     }
 
     /// @brief Create an image.

@@ -99,18 +99,16 @@ void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sce
         }
     }
     assert(frame.packedDraws.size() == objectGPUData.size());
-
-    auto bufferCmp = objectGPUData.size() <=> frame.currentBufferSize;
-    auto descriptorCmp = objectGPUData.size() <=> frame.currentDescriptorSetSize;
     if (objectGPUData.empty()) return;
-    if (std::is_gt(bufferCmp)) {
+    if (objectGPUData.size() > frame.currentBufferSize || objectGPUData.size() < frame.currentBufferSize / 2) {
         createBuffer(objectGPUData.size());
-        updateDescriptorSet(objectGPUData.size());
-    } else if (std::is_lt(bufferCmp) || std::is_gt(descriptorCmp)) {
-        updateDescriptorSet(objectGPUData.size());
     }
+    updateDescriptorSet(objectGPUData.size());
 
     assert(frame.currentBufferSize > 0);
+    assert(frame.currentDescriptorSetSize > 0);
+    assert(frame.currentBufferSize > frame.currentDescriptorSetSize);
+
     base_ref->get().allocator.copyBuffer(frame.objectBuffer, std::span(objectGPUData));
 
     frame.pointLightCount = handleLights(frame.omniLightBuffer, sceneInformation.pointLight, sceneInformation.transform,
@@ -125,11 +123,13 @@ void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sce
     for (uint32_t i = 0; i < frame.packedDraws.size(); i++) {
         const auto &mesh = storage_ref->get().get<AssetStorage::Mesh>(frame.packedDraws.at(i).meshId);
 
-        sceneData[i].firstIndex = mesh.indicesOffset;
-        sceneData[i].indexCount = mesh.indicesSize;
-        sceneData[i].vertexOffset = mesh.vertexOffset;
-        sceneData[i].instanceCount = 0;
-        sceneData[i].firstInstance = i;
+        sceneData[i] = vk::DrawIndexedIndirectCommand{
+            .indexCount = mesh.indicesSize,
+            .instanceCount = 0,
+            .firstIndex = mesh.indicesOffset,
+            .vertexOffset = static_cast<int32_t>(mesh.vertexOffset),
+            .firstInstance = i,
+        };
     }
 }
 
@@ -137,28 +137,23 @@ void DrawCallResolver::createBuffer(vk::DeviceSize bufferSize)
 {
     destroy();
 
-    frame.indirectBuffer = base_ref->get().allocator.createBuffer<vk::DrawIndexedIndirectCommand>(
-        bufferSize, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eIndirectBuffer,
-        vma::MemoryUsage::eCpuToGpu, vma::AllocationCreateFlagBits::eMapped,
-        "Indirect Command Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
+    frame.indirectBuffer = base_ref->get().allocator.createMappedBuffer<vk::DrawIndexedIndirectCommand>(
+        bufferSize, "Indirect Command Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)),
+        vk::BufferUsageFlagBits::eIndirectBuffer);
 
-    frame.objectBuffer = base_ref->get().allocator.createBuffer<gpu_object::UniformBufferObject>(
-        bufferSize, vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu, {},
-        "Object Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
+    frame.objectBuffer = base_ref->get().allocator.createMappedBuffer<gpu_object::UniformBufferObject>(
+        bufferSize, "Uniform Buffer Object Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
     frame.currentBufferSize = bufferSize;
 }
 
 void DrawCallResolver::createLightBuffer()
 {
-    frame.omniLightBuffer = base_ref->get().allocator.createBuffer<gpu_object::PointLight>(
-        1, vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu, vma::AllocationCreateFlagBits::eMapped,
-        "Point light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
-    frame.directLightBuffer = base_ref->get().allocator.createBuffer<gpu_object::DirectionalLight>(
-        1, vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu, vma::AllocationCreateFlagBits::eMapped,
-        "Directional light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
-    frame.spotLightBuffer = base_ref->get().allocator.createBuffer<gpu_object::SpotLight>(
-        1, vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu, vma::AllocationCreateFlagBits::eMapped,
-        "Spot light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
+    frame.omniLightBuffer = base_ref->get().allocator.createMappedBuffer<gpu_object::PointLight>(
+        1, "Point light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
+    frame.directLightBuffer = base_ref->get().allocator.createMappedBuffer<gpu_object::DirectionalLight>(
+        1, "Directional light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
+    frame.spotLightBuffer = base_ref->get().allocator.createMappedBuffer<gpu_object::SpotLight>(
+        1, "Spot light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
 }
 
 void DrawCallResolver::updateDescriptorSet(vk::DeviceSize bufferSize)

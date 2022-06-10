@@ -82,14 +82,14 @@ static void copy_with_staging_buffer(VulkanBase &base_ref, vk::BufferUsageFlags 
     auto true_size = data.size();
     auto staging = base_ref.allocator.createBuffer<T>(
         true_size, vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst,
-        vma::MemoryUsage::eCpuToGpu);
+        vma::MemoryUsage::eAuto, vma::AllocationCreateFlagBits::eHostAccessSequentialWrite);
 
     base_ref.allocator.copyBuffer(staging, std::span(data));
     if (true_size > buffer.getSize()) {
         base_ref.allocator.destroyBuffer(buffer);
         buffer = base_ref.allocator.createBuffer<T>(
             true_size, flag | vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst,
-            vma::MemoryUsage::eGpuOnly);
+            vma::MemoryUsage::eAutoPreferDevice);
     }
     base_ref.copyBuffer(staging, buffer);
     base_ref.allocator.destroyBuffer(staging);

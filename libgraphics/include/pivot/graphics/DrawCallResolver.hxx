@@ -132,17 +132,15 @@ private:
 
             lightsData.emplace_back(light, transform);
         }
-        if (buffer.getAllocatedSize() / sizeof(G) < lightsData.size()) {
+        if (buffer.getSize() < lightsData.size()) {
             if (buffer) base_ref->get().allocator.destroyBuffer(buffer);
-            buffer = base_ref->get().allocator.createBuffer<G>(
-                lightsData.size(), vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu,
-                vma::AllocationCreateFlagBits::eMapped, debug_name);
+            buffer = base_ref->get().allocator.createMappedBuffer<G>(lightsData.size(), debug_name);
         }
         base_ref->get().allocator.copyBuffer(buffer, std::span(lightsData));
         return lightsData.size();
     }
 
-    void createBuffer(const vk::DeviceSize bufferSize);
+    void createBuffer(vk::DeviceSize bufferSize);
     void createLightBuffer();
     void updateDescriptorSet(const vk::DeviceSize bufferSize);
 
@@ -150,13 +148,8 @@ private:
     OptionalRef<VulkanBase> base_ref;
     OptionalRef<AssetStorage> storage_ref;
     Frame frame;
+    std::vector<vk::WriteDescriptorSet> descriptorWrites;
     vk::DescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
 };
-
-// void swap(DrawCallResolver::DrawSceneInformation &lhs, DrawCallResolver::DrawSceneInformation &rhs)
-// {
-//     std::swap(lhs.renderObjects, rhs.renderObjects);
-//     std::swap(lhs.transforms, rhs.transforms);
-// }
 
 }    // namespace pivot::graphics

@@ -10,7 +10,7 @@ class ImGuiRenderer : public IGraphicsRenderer
 {
 public:
     /// @copydoc IRenderer::IRenderer
-    ImGuiRenderer(PipelineStorage &storage, AssetStorage &assets);
+    ImGuiRenderer(StorageUtils &utils);
     ~ImGuiRenderer();
 
     std::string getName() const noexcept override { return "ImGui"; }

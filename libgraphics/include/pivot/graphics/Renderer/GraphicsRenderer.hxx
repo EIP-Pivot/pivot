@@ -10,7 +10,7 @@ class GraphicsRenderer : public IGraphicsRenderer
 {
 public:
     /// @copydoc IRenderer::IRenderer
-    GraphicsRenderer(PipelineStorage &storage, AssetStorage &assets);
+    GraphicsRenderer(StorageUtils &utils);
     ~GraphicsRenderer();
 
     std::string getName() const noexcept override { return "Graphics"; }

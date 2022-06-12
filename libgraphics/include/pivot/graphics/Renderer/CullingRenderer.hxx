@@ -14,7 +14,7 @@ class CullingRenderer : public IComputeRenderer
 {
 public:
     /// @copydoc IRenderer::IRenderer
-    CullingRenderer(PipelineStorage &storage, AssetStorage &assets);
+    CullingRenderer(StorageUtils &utils);
     ~CullingRenderer();
 
     std::string getName() const noexcept override { return "Culling"; }

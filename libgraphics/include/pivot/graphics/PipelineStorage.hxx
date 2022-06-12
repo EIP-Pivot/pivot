@@ -19,6 +19,7 @@ class PipelineStorage
 public:
     /// @brief Constructor
     PipelineStorage(VulkanBase &base);
+    PipelineStorage(const PipelineStorage &) = delete;
     /// @brief Destructor
     ~PipelineStorage();
 

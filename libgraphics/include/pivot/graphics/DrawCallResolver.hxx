@@ -121,8 +121,8 @@ private:
     handleLights(AllocatedBuffer<G> &buffer, const Object<T> &lights, const Object<Transform> &transforms,
                  const std::string &debug_name = "")
     {
-        assert(lights.objects.get().size() == lights.exist.get().size());
-        assert(transforms.objects.get().size() == transforms.exist.get().size());
+        pivot_assert(lights.objects.get().size() == lights.exist.get().size());
+        pivot_assert(transforms.objects.get().size() == transforms.exist.get().size());
 
         std::vector<G> lightsData;
         for (unsigned i = 0; i < lights.objects.get().size() && i < transforms.objects.get().size(); i++) {

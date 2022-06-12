@@ -34,7 +34,7 @@ void DrawCallResolver::init(VulkanBase &base, AssetStorage &stor, DescriptorBuil
                        .bindBuffer(4, frame.spotLightBuffer.getBufferInfo(), vk::DescriptorType::eStorageBuffer,
                                    vk::ShaderStageFlagBits::eFragment)
                        .build(base_ref->get().device, frame.objectDescriptor, descriptorSetLayout);
-    assert(success);
+    pivot_assert(success);
     vk_debug::setObjectName(base_ref->get().device, frame.objectDescriptor,
                             "Object Descriptor Set " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
     updateDescriptorSet(defaultBufferSize);
@@ -60,12 +60,13 @@ void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sce
     // std::ranges::sort(sceneInformation, {},
     //                   [](const auto &info) { return std::make_tuple(info.get().pipelineID, info.get().meshID); });
 
-    assert(sceneInformation.renderObjects.objects.get().size() == sceneInformation.renderObjects.exist.get().size());
-    assert(sceneInformation.transform.objects.get().size() == sceneInformation.transform.exist.get().size());
-    assert(sceneInformation.pointLight.objects.get().size() == sceneInformation.pointLight.exist.get().size());
-    assert(sceneInformation.directionalLight.objects.get().size() ==
-           sceneInformation.directionalLight.exist.get().size());
-    assert(sceneInformation.spotLight.objects.get().size() == sceneInformation.spotLight.exist.get().size());
+    pivot_assert(sceneInformation.renderObjects.objects.get().size() ==
+                 sceneInformation.renderObjects.exist.get().size());
+    pivot_assert(sceneInformation.transform.objects.get().size() == sceneInformation.transform.exist.get().size());
+    pivot_assert(sceneInformation.pointLight.objects.get().size() == sceneInformation.pointLight.exist.get().size());
+    pivot_assert(sceneInformation.directionalLight.objects.get().size() ==
+                 sceneInformation.directionalLight.exist.get().size());
+    pivot_assert(sceneInformation.spotLight.objects.get().size() == sceneInformation.spotLight.exist.get().size());
 
     for (unsigned i = 0;
          i < sceneInformation.renderObjects.objects.get().size() && i < sceneInformation.transform.objects.get().size();
@@ -98,16 +99,16 @@ void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sce
             }
         }
     }
-    assert(frame.packedDraws.size() == objectGPUData.size());
+    pivot_assert(frame.packedDraws.size() == objectGPUData.size());
     if (objectGPUData.empty()) return;
     if (objectGPUData.size() > frame.currentBufferSize || objectGPUData.size() < frame.currentBufferSize / 2) {
         createBuffer(objectGPUData.size());
     }
     updateDescriptorSet(objectGPUData.size());
 
-    assert(frame.currentBufferSize > 0);
-    assert(frame.currentDescriptorSetSize > 0);
-    assert(frame.currentBufferSize > frame.currentDescriptorSetSize);
+    pivot_assert(frame.currentBufferSize > 0);
+    pivot_assert(frame.currentDescriptorSetSize > 0);
+    pivot_assert(frame.currentBufferSize > frame.currentDescriptorSetSize);
 
     base_ref->get().allocator.copyBuffer(frame.objectBuffer, std::span(objectGPUData));
 
@@ -158,7 +159,7 @@ void DrawCallResolver::createLightBuffer()
 
 void DrawCallResolver::updateDescriptorSet(vk::DeviceSize bufferSize)
 {
-    assert(bufferSize > 0);
+    pivot_assert(bufferSize > 0);
     auto bufferInfo = frame.objectBuffer.getBufferInfo();
     auto indirectInfo = frame.indirectBuffer.getBufferInfo();
     auto omniLightInfo = frame.omniLightBuffer.getBufferInfo();

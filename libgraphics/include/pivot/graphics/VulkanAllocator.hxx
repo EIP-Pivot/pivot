@@ -51,7 +51,7 @@ public:
                                     vma::MemoryUsage memoryUsage = vma::MemoryUsage::eAuto,
                                     vma::AllocationCreateFlags flags = {}, const std::string &debug_name = "")
     {
-        assert(size != 0);
+        pivot_assert(size != 0);
         AllocatedBuffer<T> buffer{
             .size = size,
             .flags = flags,
@@ -92,7 +92,7 @@ public:
     /// Map buffer memory to a pointer
     T *mapMemory(AllocatedBuffer<T> &buffer)
     {
-        assert(buffer);
+        pivot_assert(buffer);
         return static_cast<T *>(allocator.mapMemory(buffer.memory));
     }
 
@@ -100,7 +100,7 @@ public:
     /// Map buffer memory as a read-only pointer
     const T *mapMemory(AllocatedBuffer<T> &buffer) const
     {
-        assert(buffer);
+        pivot_assert(buffer);
         return static_cast<const T *const>(allocator.mapMemory(buffer.memory));
     }
 
@@ -111,7 +111,7 @@ public:
     /// It is safe to call even if the buffer has been created with vma::AllocationCreateFlagBits::eMapped.
     void unmapMemory(AllocatedBuffer<T> &buffer)
     {
-        assert(buffer);
+        pivot_assert(buffer);
         allocator.unmapMemory(buffer.memory);
     }
 
@@ -121,10 +121,10 @@ public:
     void copyBuffer(AllocatedBuffer<T> &buffer, const T *data, std::size_t data_size, std::size_t offset = 0)
     {
         if (data_size == 0) return;
-        assert(buffer);
-        assert(buffer.getBytesSize() >= data_size + offset);
-        assert((data_size + offset) % sizeof(T) == 0);
-        assert(data);
+        pivot_assert(buffer);
+        pivot_assert(buffer.getBytesSize() >= data_size + offset);
+        pivot_assert((data_size + offset) % sizeof(T) == 0);
+        pivot_assert(data);
 
         auto *mapped = mapMemory<T>(buffer);
         std::memcpy(mapped + offset, data, data_size);

@@ -1,6 +1,5 @@
 #include "pivot/graphics/VulkanSwapchain.hxx"
 
-#include <assert.h>
 #include <optional>
 #include <stddef.h>
 
@@ -42,7 +41,7 @@ void VulkanSwapchain::recreate(const vk::Extent2D &size, vk::PhysicalDevice &gpu
 
 std::uint32_t VulkanSwapchain::nbOfImage() const
 {
-    assert(swapChainImages.size() == swapChainImageViews.size());
+    pivot_assert(swapChainImages.size() == swapChainImageViews.size());
     return swapChainImages.size();
 }
 
@@ -59,7 +58,7 @@ std::uint32_t VulkanSwapchain::getNextImageIndex(const uint64_t maxDelay, vk::Se
 void VulkanSwapchain::createSwapchain(const vk::Extent2D &size, vk::PhysicalDevice &gpu, vk::SurfaceKHR &surface)
 {
     DEBUG_FUNCTION
-    assert(device);
+    pivot_assert(device);
 
     auto indices = QueueFamilyIndices::findQueueFamilies(gpu, surface);
 
@@ -114,7 +113,7 @@ void VulkanSwapchain::createSwapchain(const vk::Extent2D &size, vk::PhysicalDevi
 void VulkanSwapchain::getImages()
 {
     DEBUG_FUNCTION;
-    assert(swapChain);
+    pivot_assert(swapChain);
     swapChainImages = device->getSwapchainImagesKHR(swapChain);
 
     for (unsigned i = 0; i < swapChainImages.size(); i++) {

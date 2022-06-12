@@ -10,9 +10,9 @@ void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
 {
     DEBUG_FUNCTION
     // check for incorrect combination of flags
-    assert(std::popcount(static_cast<std::underlying_type_t<AssetStorage::BuildFlagBits>>(flags)) == 1);
-    assert(cpuStorage.materialStaging.contains(missing_material_name));
-    assert(cpuStorage.textureStaging.contains(missing_texture_name));
+    pivot_assert(std::popcount(static_cast<std::underlying_type_t<AssetStorage::BuildFlagBits>>(flags)) == 1);
+    pivot_assert(cpuStorage.materialStaging.contains(missing_material_name));
+    pivot_assert(cpuStorage.textureStaging.contains(missing_texture_name));
 
     // TODO: better separation of loading ressources
     modelStorage.clear();
@@ -111,7 +111,7 @@ void AssetStorage::pushModelsOnGPU()
                             gpu_object::AABB(std::span(cpuStorage.vertexStagingBuffer.begin() + model.mesh.vertexOffset,
                                                        model.mesh.vertexSize)));
     }
-    assert(modelStorage.size() == meshAABBStorage.size());
+    pivot_assert(modelStorage.size() == meshAABBStorage.size());
 
     copy_with_staging_buffer(base_ref->get(), vk::BufferUsageFlagBits::eVertexBuffer, cpuStorage.vertexStagingBuffer,
                              vertexBuffer);

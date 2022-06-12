@@ -89,7 +89,7 @@ bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &s
                                      : ("white")),
         };
         for (const auto &index: shape.mesh.indices) {
-            assert(index.vertex_index != -1);
+            pivot_assert(index.vertex_index != -1);
             Vertex vertex{
                 .pos =
                     {

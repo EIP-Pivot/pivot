@@ -1,6 +1,7 @@
 
 #include "pivot/graphics/Window.hxx"
 #include "pivot/graphics/DebugMacros.hxx"
+#include "pivot/graphics/pivot.hxx"
 
 #include <Logger.hpp>
 #include <magic_enum.hpp>
@@ -18,7 +19,7 @@ static int translate_key(int key, int scancode)
                                  GLFW_KEY_RIGHT_BRACKET, GLFW_KEY_BACKSLASH, GLFW_KEY_COMMA, GLFW_KEY_SEMICOLON,
                                  GLFW_KEY_APOSTROPHE,    GLFW_KEY_PERIOD,    GLFW_KEY_SLASH, 0};
 
-        assert(std::size(char_names) == std::size(char_keys));
+        pivot_assert(std::size(char_names) == std::size(char_keys));
         if (key_name[0] >= '0' && key_name[0] <= '9') {
             key = GLFW_KEY_0 + (key_name[0] - '0');
         } else if (key_name[0] >= 'A' && key_name[0] <= 'Z') {

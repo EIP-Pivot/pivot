@@ -21,7 +21,7 @@ ComputePipelineBuilder &ComputePipelineBuilder::setComputeShaderPath(const std::
 
 vk::Pipeline ComputePipelineBuilder::build(vk::Device &device, vk::PipelineCache pipelineCache) const
 {
-    auto computeShaderCode = vk_utils::readFile(shaderPath);
+    auto computeShaderCode = vk_utils::readBinaryFile(shaderPath);
     auto computeShaderModule = vk_utils::createShaderModule(device, computeShaderCode);
     auto computeShaderStage =
         vk_init::populateVkPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eCompute, computeShaderModule);

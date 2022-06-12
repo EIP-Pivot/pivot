@@ -109,6 +109,15 @@ void GraphicsRenderer::createPipeline(VulkanBase &base_ref, vk::RenderPass &pass
 {
     DEBUG_FUNCTION
 
+    const std::uint32_t count = storage.assets.get().getSize<AssetStorage::Texture>();
+    std::vector<vk::SpecializationMapEntry> specializationData = {
+        {
+            .constantID = 0,
+            .offset = 0,
+            .size = sizeof(std::uint32_t),
+        },
+    };
+
     GraphicsPipelineBuilder builder(storage.shader);
     builder.setPipelineLayout(pipelineLayout)
         .setRenderPass(pass)
@@ -116,17 +125,28 @@ void GraphicsRenderer::createPipeline(VulkanBase &base_ref, vk::RenderPass &pass
         .setFaceCulling(vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise);
 
     builder.setVertexShaderPath("default.vert").setFragmentShaderPath("default_lit.frag");
-    storage.pipeline.get().newGraphicsPipeline("lit", builder);
+    storage.pipeline.get().newGraphicsPipeline(
+        "lit", builder.buildWithSpecialisation(base_ref.device, specializationData, count,
+                                               vk::ShaderStageFlagBits::eFragment, storage.pipeline.get().getCache()));
 
     builder.setFragmentShaderPath("default_unlit.frag");
-    storage.pipeline.get().newGraphicsPipeline("unlit", builder);
+    storage.pipeline.get().newGraphicsPipeline(
+        "unlit",
+        builder.buildWithSpecialisation(base_ref.device, specializationData, count, vk::ShaderStageFlagBits::eFragment,
+                                        storage.pipeline.get().getCache()));
 
     builder.setPolygonMode(vk::PolygonMode::eLine);
-    storage.pipeline.get().newGraphicsPipeline("wireframe", builder);
+    storage.pipeline.get().newGraphicsPipeline(
+        "wireframe",
+        builder.buildWithSpecialisation(base_ref.device, specializationData, count, vk::ShaderStageFlagBits::eFragment,
+                                        storage.pipeline.get().getCache()));
 
     builder.setPolygonMode(vk::PolygonMode::eFill);
     builder.setFaceCulling(vk::CullModeFlagBits::eFront, vk::FrontFace::eCounterClockwise);
-    storage.pipeline.get().newGraphicsPipeline("skybox", builder);
+    storage.pipeline.get().newGraphicsPipeline(
+        "skybox",
+        builder.buildWithSpecialisation(base_ref.device, specializationData, count, vk::ShaderStageFlagBits::eFragment,
+                                        storage.pipeline.get().getCache()));
 
     builder.setFaceCulling(vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise)
         .setVertexAttributes(Vertex::getInputAttributeDescriptions(
@@ -134,7 +154,9 @@ void GraphicsRenderer::createPipeline(VulkanBase &base_ref, vk::RenderPass &pass
                    VertexComponentFlagBits::Tangent))
         .setVertexShaderPath("default_pbr.vert")
         .setFragmentShaderPath("default_pbr.frag");
-    storage.pipeline.get().newGraphicsPipeline("pbr", builder);
+    storage.pipeline.get().newGraphicsPipeline(
+        "pbr", builder.buildWithSpecialisation(base_ref.device, specializationData, count,
+                                               vk::ShaderStageFlagBits::eFragment, storage.pipeline.get().getCache()));
     storage.pipeline.get().setDefault("pbr");
 }
 

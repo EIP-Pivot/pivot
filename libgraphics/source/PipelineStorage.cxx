@@ -25,6 +25,17 @@ void PipelineStorage::destroy()
 void PipelineStorage::newGraphicsPipeline(const std::string &name, const GraphicsPipelineBuilder &builder)
 {
     auto pipeline = builder.build(base_ref.device, pipelineCache);
+    return newGraphicsPipeline(name, pipeline);
+}
+
+void PipelineStorage::newComputePipeline(const std::string &name, const ComputePipelineBuilder &builder)
+{
+    auto pipeline = builder.build(base_ref.device, pipelineCache);
+    return newComputePipeline(name, pipeline);
+}
+
+void PipelineStorage::newGraphicsPipeline(const std::string &name, vk::Pipeline pipeline)
+{
     if (!pipeline) throw std::runtime_error("Failed to create a pipeline named " + name);
     if (graphicsStorage.contains(name)) {
         logger.warn("Pipeline Storage") << "A graphics pipeline named " + name +
@@ -36,9 +47,8 @@ void PipelineStorage::newGraphicsPipeline(const std::string &name, const Graphic
     vk_debug::setObjectName(base_ref.device, pipeline, "Graphics pieline : " + name);
 }
 
-void PipelineStorage::newComputePipeline(const std::string &name, const ComputePipelineBuilder &builder)
+void PipelineStorage::newComputePipeline(const std::string &name, vk::Pipeline pipeline)
 {
-    auto pipeline = builder.build(base_ref.device, pipelineCache);
     if (!pipeline) throw std::runtime_error("Failed to create a pipeline named " + name);
     if (computeStorage.contains(name)) {
         logger.warn("Pipeline Builder") << "A compute pipeline named " + name +

@@ -106,12 +106,7 @@ void VulkanBase::createLogicalDevice(const std::vector<const char *> &deviceExte
         return vk_init::populateDeviceQueueCreateInfo(1, queueFamily, fQueuePriority);
     });
 
-    vk::PhysicalDeviceDescriptorIndexingFeatures descriptorIndex{
-        .descriptorBindingVariableDescriptorCount = VK_TRUE,
-        .runtimeDescriptorArray = VK_TRUE,
-    };
     vk::PhysicalDeviceVulkan11Features v11Features{
-        .pNext = &descriptorIndex,
         .shaderDrawParameters = VK_TRUE,
     };
 

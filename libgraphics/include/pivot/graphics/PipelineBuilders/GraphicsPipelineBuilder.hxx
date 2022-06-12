@@ -108,10 +108,35 @@ public:
         return *this;
     }
 
+    template <typename T>
     /// Build the Vulkan pipeline
     ///
     /// @return A valid Vulkan pipeline, or VK_NULL_REFERENCE if an error has occurred
+    vk::Pipeline buildWithSpecialisation(vk::Device &device,
+                                         const std::vector<vk::SpecializationMapEntry> &specializationMapEntries,
+                                         const T &specializationData, vk::ShaderStageFlagBits stage,
+                                         vk::PipelineCache pipelineCache = VK_NULL_HANDLE) const
+    {
+        vk::SpecializationInfo specializationInfo{
+            .mapEntryCount = static_cast<uint32_t>(specializationMapEntries.size()),
+            .pMapEntries = specializationMapEntries.data(),
+            .dataSize = sizeof(T),
+            .pData = &specializationData,
+        };
+
+        auto shaderStage = build_shader(device);
+        for (auto &shader: shaderStage) {
+            if (shader.stage & stage) shader.pSpecializationInfo = &specializationInfo;
+        }
+        return build_impl(device, shaderStage, pipelineCache);
+    }
+
     vk::Pipeline build(vk::Device &device, vk::PipelineCache pipelineCache = VK_NULL_HANDLE) const;
+
+private:
+    std::vector<vk::PipelineShaderStageCreateInfo> build_shader(vk::Device &device) const;
+    vk::Pipeline build_impl(vk::Device &device, const std::vector<vk::PipelineShaderStageCreateInfo> &shaderStage,
+                            vk::PipelineCache pipelineCache = VK_NULL_HANDLE) const;
 
 private:
     std::string vertexShaderPath;

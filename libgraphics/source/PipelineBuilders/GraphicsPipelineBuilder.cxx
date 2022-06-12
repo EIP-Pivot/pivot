@@ -9,6 +9,14 @@
 namespace pivot::graphics
 {
 
+static void loadShader(const VulkanShader &shader, const vk::ShaderStageFlagBits &stage, vk::Device &device,
+                       std::vector<vk::PipelineShaderStageCreateInfo> &shaderStages)
+{
+    auto shaderModule = vk_utils::createShaderModule(device, shader.getByteCode());
+    vk_debug::setObjectName(device, shaderModule, shader.getPath(true).string());
+    shaderStages.push_back(vk_init::populateVkPipelineShaderStageCreateInfo(stage, shaderModule));
+}
+
 GraphicsPipelineBuilder::GraphicsPipelineBuilder(ShaderStorage &shader)
     : internal::IPipelineBuilder(shader),
       inputAssembly(vk_init::populateVkPipelineInputAssemblyCreateInfo(vk::PrimitiveTopology::eTriangleList, VK_FALSE)),
@@ -24,17 +32,15 @@ GraphicsPipelineBuilder::GraphicsPipelineBuilder(ShaderStorage &shader)
 
 GraphicsPipelineBuilder::~GraphicsPipelineBuilder() {}
 
-static void loadShader(const VulkanShader &shader, const vk::ShaderStageFlagBits &stage, vk::Device &device,
-                       std::vector<vk::PipelineShaderStageCreateInfo> &shaderStages) noexcept
-{
-    auto shaderModule = vk_utils::createShaderModule(device, shader.getByteCode());
-    vk_debug::setObjectName(device, shaderModule, shader.getPath(true).string());
-    shaderStages.push_back(vk_init::populateVkPipelineShaderStageCreateInfo(stage, shaderModule));
-}
-
 vk::Pipeline GraphicsPipelineBuilder::build(vk::Device &device, vk::PipelineCache pipelineCache) const
 {
     DEBUG_FUNCTION
+    auto shaderStages = build_shader(device);
+    return build_impl(device, shaderStages, pipelineCache);
+}
+
+std::vector<vk::PipelineShaderStageCreateInfo> GraphicsPipelineBuilder::build_shader(vk::Device &device) const
+{
     std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
 
     auto vertexId = shader.load(vertexShaderPath);
@@ -55,7 +61,13 @@ vk::Pipeline GraphicsPipelineBuilder::build(vk::Device &device, vk::PipelineCach
         auto id = shader.load(geometryShaderPath.value());
         loadShader(shader.get(id), vk::ShaderStageFlagBits::eGeometry, device, shaderStages);
     }
+    return shaderStages;
+}
 
+vk::Pipeline GraphicsPipelineBuilder::build_impl(vk::Device &device,
+                                                 const std::vector<vk::PipelineShaderStageCreateInfo> &shaderStages,
+                                                 vk::PipelineCache pipelineCache) const
+{
     auto vertexInputInfo = vk_init::populateVkPipelineVertexInputStateCreateInfo(vertexDescription, vertexAttributes);
 
     vk::PipelineViewportStateCreateInfo viewportState{

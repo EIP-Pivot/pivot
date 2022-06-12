@@ -76,18 +76,12 @@ DescriptorBuilder &DescriptorBuilder::bindImages(uint32_t binding,
     };
     writes.push_back(newWrite);
     variableDescriptorCount.push_back(imageInfo.size());
-    descriptorBindingFlags.push_back(vk::DescriptorBindingFlagBits::eVariableDescriptorCount);
     return *this;
 }
 
 bool DescriptorBuilder::build(vk::Device &device, vk::DescriptorSet &set, vk::DescriptorSetLayout &layout)
 {
-    vk::DescriptorSetLayoutBindingFlagsCreateInfo bindingInfo{
-        .bindingCount = static_cast<uint32_t>(descriptorBindingFlags.size()),
-        .pBindingFlags = descriptorBindingFlags.data(),
-    };
     vk::DescriptorSetLayoutCreateInfo layoutInfo{
-        .pNext = &bindingInfo,
         .bindingCount = static_cast<uint32_t>(bindings.size()),
         .pBindings = bindings.data(),
     };

@@ -35,6 +35,12 @@ static void loadShader(const std::string &path, const vk::ShaderStageFlagBits &s
 vk::Pipeline GraphicsPipelineBuilder::build(vk::Device &device, vk::PipelineCache pipelineCache) const
 {
     DEBUG_FUNCTION
+    auto shaderStages = build_shader(device);
+    return build_impl(device, shaderStages, pipelineCache);
+}
+
+std::vector<vk::PipelineShaderStageCreateInfo> GraphicsPipelineBuilder::build_shader(vk::Device &device) const
+{
     std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
 
     loadShader(vertexShaderPath, vk::ShaderStageFlagBits::eVertex, device, shaderStages);
@@ -48,7 +54,13 @@ vk::Pipeline GraphicsPipelineBuilder::build(vk::Device &device, vk::PipelineCach
                    shaderStages);
     if (geometryShaderPath)
         loadShader(geometryShaderPath.value(), vk::ShaderStageFlagBits::eGeometry, device, shaderStages);
+    return shaderStages;
+}
 
+vk::Pipeline GraphicsPipelineBuilder::build_impl(vk::Device &device,
+                                                 const std::vector<vk::PipelineShaderStageCreateInfo> &shaderStages,
+                                                 vk::PipelineCache pipelineCache) const
+{
     auto vertexInputInfo = vk_init::populateVkPipelineVertexInputStateCreateInfo(vertexDescription, vertexAttributes);
 
     vk::PipelineViewportStateCreateInfo viewportState{

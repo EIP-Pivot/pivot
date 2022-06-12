@@ -239,6 +239,10 @@ public:
     inline const T &get(const std::string &name) const;
 
     template <typename T>
+    /// Return the amount of ressources
+    inline std::uint32_t getSize() const;
+
+    template <typename T>
     /// Get an asset of type T named name if it exists
     inline OptionalRef<const T> get_optional(const std::string &name) const;
 
@@ -392,6 +396,21 @@ inline std::int32_t AssetStorage::getIndex<gpu_object::Material>(const std::stri
     auto idx = materialStorage.getIndex(i);
     if (idx == -1) return getIndex<gpu_object::Material>(missing_material_name);
     return idx;
+}
+
+template <>
+/// @copydoc AssetStorage::getSize
+inline std::uint32_t AssetStorage::getSize<gpu_object::Material>() const
+{
+    assert(materialBuffer.size == materialStorage.size());
+    return materialStorage.size();
+}
+
+template <>
+/// @copydoc AssetStorage::getSize
+inline std::uint32_t AssetStorage::getSize<AssetStorage::Texture>() const
+{
+    return textureStorage.size();
 }
 
 #endif

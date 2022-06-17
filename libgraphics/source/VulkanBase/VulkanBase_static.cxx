@@ -87,6 +87,8 @@ bool VulkanBase::isDeviceSuitable(const vk::PhysicalDevice &gpu, const vk::Surfa
     bool extensionsSupported = checkDeviceExtensionSupport(gpu, deviceExtensions);
     auto deviceProperties = gpu.getProperties();
     auto deviceFeatures = gpu.getFeatures();
+    auto deviceFeature2 =
+        gpu.getFeatures2<vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceShaderDrawParametersFeatures>();
 
     bool swapChainAdequate = false;
     if (extensionsSupported) {
@@ -96,6 +98,7 @@ bool VulkanBase::isDeviceSuitable(const vk::PhysicalDevice &gpu, const vk::Surfa
 
     bool isValid = false;
     IS_VALID(indices.isComplete(), "Missing Device queue");
+    IS_VALID(std::get<1>(deviceFeature2).shaderDrawParameters, "shaderDrawParameters feature not supported");
     IS_VALID(extensionsSupported, "Extension not supported");
     IS_VALID(swapChainAdequate, "Swapchain not adequate");
     IS_VALID(deviceFeatures.samplerAnisotropy, "Sampler anisotropy not supported");

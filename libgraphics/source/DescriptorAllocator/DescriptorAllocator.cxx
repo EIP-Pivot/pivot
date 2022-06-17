@@ -51,8 +51,7 @@ void DescriptorAllocator::resetPools()
     currentPool = VK_NULL_HANDLE;
 }
 
-bool DescriptorAllocator::allocate(vk::DescriptorSet &set, vk::DescriptorSetLayout &layout,
-                                   const vk::DescriptorSetVariableDescriptorCountAllocateInfo &pExtension)
+bool DescriptorAllocator::allocate(vk::DescriptorSet &set, vk::DescriptorSetLayout &layout)
 try {
     DEBUG_FUNCTION
     if (!currentPool) {
@@ -61,7 +60,6 @@ try {
     }
 
     vk::DescriptorSetAllocateInfo allocInfo{
-        .pNext = &pExtension,
         .descriptorPool = currentPool,
         .descriptorSetCount = 1,
         .pSetLayouts = &layout,

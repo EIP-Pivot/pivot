@@ -87,11 +87,7 @@ bool DescriptorBuilder::build(vk::Device &device, vk::DescriptorSet &set, vk::De
     };
     layout = cache.createDescriptorLayout(layoutInfo);
 
-    vk::DescriptorSetVariableDescriptorCountAllocateInfo set_counts{
-        .descriptorSetCount = static_cast<uint32_t>(variableDescriptorCount.size()),
-        .pDescriptorCounts = variableDescriptorCount.data(),
-    };
-    if (!alloc.allocate(set, layout, set_counts)) return false;
+    if (!alloc.allocate(set, layout)) return false;
     for (vk::WriteDescriptorSet &w: writes) w.dstSet = set;
     device.updateDescriptorSets(writes, 0);
     return true;

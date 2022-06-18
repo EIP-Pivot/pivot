@@ -51,11 +51,23 @@ public:
     }
 
     /// Append to the current storage
-    void append(const IndexedStorage &stor)
+    void append(const IndexedStorage &other)
     {
-        for (const auto &[name, idx]: stor) { add(name, stor.getStorage().at(idx)); }
+        for (const auto &[name, idx]: other.getIndexes()) {
+            if (contains(name)) throw std::runtime_error("Index already in use !");
+            index.emplace(name, idx + storage.size());
+        }
+        storage.insert(storage.end(), other.getStorage().begin(), other.getStorage().end());
     }
 
+    /// Remove key from storage
+    void erase(const Key &key)
+    {
+        auto idx = getIndex(key);
+        if (idx == -1) throw std::out_of_range("Key not found !");
+        storage.erase(storage.begin() + idx);
+        index.erase(key);
+    }
     /// Add a new item to the storage
     inline void add(const Key &i, Value value)
     {
@@ -64,7 +76,7 @@ public:
         index.emplace(i, storage.size() - 1);
     }
     /// @copydoc add
-    inline void add(const std::pair<Key, Value> &value) { add(value.first, std::move(value.second)); }
+    inline void add(const std::pair<Key, Value> value) { add(value.first, std::move(value.second)); }
     /// Valueell if given key already exist in storage
     inline bool contains(const Key &i) const { return index.contains(i); }
     /// return the number of item in the storage
@@ -80,6 +92,10 @@ public:
     constexpr const auto &getStorage() const noexcept { return storage; }
     /// @copydoc getStorage
     constexpr auto &getStorage() noexcept { return storage; }
+    /// return the internal vector
+    constexpr const auto &getIndexes() const noexcept { return index; }
+    /// @copydoc getIndexes
+    constexpr auto &getIndexes() noexcept { return index; }
 
     /// Get the name associated to given idx
     constexpr const Key &getName(const size_type &idx) const

@@ -6,7 +6,7 @@ using namespace pivot::graphics;
 
 TEST_CASE("Panic Texture are loaded", "[assetStorage]")
 {
-    AssetStorage::CPUStorage storage;
+    auto storage = AssetStorage::CPUStorage::default_assets();
     REQUIRE(storage.texturePaths.empty());
 
     REQUIRE(storage.textureStaging.size() == 1);

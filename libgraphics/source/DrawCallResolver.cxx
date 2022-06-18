@@ -57,8 +57,6 @@ void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sce
 
     frame.packedDraws.clear();
     frame.pipelineBatch.clear();
-    // std::ranges::sort(sceneInformation, {},
-    //                   [](const auto &info) { return std::make_tuple(info.get().pipelineID, info.get().meshID); });
 
     pivot_assert(sceneInformation.renderObjects.objects.get().size() ==
                  sceneInformation.renderObjects.exist.get().size());

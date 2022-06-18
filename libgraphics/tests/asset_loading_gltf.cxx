@@ -12,44 +12,45 @@
 #endif
 
 const std::string pathToGltf = BASE_PATH "test_models/boom_box/BoomBox.gltf";
+const std::string pathToOtherGltf = BASE_PATH "test_models/basic_triangle.gltf";
+
 const std::string pathToObj = BASE_PATH "test_models/basic_cube.obj";
 
 using namespace pivot::graphics;
 
-#define VERTEX_CHECK_VECTOR_(index, champ, field, value)         \
-    REQUIRE(storage.vertexStagingBuffer.at(index).champ.field == \
+#define VERTEX_CHECK_VECTOR_(stor, index, champ, field, value) \
+    REQUIRE(stor.vertexStagingBuffer.at(index).champ.field ==  \
             Catch::Approx(value).epsilon(std::numeric_limits<float>::epsilon()));
 
-#define VERTEX_CHECK_VEC2(index, champ, x_, y_) \
-    VERTEX_CHECK_VECTOR_(index, champ, x, x_)   \
-    VERTEX_CHECK_VECTOR_(index, champ, y, y_)
+#define VERTEX_CHECK_VEC2(stor, index, champ, x_, y_) \
+    VERTEX_CHECK_VECTOR_(stor, index, champ, x, x_)   \
+    VERTEX_CHECK_VECTOR_(stor, index, champ, y, y_)
 
-#define VERTEX_CHECK_VEC3(index, champ, x_, y_, z_) \
-    VERTEX_CHECK_VEC2(index, champ, x_, y_)         \
-    VERTEX_CHECK_VECTOR_(index, champ, z, z_)
+#define VERTEX_CHECK_VEC3(stor, index, champ, x_, y_, z_) \
+    VERTEX_CHECK_VEC2(stor, index, champ, x_, y_)         \
+    VERTEX_CHECK_VECTOR_(stor, index, champ, z, z_)
 
-#define VERTEX_CHECK_VEC4(index, champ, x_, y_, z_, w_) \
-    VERTEX_CHECK_VEC3(index, champ, x_, y_, z_)         \
-    VERTEX_CHECK_VECTOR_(index, champ, w, w_)
+#define VERTEX_CHECK_VEC4(stor, index, champ, x_, y_, z_, w_) \
+    VERTEX_CHECK_VEC3(stor, index, champ, x_, y_, z_)         \
+    VERTEX_CHECK_VECTOR_(stor, index, champ, w, w_)
 
 TEST_CASE("loadGltfFile", "[assetStorage]")
 {
     static_assert(std::numeric_limits<float>::epsilon() < 1.f);
 
-    const auto offset = AssetStorage::quad_vertices.size();
     AssetStorage::CPUStorage storage;
 
     SECTION("Return false when incorrect path") REQUIRE_FALSE(loaders::loadGltfModel(pathToObj, storage));
 
     REQUIRE(loaders::loadGltfModel(pathToGltf, storage));
 
-    std::string testIds{"BoomBox" + std::to_string(offset)};
+    std::string testIds = "BoomBox0";
     REQUIRE_NOTHROW(storage.prefabStorage.at("BoomBox"));
     const auto &prefab = storage.prefabStorage.at("BoomBox");
     REQUIRE(prefab.modelIds.size() == 1);
     REQUIRE(prefab.modelIds.at(0) == testIds);
 
-    REQUIRE(storage.materialStaging.size() == 3);
+    REQUIRE(storage.materialStaging.size() == 1);
     REQUIRE_NOTHROW(storage.materialStaging.get("BoomBox_Mat"));
     const auto &mat = storage.materialStaging.get("BoomBox_Mat");
     REQUIRE(mat.baseColor == glm::vec4(1.0f));
@@ -67,61 +68,103 @@ TEST_CASE("loadGltfFile", "[assetStorage]")
     const auto &model = storage.modelStorage.at(testIds);
     REQUIRE(model.default_material.has_value());
     REQUIRE(model.default_material == "BoomBox_Mat");
-    REQUIRE(model.mesh.vertexOffset == AssetStorage::quad_vertices.size());
+    REQUIRE(model.mesh.vertexOffset == 0);
     REQUIRE(model.mesh.vertexSize == 3575);
-    REQUIRE(model.mesh.indicesOffset == AssetStorage::quad_indices.size());
+    REQUIRE(model.mesh.indicesOffset == 0);
     REQUIRE(model.mesh.indicesSize == 18108);
 
-    REQUIRE(storage.vertexStagingBuffer.size() == 3575 + AssetStorage::quad_vertices.size());
-    REQUIRE(storage.indexStagingBuffer.size() == 18108 + AssetStorage::quad_indices.size());
+    REQUIRE(storage.vertexStagingBuffer.size() == 3575);
+    REQUIRE(storage.indexStagingBuffer.size() == 18108);
 
     using limit = std::numeric_limits<float>;
-    logger.debug("position") << std::setprecision(limit::max_digits10)
-                             << storage.vertexStagingBuffer.at(offset + 1000).pos.x;
-    logger.debug("position") << std::setprecision(limit::max_digits10)
-                             << storage.vertexStagingBuffer.at(offset + 1000).pos.y;
-    logger.debug("position") << std::setprecision(limit::max_digits10)
-                             << storage.vertexStagingBuffer.at(offset + 1000).pos.z;
+    logger.debug("position") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).pos.x;
+    logger.debug("position") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).pos.y;
+    logger.debug("position") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).pos.z;
 
-    logger.debug("normal") << std::setprecision(limit::max_digits10)
-                           << storage.vertexStagingBuffer.at(offset + 1000).normal.x;
-    logger.debug("normal") << std::setprecision(limit::max_digits10)
-                           << storage.vertexStagingBuffer.at(offset + 1000).normal.y;
-    logger.debug("normal") << std::setprecision(limit::max_digits10)
-                           << storage.vertexStagingBuffer.at(offset + 1000).normal.z;
+    logger.debug("normal") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).normal.x;
+    logger.debug("normal") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).normal.y;
+    logger.debug("normal") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).normal.z;
 
-    logger.debug("color") << std::setprecision(limit::max_digits10)
-                          << storage.vertexStagingBuffer.at(offset + 1000).color.x;
-    logger.debug("color") << std::setprecision(limit::max_digits10)
-                          << storage.vertexStagingBuffer.at(offset + 1000).color.y;
-    logger.debug("color") << std::setprecision(limit::max_digits10)
-                          << storage.vertexStagingBuffer.at(offset + 1000).color.z;
-    logger.debug("color") << std::setprecision(limit::max_digits10)
-                          << storage.vertexStagingBuffer.at(offset + 1000).color.w;
+    logger.debug("color") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).color.x;
+    logger.debug("color") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).color.y;
+    logger.debug("color") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).color.z;
+    logger.debug("color") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).color.w;
 
     logger.debug("texCoord") << std::setprecision(limit::max_digits10)
-                             << storage.vertexStagingBuffer.at(offset + 1000).texCoord.x;
+                             << storage.vertexStagingBuffer.at(1000).texCoord.x;
     logger.debug("texCoord") << std::setprecision(limit::max_digits10)
-                             << storage.vertexStagingBuffer.at(offset + 1000).texCoord.y;
+                             << storage.vertexStagingBuffer.at(1000).texCoord.y;
 
-    logger.debug("tangent") << std::setprecision(limit::max_digits10)
-                            << storage.vertexStagingBuffer.at(offset + 1000).tangent.x;
-    logger.debug("tangent") << std::setprecision(limit::max_digits10)
-                            << storage.vertexStagingBuffer.at(offset + 1000).tangent.y;
-    logger.debug("tangent") << std::setprecision(limit::max_digits10)
-                            << storage.vertexStagingBuffer.at(offset + 1000).tangent.z;
-    logger.debug("tangent") << std::setprecision(limit::max_digits10)
-                            << storage.vertexStagingBuffer.at(offset + 1000).tangent.w;
+    logger.debug("tangent") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).tangent.x;
+    logger.debug("tangent") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).tangent.y;
+    logger.debug("tangent") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).tangent.z;
+    logger.debug("tangent") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).tangent.w;
 
-    VERTEX_CHECK_VEC3(offset + 0, pos, 0.00247455505f, -0.00207684329f, 0.00687769148f);
-    VERTEX_CHECK_VEC3(offset + 0, normal, -0.662998438f, -0.244545713f, 0.0187361445f);
-    VERTEX_CHECK_VEC4(offset + 0, color, 1.0f, 1.0f, 1.0f, 1.0f);
-    VERTEX_CHECK_VEC2(offset + 0, texCoord, 0.0681650937f, 0.192196429f);
-    VERTEX_CHECK_VEC4(offset + 0, tangent, -0.295275331f, -0.835973203f, -0.462559491f, 1.00000f);
+    VERTEX_CHECK_VEC3(storage, 0, pos, 0.00247455505f, -0.00207684329f, 0.00687769148f);
+    VERTEX_CHECK_VEC3(storage, 0, normal, -0.662998438f, -0.244545713f, 0.0187361445f);
+    VERTEX_CHECK_VEC4(storage, 0, color, 1.0f, 1.0f, 1.0f, 1.0f);
+    VERTEX_CHECK_VEC2(storage, 0, texCoord, 0.0681650937f, 0.192196429f);
+    VERTEX_CHECK_VEC4(storage, 0, tangent, -0.295275331f, -0.835973203f, -0.462559491f, 1.00000f);
 
-    VERTEX_CHECK_VEC3(offset + 1000, pos, 0.00661812071f, -0.00235924753f, 0.00288167689f);
-    VERTEX_CHECK_VEC3(offset + 1000, normal, 0.589514494f, 0.0575772263f, -0.38584733f);
-    VERTEX_CHECK_VEC4(offset + 1000, color, 1.0f, 1.0f, 1.0f, 1.0f);
-    VERTEX_CHECK_VEC2(offset + 1000, texCoord, 0.90863955f, 0.12404108f);
-    VERTEX_CHECK_VEC4(offset + 1000, tangent, -0.114067227f, -0.993130505f, 0.0260791834f, 1.00000f);
+    VERTEX_CHECK_VEC3(storage, 1000, pos, 0.00661812071f, -0.00235924753f, 0.00288167689f);
+    VERTEX_CHECK_VEC3(storage, 1000, normal, 0.589514494f, 0.0575772263f, -0.38584733f);
+    VERTEX_CHECK_VEC4(storage, 1000, color, 1.0f, 1.0f, 1.0f, 1.0f);
+    VERTEX_CHECK_VEC2(storage, 1000, texCoord, 0.90863955f, 0.12404108f);
+    VERTEX_CHECK_VEC4(storage, 1000, tangent, -0.114067227f, -0.993130505f, 0.0260791834f, 1.00000f);
+
+    SECTION("CPUStorage merge")
+    {
+        AssetStorage::CPUStorage other_storage;
+        REQUIRE(loaders::loadGltfModel(pathToOtherGltf, other_storage));
+
+        auto before = other_storage.modelStorage.at("0");
+        auto before_vertex_size = other_storage.vertexStagingBuffer.size();
+        auto before_index_size = other_storage.indexStagingBuffer.size();
+
+        REQUIRE_NOTHROW(other_storage += storage);
+
+        REQUIRE(other_storage.modelStorage.at("0") == before);
+        REQUIRE_NOTHROW(other_storage.prefabStorage.at("BoomBox"));
+        REQUIRE(other_storage.prefabStorage.at("BoomBox") == storage.prefabStorage.at("BoomBox"));
+        REQUIRE_NOTHROW(storage.modelStorage.at(testIds));
+
+        {
+            auto &other_model = other_storage.modelStorage.at(testIds);
+            auto &model = storage.modelStorage.at(testIds);
+
+            REQUIRE(model.default_material == other_model.default_material);
+            REQUIRE(model.mesh.indicesOffset == other_model.mesh.indicesOffset - before_index_size);
+            REQUIRE(model.mesh.indicesSize == other_model.mesh.indicesSize);
+            REQUIRE(model.mesh.vertexOffset == other_model.mesh.vertexOffset - before_vertex_size);
+            REQUIRE(model.mesh.vertexSize == other_model.mesh.vertexSize);
+
+            std::span<Vertex> vertices(storage.vertexStagingBuffer.data() + model.mesh.vertexOffset,
+                                       model.mesh.vertexSize);
+            std::span<Vertex> other_vertices(other_storage.vertexStagingBuffer.data() + other_model.mesh.vertexOffset,
+                                             other_model.mesh.vertexSize);
+            REQUIRE(vertices.size() == other_vertices.size());
+            for (unsigned i = 0; i < vertices.size(); i++) REQUIRE(vertices[i] == other_vertices[i]);
+
+            std::span<std::uint32_t> indexes(storage.indexStagingBuffer.data() + model.mesh.indicesOffset,
+                                             model.mesh.indicesSize);
+            std::span<std::uint32_t> other_indexes(
+                other_storage.indexStagingBuffer.data() + other_model.mesh.indicesOffset, other_model.mesh.indicesSize);
+            REQUIRE(indexes.size() == other_indexes.size());
+            for (unsigned i = 0; i < indexes.size(); i++) REQUIRE(indexes[i] == other_indexes[i]);
+        }
+
+        REQUIRE_NOTHROW(other_storage.prefabStorage.at("basic_triangle"));
+
+        VERTEX_CHECK_VEC3(other_storage, 3, pos, 0.00247455505f, -0.00207684329f, 0.00687769148f);
+        VERTEX_CHECK_VEC3(other_storage, 3, normal, -0.662998438f, -0.244545713f, 0.0187361445f);
+        VERTEX_CHECK_VEC4(other_storage, 3, color, 1.0f, 1.0f, 1.0f, 1.0f);
+        VERTEX_CHECK_VEC2(other_storage, 3, texCoord, 0.0681650937f, 0.192196429f);
+        VERTEX_CHECK_VEC4(other_storage, 3, tangent, -0.295275331f, -0.835973203f, -0.462559491f, 1.00000f);
+
+        VERTEX_CHECK_VEC3(other_storage, 1003, pos, 0.00661812071f, -0.00235924753f, 0.00288167689f);
+        VERTEX_CHECK_VEC3(other_storage, 1003, normal, 0.589514494f, 0.0575772263f, -0.38584733f);
+        VERTEX_CHECK_VEC4(other_storage, 1003, color, 1.0f, 1.0f, 1.0f, 1.0f);
+        VERTEX_CHECK_VEC2(other_storage, 1003, texCoord, 0.90863955f, 0.12404108f);
+        VERTEX_CHECK_VEC4(other_storage, 1003, tangent, -0.114067227f, -0.993130505f, 0.0260791834f, 1.00000f);
+    }
 }

@@ -119,21 +119,38 @@ public:
     class CPUStorage
     {
     public:
-        /// @cond
-        CPUStorage();
+        /// CPUStorage error type
+        LOGIC_ERROR(CPUStorage);
+
+        /// Merge two CPUStorage together
+        void merge(const CPUStorage &other);
+
+        /// Operator += overload
+        CPUStorage &operator+=(const CPUStorage &other);
         /// Equality operator
         bool operator==(const CPUStorage &) const = default;
 
     public:
+        /// Return a CPUStorage with default asset
+        static CPUStorage default_assets();
+
+    public:
+        /// store the Models
         std::unordered_map<std::string, Model> modelStorage;
+        /// store the Prefab
         std::unordered_map<std::string, Prefab> prefabStorage;
+        /// Store the Vertex
         std::vector<Vertex> vertexStagingBuffer;
+        /// Store the index of the buffer
         std::vector<std::uint32_t> indexStagingBuffer;
+        /// Store the textures
         IndexedStorage<std::string, CPUTexture> textureStaging;
+        /// Store the Materials
         IndexedStorage<std::string, CPUMaterial> materialStaging;
+        /// Store the path of the model currently loaded
         std::unordered_map<std::string, std::filesystem::path> modelPaths;
+        /// Store the path of the texture currently loaded
         std::unordered_map<std::string, std::filesystem::path> texturePaths;
-        /// @endcond
     };
 
     /// name of the fallback texture if missing

@@ -11,8 +11,6 @@ void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
     DEBUG_FUNCTION
     // check for incorrect combination of flags
     pivot_assert(std::popcount(static_cast<std::underlying_type_t<AssetStorage::BuildFlagBits>>(flags)) == 1);
-    pivot_assert(cpuStorage.materialStaging.contains(missing_material_name));
-    pivot_assert(cpuStorage.textureStaging.contains(missing_texture_name));
 
     // TODO: better separation of loading ressources
     modelStorage.clear();
@@ -28,6 +26,7 @@ void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
 
     createTextureSampler();
 
+    cpuStorage.merge(CPUStorage::default_assets());
     if (flags & (BuildFlagBits::eReloadOldAssets)) {
         cpuStorage.modelPaths.insert(modelPaths.begin(), modelPaths.end());
         cpuStorage.texturePaths.insert(texturePaths.begin(), texturePaths.end());

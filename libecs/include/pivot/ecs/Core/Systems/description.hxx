@@ -32,7 +32,7 @@ struct Description {
     /// Event provenance
     Provenance provenance;
     /// System function
-    std::function<void(const Description &, component::ArrayCombination &, const event::EventWithComponent &)> system;
+    std::function<std::vector<event::Event>(const Description &, component::ArrayCombination &, const event::EventWithComponent &)> system;
     /// Check if all needed variable are set
     void validate() const;
     /// Error returned when the validation of a description fails

@@ -23,11 +23,12 @@ void Manager::useSystem(const Description &description)
     m_combinations.insert({description.name, {componentArrays}});
 }
 
-void Manager::execute(const event::Event &event)
+std::vector<event::Event> Manager::execute(const event::Event &event)
 {
     for (const auto &[name, description]: m_systems) {
-        if (event.description.name == description.eventListener.name) executeOne(description, event);
+        if (event.description.name == description.eventListener.name) return executeOne(description, event);
     }
+    return {};
 }
 
 Manager::const_iterator Manager::begin() const { return m_systems.begin(); }
@@ -46,7 +47,7 @@ std::vector<component::Manager::ComponentId> Manager::getComponentsId(const std:
     return componentsId;
 }
 
-void Manager::executeOne(const Description &description, const event::Event &event)
+std::vector<event::Event> Manager::executeOne(const Description &description, const event::Event &event)
 {
     if (event.entities.size() != description.eventComponents.size())
         throw std::logic_error("This system expect " + std::to_string(description.eventComponents.size()) + " entity.");
@@ -55,14 +56,14 @@ void Manager::executeOne(const Description &description, const event::Event &eve
     for (std::size_t i = 0; i < event.entities.size(); i++) {
         std::vector<component::ComponentRef> entityComponents;
         for (const auto index: getComponentsId(description.eventComponents[i])) {
-            if (!m_componentManager.GetComponent(event.entities[i], index).has_value()) return;
+            if (!m_componentManager.GetComponent(event.entities[i], index).has_value()) return {};
             entityComponents.emplace_back(m_componentManager.GetComponentArray(index), event.entities[i]);
         }
         entitiesComponents.push_back(entityComponents);
     }
 
     event::EventWithComponent entityComponents{.event = event, .components = entitiesComponents};
-    description.system(description, m_combinations.at(description.name), entityComponents);
+    return description.system(description, m_combinations.at(description.name), entityComponents);
 }
 
 }    // namespace pivot::ecs::systems

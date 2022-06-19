@@ -91,30 +91,29 @@ bool AssetStorage::addTexture(const std::vector<std::filesystem::path> &path)
     return load == path.size();
 }
 
-bool AssetStorage::loadModel(const std::filesystem::path &path)
-{
+std::optional<AssetStorage::CPUStorage> AssetStorage::loadModel(unsigned thread_id, const std::filesystem::path &path)
+try {
     auto extension = path.extension().string();
     if (!loaders::supportedObject.contains(extension))
         throw AssetStorageError(extension + " filetype not supported for 3D models.");
-    logger.debug("Asset Storage") << "Loading model at : " << path;
+    logger.debug("Asset Storage/" + std::to_string(thread_id)) << "Loading model at : " << path;
 
-    CPUStorage storage;
-    bool bSuccess = std::apply(loaders::supportedObject.at(extension), std::make_tuple(path, std::ref(storage)));
-    cpuStorage.merge(storage);
-    return bSuccess;
+    return std::apply(loaders::supportedObject.at(extension), std::make_tuple(path));
+} catch (const std::exception &e) {
+    logger.err("Asset Storage/Load Model") << e.what();
+    return std::nullopt;
 }
 
-bool AssetStorage::loadTexture(const std::filesystem::path &path)
-{
+std::optional<AssetStorage::CPUStorage> AssetStorage::loadTexture(unsigned thread_id, const std::filesystem::path &path)
+try {
     auto extension = path.extension().string();
     if (!loaders::supportedTexture.contains(extension))
         throw AssetStorageError(extension + " filetype not supported for texture.");
-    logger.debug("Asset Storage") << "Loading texture at : " << path;
-
-    CPUStorage storage;
-    bool bSuccess = std::apply(loaders::supportedTexture.at(extension), std::make_tuple(path, std::ref(storage)));
-    cpuStorage.merge(storage);
-    return bSuccess;
+    logger.debug("Asset Storage/" + std::to_string(thread_id)) << "Loading texture at : " << path;
+    return std::apply(loaders::supportedTexture.at(extension), std::make_tuple(path));
+} catch (const std::exception &e) {
+    logger.err("Asset Storage/Load Texture") << e.what();
+    return std::nullopt;
 }
 
 }    // namespace pivot::graphics

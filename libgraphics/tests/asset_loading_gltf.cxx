@@ -40,9 +40,9 @@ TEST_CASE("loadGltfFile", "[assetStorage]")
 
     AssetStorage::CPUStorage storage;
 
-    SECTION("Return false when incorrect path") REQUIRE_FALSE(loaders::loadGltfModel(pathToObj, storage));
+    SECTION("Return false when incorrect path") REQUIRE_FALSE(loaders::loadGltfModel(pathToObj).has_value());
 
-    REQUIRE(loaders::loadGltfModel(pathToGltf, storage));
+    REQUIRE_NOTHROW(storage = loaders::loadGltfModel(pathToGltf).value());
 
     std::string testIds = "BoomBox0";
     REQUIRE_NOTHROW(storage.prefabStorage.at("BoomBox"));
@@ -115,7 +115,7 @@ TEST_CASE("loadGltfFile", "[assetStorage]")
     SECTION("CPUStorage merge")
     {
         AssetStorage::CPUStorage other_storage;
-        REQUIRE(loaders::loadGltfModel(pathToOtherGltf, other_storage));
+        REQUIRE_NOTHROW(other_storage = loaders::loadGltfModel(pathToOtherGltf).value());
 
         auto before = other_storage.modelStorage.at("0");
         auto before_vertex_size = other_storage.vertexStagingBuffer.size();

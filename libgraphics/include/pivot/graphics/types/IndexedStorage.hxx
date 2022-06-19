@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "pivot/graphics/pivot.hxx"
+#include "pivot/graphics/types/common.hxx"
 
 namespace pivot
 {
@@ -98,12 +99,12 @@ public:
     constexpr auto &getIndexes() noexcept { return index; }
 
     /// Get the name associated to given idx
-    constexpr const Key &getName(const size_type &idx) const
+    constexpr std::optional<Key> getName(const size_type &idx) const
     {
         auto findResult =
             std::find_if(index.begin(), index.end(), [&idx](const auto &pair) { return pair.second == idx; });
         if (findResult != index.end()) return findResult->first;
-        throw std::out_of_range("Out of range index: " + std::to_string(idx));
+        return std::nullopt;
     }
     /// return the index of an item name
     inline std::int32_t getIndex(const Key &i) const noexcept

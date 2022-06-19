@@ -3,6 +3,7 @@
 #include "pivot/graphics/DeletionQueue.hxx"
 #include "pivot/graphics/DescriptorAllocator/DescriptorBuilder.hxx"
 #include "pivot/graphics/PivotFlags.hxx"
+#include "pivot/graphics/ThreadPool.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/abstract/AImmediateCommand.hxx"
 #include "pivot/graphics/types/AABB.hxx"
@@ -291,15 +292,10 @@ public:
 
 private:
     /// Load models
-    bool loadModel(const std::filesystem::path &path);
-    bool loadObjModel(const std::filesystem::path &path);
-    bool loadGltfModel(const std::filesystem::path &path);
+    static std::optional<CPUStorage> loadModel(unsigned, const std::filesystem::path &path);
 
     /// Load texture
-    bool loadTexture(const std::filesystem::path &path);
-    bool loadPngTexture(const std::filesystem::path &path);
-    bool loadJpgTexture(const std::filesystem::path &path);
-    bool loadKtxImage(const std::filesystem::path &path);
+    static std::optional<CPUStorage> loadTexture(unsigned, const std::filesystem::path &path);
 
     // Push to gpu
     void pushModelsOnGPU();
@@ -313,6 +309,7 @@ private:
 private:
     OptionalRef<VulkanBase> base_ref;
     std::filesystem::path asset_dir = PIVOT_ASSET_DEFAULT_DIRECTORY;
+    ThreadPool threadPool;
 
     // Abstract ressouces
     std::unordered_map<std::string, Model> modelStorage;
@@ -342,19 +339,19 @@ private:
 namespace loaders
 {
     /// @brief The function signature of an asset handler
-    using AssetHandler = std::function<bool(const std::filesystem::path &, AssetStorage::CPUStorage &)>;
+    using AssetHandler = std::function<std::optional<AssetStorage::CPUStorage>(const std::filesystem::path &)>;
 
     /// Load a .obj file
-    bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
+    std::optional<AssetStorage::CPUStorage> loadObjModel(const std::filesystem::path &path);
     /// Load a .gltf file
-    bool loadGltfModel(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
+    std::optional<AssetStorage::CPUStorage> loadGltfModel(const std::filesystem::path &path);
 
     /// Load a .png file
-    bool loadPngTexture(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
+    std::optional<AssetStorage::CPUStorage> loadPngTexture(const std::filesystem::path &path);
     /// Load a .jpg file
-    bool loadJpgTexture(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
+    std::optional<AssetStorage::CPUStorage> loadJpgTexture(const std::filesystem::path &path);
     /// Load a .ktx file
-    bool loadKtxImage(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
+    std::optional<AssetStorage::CPUStorage> loadKtxImage(const std::filesystem::path &path);
 
     /// List of supported texture extensions
     const std::unordered_map<std::string, loaders::AssetHandler> supportedTexture = {

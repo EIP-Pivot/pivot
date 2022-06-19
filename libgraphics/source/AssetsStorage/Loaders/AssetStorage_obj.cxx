@@ -44,11 +44,12 @@ static std::pair<std::string, AssetStorage::CPUMaterial> loadMaterial(const tiny
                                          });
 }
 
-bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &storage)
+std::optional<AssetStorage::CPUStorage> loadObjModel(const std::filesystem::path &path)
 {
     DEBUG_FUNCTION
     auto base_dir = path.parent_path();
 
+    AssetStorage::CPUStorage storage;
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
@@ -58,17 +59,17 @@ bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &s
                                         base_dir.string().c_str(), false, false);
     if (!warn.empty()) logger.warn("Asset Storage/OBJ") << warn;
     if (!err.empty()) logger.err("Asset Storage/OBJ") << err;
-    if (!loadSuccess) return false;
+    if (!loadSuccess) return std::nullopt;
 
     if (shapes.empty()) {
         logger.warn("Asset Storage/OBJ") << "No shapes was loaded, this is considered as a failure.";
-        return false;
+        return std::nullopt;
     }
 
     for (const auto &m: materials) {
         if (!m.diffuse_texname.empty() && storage.textureStaging.getIndex(m.diffuse_texname) == -1) {
             const auto filepath = base_dir / m.diffuse_texname;
-            supportedTexture.at(filepath.extension().string())(filepath, std::ref(storage));
+            storage.texturePaths.emplace(filepath.stem().string(), filepath);
         }
         storage.materialStaging.add(loadMaterial(m));
     }
@@ -132,7 +133,7 @@ bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &s
         storage.modelStorage.emplace(shape.name + std::to_string(model.mesh.vertexOffset), model);
     }
     storage.prefabStorage.emplace(path.stem().string(), prefab);
-    return true;
+    return storage;
 }
 
 }    // namespace pivot::graphics::loaders

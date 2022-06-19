@@ -6,6 +6,27 @@
 namespace pivot::graphics
 {
 
+static AssetStorage::CPUStorage
+batch_load(const std::unordered_map<std::string, std::filesystem::path> &storage_map,
+           const std::function<std::optional<AssetStorage::CPUStorage>(unsigned, const std::filesystem::path &)> load,
+           const std::string &debug_name, ThreadPool &threadPool)
+{
+    AssetStorage::CPUStorage cpuStorage;
+    std::vector<std::pair<std::filesystem::path, std::future<std::optional<AssetStorage::CPUStorage>>>> futures;
+    futures.reserve(storage_map.size());
+
+    /// Model must be loaded first, as they may add new texture to load
+    for (const auto &i: storage_map) futures.emplace_back(i.second, threadPool.push(load, i.second));
+    for (auto &[name, f]: futures) {
+        auto storage = f.get();
+        if (!storage.has_value())
+            logger.warn("Asset Storage") << debug_name << " failed to load: " << name;
+        else
+            cpuStorage.merge(storage.value());
+    }
+    return cpuStorage;
+}
+
 void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
 {
     DEBUG_FUNCTION
@@ -31,13 +52,11 @@ void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
         cpuStorage.modelPaths.insert(modelPaths.begin(), modelPaths.end());
         cpuStorage.texturePaths.insert(texturePaths.begin(), texturePaths.end());
     }
-    /// Model must be loaded first, as they may add new texture to load
-    for (const auto &i: cpuStorage.modelPaths) {
-        if (!loadModel(i.second)) logger.warn("Asset Storage") << "Model failed to load: " << i.second;
-    }
-    for (const auto &i: cpuStorage.texturePaths) {
-        if (!loadTexture(i.second)) logger.warn("Asset Storage") << "Texture failed to load: " << i.second;
-    }
+
+    threadPool.start();
+    cpuStorage += batch_load(cpuStorage.modelPaths, loadModel, "Model", threadPool);
+    cpuStorage += batch_load(cpuStorage.texturePaths, loadTexture, "Texture", threadPool);
+
     modelStorage.swap(cpuStorage.modelStorage);
     prefabStorage.swap(cpuStorage.prefabStorage);
     modelPaths.swap(cpuStorage.modelPaths);
@@ -56,6 +75,7 @@ void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
     createDescriptorSet(builder);
 
     cpuStorage = {};
+    threadPool.stop();
 }
 
 void AssetStorage::destroy()

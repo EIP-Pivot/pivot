@@ -86,7 +86,7 @@ TEST_CASE("Indexed Storage", "[indexedStorage]")
         REQUIRE_THROWS_AS(storage.append(storage), std::runtime_error);
         REQUIRE_THROWS_AS(storage.add(key2, value2), std::runtime_error);
         REQUIRE_THROWS_AS(storage.add(pair3), std::runtime_error);
-        REQUIRE_THROWS_AS(storage.getName(42), std::out_of_range);
+        REQUIRE_FALSE(storage.getName(42).has_value());
         REQUIRE(storage.getIndex("Nope") == -1);
 
         SECTION("Test array operator")

@@ -110,7 +110,7 @@ namespace pivot::graphics::loaders
 
 static std::vector<std::pair<std::string, AssetStorage::Model>>
 loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::vector<Vertex> &vertexBuffer,
-             std::vector<uint32_t> &indexBuffer, glm::mat4 matrix)
+             std::vector<std::uint32_t> &indexBuffer, glm::mat4 matrix)
 {
     DEBUG_FUNCTION
     logger.debug("Asset Storage/Gltf") << "Loading node: " << node.name;
@@ -141,9 +141,9 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
         AssetStorage::Model model{
             .mesh =
                 {
-                    .vertexOffset = static_cast<uint32_t>(vertexBuffer.size()),
+                    .vertexOffset = static_cast<std::uint32_t>(vertexBuffer.size()),
                     .vertexSize = 0,
-                    .indicesOffset = static_cast<uint32_t>(indexBuffer.size()),
+                    .indicesOffset = static_cast<std::uint32_t>(indexBuffer.size()),
                     .indicesSize = 0,
                 },
             .default_material =
@@ -192,7 +192,7 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
             const tinygltf::BufferView &bufferView = gltfModel.bufferViews.at(accessor.bufferView);
             const tinygltf::Buffer &buffer = gltfModel.buffers.at(bufferView.buffer);
 
-            model.mesh.indicesSize += static_cast<uint32_t>(accessor.count);
+            model.mesh.indicesSize += static_cast<std::uint32_t>(accessor.count);
 
             // glTF supports different component types of indices
             switch (accessor.componentType) {
@@ -215,13 +215,13 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
     return loaded;
 }
 
-static std::pair<std::string, AssetStorage::CPUMaterial>
-loadGltfMaterial(const IndexedStorage<std::string, AssetStorage::CPUTexture> &texture, const tinygltf::Material &mat,
-                 const unsigned offset)
+static std::pair<std::string, AssetStorage::CPUMaterial> loadGltfMaterial(const std::vector<std::string> &texture,
+                                                                          const tinygltf::Material &mat)
 {
-#define GET_MATERIAL_TEXTURE(value, name)                                             \
-    if (mat.value.find(#name) != mat.value.end()) {                                   \
-        material.name = texture.getName(mat.value.at(#name).TextureIndex() + offset); \
+#define GET_MATERIAL_TEXTURE(value, name)                                                                  \
+    if (mat.value.find(#name) != mat.value.end()) {                                                        \
+        std::size_t idx = mat.value.at(#name).TextureIndex();                                              \
+        material.name = (texture.size() > idx) ? (texture.at(idx)) : (AssetStorage::missing_texture_name); \
     }
 #define GET_MATERIAL_COLOR(value, name)                                           \
     if (mat.value.find(#name) != mat.value.end()) {                               \
@@ -251,10 +251,11 @@ loadGltfMaterial(const IndexedStorage<std::string, AssetStorage::CPUTexture> &te
     return std::make_pair(mat.name, material);
 }
 
-bool loadGltfModel(const std::filesystem::path &path, AssetStorage::CPUStorage &storage)
+std::optional<AssetStorage::CPUStorage> loadGltfModel(const std::filesystem::path &path)
 try {
     DEBUG_FUNCTION
 
+    AssetStorage::CPUStorage storage;
     tinygltf::Model gltfModel;
     tinygltf::TinyGLTF gltfContext;
     std::string error, warning;
@@ -263,20 +264,21 @@ try {
     bool isLoaded = gltfContext.LoadASCIIFromFile(&gltfModel, &error, &warning, path.string());
     if (!warning.empty()) logger.warn("Asset Storage/GLTF") << warning;
     if (!error.empty()) logger.err("Asset Storage/GLTF") << error;
-    if (!isLoaded) return false;
+    if (!isLoaded) return std::nullopt;
 
-    const auto offset = storage.textureStaging.size();
+    std::vector<std::string> texturePath;
     for (const auto &image: gltfModel.images) {
         const auto filepath = path.parent_path() / image.uri;
-        supportedTexture.at(filepath.extension().string())(filepath, std::ref(storage));
+        storage.texturePaths.emplace(filepath.stem().string(), filepath);
+        texturePath.push_back(filepath.stem().string());
     }
     for (const auto &material: gltfModel.materials) {
-        const auto mat = loadGltfMaterial(storage.textureStaging, material, offset);
+        const auto mat = loadGltfMaterial(texturePath, material);
         storage.materialStaging.add(std::move(mat));
     }
     if (gltfModel.scenes.empty()) {
         logger.warn("Asset Storage/GLTF") << "GLTF file does not contains scene.";
-        return true;
+        return storage;
     }
     const auto &scene = gltfModel.scenes[0];
     for (const auto &idx: scene.nodes) {
@@ -289,13 +291,13 @@ try {
     }
 
     storage.prefabStorage[path.stem().string()] = prefab;
-    return true;
+    return storage;
 } catch (const PivotException &ase) {
     logger.err(ase.getScope()) << "Error while loaded GLTF file : " << ase.what();
-    return false;
+    return std::nullopt;
 } catch (const std::logic_error &le) {
     logger.err("THROW/Asset Storage/Invalid GLTF file") << "The GLTF file is malformed. Reason : " << le.what();
-    return false;
+    return std::nullopt;
 }
 
 }    // namespace pivot::graphics::loaders

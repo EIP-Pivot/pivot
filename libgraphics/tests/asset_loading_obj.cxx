@@ -19,9 +19,9 @@ TEST_CASE("loadObjFile", "[assetStorage]")
 
     AssetStorage::CPUStorage storage;
 
-    SECTION("Return false when incorrect path") { REQUIRE_FALSE(loaders::loadObjModel(pathToGltf, storage)); }
+    SECTION("Return false when incorrect path") { REQUIRE_FALSE(loaders::loadObjModel(pathToGltf).has_value()); }
 
-    REQUIRE(loaders::loadObjModel(pathToObj, storage));
+    REQUIRE_NOTHROW(storage = loaders::loadObjModel(pathToObj).value());
 
     REQUIRE_NOTHROW(storage.prefabStorage.at("basic_cube"));
     const auto &prefab = storage.prefabStorage.at("basic_cube");

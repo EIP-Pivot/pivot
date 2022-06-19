@@ -7,16 +7,17 @@
 namespace pivot::graphics::loaders
 {
 
-bool loadPngTexture(const std::filesystem::path &path, AssetStorage::CPUStorage &storage)
+std::optional<AssetStorage::CPUStorage> loadPngTexture(const std::filesystem::path &path)
 {
     DEBUG_FUNCTION
+    AssetStorage::CPUStorage storage;
     int texWidth, texHeight, texChannels;
     stbi_uc *pixels = stbi_load(path.string().c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
     VkDeviceSize imageSize = texWidth * texHeight * 4;
 
     if (!pixels) {
         logger.err("Asset Storage") << "stbi_load() returned NULL";
-        return false;
+        return std::nullopt;
     }
 
     std::vector<std::byte> image(imageSize);
@@ -32,7 +33,7 @@ bool loadPngTexture(const std::filesystem::path &path, AssetStorage::CPUStorage 
                                                                  .depth = 1,
                                                              },
                                                      });
-    return true;
+    return storage;
 }
 
 }    // namespace pivot::graphics::loaders

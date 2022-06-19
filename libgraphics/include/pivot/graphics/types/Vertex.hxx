@@ -32,7 +32,7 @@ struct Vertex {
     /// UV coordinate of the vertex
     glm::vec2 texCoord = glm::vec2(0.0f);
     /// Color of the vertex, ignored if a texture is provided
-    glm::vec4 color = glm::vec4(1.0f);
+    glm::vec3 color = glm::vec3(1.0f);
     /// Tangent of the vertex
     glm::vec4 tangent = glm::vec4(0.0f);
 

@@ -63,16 +63,19 @@ public:
     /// @brief Represent a CPU-side material
     struct CPUMaterial {
         /// @cond
+        float alphaCutOff = 1.0f;
+        float metallicFactor = 1.0f;
+        float roughnessFactor = 1.0f;
         glm::vec4 baseColor = glm::vec4(1.0f);
         glm::vec4 baseColorFactor = glm::vec4(1.0f);
         glm::vec4 emissiveFactor = glm::vec4(1.0f);
-        float metallicFactor = 1.0f;
-        float roughnessFactor = 1.0f;
-        std::string baseColorTexture = "";
+        std::string baseColorTexture = missing_texture_name;
         std::string metallicRoughnessTexture = "";
         std::string normalTexture = "";
         std::string occlusionTexture = "";
         std::string emissiveTexture = "";
+        std::string specularGlossinessTexture = "";
+        std::string diffuseTexture = "";
         bool operator==(const CPUMaterial &) const = default;
         ///@endcond
     };
@@ -206,15 +209,21 @@ public:
     ///     vec3 low;
     ///     vec3 high;
     /// };
+
     /// struct Material {
+    ///     float alphaCutOff;
     ///     float metallic;
     ///     float roughness;
     ///     vec4 baseColor;
+    ///     vec4 baseColorFactor;
+    ///     vec4 emissiveFactor;
     ///     int baseColorTexture;
     ///     int metallicRoughnessTexture;
     ///     int normalTexture;
     ///     int occlusionTexture;
     ///     int emissiveTexture;
+    ///     int specularGlossinessTexture;
+    ///     int diffuseTexture;
     /// };
     ///
     /// layout(set = 0, binding = 0) readonly buffer ObjectAABB{

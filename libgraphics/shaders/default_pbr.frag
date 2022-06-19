@@ -23,16 +23,19 @@ struct SpotLight {
 };
 
 struct Material {
+    float alphaCutOff;
+    float metallic;
+    float roughness;
     vec4 baseColor;
     vec4 baseColorFactor;
     vec4 emissiveFactor;
-    float metallic;
-    float roughness;
     int baseColorTexture;
     int metallicRoughnessTexture;
     int normalTexture;
     int occlusionTexture;
     int emissiveTexture;
+    int specularGlossinessTexture;
+    int diffuseTexture;
 };
 
 struct pushConstantStruct {
@@ -47,8 +50,9 @@ layout(constant_id = 0) const uint NUMBER_OF_TEXTURES = 1;
 layout(location = 0) in vec3 fragPosition;
 layout(location = 1) in vec3 fragNormal;
 layout(location = 2) in vec2 fragTextCoords;
-layout(location = 3) in vec4 fragTangent;
-layout(location = 4) in flat uint materialIndex;
+layout(location = 3) in vec3 fragColor;
+layout(location = 4) in vec4 fragTangent;
+layout(location = 5) in flat uint materialIndex;
 
 layout(location = 0) out vec4 outColor;
 
@@ -174,19 +178,21 @@ vec3 specularContribution(vec3 L, vec3 V, vec3 N, vec3 F0, vec3 diffuseColor, fl
 void main()
 {
     Material material = objectMaterials.materials[materialIndex];
-    vec3 diffuseColor_ = SAMPLE_OPTIONAL_WITH_DEFAULT_RGB(baseColor, material.baseColor.rgb);
+    vec4 diffuseColor_ = SAMPLE_OPTIONAL_WITH_DEFAULT(baseColor, rgba, material.baseColor);
     vec3 metallicRoughness = SAMPLE_OPTIONAL_WITH_DEFAULT_RGB(metallicRoughness, vec3(1.0));
     float occlusion = SAMPLE_OPTIONAL_WITH_DEFAULT(occlusion, r, 1.0);
 
     float metallic = metallicRoughness.b * material.metallic;
     float roughness = metallicRoughness.g * material.roughness;
-    vec3 diffuseColor = diffuseColor_ * material.baseColorFactor.rgb;
+    vec4 diffuseColor = diffuseColor_ * material.baseColorFactor * vec4(fragColor, 1.0);
 
+    if (diffuseColor.a < material.alphaCutOff)
+        discard;
     vec3 N = getNormalFromMap(material);
     vec3 V = normalize(cameraData.push.position - fragPosition);
 
     vec3 F0 = vec3(0.04);
-    F0 = mix(F0, diffuseColor, metallic);
+    F0 = mix(F0, diffuseColor.rgb, metallic);
 
     // reflectance equation
     vec3 Lo = vec3(0.0);
@@ -195,7 +201,7 @@ void main()
         vec3 radiance = light.color.rgb * light.intensity;
 
         vec3 L = normalize(-light.orientation.xyz);
-        Lo += specularContribution(L, V, N, F0, diffuseColor, metallic, roughness) * radiance;
+        Lo += specularContribution(L, V, N, F0, diffuseColor.rgb, metallic, roughness) * radiance;
     }
     for (uint i = 0; i < cameraData.push.spotLightCount; i++) {
         SpotLight light = spotLight.spotLightArray[i];
@@ -209,7 +215,7 @@ void main()
         float attenuation = 1.0 / (distance * distance);
         vec3 radiance = light.color.rgb * intensity * attenuation;
 
-        Lo += specularContribution(L, V, N, F0, diffuseColor, metallic, roughness) * radiance;
+        Lo += specularContribution(L, V, N, F0, diffuseColor.rgb, metallic, roughness) * radiance;
     }
     for (uint i = 0; i < cameraData.push.pointLightCount; i++) {
         PointLight light = omniLight.pointLightArray[i];
@@ -219,10 +225,10 @@ void main()
         float attenuation = 1.0 / ((distance * distance) * light.falloff);
         vec3 radiance = light.color.rgb * light.intensity * attenuation;
 
-        Lo += specularContribution(L, V, N, F0, diffuseColor, metallic, roughness) * radiance;
+        Lo += specularContribution(L, V, N, F0, diffuseColor.rgb, metallic, roughness) * radiance;
     }
 
-    vec3 ambient = vec3(0.03) * diffuseColor * occlusion;
+    vec3 ambient = vec3(0.03) * diffuseColor.rgb * occlusion;
 
     vec3 color = ambient + Lo;
 
@@ -231,5 +237,5 @@ void main()
     // gamma correct
     color = pow(color, vec3(1.0 / 2.2));
 
-    outColor = vec4(color, 1.0);
+    outColor = vec4(color, diffuseColor.a);
 }

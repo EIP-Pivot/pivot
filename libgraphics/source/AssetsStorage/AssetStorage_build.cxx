@@ -199,11 +199,12 @@ void AssetStorage::pushMaterialOnGPU()
         materialStorage.add(
             name,
             {
+                .alphaCutOff = mat.alphaCutOff,
+                .metallicFactor = mat.metallicFactor,
+                .roughnessFactor = mat.roughnessFactor,
                 .baseColor = mat.baseColor,
                 .baseColorFactor = mat.baseColorFactor,
                 .emissiveFactor = mat.emissiveFactor,
-                .metallicFactor = mat.metallicFactor,
-                .roughnessFactor = mat.roughnessFactor,
                 .baseColorTexture =
                     (mat.baseColorTexture.empty()) ? (-1) : (textureStorage.getIndex(mat.baseColorTexture)),
                 .metallicRoughnessTexture = (mat.metallicRoughnessTexture.empty())

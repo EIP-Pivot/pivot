@@ -88,7 +88,6 @@ TEST_CASE("loadGltfFile", "[assetStorage]")
     logger.debug("color") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).color.x;
     logger.debug("color") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).color.y;
     logger.debug("color") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).color.z;
-    logger.debug("color") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).color.w;
 
     logger.debug("texCoord") << std::setprecision(limit::max_digits10)
                              << storage.vertexStagingBuffer.at(1000).texCoord.x;
@@ -102,13 +101,13 @@ TEST_CASE("loadGltfFile", "[assetStorage]")
 
     VERTEX_CHECK_VEC3(storage, 0, pos, 0.00247455505f, -0.00207684329f, 0.00687769148f);
     VERTEX_CHECK_VEC3(storage, 0, normal, -0.662998438f, -0.244545713f, 0.0187361445f);
-    VERTEX_CHECK_VEC4(storage, 0, color, 1.0f, 1.0f, 1.0f, 1.0f);
+    VERTEX_CHECK_VEC3(storage, 0, color, 1.0f, 1.0f, 1.0f);
     VERTEX_CHECK_VEC2(storage, 0, texCoord, 0.0681650937f, 0.192196429f);
     VERTEX_CHECK_VEC4(storage, 0, tangent, -0.295275331f, -0.835973203f, -0.462559491f, 1.00000f);
 
     VERTEX_CHECK_VEC3(storage, 1000, pos, 0.00661812071f, -0.00235924753f, 0.00288167689f);
     VERTEX_CHECK_VEC3(storage, 1000, normal, 0.589514494f, 0.0575772263f, -0.38584733f);
-    VERTEX_CHECK_VEC4(storage, 1000, color, 1.0f, 1.0f, 1.0f, 1.0f);
+    VERTEX_CHECK_VEC3(storage, 1000, color, 1.0f, 1.0f, 1.0f);
     VERTEX_CHECK_VEC2(storage, 1000, texCoord, 0.90863955f, 0.12404108f);
     VERTEX_CHECK_VEC4(storage, 1000, tangent, -0.114067227f, -0.993130505f, 0.0260791834f, 1.00000f);
 
@@ -157,13 +156,13 @@ TEST_CASE("loadGltfFile", "[assetStorage]")
 
         VERTEX_CHECK_VEC3(other_storage, 3, pos, 0.00247455505f, -0.00207684329f, 0.00687769148f);
         VERTEX_CHECK_VEC3(other_storage, 3, normal, -0.662998438f, -0.244545713f, 0.0187361445f);
-        VERTEX_CHECK_VEC4(other_storage, 3, color, 1.0f, 1.0f, 1.0f, 1.0f);
+        VERTEX_CHECK_VEC3(other_storage, 3, color, 1.0f, 1.0f, 1.0f);
         VERTEX_CHECK_VEC2(other_storage, 3, texCoord, 0.0681650937f, 0.192196429f);
         VERTEX_CHECK_VEC4(other_storage, 3, tangent, -0.295275331f, -0.835973203f, -0.462559491f, 1.00000f);
 
         VERTEX_CHECK_VEC3(other_storage, 1003, pos, 0.00661812071f, -0.00235924753f, 0.00288167689f);
         VERTEX_CHECK_VEC3(other_storage, 1003, normal, 0.589514494f, 0.0575772263f, -0.38584733f);
-        VERTEX_CHECK_VEC4(other_storage, 1003, color, 1.0f, 1.0f, 1.0f, 1.0f);
+        VERTEX_CHECK_VEC3(other_storage, 1003, color, 1.0f, 1.0f, 1.0f);
         VERTEX_CHECK_VEC2(other_storage, 1003, texCoord, 0.90863955f, 0.12404108f);
         VERTEX_CHECK_VEC4(other_storage, 1003, tangent, -0.114067227f, -0.993130505f, 0.0260791834f, 1.00000f);
     }

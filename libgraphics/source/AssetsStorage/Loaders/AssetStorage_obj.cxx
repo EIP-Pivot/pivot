@@ -13,8 +13,12 @@ static std::pair<std::string, AssetStorage::CPUMaterial> loadMaterial(const tiny
     std::filesystem::path diffuse = material.diffuse_texname;
     std::filesystem::path normal = material.normal_texname;
     std::filesystem::path emissive = material.emissive_texname;
+    std::filesystem::path specular = material.specular_texname;
 
     return std::make_pair(material.name, AssetStorage::CPUMaterial{
+                                             .alphaCutOff = 1.0f,
+                                             .metallicFactor = material.metallic,
+                                             .roughnessFactor = material.roughness,
                                              .baseColor =
                                                  {
                                                      material.diffuse[0],
@@ -36,11 +40,12 @@ static std::pair<std::string, AssetStorage::CPUMaterial> loadMaterial(const tiny
                                                      material.emissive_texopt.scale[2],
                                                      1.0f,
                                                  },
-                                             .metallicFactor = material.metallic,
-                                             .roughnessFactor = material.roughness,
+
                                              .baseColorTexture = diffuse.stem().string(),
                                              .normalTexture = normal.stem().string(),
                                              .emissiveTexture = emissive.stem().string(),
+                                             .specularGlossinessTexture = material.specular_highlight_texname,
+                                             .diffuseTexture = diffuse,
                                          });
 }
 
@@ -104,7 +109,6 @@ std::optional<AssetStorage::CPUStorage> loadObjModel(const std::filesystem::path
                     attrib.colors[3 * index.vertex_index + 0],
                     attrib.colors[3 * index.vertex_index + 1],
                     attrib.colors[3 * index.vertex_index + 2],
-                    1.0f,
                 };
             }
             if (!attrib.normals.empty() && index.normal_index >= 0) {

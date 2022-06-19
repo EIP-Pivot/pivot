@@ -173,12 +173,12 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
 
             model.mesh.vertexSize = positionBuffer.size();
             for (unsigned v = 0; v < positionBuffer.size(); v++) {
+                const auto matrix3 = glm::mat3(matrix);
                 Vertex vert{
-                    .pos = glm::vec4(positionBuffer.at(v), 1.0f) * matrix,
-                    .normal = normalsBuffer.empty() ? glm::vec4(0.0f)
-                                                    : (glm::normalize(glm::vec4(normalsBuffer.at(v), 1.0f) * matrix)),
-                    .texCoord = texCoordsBuffer.empty() ? glm::vec3(0.0f) : texCoordsBuffer.at(v),
-                    .color = colorBuffer.empty() ? glm::vec4(1.0f) : glm::vec4(colorBuffer.at(v), 1.0f),
+                    .pos = positionBuffer.at(v) * matrix3,
+                    .normal = normalsBuffer.empty() ? glm::vec3(0.0f) : (glm::normalize(normalsBuffer.at(v) * matrix3)),
+                    .texCoord = texCoordsBuffer.empty() ? glm::vec2(0.0f) : texCoordsBuffer.at(v),
+                    .color = colorBuffer.empty() ? glm::vec3(1.0f) : colorBuffer.at(v),
                     .tangent = tangentBuffer.empty() ? glm::vec4(0.0f) : tangentBuffer.at(v),
                 };
                 vertexBuffer.push_back(vert);
@@ -227,17 +227,20 @@ static std::pair<std::string, AssetStorage::CPUMaterial> loadGltfMaterial(const 
     if (mat.value.find(#name) != mat.value.end()) {                               \
         material.name = glm::make_vec4(mat.value.at(#name).ColorFactor().data()); \
     }
+
 #define GET_MATERIAL_FACTOR(value, name) \
-    if (mat.value.find(#name) != mat.value.end()) { material.name = mat.value.at(#name).Factor(); }
+    if (mat.value.find(#name) != mat.value.end()) { material.name = static_cast<float>(mat.value.at(#name).Factor()); }
 
     DEBUG_FUNCTION
     AssetStorage::CPUMaterial material;
 
-    GET_MATERIAL_COLOR(values, baseColorFactor);
-    GET_MATERIAL_COLOR(additionalValues, emissiveFactor);
+    GET_MATERIAL_FACTOR(additionalValues, alphaCutOff);
 
     GET_MATERIAL_FACTOR(values, roughnessFactor);
     GET_MATERIAL_FACTOR(values, metallicFactor);
+
+    GET_MATERIAL_COLOR(values, baseColorFactor);
+    GET_MATERIAL_COLOR(additionalValues, emissiveFactor);
 
     GET_MATERIAL_TEXTURE(values, baseColorTexture);
     GET_MATERIAL_TEXTURE(values, metallicRoughnessTexture);

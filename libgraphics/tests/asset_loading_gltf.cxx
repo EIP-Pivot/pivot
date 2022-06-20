@@ -34,6 +34,31 @@ using namespace pivot::graphics;
     VERTEX_CHECK_VEC3(stor, index, champ, x_, y_, z_)         \
     VERTEX_CHECK_VECTOR_(stor, index, champ, w, w_)
 
+using limit = std::numeric_limits<float>;
+
+#define VERTEX_PRINT_VECTOR_(stor, index, champ, field) \
+    logger.debug(#index ":" #champ "." #field)          \
+        << std::setprecision(limit::max_digits10) << stor.vertexStagingBuffer.at(index).champ.field;
+
+#define VERTEX_PRINT_VEC2(stor, index, champ)    \
+    VERTEX_PRINT_VECTOR_(stor, index, champ, x); \
+    VERTEX_PRINT_VECTOR_(stor, index, champ, y)
+
+#define VERTEX_PRINT_VEC3(stor, index, champ) \
+    VERTEX_PRINT_VEC2(stor, index, champ);    \
+    VERTEX_PRINT_VECTOR_(stor, index, champ, z)
+
+#define VERTEX_PRINT_VEC4(stor, index, champ) \
+    VERTEX_PRINT_VEC3(stor, index, champ);    \
+    VERTEX_PRINT_VECTOR_(stor, index, champ, w)
+
+#define PRINT_VERTEX(stor, index)                \
+    VERTEX_PRINT_VEC3(storage, index, pos);      \
+    VERTEX_PRINT_VEC3(storage, index, normal);   \
+    VERTEX_PRINT_VEC2(storage, index, texCoord); \
+    VERTEX_PRINT_VEC3(storage, index, color);    \
+    VERTEX_PRINT_VEC4(storage, index, tangent);
+
 TEST_CASE("loadGltfFile", "[assetStorage]")
 {
     static_assert(std::numeric_limits<float>::epsilon() < 1.f);
@@ -76,37 +101,16 @@ TEST_CASE("loadGltfFile", "[assetStorage]")
     REQUIRE(storage.vertexStagingBuffer.size() == 3575);
     REQUIRE(storage.indexStagingBuffer.size() == 18108);
 
-    using limit = std::numeric_limits<float>;
-    logger.debug("position") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).pos.x;
-    logger.debug("position") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).pos.y;
-    logger.debug("position") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).pos.z;
-
-    logger.debug("normal") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).normal.x;
-    logger.debug("normal") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).normal.y;
-    logger.debug("normal") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).normal.z;
-
-    logger.debug("color") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).color.x;
-    logger.debug("color") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).color.y;
-    logger.debug("color") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).color.z;
-
-    logger.debug("texCoord") << std::setprecision(limit::max_digits10)
-                             << storage.vertexStagingBuffer.at(1000).texCoord.x;
-    logger.debug("texCoord") << std::setprecision(limit::max_digits10)
-                             << storage.vertexStagingBuffer.at(1000).texCoord.y;
-
-    logger.debug("tangent") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).tangent.x;
-    logger.debug("tangent") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).tangent.y;
-    logger.debug("tangent") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).tangent.z;
-    logger.debug("tangent") << std::setprecision(limit::max_digits10) << storage.vertexStagingBuffer.at(1000).tangent.w;
-
+    PRINT_VERTEX(storage, 0);
     VERTEX_CHECK_VEC3(storage, 0, pos, 0.00247455505f, -0.00207684329f, 0.00687769148f);
-    VERTEX_CHECK_VEC3(storage, 0, normal, -0.662998438f, -0.244545713f, 0.0187361445f);
+    VERTEX_CHECK_VEC3(storage, 0, normal, -0.937883496f, -0.345936537f, 0.0265043154f);
     VERTEX_CHECK_VEC3(storage, 0, color, 1.0f, 1.0f, 1.0f);
     VERTEX_CHECK_VEC2(storage, 0, texCoord, 0.0681650937f, 0.192196429f);
     VERTEX_CHECK_VEC4(storage, 0, tangent, -0.295275331f, -0.835973203f, -0.462559491f, 1.00000f);
 
+    PRINT_VERTEX(storage, 1000);
     VERTEX_CHECK_VEC3(storage, 1000, pos, 0.00661812071f, -0.00235924753f, 0.00288167689f);
-    VERTEX_CHECK_VEC3(storage, 1000, normal, 0.589514494f, 0.0575772263f, -0.38584733f);
+    VERTEX_CHECK_VEC3(storage, 1000, normal, 0.8339324f, 0.0814492553f, -0.545823038f);
     VERTEX_CHECK_VEC3(storage, 1000, color, 1.0f, 1.0f, 1.0f);
     VERTEX_CHECK_VEC2(storage, 1000, texCoord, 0.90863955f, 0.12404108f);
     VERTEX_CHECK_VEC4(storage, 1000, tangent, -0.114067227f, -0.993130505f, 0.0260791834f, 1.00000f);
@@ -154,14 +158,16 @@ TEST_CASE("loadGltfFile", "[assetStorage]")
 
         REQUIRE_NOTHROW(other_storage.prefabStorage.at("basic_triangle"));
 
+        PRINT_VERTEX(other_storage, 3);
         VERTEX_CHECK_VEC3(other_storage, 3, pos, 0.00247455505f, -0.00207684329f, 0.00687769148f);
-        VERTEX_CHECK_VEC3(other_storage, 3, normal, -0.662998438f, -0.244545713f, 0.0187361445f);
+        VERTEX_CHECK_VEC3(other_storage, 3, normal, -0.937883496f, -0.345936537f, 0.0265043154f);
         VERTEX_CHECK_VEC3(other_storage, 3, color, 1.0f, 1.0f, 1.0f);
         VERTEX_CHECK_VEC2(other_storage, 3, texCoord, 0.0681650937f, 0.192196429f);
         VERTEX_CHECK_VEC4(other_storage, 3, tangent, -0.295275331f, -0.835973203f, -0.462559491f, 1.00000f);
 
+        PRINT_VERTEX(other_storage, 1003);
         VERTEX_CHECK_VEC3(other_storage, 1003, pos, 0.00661812071f, -0.00235924753f, 0.00288167689f);
-        VERTEX_CHECK_VEC3(other_storage, 1003, normal, 0.589514494f, 0.0575772263f, -0.38584733f);
+        VERTEX_CHECK_VEC3(other_storage, 1003, normal, 0.8339324f, 0.0814492553f, -0.545823038f);
         VERTEX_CHECK_VEC3(other_storage, 1003, color, 1.0f, 1.0f, 1.0f);
         VERTEX_CHECK_VEC2(other_storage, 1003, texCoord, 0.90863955f, 0.12404108f);
         VERTEX_CHECK_VEC4(other_storage, 1003, tangent, -0.114067227f, -0.993130505f, 0.0260791834f, 1.00000f);

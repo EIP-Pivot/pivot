@@ -43,11 +43,11 @@ void DrawCallResolver::init(VulkanBase &base, AssetStorage &stor, DescriptorBuil
 void DrawCallResolver::destroy()
 {
     DEBUG_FUNCTION
-    if (frame.indirectBuffer) base_ref->get().allocator.destroyBuffer(frame.indirectBuffer);
-    if (frame.objectBuffer) base_ref->get().allocator.destroyBuffer(frame.objectBuffer);
-    if (frame.omniLightBuffer) base_ref->get().allocator.destroyBuffer(frame.omniLightBuffer);
-    if (frame.directLightBuffer) base_ref->get().allocator.destroyBuffer(frame.directLightBuffer);
-    if (frame.spotLightBuffer) base_ref->get().allocator.destroyBuffer(frame.spotLightBuffer);
+    base_ref->get().allocator.destroyBuffer(frame.indirectBuffer);
+    base_ref->get().allocator.destroyBuffer(frame.objectBuffer);
+    base_ref->get().allocator.destroyBuffer(frame.omniLightBuffer);
+    base_ref->get().allocator.destroyBuffer(frame.directLightBuffer);
+    base_ref->get().allocator.destroyBuffer(frame.spotLightBuffer);
 }
 
 void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sceneInformation)
@@ -106,7 +106,6 @@ void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sce
 
     pivot_assert(frame.currentBufferSize > 0);
     pivot_assert(frame.currentDescriptorSetSize > 0);
-    pivot_assert(frame.currentBufferSize > frame.currentDescriptorSetSize);
 
     base_ref->get().allocator.copyBuffer(frame.objectBuffer, std::span(objectGPUData));
 
@@ -134,7 +133,8 @@ void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sce
 
 void DrawCallResolver::createBuffer(vk::DeviceSize bufferSize)
 {
-    destroy();
+    base_ref->get().allocator.destroyBuffer(frame.indirectBuffer);
+    base_ref->get().allocator.destroyBuffer(frame.objectBuffer);
 
     frame.indirectBuffer = base_ref->get().allocator.createMappedBuffer<vk::DrawIndexedIndirectCommand>(
         bufferSize, "Indirect Command Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)),
@@ -147,6 +147,10 @@ void DrawCallResolver::createBuffer(vk::DeviceSize bufferSize)
 
 void DrawCallResolver::createLightBuffer()
 {
+    base_ref->get().allocator.destroyBuffer(frame.omniLightBuffer);
+    base_ref->get().allocator.destroyBuffer(frame.directLightBuffer);
+    base_ref->get().allocator.destroyBuffer(frame.spotLightBuffer);
+
     frame.omniLightBuffer = base_ref->get().allocator.createMappedBuffer<gpu_object::PointLight>(
         1, "Point light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
     frame.directLightBuffer = base_ref->get().allocator.createMappedBuffer<gpu_object::DirectionalLight>(

@@ -145,7 +145,7 @@ void ImGuiManager::loadAsset(pivot::Engine &engine)
     if (ImGui::Button("Load asset")) {
         NFD::Guard nfd_guard;
         NFD::UniquePath path;
-        nfdfilteritem_t filterItem[] = {{"Model", "gltf"}, {"Model", "obj"}};
+        nfdfilteritem_t filterItem[] = {{"Model", "gltf,obj"}, {"Textures", "jpg,png,ktx"}};
 
         switch (NFD::OpenDialog(path, filterItem, 2)) {
             case NFD_OKAY: {

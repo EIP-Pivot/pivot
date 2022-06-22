@@ -62,10 +62,11 @@ namespace std
 template <>
 struct hash<pivot::graphics::Vertex> {
     /// @cond
-    size_t operator()(pivot::graphics::Vertex const &vertex) const
+    size_t operator()(const pivot::graphics::Vertex &vertex) const
     {
         return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^
-               (hash<glm::vec3>()(vertex.color) ^ (hash<glm::vec2>()(vertex.texCoord) << 1));
+               ((hash<glm::vec2>()(vertex.texCoord) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
+               (hash<glm::vec4>()(vertex.tangent));
     }
     /// @endcond
 };

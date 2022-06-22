@@ -110,20 +110,29 @@ namespace pivot::graphics::loaders
 
 static std::vector<std::pair<std::string, AssetStorage::Model>>
 loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::vector<Vertex> &vertexBuffer,
-             std::vector<std::uint32_t> &indexBuffer, glm::mat4 matrix)
+             std::vector<std::uint32_t> &indexBuffer, glm::dmat4 matrix)
 {
     DEBUG_FUNCTION
     logger.debug("Asset Storage/Gltf") << "Loading node: " << node.name;
 
-    if (node.translation.size() == 3) {
-        matrix = glm::translate(matrix, glm::vec3(glm::make_vec3(node.translation.data())));
+    if (node.matrix.size() == 16) {
+        matrix *= glm::make_mat4x4(node.matrix.data());
+    } else {
+        glm::dvec3 translation(0.0f);
+        if (node.translation.size() == 3) { translation = glm::make_vec3(node.translation.data()); }
+
+        glm::dquat rotation{};
+        if (node.rotation.size() == 4) {
+            glm::dquat q = glm::make_quat(node.rotation.data());
+            rotation = glm::dmat4(q);
+        }
+
+        glm::dvec3 scale(1.0f);
+        if (node.scale.size() == 3) { scale = glm::make_vec3(node.scale.data()); }
+
+        matrix *=
+            glm::translate(glm::dmat4(1.0f), translation) * glm::dmat4(rotation) * glm::scale(glm::dmat4(1.0f), scale);
     }
-    if (node.rotation.size() == 4) {
-        glm::quat q = glm::make_quat(node.rotation.data());
-        matrix *= glm::mat4(q);
-    }
-    if (node.scale.size() == 3) { matrix = glm::scale(matrix, glm::vec3(glm::make_vec3(node.scale.data()))); }
-    if (node.matrix.size() == 16) { matrix = glm::make_mat4x4(node.matrix.data()); }
 
     std::vector<std::pair<std::string, AssetStorage::Model>> loaded;
     for (const auto &i: node.children) {

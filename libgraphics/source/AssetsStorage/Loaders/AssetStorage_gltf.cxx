@@ -110,11 +110,13 @@ namespace pivot::graphics::loaders
 
 static std::vector<std::pair<std::string, AssetStorage::Model>>
 loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::vector<Vertex> &vertexBuffer,
-             std::vector<std::uint32_t> &indexBuffer, glm::dmat4 matrix)
+             std::vector<std::uint32_t> &indexBuffer, const glm::dmat4 &_matrix)
 {
     DEBUG_FUNCTION
     logger.debug("Asset Storage/Gltf") << "Loading node: " << node.name;
 
+    // Can't pass as copy, trigger note about GCC ABI
+    glm::dmat4 matrix = _matrix;
     if (node.matrix.size() == 16) {
         matrix *= glm::make_mat4x4(node.matrix.data());
     } else {

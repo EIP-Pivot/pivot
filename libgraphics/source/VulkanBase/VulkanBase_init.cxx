@@ -123,8 +123,8 @@ void VulkanBase::createLogicalDevice(const std::vector<const char *> &deviceExte
         .shaderDrawParameters = VK_TRUE,
     };
 
-    vk::PhysicalDeviceFeatures deviceFeature{
-        .multiDrawIndirect = this->deviceFeature.multiDrawIndirect,
+    vk::PhysicalDeviceFeatures physicalDeviceFeature{
+        .multiDrawIndirect = deviceFeature.multiDrawIndirect,
         .drawIndirectFirstInstance = VK_TRUE,
         .fillModeNonSolid = VK_TRUE,
         .samplerAnisotropy = VK_TRUE,
@@ -135,7 +135,7 @@ void VulkanBase::createLogicalDevice(const std::vector<const char *> &deviceExte
         .pQueueCreateInfos = queueCreateInfos.data(),
         .enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size()),
         .ppEnabledExtensionNames = deviceExtensions.data(),
-        .pEnabledFeatures = &deviceFeature,
+        .pEnabledFeatures = &physicalDeviceFeature,
     };
     this->VulkanLoader::createLogicalDevice(physical_device, createInfo);
     baseDeletionQueue.push([&] { device.destroy(); });

@@ -14,39 +14,42 @@ static std::pair<std::string, AssetStorage::CPUMaterial> loadMaterial(const tiny
     std::filesystem::path normal = material.normal_texname;
     std::filesystem::path emissive = material.emissive_texname;
     std::filesystem::path specular = material.specular_texname;
+    std::filesystem::path specular_highlight = material.specular_highlight_texname;
 
-    return std::make_pair(material.name, AssetStorage::CPUMaterial{
-                                             .alphaCutOff = 1.0f,
-                                             .metallicFactor = material.metallic,
-                                             .roughnessFactor = material.roughness,
-                                             .baseColor =
-                                                 {
-                                                     material.diffuse[0],
-                                                     material.diffuse[1],
-                                                     material.diffuse[2],
-                                                     1.0f,
-                                                 },
-                                             .baseColorFactor =
-                                                 {
-                                                     material.diffuse_texopt.scale[0],
-                                                     material.diffuse_texopt.scale[1],
-                                                     material.diffuse_texopt.scale[2],
-                                                     1.0f,
-                                                 },
-                                             .emissiveFactor =
-                                                 {
-                                                     material.emissive_texopt.scale[0],
-                                                     material.emissive_texopt.scale[1],
-                                                     material.emissive_texopt.scale[2],
-                                                     1.0f,
-                                                 },
-
-                                             .baseColorTexture = diffuse.stem().string(),
-                                             .normalTexture = normal.stem().string(),
-                                             .emissiveTexture = emissive.stem().string(),
-                                             .specularGlossinessTexture = material.specular_highlight_texname,
-                                             .diffuseTexture = diffuse,
-                                         });
+    return {
+        material.name,
+        AssetStorage::CPUMaterial{
+            .alphaCutOff = 1.0f,
+            .metallicFactor = material.metallic,
+            .roughnessFactor = material.roughness,
+            .baseColor =
+                {
+                    material.diffuse[0],
+                    material.diffuse[1],
+                    material.diffuse[2],
+                    1.0f,
+                },
+            .baseColorFactor =
+                {
+                    material.diffuse_texopt.scale[0],
+                    material.diffuse_texopt.scale[1],
+                    material.diffuse_texopt.scale[2],
+                    1.0f,
+                },
+            .emissiveFactor =
+                {
+                    material.emissive_texopt.scale[0],
+                    material.emissive_texopt.scale[1],
+                    material.emissive_texopt.scale[2],
+                    1.0f,
+                },
+            .baseColorTexture = diffuse.stem().string(),
+            .normalTexture = normal.stem().string(),
+            .emissiveTexture = emissive.stem().string(),
+            .specularGlossinessTexture = specular_highlight.stem().string(),
+            .diffuseTexture = diffuse.stem().string(),
+        },
+    };
 }
 
 std::optional<AssetStorage::CPUStorage> loadObjModel(const std::filesystem::path &path)

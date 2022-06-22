@@ -148,7 +148,6 @@ private:
     OptionalRef<VulkanBase> base_ref;
     OptionalRef<AssetStorage> storage_ref;
     Frame frame;
-    std::vector<vk::WriteDescriptorSet> descriptorWrites;
     vk::DescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
 };
 

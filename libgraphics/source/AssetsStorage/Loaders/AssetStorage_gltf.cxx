@@ -72,7 +72,7 @@ requires(gltf_type_code<T> != -1) std::vector<T> sliceGltfBuffer(const tinygltf:
             case TINYGLTF_COMPONENT_TYPE_FLOAT: {
                 T val;
                 const auto data = getSpan<float>(buffer, start + byteStride * i, ncomp);
-                for (unsigned i = 0; i < data.size(); ++i) { val[i] = data[i]; }
+                for (unsigned j = 0; j < data.size(); ++j) { val[j] = data[j]; }
                 ret.push_back(std::move(val));
             } break;
         }

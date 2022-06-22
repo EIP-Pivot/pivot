@@ -36,14 +36,16 @@ void ThreadPool::new_thread(unsigned id) noexcept
     logger.trace(file_position()) << "New thread: " << id;
     while (!bExit) {
         try {
-            std::unique_lock lock(q_mutex);
-            if (qWork.empty()) q_var.wait(lock);
-            /// lock is owned by this thread when .wait return
+            {
+                std::unique_lock lock(q_mutex);
+                if (qWork.empty()) q_var.wait(lock);
+                /// lock is owned by this thread when .wait return
 
-            if (qWork.empty()) continue;
+                if (qWork.empty()) continue;
 
-            work = std::move(this->qWork.front());
-            this->qWork.pop();
+                work = std::move(this->qWork.front());
+                this->qWork.pop();
+            }
             if (work) work(id);
         } catch (const std::exception &e) {
             logger.err("Thread Pool") << id << " : " << e.what();

@@ -216,7 +216,8 @@ target_compile_options(
             /W4
             /wd4267
             /wd4201
-            /wd4244>
+            /wd4244
+            /wd4324>
 )
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE <vulkan/vulkan.hpp> <vk_mem_alloc.hpp>)

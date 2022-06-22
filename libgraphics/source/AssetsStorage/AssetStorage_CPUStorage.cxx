@@ -91,13 +91,33 @@ AssetStorage::CPUStorage AssetStorage::CPUStorage::default_assets()
     return storage;
 }
 
+template <typename K, typename V>
+std::unordered_map<K, V> merge_map_ignore_dup(const std::unordered_map<K, V> &first,
+                                              const std::unordered_map<K, V> &second)
+{
+    std::unordered_map<K, V> result;
+    result.reserve(first.size() + second.size());
+
+    for (const auto &[key, value]: first) {
+        const auto &iter = second.find(key);
+        if (iter != second.end() && iter->second != value)
+            throw AssetStorage::CPUStorage::CPUStorageError("Duplicate key with differing value");
+        else
+            result.emplace(key, value);
+    }
+    for (const auto &[key, value]: second) {
+        if (result.contains(key)) {
+            pivot_assert(first.contains(key));
+            continue;
+        }
+        result.emplace(key, value);
+    }
+    pivot_assert(result.size() <= first.size() + second.size());
+    return result;
+}
+
 void AssetStorage::CPUStorage::merge(const AssetStorage::CPUStorage &other)
 {
-// Must clone because .merge() require a non const argument
-#define MERGE_CONST(field)       \
-    auto _##field = other.field; \
-    field.merge(_##field);
-
 #define TEST_CONTAINS(field)           \
     for (const auto &[name, _]: field) \
         if (other.field.contains(name)) throw CPUStorageError("Duplicate key in " #field ": " + name);
@@ -106,13 +126,12 @@ void AssetStorage::CPUStorage::merge(const AssetStorage::CPUStorage &other)
     TEST_CONTAINS(prefabStorage);
     TEST_CONTAINS(textureStaging);
     TEST_CONTAINS(materialStaging);
-    TEST_CONTAINS(modelPaths);
-    TEST_CONTAINS(texturePaths);
 #undef TEST_CONTAINS
-    MERGE_CONST(prefabStorage);
-    MERGE_CONST(modelPaths);
-    MERGE_CONST(texturePaths);
-#undef MERGE_CONST
+
+    prefabStorage = merge_map_ignore_dup(prefabStorage, other.prefabStorage);
+    modelPaths = merge_map_ignore_dup(modelPaths, other.modelPaths);
+    texturePaths = merge_map_ignore_dup(texturePaths, other.texturePaths);
+
     textureStaging.append(other.textureStaging);
     materialStaging.append(other.materialStaging);
     modelStorage.reserve(other.modelStorage.size());

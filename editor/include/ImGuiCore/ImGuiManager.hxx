@@ -25,14 +25,15 @@ public:
     template <FileAction A>
     bool handleFile(const std::string &buttonText, const std::string &successText, const std::string &errorText,
                     const std::vector<nfdfilteritem_t> &acceptedFiles,
-                    const std::function<bool(const std::filesystem::path &)> &&handler)
+                    const std::function<bool(const std::filesystem::path &)> &&handler,
+                    const std::string &shortcut = "")
     {
         std::string popupFailed = buttonText + "Failed";
         std::string popupSuccess = buttonText + "Success";
 
         bool result_handler = false;
 
-        if (ImGui::Button(buttonText.c_str())) {
+        if (ImGui::MenuItem(buttonText.c_str(), shortcut.c_str())) {
             NFD::Guard nfd_guard;
             NFD::UniquePath path;
             nfdresult_t result = nfdresult_t::NFD_ERROR;

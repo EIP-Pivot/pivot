@@ -15,22 +15,6 @@
 namespace pivot
 {
 
-/// Return the name of the calling function
-constexpr std::string_view
-function_name(const std::source_location &location = std::source_location::current()) noexcept
-{
-    return location.function_name();
-}
-
-/// @brief Return the position of the calling function
-///
-/// Format: "filename":"line":"column"
-inline std::string file_position(const std::source_location &location = std::source_location::current()) noexcept
-{
-    return std::string() + std::filesystem::relative(location.file_name(), PIVOT_SOURCE_DIRECTORY).string() + ":" +
-           std::to_string(location.line()) + ":" + std::to_string(location.column());
-}
-
 namespace graphics
 {
 
@@ -43,13 +27,18 @@ namespace graphics
 }    // namespace pivot
 
 #ifndef NDEBUG
-    #define pivot_assert(expr) (static_cast<bool>(expr) ? void(0) : __pivot_assert_failed(#expr))
+    #define pivot_assert(expr, msg) (static_cast<bool>(expr) ? void(0) : __pivot_assert_failed(#expr, msg))
 
-    #define __pivot_assert_failed(expr)        \
+    #define __pivot_assert_failed(expr, msg)   \
         (/* detect catch2 at runtime */ false) \
             ? (void(0))                        \
-            : (logger.err(::pivot::file_position()) << "Assertion failed: " #expr, logger.stop(), std::abort())
+            : (logger.err(::file_position()) << "Assertion failed: " #expr " :: " << msg, logger.stop(), std::abort())
+
+    #define pivot_check(expr, msg) (static_cast<bool>(expr) ? void(0) : __pivot_check_failed(#expr, msg))
+
+    #define __pivot_check_failed(expr, msg) (logger.warn(::file_position()) << #expr ": " << msg, void(0))
 
 #else
     #define pivot_assert(e) void(0);
+    #define pivot_check(e) void(0);
 #endif

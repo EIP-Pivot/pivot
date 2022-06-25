@@ -41,7 +41,8 @@ void VulkanSwapchain::recreate(const vk::Extent2D &size, vk::PhysicalDevice &gpu
 
 std::uint32_t VulkanSwapchain::nbOfImage() const
 {
-    pivot_assert(swapChainImages.size() == swapChainImageViews.size());
+    pivot_assert(swapChainImages.size() == swapChainImageViews.size(),
+                 "Swapchain images view are not of the same size");
     return swapChainImages.size();
 }
 
@@ -58,7 +59,7 @@ std::uint32_t VulkanSwapchain::getNextImageIndex(const uint64_t maxDelay, vk::Se
 void VulkanSwapchain::createSwapchain(const vk::Extent2D &size, vk::PhysicalDevice &gpu, vk::SurfaceKHR &surface)
 {
     DEBUG_FUNCTION
-    pivot_assert(device);
+    pivot_assert(device, "Vulkan Device not created");
 
     auto indices = QueueFamilyIndices::findQueueFamilies(gpu, surface);
 
@@ -113,7 +114,7 @@ void VulkanSwapchain::createSwapchain(const vk::Extent2D &size, vk::PhysicalDevi
 void VulkanSwapchain::getImages()
 {
     DEBUG_FUNCTION;
-    pivot_assert(swapChain);
+    pivot_assert(swapChain, "Swapchain not created");
     swapChainImages = device->getSwapchainImagesKHR(swapChain);
 
     for (unsigned i = 0; i < swapChainImages.size(); i++) {

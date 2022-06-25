@@ -114,7 +114,7 @@ endif()
 fetchcontent_declare(
     logger
     GIT_REPOSITORY https://github.com/zcorniere/logger-cpp.git
-    GIT_TAG v0.8.0
+    GIT_TAG v0.8.1
 )
 fetchcontent_getproperties(logger)
 if(NOT logger_POPULATED)

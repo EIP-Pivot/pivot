@@ -16,7 +16,8 @@ void VulkanAllocator::init(const vma::AllocatorCreateInfo &info)
 
 AllocatedImage VulkanAllocator::createImage(const vk::ImageCreateInfo &info, const vma::AllocationCreateInfo &allocInfo)
 {
-    pivot_assert(info.extent.depth != 0 && info.extent.height != 0 && info.extent.width != 0);
+    pivot_assert(info.extent.depth != 0 && info.extent.height != 0 && info.extent.width != 0,
+                 "Image can't have a size of 0");
     AllocatedImage image{
         .format = info.format,
         .size = info.extent,

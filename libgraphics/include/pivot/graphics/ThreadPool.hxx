@@ -8,7 +8,7 @@
 #include <thread>
 #include <type_traits>
 
-#include <Logger.hpp>
+#include "pivot/graphics/pivot.hxx"
 
 namespace pivot
 {
@@ -38,7 +38,7 @@ public:
     requires std::is_invocable_v<F, unsigned, Args...>
     [[nodiscard]] auto push(F &&f, Args &&...args) -> std::future<decltype(f(0, args...))>
     {
-        if (thread_p.empty()) logger.warn("Thread Pool/push") << "Pushing task when no thread are started !";
+        pivot_check(!thread_p.empty(), "Pushing task when no thread are started !");
         auto packagedFunction = std::make_shared<std::packaged_task<decltype(f(0, args...))(unsigned)>>(
             std::bind(std::forward<F>(f), std::placeholders::_1, std::forward<Args>(args)...));
 

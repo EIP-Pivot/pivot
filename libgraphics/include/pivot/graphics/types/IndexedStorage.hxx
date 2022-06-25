@@ -83,7 +83,7 @@ public:
     /// return the number of item in the storage
     constexpr auto size() const noexcept
     {
-        pivot_assert(storage.size() == index.size());
+        pivot_assert(storage.size() == index.size(), "Index and Storage are not the same.");
         return storage.size();
     }
     /// return whether or not the size is equal to 0

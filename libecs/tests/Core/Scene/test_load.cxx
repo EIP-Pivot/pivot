@@ -8,9 +8,11 @@
 using namespace nlohmann;
 using namespace pivot::ecs::data;
 
-void test_load_scene_system(const pivot::ecs::systems::Description &, pivot::ecs::component::ArrayCombination &,
-                            const pivot::ecs::event::EventWithComponent &)
+std::vector<pivot::ecs::event::Event> test_load_scene_system(const pivot::ecs::systems::Description &,
+                                                             pivot::ecs::component::ArrayCombination &,
+                                                             const pivot::ecs::event::EventWithComponent &)
 {
+    return {};
 }
 
 TEST_CASE("Load the scene", "[Scene][Load]")

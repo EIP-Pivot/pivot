@@ -185,13 +185,13 @@ void Engine::saveScene(ecs::SceneManager::SceneId id, const std::filesystem::pat
             auto modelPath = assetStorage.getModelPath(asset);
             if (!texturePath.has_value() && !modelPath.has_value()) return std::nullopt;
             std::filesystem::path assetPath = texturePath.value_or(modelPath.value());
-            return assetPath.lexically_relative(path.parent_path()).string();
+            return std::filesystem::relative(std::filesystem::absolute(assetPath), path.parent_path()).string();
         }));
 
     auto scriptTranslator =
         std::make_optional(std::function([&path](const std::string &script) -> std::optional<std::string> {
             std::filesystem::path scriptPath = script;
-            return scriptPath.lexically_relative(path.parent_path()).string();
+            return std::filesystem::relative(std::filesystem::absolute(scriptPath), path.parent_path()).string();
         }));
 
     m_scene_manager.getSceneById(id).save(path, assetTranslator, scriptTranslator);

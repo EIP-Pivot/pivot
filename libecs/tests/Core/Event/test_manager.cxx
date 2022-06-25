@@ -20,14 +20,15 @@ using namespace pivot::ecs;
 using namespace pivot::ecs::data;
 using namespace pivot::builtins::components;
 
-void tickSystem(const systems::Description &description, component::ArrayCombination &entities,
-                const event::EventWithComponent &event)
+std::vector<event::Event> tickSystem(const systems::Description &description, component::ArrayCombination &entities,
+                                     const event::EventWithComponent &event)
 {
     for (auto combination: entities) {
         auto tag = combination[1].get();
         std::get<std::string>(std::get<Record>(tag).at("name")) = "edit";
         combination[1].set(tag);
     }
+    return {};
 }
 
 TEST_CASE("Manager event", "[description][registration][manager]")

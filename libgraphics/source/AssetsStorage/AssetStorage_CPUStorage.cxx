@@ -1,6 +1,6 @@
 #include "pivot/graphics/AssetStorage.hxx"
 
-#include "pivot/graphics/DebugMacros.hxx"
+#include "pivot/pivot.hxx"
 
 #include <Logger.hpp>
 

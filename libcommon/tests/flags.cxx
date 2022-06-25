@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "pivot/graphics/PivotFlags.hxx"
+#include "pivot/utility/flags.hxx"
 
 using namespace pivot;
 

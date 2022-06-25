@@ -8,7 +8,7 @@
 #include <thread>
 #include <type_traits>
 
-#include "pivot/graphics/pivot.hxx"
+#include "pivot/pivot.hxx"
 
 namespace pivot
 {

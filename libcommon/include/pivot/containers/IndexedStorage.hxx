@@ -6,8 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "pivot/graphics/pivot.hxx"
-#include "pivot/graphics/types/common.hxx"
+#include "pivot/pivot.hxx"
 
 namespace pivot
 {

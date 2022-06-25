@@ -1,32 +1,12 @@
 #pragma once
 
-#include <cstdlib>
-#include <filesystem>
-#include <source_location>
-#include <string>
-#include <string_view>
-
 #include <Logger.hpp>
-
-#ifndef PIVOT_SOURCE_DIRECTORY
-    #define PIVOT_SOURCE_DIRECTORY "."
-#endif
-
-namespace pivot
-{
-
-namespace graphics
-{
-
-    /// Indicated the number of frame rendered in advance by the engine
-    constexpr const auto MaxFrameInFlight = 3;
-    static_assert(MaxFrameInFlight >= 1);
-
-}    // namespace graphics
-
-}    // namespace pivot
+#include <optional>
+// namespace pivot
 
 #ifndef NDEBUG
+    #define DEBUG_FUNCTION logger LOGGER_ACCESS trace(::function_name()) << "Entered";
+
     #define pivot_assert(expr, msg) (static_cast<bool>(expr) ? void(0) : __pivot_assert_failed(#expr, msg))
 
     #define __pivot_assert_failed(expr, msg)   \
@@ -41,4 +21,11 @@ namespace graphics
 #else
     #define pivot_assert(e) void(0);
     #define pivot_check(e) void(0);
+    #define DEBUG_FUNCTION void(0);
 #endif
+
+template <typename T>
+using Ref = std::reference_wrapper<T>;
+
+template <typename T>
+using OptionalRef = std::optional<Ref<T>>;

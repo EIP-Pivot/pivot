@@ -1,10 +1,10 @@
 #include "pivot/graphics/PipelineBuilders/GraphicsPipelineBuilder.hxx"
 
-#include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/types/Vertex.hxx"
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"
+#include "pivot/pivot.hxx"
 
 namespace pivot::graphics
 {

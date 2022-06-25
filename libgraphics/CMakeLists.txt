@@ -235,6 +235,7 @@ target_compile_definitions(
            PIVOT_SOURCE_DIRECTORY="${CMAKE_SOURCE_DIR}"
            PIVOT_ASSET_DEFAULT_DIRECTORY="${PIVOT_ASSET_DEFAULT_DIRECTORY}"
            PIVOT_WINDOW_ICON_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../assets"
+           PIVOT_MAX_FRAMES_IN_FLIGHT=3
 )
 
 add_shader(${PROJECT_NAME} default.vert)
@@ -248,17 +249,15 @@ target_include_directories(${PROJECT_NAME} PUBLIC include/)
 
 target_link_libraries(
     ${PROJECT_NAME}
-    PUBLIC logger
+    PUBLIC pivot-common
     PUBLIC VulkanMemoryAllocator
     PUBLIC imgui
     PUBLIC imguizmo
     PUBLIC glfw
-    PUBLIC glm
     PUBLIC tinyobjloader
     PUBLIC ktx
     PUBLIC tinygltf
     PUBLIC stb
-    PUBLIC magic_enum
     PUBLIC Vulkan::Vulkan
 )
 
@@ -266,9 +265,7 @@ build_tests(
     ${PROJECT_NAME}
     tests/culling.cxx
     tests/bounding_box.cxx
-    tests/indexed_storage.cxx
     tests/asset_storage_cpu_storage.cxx
     tests/asset_loading_gltf.cxx
     tests/asset_loading_obj.cxx
-    tests/flags.cxx
 )

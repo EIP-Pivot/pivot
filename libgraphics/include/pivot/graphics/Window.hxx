@@ -8,8 +8,8 @@
 #include <unordered_map>
 #include <vulkan/vulkan.hpp>
 
-#include "pivot/graphics/PivotException.hxx"
-#include "pivot/graphics/PivotFlags.hxx"
+#include "pivot/exception.hxx"
+#include "pivot/utility/flags.hxx"
 
 namespace pivot::graphics
 {

@@ -6,7 +6,7 @@
 #include <vector>
 #include <vulkan/vulkan.hpp>
 
-#include "pivot/graphics/PivotFlags.hxx"
+#include "pivot/utility/flags.hxx"
 
 namespace pivot::graphics
 {

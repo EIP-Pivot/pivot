@@ -1,7 +1,6 @@
 
 #include "pivot/graphics/Window.hxx"
-#include "pivot/graphics/DebugMacros.hxx"
-#include "pivot/graphics/pivot.hxx"
+#include "pivot/pivot.hxx"
 
 #include <Logger.hpp>
 #include <magic_enum.hpp>

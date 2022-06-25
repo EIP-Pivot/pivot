@@ -1,7 +1,7 @@
 #include "pivot/graphics/AssetStorage.hxx"
 
-#include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/vk_debug.hxx"
+#include "pivot/pivot.hxx"
 
 namespace pivot::graphics
 {

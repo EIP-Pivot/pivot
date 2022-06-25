@@ -1,5 +1,5 @@
 #include "pivot/graphics/VulkanBase.hxx"
-#include "pivot/graphics/DebugMacros.hxx"
+#include "pivot/pivot.hxx"
 
 #include <optional>
 

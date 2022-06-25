@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "pivot/graphics/types/IndexedStorage.hxx"
+#include "pivot/containers/IndexedStorage.hxx"
 
 using namespace pivot;
 
@@ -16,7 +16,7 @@ const std::string key4 = "arrow";
 const std::string value4 = "is the knee";
 
 template <typename F, typename T>
-bool testIndex(const IndexedStorage<F, T> &storage, const std::string &key, const T &value, const unsigned index)
+bool testIndex(const IndexedStorage<F, T> &storage, const std::string &key, const T &value, const int index)
 {
 
     REQUIRE(storage.contains(key));

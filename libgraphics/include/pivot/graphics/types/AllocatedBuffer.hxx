@@ -4,7 +4,7 @@
 #include <vk_mem_alloc.hpp>
 #include <vulkan/vulkan.hpp>
 
-#include "pivot/graphics/pivot.hxx"
+#include "pivot/pivot.hxx"
 
 namespace pivot::graphics
 {

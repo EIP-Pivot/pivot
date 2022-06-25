@@ -1,5 +1,5 @@
 #include "pivot/graphics/AssetStorage.hxx"
-#include "pivot/graphics/DebugMacros.hxx"
+#include "pivot/pivot.hxx"
 
 namespace pivot::graphics::loaders
 {

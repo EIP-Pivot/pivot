@@ -7,9 +7,10 @@
 
 using namespace pivot::ecs;
 
-void test_save_scene_system(const systems::Description &, component::ArrayCombination &,
-                            const event::EventWithComponent &)
+std::vector<event::Event> test_save_scene_system(const systems::Description &, component::ArrayCombination &,
+                                                 const event::EventWithComponent &)
 {
+    return {};
 }
 
 TEST_CASE("Test save scene", "[Scene][save]")

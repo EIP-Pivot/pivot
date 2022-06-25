@@ -28,8 +28,9 @@ public:
     std::string loadFile(const std::string &file, bool isContent = false, bool verbose = false);
 
     ///	This is the callback the SystemManager will call to execute a system on entities with a given event trigger
-    void systemCallback(const systems::Description &system, component::ArrayCombination &entities,
-                        const event::EventWithComponent &trigger);
+    std::vector<ecs::event::Event> systemCallback(const systems::Description &system,
+                                                  component::ArrayCombination &entities,
+                                                  const event::EventWithComponent &trigger);
 
 private:
     systems::Index &_systemIndex;

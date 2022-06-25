@@ -58,14 +58,15 @@ std::string Engine::loadFile(const std::string &file, bool isContent, bool verbo
     return (file + " parsed succesfully.");    // no errors
 }
 
-void Engine::systemCallback(const systems::Description &system, component::ArrayCombination &entities,
-                            const event::EventWithComponent &trigger)
+std::vector<ecs::event::Event> Engine::systemCallback(const systems::Description &system,
+                                                      component::ArrayCombination &entities,
+                                                      const event::EventWithComponent &trigger)
 {
     if (!_systems.contains(system.name)) {
         // std::cerr << std::format("Unregistered system '{}'", system.name) << std::endl; // format not available in
         // c++20 gcc yet
         logger.err("Unregistered system '") << system.name << "'";
-        return;
+        return {};
     }
     const Node &systemEntry = _systems.at(system.name);    // Avoid looking up for every entity
     for (auto entity: entities) {                          // For every entity, execute the system with it as parameter
@@ -82,6 +83,7 @@ void Engine::systemCallback(const systems::Description &system, component::Array
             logger.err("Unhandled std exception: ") << e.what();
         }
     }
+    return {};
 }
 
 // Private functions

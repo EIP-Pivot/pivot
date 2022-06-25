@@ -10,7 +10,11 @@
 
 using namespace pivot::ecs;
 
-void test_description(const systems::Description &, component::ArrayCombination &, const event::EventWithComponent &) {}
+std::vector<event::Event> test_description(const systems::Description &, component::ArrayCombination &,
+                                           const event::EventWithComponent &)
+{
+    return {};
+}
 
 TEST_CASE("valid system description", "[description]")
 {

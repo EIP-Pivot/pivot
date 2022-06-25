@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pivot/ecs/Components/Camera.hxx"
+#include "pivot/ecs/Core/Event/description.hxx"
 #include "pivot/graphics/Window.hxx"
 
 #include <optional>
@@ -31,7 +32,7 @@ public:
     // virtual void Update(float dt);
 
     /// Update mouse movement (Called in Update())
-    static void processMouseMovement(Camera &cam, const glm::dvec2 &offset);
+    static std::vector<pivot::ecs::event::Event> processMouseMovement(Camera &cam, const glm::dvec2 &offset);
 
 private:
     // std::bitset<UINT16_MAX> button;

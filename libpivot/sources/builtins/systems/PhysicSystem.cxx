@@ -11,8 +11,8 @@ using namespace pivot::builtins::components;
 
 namespace
 {
-void physicsSystemImpl(const systems::Description &systemDescription, component::ArrayCombination &cmb,
-                       const event::EventWithComponent &event)
+std::vector<event::Event> physicsSystemImpl(const systems::Description &systemDescription,
+                                            component::ArrayCombination &cmb, const event::EventWithComponent &event)
 {
     auto dt = (float)std::get<double>(event.event.payload);
 
@@ -33,6 +33,7 @@ void physicsSystemImpl(const systems::Description &systemDescription, component:
         rigidBody.velocity += rigidBody.acceleration * dt;
         transform.position += rigidBody.velocity * dt;
     }
+    return {};
 }
 }    // namespace
 

@@ -12,7 +12,8 @@ add_library(
 target_compile_options(
     ${PROJECT_NAME}
     PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-            -Wall -Wextra>
+            -Wall
+            -Wextra>
             $<$<CXX_COMPILER_ID:MSVC>:
             /W4
             /wd4267
@@ -23,5 +24,7 @@ target_compile_options(
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC pivot-graphics pivot-ecs)
+
+target_precompile_headers(${PROJECT_NAME} REUSE_FROM pivot-common)
 
 build_tests(${PROJECT_NAME} tests/test_parser.cxx tests/test_interpreter.cxx tests/test_builtins.cxx)

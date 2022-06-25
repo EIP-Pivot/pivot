@@ -5,7 +5,7 @@
 // namespace pivot
 
 #ifndef NDEBUG
-    #define DEBUG_FUNCTION logger LOGGER_ACCESS trace(::function_name()) << "Entered";
+    #define DEBUG_FUNCTION logger.trace(::function_name()) << "Entered";
 
     #define pivot_assert(expr, msg) (static_cast<bool>(expr) ? void(0) : __pivot_assert_failed(#expr, msg))
 

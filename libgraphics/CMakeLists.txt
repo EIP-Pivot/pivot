@@ -220,7 +220,8 @@ target_compile_options(
             /wd4324>
 )
 
-target_precompile_headers(${PROJECT_NAME} PRIVATE <vulkan/vulkan.hpp> <vk_mem_alloc.hpp>)
+target_precompile_headers(${PROJECT_NAME} REUSE_FROM pivot-common)
+#target_precompile_headers(${PROJECT_NAME} PRIVATE <vulkan/vulkan.hpp> <vk_mem_alloc.hpp>)
 
 set(PIVOT_ASSET_DEFAULT_DIRECTORY
     "${CMAKE_SOURCE_DIR}/editor/assets/"

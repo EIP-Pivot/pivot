@@ -447,7 +447,6 @@ template <>
 /// @copydoc AssetStorage::getSize
 inline std::uint32_t AssetStorage::getSize<gpu_object::Material>() const
 {
-    assert(materialBuffer.size == materialStorage.size());
     return materialStorage.size();
 }
 

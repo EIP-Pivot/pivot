@@ -56,14 +56,13 @@ if(NOT magic_enum_POPULATED)
     add_subdirectory(${magic_enum_SOURCE_DIR} ${magic_enum_BINARY_DIR})
 endif()
 
-add_library(
-    ${PROJECT_NAME} INTERFACE
-)
+add_library(${PROJECT_NAME} STATIC sources/lib.cxx)
 
 target_compile_options(
     ${PROJECT_NAME}
-    INTERFACE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-            -Wall -Wextra>
+    PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+            -Wall
+            -Wextra>
             $<$<CXX_COMPILER_ID:MSVC>:
             /W4
             /wd4267
@@ -71,15 +70,20 @@ target_compile_options(
             /wd4244>
 )
 
-target_include_directories(${PROJECT_NAME} INTERFACE include/)
+target_include_directories(${PROJECT_NAME} PUBLIC include/)
 
-target_link_libraries(${PROJECT_NAME} INTERFACE logger glm magic_enum)
+target_link_libraries(${PROJECT_NAME} PUBLIC logger glm magic_enum)
 
-target_precompile_headers(${PROJECT_NAME} INTERFACE <Logger.hpp> <glm/glm.hpp>)
-
-
-build_tests(
+target_precompile_headers(
     ${PROJECT_NAME}
-    tests/indexed_storage.cxx
-    tests/flags.cxx
+    PUBLIC
+    <Logger.hpp>
+    <glm/glm.hpp>
+    <optional>
+    <variant>
+    <vector>
+    <unordered_map>
+    <string>
 )
+
+build_tests(${PROJECT_NAME} tests/indexed_storage.cxx tests/flags.cxx)

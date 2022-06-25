@@ -42,6 +42,9 @@ readBinaryFile(const std::filesystem::path &filename)
 
     if (!file.is_open()) throw std::runtime_error("failed to open file " + filename.string());
     file.read(reinterpret_cast<char *>(fileContent.data()), fileSize * sizeof(T));
+    assert(!file.bad());
+    assert(!file.fail());
+    assert(fileContent.size() == (unsigned long)file.gcount());
     file.close();
     return fileContent;
 }

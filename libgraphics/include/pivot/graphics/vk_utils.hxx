@@ -32,8 +32,10 @@ constexpr void vk_try(VkResult res) { vk_try(vk::Result(res)); }
 
 /// Read a whole file into a vector of byte.
 template <typename T = std::byte>
-std::vector<T> readBinaryFile(const std::filesystem::path &filename)
+requires std::is_trivial_v<T> && std::is_standard_layout_v<T> std::vector<T>
+readBinaryFile(const std::filesystem::path &filename)
 {
+    assert(!std::filesystem::is_symlink(filename));
     size_t fileSize = std::filesystem::file_size(filename);
     std::ifstream file(filename, std::ios::binary);
     std::vector<T> fileContent(fileSize / sizeof(T));
@@ -48,7 +50,7 @@ std::vector<T> readBinaryFile(const std::filesystem::path &filename)
 std::string readFile(const std::filesystem::path &filename);
 
 template <typename T = std::byte>
-std::size_t writeBinaryFile(const std::filesystem::path &filename, const std::span<const T> &code)
+std::size_t writeBinaryFile(const std::filesystem::path &filename, std::span<const T> &code)
 {
     std::ofstream file(filename, std::ios::binary);
     file.write(reinterpret_cast<const char *>(code.data()), code.size_bytes());

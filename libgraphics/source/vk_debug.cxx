@@ -12,10 +12,6 @@ void beginRegion(vk::CommandBuffer &cmdbuffer, const char *pMarkerName, const st
         .color = color,
     };
     cmdbuffer.beginDebugUtilsLabelEXT(markerInfo);
-#else
-    (void)cmdbuffer;
-    (void)pMarkerName;
-    (void)color;
 #endif
 };
 
@@ -23,8 +19,6 @@ void endRegion(vk::CommandBuffer &cmdBuffer)
 {
 #ifndef NDEBUG
     cmdBuffer.endDebugUtilsLabelEXT();
-#else
-    (void)cmdBuffer;
 #endif
 }
 

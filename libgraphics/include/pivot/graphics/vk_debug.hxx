@@ -11,7 +11,8 @@ namespace pivot::graphics::vk_debug
 {
 template <vk_utils::wrappedVulkanType T>
 /// Set the debug name of the object
-void setObjectName(vk::Device &device, const T &object, const std::string &name)
+void setObjectName([[maybe_unused]] vk::Device &device, [[maybe_unused]] const T &object,
+                   [[maybe_unused]] const std::string &name)
 {
 #ifndef NDEBUG
     vk::DebugUtilsObjectNameInfoEXT nameInfo{
@@ -20,17 +21,13 @@ void setObjectName(vk::Device &device, const T &object, const std::string &name)
         .pObjectName = name.c_str(),
     };
     device.setDebugUtilsObjectNameEXT(nameInfo);
-#else
-    // Mute unused vars warning
-    (void)device;
-    (void)object;
-    (void)name;
 #endif
 }
 
 template <vk_utils::wrappedVulkanType T, typename D>
 /// Set the debug tag of the object
-void setObjectTag(vk::Device &device, const T &object, const std::span<D> &tag)
+void setObjectTag([[maybe_unused]] vk::Device &device, [[maybe_unused]] const T &object,
+                  [[maybe_unused]] const std::span<D> &tag)
 {
 #ifndef NDEBUG
     vk::DebugUtilsObjectTagInfoEXT tagInfo{
@@ -40,17 +37,13 @@ void setObjectTag(vk::Device &device, const T &object, const std::span<D> &tag)
         .pTag = tag.data(),
     };
     device.setDebugUtilsObjectTagEXT(tagInfo);
-#else
-    // Mute unused vars warning
-    (void)device;
-    (void)object;
-    (void)tag;
 #endif
 }
 
 /// Begin a new debug region
-void beginRegion(vk::CommandBuffer &cmdbuffer, const char *pMarkerName, const std::array<float, 4> color);
+void beginRegion([[maybe_unused]] vk::CommandBuffer &cmdbuffer, [[maybe_unused]] const char *pMarkerName,
+                 [[maybe_unused]] const std::array<float, 4> color);
 /// End a debug region
-void endRegion(vk::CommandBuffer &cmdBuffer);
+void endRegion([[maybe_unused]] vk::CommandBuffer &cmdBuffer);
 
 };    // namespace pivot::graphics::vk_debug

@@ -283,6 +283,24 @@ public:
         return {it->second};
     }
 
+    /// Return the path of all the texture currently loaded in the Storage
+    auto getTextures() const
+    {
+        return this->textureStorage | std::views::transform([](const auto &i) { return i.first; });
+    }
+
+    /// Return the path of all the models currently loaded in the Storage
+    auto getModels() const
+    {
+        return this->modelStorage | std::views::transform([](const auto &i) { return i.first; });
+    }
+
+    /// Return the path of all the models currently loaded in the Storage
+    auto getMaterial() const
+    {
+        return this->materialStorage | std::views::transform([](const auto &i) { return i.first; });
+    }
+
     template <typename T>
     /// Get an asset of type T named name
     inline const T &get(const std::string &name) const;

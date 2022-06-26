@@ -29,6 +29,7 @@ private:
 public:
     ThreadPool() = default;
     ThreadPool(const ThreadPool &) = delete;
+    ThreadPool(const ThreadPool &&) = delete;
     ~ThreadPool() = default;
 
     /// Create the pool with a given number of thread
@@ -58,6 +59,8 @@ public:
         state.q_var.notify_one();
         return packagedFunction->get_future();
     }
+
+    ThreadPool &operator=(const ThreadPool &other) = delete;
 
 private:
     static void new_thread(State &state, const unsigned i) noexcept;

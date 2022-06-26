@@ -11,8 +11,8 @@ using namespace pivot::builtins::components;
 
 namespace
 {
-std::vector<event::Event> physicsSystemImpl(const systems::Description &systemDescription,
-                                            component::ArrayCombination &cmb, const event::EventWithComponent &event)
+std::vector<event::Event> physicsSystemImpl(const systems::Description &, component::ArrayCombination &cmb,
+                                            const event::EventWithComponent &event)
 {
     auto dt = (float)std::get<double>(event.event.payload);
 
@@ -39,8 +39,10 @@ std::vector<event::Event> physicsSystemImpl(const systems::Description &systemDe
 
 namespace pivot::builtins::systems
 {
+
 const pivot::ecs::systems::Description physicSystem{
     .name = "Physics System",
+    .entityName = "",
     .systemComponents =
         {
             "Gravity",
@@ -48,7 +50,9 @@ const pivot::ecs::systems::Description physicSystem{
             "Transform",
         },
     .eventListener = events::tick,
+    .eventComponents = {},
     .provenance = pivot::ecs::Provenance::builtin(),
     .system = &physicsSystemImpl,
+
 };
 }

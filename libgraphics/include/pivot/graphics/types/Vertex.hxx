@@ -6,19 +6,35 @@
 #include <vector>
 #include <vulkan/vulkan.hpp>
 
+#include "pivot/graphics/PivotFlags.hxx"
+
 namespace pivot::graphics
 {
+
+/// Select which Vertex component are required for the vulkan pipeline
+enum class VertexComponentFlagBits : FlagsType {
+    Position = BIT(1),
+    Normal = BIT(2),
+    UV = BIT(3),
+    Color = BIT(4),
+    Tangent = BIT(5),
+};
+/// Flag type of VertexComponentFlagBits
+using VertexComponentFlags = Flags<VertexComponentFlagBits>;
+
 /// @struct Vertex
 /// @brief Represent a vertex of the 3D model
 struct Vertex {
     /// Position of the vertex
     glm::vec3 pos;
     /// Normal of the vertex
-    glm::vec3 normal;
-    /// Color of the vertex, ignored if a texture is provided
-    glm::vec3 color;
+    glm::vec3 normal = glm::vec3(0.0f);
     /// UV coordinate of the vertex
-    glm::vec2 texCoord;
+    glm::vec2 texCoord = glm::vec2(0.0f);
+    /// Color of the vertex, ignored if a texture is provided
+    glm::vec4 color = glm::vec4(1.0f);
+    /// Tangent of the vertex
+    glm::vec4 tangent = glm::vec4(0.0f);
 
     /// Equality operator overload
     /// @param other The other object to compare
@@ -28,10 +44,17 @@ struct Vertex {
     /// Get the description for Vulkan pipeline input binding
     static vk::VertexInputBindingDescription getBindingDescription() noexcept;
 
-    /// Get the layout of the Vertex struct for Vulkan pipeline input
-    static std::vector<vk::VertexInputAttributeDescription> getAttributeDescriptons() noexcept;
+    /// Return the input attribute for the given vertex component
+    static vk::VertexInputAttributeDescription inputAttributeDescription(std::uint32_t binding, std::uint32_t location,
+                                                                         VertexComponentFlagBits component);
+
+    /// Return the vertex input attribute needed for the vulkan pipeline
+    static std::vector<vk::VertexInputAttributeDescription>
+    getInputAttributeDescriptions(std::uint32_t binding, const VertexComponentFlags components);
 };
 }    // namespace pivot::graphics
+
+ENABLE_FLAGS_FOR_ENUM(pivot::graphics::VertexComponentFlagBits);
 
 namespace std
 {

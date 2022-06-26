@@ -10,12 +10,20 @@
 namespace pivot::graphics
 {
 
+/// Wrapper for all the "storage class"
+struct StorageUtils {
+    /// @see PipelineStorage
+    std::reference_wrapper<PipelineStorage> pipeline;
+    /// @see AssetStorage
+    std::reference_wrapper<AssetStorage> assets;
+};
+
 /// Root interface for the Renderers
 class IRenderer
 {
 public:
     /// Constructor
-    IRenderer(PipelineStorage &storage, AssetStorage &assets): stor(storage), assets(assets) {}
+    IRenderer(StorageUtils &utils): storage(utils) {}
     /// Destructor
     virtual ~IRenderer() {}
     /// Return the debug name of the renderer
@@ -31,10 +39,8 @@ public:
                             const vk::DescriptorSetLayout &resolverLayout, vk::RenderPass &pass) = 0;
 
 protected:
-    /// Reference to the PipelineStorage
-    PipelineStorage &stor;
-    /// Reference to the AssetStorage
-    AssetStorage &assets;
+    /// All ref to the storage class
+    StorageUtils storage;
 };
 
 /// Renderer interface for compute-based operation
@@ -62,7 +68,6 @@ public:
 
 template <typename T>
 /// This concept is valid for a renderer and is able to be constructed
-concept validRenderer =
-    std::is_base_of_v<IRenderer, T> && std::is_constructible_v<T, PipelineStorage &, AssetStorage &>;
+concept validRenderer = std::is_base_of_v<IRenderer, T> && std::is_constructible_v<T, StorageUtils &>;
 
 }    // namespace pivot::graphics

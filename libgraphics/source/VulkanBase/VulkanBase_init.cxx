@@ -26,7 +26,7 @@ void VulkanBase::createInstance(const std::vector<const char *> &instanceExtensi
 
     vk::ApplicationInfo applicationInfo{
         .pEngineName = "Pivot",
-        .apiVersion = VK_API_VERSION_1_2,
+        .apiVersion = VK_API_VERSION_1_1,
     };
     vk::InstanceCreateInfo createInfo{
         .pApplicationInfo = &applicationInfo,
@@ -106,12 +106,7 @@ void VulkanBase::createLogicalDevice(const std::vector<const char *> &deviceExte
         return vk_init::populateDeviceQueueCreateInfo(1, queueFamily, fQueuePriority);
     });
 
-    vk::PhysicalDeviceDescriptorIndexingFeatures descriptorIndex{
-        .descriptorBindingVariableDescriptorCount = VK_TRUE,
-        .runtimeDescriptorArray = VK_TRUE,
-    };
-    vk::PhysicalDeviceVulkan11Features v11Features{
-        .pNext = &descriptorIndex,
+    vk::PhysicalDeviceShaderDrawParametersFeatures shaderDrawParameters{
         .shaderDrawParameters = VK_TRUE,
     };
 
@@ -122,7 +117,7 @@ void VulkanBase::createLogicalDevice(const std::vector<const char *> &deviceExte
         .samplerAnisotropy = VK_TRUE,
     };
     vk::DeviceCreateInfo createInfo{
-        .pNext = &v11Features,
+        .pNext = &shaderDrawParameters,
         .queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size()),
         .pQueueCreateInfos = queueCreateInfos.data(),
         .enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size()),

@@ -55,8 +55,10 @@ public:
           imGuiManager(getSceneManager()),
           editor(getSceneManager(), getCurrentScene()),
           entity(getCurrentScene()),
-          systemsEditor(m_system_index, getCurrentScene()),
-          componentEditor(m_component_index, getCurrentScene()){};
+          componentEditor(m_component_index, getCurrentScene()),
+          systemsEditor(m_system_index, getCurrentScene())
+    {
+    }
 
     SceneManager::SceneId loadDefaultScene() { return registerScene("Default"); }
 
@@ -67,13 +69,12 @@ public:
         Scene &scene = *getCurrentScene();
 
         window.captureCursor(true);
-        window.addKeyReleaseCallback(Window::Key::LEFT_ALT, [&](Window &window, const Window::Key key) {
+        window.addKeyReleaseCallback(Window::Key::LEFT_ALT, [&](Window &window, const Window::Key) {
             window.captureCursor(!window.captureCursor());
             bFirstMouse = window.captureCursor();
             button.reset();
         });
-        window.addKeyReleaseCallback(Window::Key::V,
-                                     [&](Window &window, const Window::Key key) { scene.switchCamera(); });
+        window.addKeyReleaseCallback(Window::Key::V, [&](Window &, const Window::Key) { scene.switchCamera(); });
 
         auto key_lambda_press = [&](Window &window, const Window::Key key) {
             if (window.captureCursor()) button.set(static_cast<std::size_t>(key));
@@ -109,11 +110,6 @@ public:
             last = pos;
             pivot::builtins::systems::ControlSystem::processMouseMovement(m_camera, glm::dvec2(xoffset, yoffset));
         });
-
-        m_vulkan_application.assetStorage.setAssetDirectory(PIVOT_ASSET_DEFAULT_DIRECTORY);
-        m_vulkan_application.assetStorage.addModel("cube.obj");
-        m_vulkan_application.assetStorage.addTexture("violet.png");
-        m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
     }
 
     void processKeyboard(const pivot::builtins::Camera::Movement direction, float dt) noexcept

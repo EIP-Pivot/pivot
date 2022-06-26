@@ -164,7 +164,6 @@ void AssetStorage::pushTexturesOnGPU()
         base_ref->get().generateMipmaps(image, image.mipLevels);
 
         base_ref->get().allocator.destroyBuffer(stagingBuffer);
-        logger.trace("Push Texture") << name;
         textureStorage.add(name, std::move(image));
     }
 }

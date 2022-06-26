@@ -14,7 +14,7 @@ class CullingRenderer : public IComputeRenderer
 {
 public:
     /// @copydoc IRenderer::IRenderer
-    CullingRenderer(PipelineStorage &storage, AssetStorage &assets);
+    CullingRenderer(StorageUtils &utils);
     ~CullingRenderer();
 
     std::string getName() const noexcept override { return "Culling"; }
@@ -27,7 +27,7 @@ public:
 
 private:
     void createPipelineLayout(vk::Device &device, const vk::DescriptorSetLayout &resolverLayout);
-    void createPipeline(vk::Device &device);
+    void createPipeline();
 
 private:
     QueueFamilyIndices indices;

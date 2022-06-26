@@ -79,7 +79,7 @@ public:
 
     template <typename T>
     /// Map buffer memory as a read-only pointer
-    const T *const mapMemory(AllocatedBuffer<T> &buffer) const
+    const T *mapMemory(AllocatedBuffer<T> &buffer) const
     {
         assert(buffer);
         return static_cast<const T *const>(allocator.mapMemory(buffer.memory));

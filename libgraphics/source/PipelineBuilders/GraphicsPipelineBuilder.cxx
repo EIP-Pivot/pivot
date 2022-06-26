@@ -16,97 +16,17 @@ GraphicsPipelineBuilder::GraphicsPipelineBuilder()
       depthStencil(vk_init::populateVkPipelineDepthStencilStateCreateInfo()),
       rasterizer(vk_init::populateVkPipelineRasterizationStateCreateInfo(vk::PolygonMode::eFill)),
       vertexDescription({Vertex::getBindingDescription()}),
-      vertexAttributes(Vertex::getAttributeDescriptons())
+      vertexAttributes(Vertex::getInputAttributeDescriptions(
+          0, VertexComponentFlagBits::Position | VertexComponentFlagBits::Normal | VertexComponentFlagBits::UV))
 {
 }
 
 GraphicsPipelineBuilder::~GraphicsPipelineBuilder() {}
 
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::setPipelineLayout(vk::PipelineLayout &layout) noexcept
-{
-    pipelineLayout = layout;
-    return *this;
-}
-
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::setRenderPass(vk::RenderPass &pass) noexcept
-{
-    renderPass = pass;
-    return *this;
-}
-
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::setVertexShaderPath(const std::string &p) noexcept
-{
-    vertexShaderPath = p;
-    return *this;
-}
-
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::setFragmentShaderPath(const std::string &p) noexcept
-{
-    fragmentShaderPath = p;
-    return *this;
-}
-
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::setGeometryShaderPath(const std::string &p) noexcept
-{
-    geometryShaderPath = p;
-    return *this;
-}
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::setTessellationEvaluationShaderPath(const std::string &p) noexcept
-{
-    tessellationEvaluationShaderPath = p;
-    return *this;
-}
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::setTessellationControlShaderPath(const std::string &p) noexcept
-{
-    tessellationControlShaderPath = p;
-    return *this;
-}
-
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::setMsaaSample(const vk::SampleCountFlagBits &s) noexcept
-{
-    multisampling = vk_init::populateVkPipelineMultisampleStateCreateInfo(s);
-    return *this;
-}
-
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::setPolygonMode(const vk::PolygonMode &mode) noexcept
-{
-    rasterizer.setPolygonMode(mode);
-    return *this;
-}
-
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::setFaceCulling(const vk::CullModeFlags &mode,
-                                                                 const vk::FrontFace &face) noexcept
-{
-    rasterizer.setFrontFace(face);
-    rasterizer.setCullMode(mode);
-    return *this;
-}
-
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::setViewPort(const vk::Viewport &port)
-{
-    viewport = port;
-    return *this;
-};
-
-GraphicsPipelineBuilder &GraphicsPipelineBuilder::setScissor(const vk::Rect2D &scisso)
-{
-    scissor = scisso;
-    return *this;
-}
-
-std::vector<vk::VertexInputBindingDescription> &GraphicsPipelineBuilder::getVertexDescription() noexcept
-{
-    return vertexDescription;
-}
-std::vector<vk::VertexInputAttributeDescription> &GraphicsPipelineBuilder::getVertexAttributes() noexcept
-{
-    return vertexAttributes;
-}
-
 static void loadShader(const std::string &path, const vk::ShaderStageFlagBits &stage, vk::Device &device,
                        std::vector<vk::PipelineShaderStageCreateInfo> &shaderStages) noexcept
 {
-    auto shaderCode = vk_utils::readFile(path);
+    auto shaderCode = vk_utils::readBinaryFile(path);
     auto shaderModule = vk_utils::createShaderModule(device, shaderCode);
     vk_debug::setObjectName(device, shaderModule, path);
     shaderStages.push_back(vk_init::populateVkPipelineShaderStageCreateInfo(stage, shaderModule));
@@ -115,6 +35,12 @@ static void loadShader(const std::string &path, const vk::ShaderStageFlagBits &s
 vk::Pipeline GraphicsPipelineBuilder::build(vk::Device &device, vk::PipelineCache pipelineCache) const
 {
     DEBUG_FUNCTION
+    auto shaderStages = build_shader(device);
+    return build_impl(device, shaderStages, pipelineCache);
+}
+
+std::vector<vk::PipelineShaderStageCreateInfo> GraphicsPipelineBuilder::build_shader(vk::Device &device) const
+{
     std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
 
     loadShader(vertexShaderPath, vk::ShaderStageFlagBits::eVertex, device, shaderStages);
@@ -128,7 +54,13 @@ vk::Pipeline GraphicsPipelineBuilder::build(vk::Device &device, vk::PipelineCach
                    shaderStages);
     if (geometryShaderPath)
         loadShader(geometryShaderPath.value(), vk::ShaderStageFlagBits::eGeometry, device, shaderStages);
+    return shaderStages;
+}
 
+vk::Pipeline GraphicsPipelineBuilder::build_impl(vk::Device &device,
+                                                 const std::vector<vk::PipelineShaderStageCreateInfo> &shaderStages,
+                                                 vk::PipelineCache pipelineCache) const
+{
     auto vertexInputInfo = vk_init::populateVkPipelineVertexInputStateCreateInfo(vertexDescription, vertexAttributes);
 
     vk::PipelineViewportStateCreateInfo viewportState{

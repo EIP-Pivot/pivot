@@ -238,7 +238,7 @@ bool Engine::isKeyPressed(const std::string &key) const
     }
 }
 
-void Engine::onKeyPressed(graphics::Window &window, const graphics::Window::Key key)
+void Engine::onKeyPressed(graphics::Window &, const graphics::Window::Key key)
 {
     if (!m_paused) {
         m_scene_manager.getCurrentScene().getEventManager().sendEvent(

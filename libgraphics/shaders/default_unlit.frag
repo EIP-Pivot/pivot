@@ -1,6 +1,4 @@
 #version 460
-#extension GL_ARB_separate_shader_objects : enable
-#extension GL_EXT_nonuniform_qualifier : enable
 
 struct Material {
     vec4 baseColor;
@@ -19,10 +17,11 @@ struct pushConstantStruct {
     vec3 position;
 };
 
+layout(constant_id = 0) const uint NUMBER_OF_TEXTURES = 1;
+
 layout(location = 0) in vec3 fragPosition;
 layout(location = 1) in vec3 fragNormal;
-layout(location = 2) in vec3 fragColor;
-layout(location = 3) in vec2 fragTextCoords;
+layout(location = 2) in vec2 fragTextCoords;
 layout(location = 4) in flat uint materialIndex;
 
 layout(location = 0) out vec4 outColor;
@@ -39,7 +38,7 @@ layout(push_constant) uniform readonly constants
 }
 cameraData;
 
-layout(set = 0, binding = 2) uniform sampler2D texSampler[];
+layout(set = 0, binding = 2) uniform sampler2D texSampler[NUMBER_OF_TEXTURES];
 
 void main()
 {

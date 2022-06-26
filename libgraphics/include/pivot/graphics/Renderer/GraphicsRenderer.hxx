@@ -10,7 +10,7 @@ class GraphicsRenderer : public IGraphicsRenderer
 {
 public:
     /// @copydoc IRenderer::IRenderer
-    GraphicsRenderer(PipelineStorage &storage, AssetStorage &assets);
+    GraphicsRenderer(StorageUtils &utils);
     ~GraphicsRenderer();
 
     std::string getName() const noexcept override { return "Graphics"; }
@@ -23,7 +23,7 @@ public:
 
 private:
     void createPipelineLayout(vk::Device &device, const vk::DescriptorSetLayout &resolverLayout);
-    void createPipeline(VulkanBase &base_ref, vk::RenderPass &pass, const vk::Extent2D &size);
+    void createPipeline(VulkanBase &base_ref, vk::RenderPass &pass);
 
 private:
     bool bIsMultiDraw = false;

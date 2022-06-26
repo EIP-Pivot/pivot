@@ -7,18 +7,21 @@
 
 namespace pivot::graphics::vk_utils
 {
-
-std::vector<std::byte> readFile(const std::string &filename)
+std::string readFile(const std::filesystem::path &filename)
 {
-    size_t fileSize = 0;
-    std::vector<std::byte> fileContent;
-    std::ifstream file(filename, std::ios::ate | std::ios::binary);
+    assert(!std::filesystem::is_symlink(filename));
 
-    if (!file.is_open()) { throw std::runtime_error("failed to open file " + filename); }
-    fileSize = file.tellg();
+    /// Must be opened in binary mode, so Windows won't mess with the newlines
+    std::string fileContent;
+    std::ifstream file(filename, std::ios::binary);
+    size_t fileSize = std::filesystem::file_size(filename);
+
+    if (!file.is_open()) throw std::runtime_error("failed to open file " + filename.string());
     fileContent.resize(fileSize);
-    file.seekg(0);
-    file.read((char *)fileContent.data(), fileSize);
+    file.read(fileContent.data(), fileSize);
+    assert(!file.bad());
+    assert(!file.fail());
+    assert(fileSize == (unsigned long)file.gcount());
     file.close();
     return fileContent;
 }

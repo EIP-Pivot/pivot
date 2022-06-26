@@ -19,6 +19,7 @@ class PipelineStorage
 public:
     /// @brief Constructor
     PipelineStorage(VulkanBase &base);
+    PipelineStorage(const PipelineStorage &) = delete;
     /// @brief Destructor
     ~PipelineStorage();
 
@@ -30,7 +31,11 @@ public:
     /// @brief Store a new pipeline as given name
     void newGraphicsPipeline(const std::string &name, const GraphicsPipelineBuilder &builder);
     /// @copydoc newGraphicsPipeline
+    void newGraphicsPipeline(const std::string &name, vk::Pipeline pipeline);
+    /// @copydoc newGraphicsPipeline
     void newComputePipeline(const std::string &name, const ComputePipelineBuilder &builder);
+    /// @copydoc newGraphicsPipeline
+    void newComputePipeline(const std::string &name, vk::Pipeline pipeline);
 
     /// @brief Destroy the pipeline
     void removePipeline(const std::string &name);
@@ -66,6 +71,9 @@ public:
         defaultPipeline = id;
         bForceDefault = bForce;
     }
+
+    /// Return the pipeline cache
+    vk::PipelineCache getCache() const noexcept { return pipelineCache; }
 
 private:
     VulkanBase &base_ref;

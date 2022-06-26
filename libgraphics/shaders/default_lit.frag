@@ -1,6 +1,4 @@
 #version 460
-#extension GL_ARB_separate_shader_objects : enable
-#extension GL_EXT_nonuniform_qualifier : enable
 
 struct PointLight {
     vec4 position;
@@ -42,10 +40,11 @@ struct pushConstantStruct {
     vec3 position;
 };
 
+layout(constant_id = 0) const uint NUMBER_OF_TEXTURES = 1;
+
 layout(location = 0) in vec3 fragPosition;
 layout(location = 1) in vec3 fragNormal;
-layout(location = 2) in vec3 fragColor;
-layout(location = 3) in vec2 fragTextCoords;
+layout(location = 2) in vec2 fragTextCoords;
 layout(location = 4) in flat uint materialIndex;
 
 layout(location = 0) out vec4 outColor;
@@ -62,7 +61,7 @@ layout(std140, set = 0, binding = 1) readonly buffer ObjectMaterials
 }
 objectMaterials;
 
-layout(set = 0, binding = 2) uniform sampler2D texSampler[];
+layout(set = 0, binding = 2) uniform sampler2D texSampler[NUMBER_OF_TEXTURES];
 
 layout(std140, set = 1, binding = 2) readonly buffer LightBuffer
 {
@@ -82,13 +81,8 @@ layout(std140, set = 1, binding = 4) readonly buffer SpoLight
 }
 spotLight;
 
-vec3 calculateSpotLight(in Material mat, in SpotLight light)
+vec3 calculateLight(vec3 lightDir, vec3 lightColor, float intensity)
 {
-    vec3 lightDir = normalize(light.position.xyz - fragPosition);
-    float theta = dot(lightDir, normalize(-light.direction.xyz));
-    float epsilon = light.cutOff - light.outerCutOff;
-    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0) * light.intensity;
-
     vec3 norm = normalize(fragNormal);
 
     // diffuse
@@ -98,41 +92,7 @@ vec3 calculateSpotLight(in Material mat, in SpotLight light)
     vec3 refectDir = reflect(-lightDir, norm);
     float specular = pow(max(dot(norm, refectDir), 0.0), 32.0);
 
-    return light.color.rgb * ((diffuse + specular) * intensity);
-}
-
-vec3 calculateDirectionalLight(in Material mat, in DirectionalLight light)
-{
-    vec3 lightDir = normalize(-light.orientation.xyz);
-    vec3 norm = normalize(fragNormal);
-
-    // diffuse
-    float diffuse = max(dot(norm, lightDir), 0.0);
-
-    // specular
-    vec3 refectDir = reflect(-lightDir, norm);
-    float specular = pow(max(dot(norm, refectDir), 0.0), 32.0);
-
-    return light.color.rgb * ((diffuse + specular) * light.intensity);
-}
-
-vec3 calculateLight(in Material mat, in PointLight light)
-{
-    vec3 lightDir = normalize(light.position.xyz - fragPosition);
-    vec3 norm = normalize(fragNormal);
-
-    // diffuse
-    float diffuse = max(dot(norm, lightDir), 0.0);
-
-    // specular
-    vec3 refectDir = reflect(-lightDir, norm);
-    float specular = pow(max(dot(norm, refectDir), 0.0), 32.0);
-
-    float attenuation = 1.0 / length(light.position.xyz - fragPosition) * light.falloff;
-    diffuse *= attenuation;
-    specular *= attenuation;
-
-    return light.color.rgb * ((diffuse + specular) * light.intensity);
+    return lightColor * ((diffuse + specular) * intensity);
 }
 
 void main()
@@ -144,13 +104,26 @@ void main()
 
     vec3 light = vec3(0.1);
     for (uint i = 0; i < cameraData.push.directLightCount; i++) {
-        light += calculateDirectionalLight(material, directLight.directionalLightArray[i]);
+        DirectionalLight directionalLight = directLight.directionalLightArray[i];
+        vec3 lightDir = normalize(-directionalLight.orientation.xyz);
+        light += calculateLight(lightDir, directionalLight.color.rgb, directionalLight.intensity);
     }
     for (uint i = 0; i < cameraData.push.spotLightCount; i++) {
-        light += calculateSpotLight(material, spotLight.spotLightArray[i]);
+        SpotLight spotLight = spotLight.spotLightArray[i];
+        vec3 lightDir = normalize(spotLight.position.xyz - fragPosition);
+
+        float theta = dot(lightDir, normalize(-spotLight.direction.xyz));
+        float epsilon = spotLight.cutOff - spotLight.outerCutOff;
+        float intensity = clamp((theta - spotLight.outerCutOff) / epsilon, 0.0, 1.0) * spotLight.intensity;
+
+        light += calculateLight(lightDir, spotLight.color.rgb, spotLight.intensity);
     }
     for (uint i = 0; i < cameraData.push.pointLightCount; i++) {
-        light += calculateLight(material, omniLight.pointLightArray[i]);
+        PointLight pointLight = omniLight.pointLightArray[i];
+        vec3 lightDir = normalize(pointLight.position.xyz - fragPosition);
+        float attenuation = 1.0 / length(pointLight.position.xyz - fragPosition) * pointLight.falloff;
+
+        light += calculateLight(lightDir, pointLight.color.rgb, pointLight.intensity * attenuation);
     }
     outColor = vec4(light * diffuseColor, 1.0);
 

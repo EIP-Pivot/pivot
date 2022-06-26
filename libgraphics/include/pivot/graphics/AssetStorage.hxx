@@ -63,11 +63,11 @@ public:
         float metallic = 1.0f;
         float roughness = 1.0f;
         glm::vec4 baseColor = glm::vec4(1.0f);
-        std::string baseColorTexture;
-        std::string metallicRoughnessTexture;
-        std::string normalTexture;
-        std::string occlusionTexture;
-        std::string emissiveTexture;
+        std::string baseColorTexture = "";
+        std::string metallicRoughnessTexture = "";
+        std::string normalTexture = "";
+        std::string occlusionTexture = "";
+        std::string emissiveTexture = "";
         ///@endcond
     };
 
@@ -130,6 +130,7 @@ public:
 public:
     /// Constructor
     AssetStorage(VulkanBase &device);
+    AssetStorage(const AssetStorage &) = delete;
     /// Destructor
     ~AssetStorage();
 
@@ -233,9 +234,31 @@ public:
         return {it->second};
     }
 
+    /// Return the path of all the texture currently loaded in the Storage
+    auto getTextures() const
+    {
+        return this->textureStorage | std::views::transform([](const auto &i) { return i.first; });
+    }
+
+    /// Return the path of all the models currently loaded in the Storage
+    auto getModels() const
+    {
+        return this->modelStorage | std::views::transform([](const auto &i) { return i.first; });
+    }
+
+    /// Return the path of all the models currently loaded in the Storage
+    auto getMaterial() const
+    {
+        return this->materialStorage | std::views::transform([](const auto &i) { return i.first; });
+    }
+
     template <typename T>
     /// Get an asset of type T named name
     inline const T &get(const std::string &name) const;
+
+    template <typename T>
+    /// Return the amount of ressources
+    inline std::uint32_t getSize() const;
 
     template <typename T>
     /// Get an asset of type T named name if it exists
@@ -391,6 +414,21 @@ inline std::int32_t AssetStorage::getIndex<gpu_object::Material>(const std::stri
     auto idx = materialStorage.getIndex(i);
     if (idx == -1) return getIndex<gpu_object::Material>(missing_material_name);
     return idx;
+}
+
+template <>
+/// @copydoc AssetStorage::getSize
+inline std::uint32_t AssetStorage::getSize<gpu_object::Material>() const
+{
+    assert(materialBuffer.size == materialStorage.size());
+    return materialStorage.size();
+}
+
+template <>
+/// @copydoc AssetStorage::getSize
+inline std::uint32_t AssetStorage::getSize<AssetStorage::Texture>() const
+{
+    return textureStorage.size();
 }
 
 #endif

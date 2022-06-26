@@ -82,7 +82,11 @@ public:
     T &addRenderer()
     {
         DEBUG_FUNCTION
-        auto rendy = std::make_unique<T>(pipelineStorage, assetStorage);
+        StorageUtils utils{
+            .pipeline = pipelineStorage,
+            .assets = assetStorage,
+        };
+        auto rendy = std::make_unique<T>(utils);
         auto &ret = *rendy;
         if constexpr (std::is_base_of_v<IGraphicsRenderer, T>) {
             graphicsRenderer.emplace_back(std::move(rendy));

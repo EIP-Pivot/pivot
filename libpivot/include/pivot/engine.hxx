@@ -43,7 +43,7 @@ protected:
     builtins::Camera m_camera;
     bool m_paused = true;
 
-    virtual void onTick(float delta){};
+    virtual void onTick([[maybe_unused]] float delta){};
     ecs::CurrentScene getCurrentScene() { return m_scene_manager; };
     const ecs::SceneManager &getSceneManager() { return m_scene_manager; };
 

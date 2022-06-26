@@ -63,7 +63,7 @@ public:
             if (!m_combination.isValid()) { goToNextValidEntity(); }
         }
         /// End constructor
-        explicit iterator(ArrayCombination &intersection, bool end)
+        explicit iterator(ArrayCombination &intersection, bool)
             : m_max_entity(intersection.maxEntity()), m_combination(intersection, m_max_entity + 1)
         {
         }

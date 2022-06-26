@@ -142,8 +142,12 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
             .mesh =
                 {
                     .vertexOffset = static_cast<uint32_t>(vertexBuffer.size()),
+                    .vertexSize = 0,
                     .indicesOffset = static_cast<uint32_t>(indexBuffer.size()),
+                    .indicesSize = 0,
                 },
+            .default_material =
+                ((primitive.material > -1) ? (gltfModel.materials.at(primitive.material).name) : ("white")),
         };
         // Vertices
         {
@@ -155,6 +159,8 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
                 getPrimitiveAttribute<glm::vec2>(gltfModel, primitive, "TEXCOORD_0");
             const auto &[colorBuffer, colorAccessor] =
                 getPrimitiveAttribute<glm::vec3>(gltfModel, primitive, "COLOR_0");
+            const auto &[tangentBuffer, tangentAccessor] =
+                getPrimitiveAttribute<glm::vec4>(gltfModel, primitive, "TANGENT");
 
             if (positionBuffer.empty()) throw std::logic_error("No verticies found in a mesh node");
             if (!colorBuffer.empty() && colorAccessor.type != TINYGLTF_PARAMETER_TYPE_FLOAT_VEC3)
@@ -167,12 +173,14 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
 
             model.mesh.vertexSize = positionBuffer.size();
             for (unsigned v = 0; v < positionBuffer.size(); v++) {
-                Vertex vert;
-                vert.pos = glm::vec4(positionBuffer.at(v), 1.0f) * matrix;
-                vert.normal = normalsBuffer.empty() ? glm::vec4(0.0f)
-                                                    : (glm::normalize(glm::vec4(normalsBuffer.at(v), 1.0f) * matrix));
-                vert.texCoord = texCoordsBuffer.empty() ? glm::vec3(0.0f) : texCoordsBuffer.at(v);
-                vert.color = colorBuffer.empty() ? glm::vec3(1.0f) : colorBuffer.at(v);
+                Vertex vert{
+                    .pos = glm::vec4(positionBuffer.at(v), 1.0f) * matrix,
+                    .normal = normalsBuffer.empty() ? glm::vec4(0.0f)
+                                                    : (glm::normalize(glm::vec4(normalsBuffer.at(v), 1.0f) * matrix)),
+                    .texCoord = texCoordsBuffer.empty() ? glm::vec3(0.0f) : texCoordsBuffer.at(v),
+                    .color = colorBuffer.empty() ? glm::vec4(1.0f) : glm::vec4(colorBuffer.at(v), 1.0f),
+                    .tangent = tangentBuffer.empty() ? glm::vec4(0.0f) : tangentBuffer.at(v),
+                };
                 vertexBuffer.push_back(vert);
             }
         }
@@ -201,19 +209,15 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
             }
         }
         /// End of Indices
-        if (primitive.material > -1) {
-            model.default_material = gltfModel.materials.at(primitive.material).name;
-        } else {
-            model.default_material = "white";
-        }
+
         loaded.push_back(std::make_pair(node.name + std::to_string(model.mesh.vertexOffset), model));
     }
     return loaded;
 }
 
 static std::pair<std::string, AssetStorage::CPUMaterial>
-loadGltfMaterial(const IndexedStorage<std::string, AssetStorage::CPUTexture> &texture, const tinygltf::Model &gltfModel,
-                 const tinygltf::Material &mat, const unsigned offset)
+loadGltfMaterial(const IndexedStorage<std::string, AssetStorage::CPUTexture> &texture, const tinygltf::Material &mat,
+                 const unsigned offset)
 {
     DEBUG_FUNCTION
     AssetStorage::CPUMaterial material;
@@ -267,7 +271,7 @@ try {
         supportedTexture.at(filepath.extension().string())(filepath, std::ref(storage));
     }
     for (const auto &material: gltfModel.materials) {
-        const auto mat = loadGltfMaterial(storage.textureStaging, gltfModel, material, offset);
+        const auto mat = loadGltfMaterial(storage.textureStaging, material, offset);
         storage.materialStaging.add(std::move(mat));
     }
     if (gltfModel.scenes.empty()) {

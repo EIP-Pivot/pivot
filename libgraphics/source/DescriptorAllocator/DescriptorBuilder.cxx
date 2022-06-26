@@ -76,28 +76,18 @@ DescriptorBuilder &DescriptorBuilder::bindImages(uint32_t binding,
     };
     writes.push_back(newWrite);
     variableDescriptorCount.push_back(imageInfo.size());
-    descriptorBindingFlags.push_back(vk::DescriptorBindingFlagBits::eVariableDescriptorCount);
     return *this;
 }
 
 bool DescriptorBuilder::build(vk::Device &device, vk::DescriptorSet &set, vk::DescriptorSetLayout &layout)
 {
-    vk::DescriptorSetLayoutBindingFlagsCreateInfo bindingInfo{
-        .bindingCount = static_cast<uint32_t>(descriptorBindingFlags.size()),
-        .pBindingFlags = descriptorBindingFlags.data(),
-    };
     vk::DescriptorSetLayoutCreateInfo layoutInfo{
-        .pNext = &bindingInfo,
         .bindingCount = static_cast<uint32_t>(bindings.size()),
         .pBindings = bindings.data(),
     };
     layout = cache.createDescriptorLayout(layoutInfo);
 
-    vk::DescriptorSetVariableDescriptorCountAllocateInfo set_counts{
-        .descriptorSetCount = static_cast<uint32_t>(variableDescriptorCount.size()),
-        .pDescriptorCounts = variableDescriptorCount.data(),
-    };
-    if (!alloc.allocate(set, layout, set_counts)) return false;
+    if (!alloc.allocate(set, layout)) return false;
     for (vk::WriteDescriptorSet &w: writes) w.dstSet = set;
     device.updateDescriptorSets(writes, 0);
     return true;

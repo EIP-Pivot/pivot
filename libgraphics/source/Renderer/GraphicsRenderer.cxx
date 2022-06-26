@@ -6,9 +6,7 @@
 namespace pivot::graphics
 {
 
-GraphicsRenderer::GraphicsRenderer(PipelineStorage &storage, AssetStorage &assets): IGraphicsRenderer(storage, assets)
-{
-}
+GraphicsRenderer::GraphicsRenderer(StorageUtils &utils): IGraphicsRenderer(utils) {}
 GraphicsRenderer::~GraphicsRenderer() {}
 
 bool GraphicsRenderer::onInit(const vk::Extent2D &size, VulkanBase &base_ref,
@@ -27,7 +25,7 @@ bool GraphicsRenderer::onInit(const vk::Extent2D &size, VulkanBase &base_ref,
         .extent = size,
     };
     createPipelineLayout(base_ref.device, resolverLayout);
-    createPipeline(base_ref, pass, size);
+    createPipeline(base_ref, pass);
     return true;
 }
 
@@ -40,11 +38,11 @@ bool GraphicsRenderer::onRecreate(const vk::Extent2D &size, VulkanBase &base_ref
                                   const vk::DescriptorSetLayout &resolverLayout, vk::RenderPass &pass)
 {
     onStop(base_ref);
-    stor.removePipeline("pbr");
-    stor.removePipeline("lit");
-    stor.removePipeline("unlit");
-    stor.removePipeline("wireframe");
-    stor.removePipeline("skybox");
+    storage.pipeline.get().removePipeline("pbr");
+    storage.pipeline.get().removePipeline("lit");
+    storage.pipeline.get().removePipeline("unlit");
+    storage.pipeline.get().removePipeline("wireframe");
+    storage.pipeline.get().removePipeline("skybox");
     return onInit(size, base_ref, resolverLayout, pass);
 }
 
@@ -61,7 +59,7 @@ bool GraphicsRenderer::onDraw(const CameraData &cameraData, DrawCallResolver &re
     };
 
     vk_debug::beginRegion(cmd, "Draw Commands", {0.f, 1.f, 0.f, 1.f});
-    assets.bindForGraphics(cmd, pipelineLayout);
+    storage.assets.get().bindForGraphics(cmd, pipelineLayout);
     cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1,
                            resolver.getFrameData().objectDescriptor, nullptr);
     cmd.pushConstants<gpu_object::VertexPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0,
@@ -69,7 +67,8 @@ bool GraphicsRenderer::onDraw(const CameraData &cameraData, DrawCallResolver &re
     cmd.pushConstants<gpu_object::FragmentPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eFragment,
                                                         sizeof(gpu_object::VertexPushConstant), fragmentCamera);
     for (const auto &packedPipeline: resolver.getFrameData().pipelineBatch) {
-        cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, stor.getGraphics(packedPipeline.pipelineID));
+        cmd.bindPipeline(vk::PipelineBindPoint::eGraphics,
+                         storage.pipeline.get().getGraphics(packedPipeline.pipelineID));
         cmd.setViewport(0, viewport);
         cmd.setScissor(0, scissor);
 
@@ -100,38 +99,65 @@ void GraphicsRenderer::createPipelineLayout(vk::Device &device, const vk::Descri
                                              sizeof(gpu_object::VertexPushConstant)),
     };
 
-    std::vector<vk::DescriptorSetLayout> setLayout = {assets.getDescriptorSetLayout(), resolverLayout};
+    std::vector<vk::DescriptorSetLayout> setLayout = {storage.assets.get().getDescriptorSetLayout(), resolverLayout};
     auto pipelineLayoutCreateInfo = vk_init::populateVkPipelineLayoutCreateInfo(setLayout, pipelinePushConstant);
     pipelineLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
     vk_debug::setObjectName(device, pipelineLayout, "Graphics pipeline Layout");
 }
 
-void GraphicsRenderer::createPipeline(VulkanBase &base_ref, vk::RenderPass &pass, const vk::Extent2D &size)
+void GraphicsRenderer::createPipeline(VulkanBase &base_ref, vk::RenderPass &pass)
 {
     DEBUG_FUNCTION
 
     GraphicsPipelineBuilder builder;
+    const std::uint32_t count = storage.assets.get().getSize<AssetStorage::Texture>();
+    std::vector<vk::SpecializationMapEntry> specializationData = {
+        {
+            .constantID = 0,
+            .offset = 0,
+            .size = sizeof(std::uint32_t),
+        },
+    };
+
     builder.setPipelineLayout(pipelineLayout)
         .setRenderPass(pass)
         .setMsaaSample(base_ref.maxMsaaSample)
-        .setFaceCulling(vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise)
-        .setVertexShaderPath("shaders/default_pbr.vert.spv")
-        .setFragmentShaderPath("shaders/default_pbr.frag.spv");
-    stor.newGraphicsPipeline("pbr", builder);
-    stor.setDefault("pbr");
+        .setFaceCulling(vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise);
 
     builder.setVertexShaderPath("shaders/default.vert.spv").setFragmentShaderPath("shaders/default_lit.frag.spv");
-    stor.newGraphicsPipeline("lit", builder);
+    storage.pipeline.get().newGraphicsPipeline(
+        "lit", builder.buildWithSpecialisation(base_ref.device, specializationData, count,
+                                               vk::ShaderStageFlagBits::eFragment, storage.pipeline.get().getCache()));
 
     builder.setFragmentShaderPath("shaders/default_unlit.frag.spv");
-    stor.newGraphicsPipeline("unlit", builder);
+    storage.pipeline.get().newGraphicsPipeline(
+        "unlit",
+        builder.buildWithSpecialisation(base_ref.device, specializationData, count, vk::ShaderStageFlagBits::eFragment,
+                                        storage.pipeline.get().getCache()));
 
     builder.setPolygonMode(vk::PolygonMode::eLine);
-    stor.newGraphicsPipeline("wireframe", builder);
+    storage.pipeline.get().newGraphicsPipeline(
+        "wireframe",
+        builder.buildWithSpecialisation(base_ref.device, specializationData, count, vk::ShaderStageFlagBits::eFragment,
+                                        storage.pipeline.get().getCache()));
 
     builder.setPolygonMode(vk::PolygonMode::eFill);
     builder.setFaceCulling(vk::CullModeFlagBits::eFront, vk::FrontFace::eCounterClockwise);
-    stor.newGraphicsPipeline("skybox", builder);
+    storage.pipeline.get().newGraphicsPipeline(
+        "skybox",
+        builder.buildWithSpecialisation(base_ref.device, specializationData, count, vk::ShaderStageFlagBits::eFragment,
+                                        storage.pipeline.get().getCache()));
+
+    builder.setFaceCulling(vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise)
+        .setVertexAttributes(Vertex::getInputAttributeDescriptions(
+            0, VertexComponentFlagBits::Position | VertexComponentFlagBits::Normal | VertexComponentFlagBits::UV |
+                   VertexComponentFlagBits::Tangent))
+        .setVertexShaderPath("shaders/default_pbr.vert.spv")
+        .setFragmentShaderPath("shaders/default_pbr.frag.spv");
+    storage.pipeline.get().newGraphicsPipeline(
+        "pbr", builder.buildWithSpecialisation(base_ref.device, specializationData, count,
+                                               vk::ShaderStageFlagBits::eFragment, storage.pipeline.get().getCache()));
+    storage.pipeline.get().setDefault("pbr");
 }
 
 }    // namespace pivot::graphics

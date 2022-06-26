@@ -23,11 +23,13 @@ function(add_shader TARGET SHADER)
     endif()
     add_custom_command(
         OUTPUT ${current-output-path}
-        COMMAND ${Vulkan_GLSLC_EXECUTABLE} -fnan-clamp -x glsl --target-env=vulkan1.2 ${GLSLC_EXTRA_ARGS} -o
-                ${current-output-path} ${current-shader-path}
+        COMMAND
+            ${Vulkan_GLSLC_EXECUTABLE} -fnan-clamp -x glsl --target-env=vulkan1.1
+            $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:-g> $<$<CONFIG:Release>:-O> $<$<CONFIG:MinSizeRel>:-Os> -o
+            ${current-output-path} ${current-shader-path}
         DEPENDS ${current-shader-path}
         IMPLICIT_DEPENDS CXX ${current-shader-path}
-        VERBATIM
+        COMMAND_EXPAND_LISTS VERBATIM
     )
 
     # Make sure our build depends on this output.

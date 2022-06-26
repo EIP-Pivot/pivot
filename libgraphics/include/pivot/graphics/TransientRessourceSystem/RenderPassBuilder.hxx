@@ -2,6 +2,7 @@
 
 #include <any>
 #include <map>
+#include <typeindex>
 #include <vulkan/vulkan.hpp>
 
 #include "pivot/graphics/TransientRessourceSystem/Ticket.hxx"
@@ -32,6 +33,7 @@ public:
         InitialState initialState = InitialState::DontCare;
         vma::MemoryUsage memUsage = vma::MemoryUsage::eAuto;
         std::string debug_name = "";
+        bool operator==(const TextureDescription &) const = default;
     };
 
     template <BufferValid T>
@@ -41,17 +43,17 @@ public:
         InitialState initialState = InitialState::DontCare;
         vma::MemoryUsage memUsage = vma::MemoryUsage::eAuto;
         std::string debug_name = "";
+        bool operator==(const BufferDescription &) const = default;
     };
 
-    struct Texture {
-        RenderPassBuilder::TextureDescription description;
-        AllocatedImage texture;
-    };
+    struct VoidBufferDescription {
+        template <BufferValid T>
+        VoidBufferDescription(const BufferDescription<T> &des): desc(des), type(typeid(T))
+        {
+        }
 
-    template <BufferValid T>
-    struct Buffer {
-        RenderPassBuilder::BufferDescription<T> description;
-        AllocatedBuffer<T> buffer;
+        BufferDescription<void> desc;
+        std::type_index type;
     };
 
 public:
@@ -68,14 +70,19 @@ public:
     Ticket create(const BufferDescription<T> &desc)
     {
         auto ret = Ticket::newTicket();
-        masterBufferStorage[ret] = desc;
+        bufferCreation.emplace(ret, desc);
         return ret;
     }
 
 private:
-    std::map<Ticket, TextureDescription> masterTextureStorage;
-    std::map<Ticket, std::any> masterBufferStorage;
-    std::unordered_map<Ticket, vk::RenderPass> renderPassStorage;
+    std::map<Ticket, TextureDescription> textureCreation;
+    std::map<Ticket, VoidBufferDescription> bufferCreation;
+    std::vector<Ticket> readTicket;
+    std::vector<Ticket> writeTicketConsumed;
+    std::vector<Ticket> writeTicketProduced;
+    std::vector<std::pair<Ticket, vk::RenderPass>> renderPasses;
+
+    friend class FrameGraph;
 };
 
 }    // namespace pivot::graphics::trs

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/AssetStorage.hxx"
 #include "pivot/graphics/DrawCallResolver.hxx"
 
 #include <vulkan/vulkan.hpp>

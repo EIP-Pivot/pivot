@@ -6,7 +6,6 @@
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 #include "pivot/graphics/types/AllocatedImage.hxx"
 
-#include <Logger.hpp>
 #include <any>
 #include <unordered_map>
 #include <vulkan/vulkan.hpp>
@@ -31,21 +30,21 @@ public:
         if (iter == bufferStorage.end())
             throw RenderPassRessourcesError("Ticket not found in this render pass requested buffer");
 
-        const auto &expected = typeid(RenderPassBuilder::Buffer<T>);
-        if (iter->second.type() != expected) {
-            logger.err("RenderPassRessource")
-                << "Error while getting buffer. Expected T = " << iter->second.type().name()
-                << " but got T = " << expected.name();
+        const std::type_index expected = typeid(T);
+        if (iter->second.type != expected) {
+            logger.err("RenderPassRessource") << "Error while getting buffer. Expected T = " << iter->second.type.name()
+                                              << " but got T = " << expected.name();
             throw RenderPassRessourcesError("Requested type not correct !");
         }
-        return std::any_cast<RenderPassBuilder::Buffer<T>>(iter->second).buffer;
+#warning unimplemented
+        return {};
     }
 
     vk::Framebuffer getRenderTarget(const Ticket &ticket) const;
 
 private:
-    std::unordered_map<Ticket, RenderPassBuilder::Texture> textureStorage;
-    std::unordered_map<Ticket, std::any> bufferStorage;
+    std::unordered_map<Ticket, RenderPassBuilder::TextureDescription> textureStorage;
+    std::unordered_map<Ticket, RenderPassBuilder::VoidBufferDescription> bufferStorage;
     std::unordered_map<Ticket, vk::Framebuffer> framebufferStorage;
 };
 

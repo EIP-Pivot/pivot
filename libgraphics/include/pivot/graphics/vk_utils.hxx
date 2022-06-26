@@ -44,7 +44,7 @@ readBinaryFile(const std::filesystem::path &filename)
     file.read(reinterpret_cast<char *>(fileContent.data()), fileSize * sizeof(T));
     assert(!file.bad());
     assert(!file.fail());
-    assert(fileContent.size() == (unsigned long)file.gcount());
+    assert(fileSize == (unsigned long)file.gcount());
     file.close();
     return fileContent;
 }

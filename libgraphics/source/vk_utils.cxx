@@ -21,7 +21,7 @@ std::string readFile(const std::filesystem::path &filename)
     file.read(fileContent.data(), fileSize);
     assert(!file.bad());
     assert(!file.fail());
-    assert(fileContent.size() == (unsigned long)file.gcount());
+    assert(fileSize == (unsigned long)file.gcount());
     file.close();
     return fileContent;
 }

@@ -2,7 +2,6 @@
 
 #include <Logger.hpp>
 #include <optional>
-// namespace pivot
 
 #ifndef NDEBUG
     #define DEBUG_FUNCTION logger.trace(::function_name()) << "Entered";
@@ -24,8 +23,13 @@
     #define DEBUG_FUNCTION void(0);
 #endif
 
+namespace pivot
+{
+
 template <typename T>
 using Ref = std::reference_wrapper<T>;
 
 template <typename T>
 using OptionalRef = std::optional<Ref<T>>;
+
+}    // namespace pivot

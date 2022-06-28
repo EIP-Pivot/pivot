@@ -12,7 +12,9 @@ PointLight::PointLight(const graphics::PointLight &light, const Transform &trans
 }
 
 DirectionalLight::DirectionalLight(const graphics::DirectionalLight &light, const Transform &transform)
-    : orientation(glm::vec4(transform.rotation, 1)), color(glm::vec4(light.color, 1)), intensity(light.intensity)
+    : orientation(glm::vec4(1.0f) * glm::toMat4(glm::quat(transform.rotation))),
+      color(glm::vec4(light.color, 1)),
+      intensity(light.intensity)
 
 {
 }

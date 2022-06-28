@@ -21,7 +21,7 @@ DirectionalLight::DirectionalLight(const graphics::DirectionalLight &light, cons
 
 SpotLight::SpotLight(const graphics::SpotLight &light, const Transform &transform)
     : position(glm::vec4(transform.position, 1.0f)),
-      direction(glm::vec4(transform.rotation, 1.0f)),
+      direction(glm::vec4(1.0f) * glm::toMat4(glm::quat(transform.rotation))),
       color(glm::vec4(light.color, 1.0f)),
       cutOff(light.cutOff),
       outerCutOff(light.outerCutOff),

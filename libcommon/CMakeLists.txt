@@ -96,4 +96,4 @@ target_precompile_headers(
     <string>
 )
 
-build_tests(${PROJECT_NAME} tests/indexed_storage.cxx tests/flags.cxx)
+build_tests(${PROJECT_NAME} tests/indexed_storage.cxx tests/flags.cxx tests/node.cxx)

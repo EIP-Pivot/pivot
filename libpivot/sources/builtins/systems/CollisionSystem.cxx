@@ -3,6 +3,7 @@
 #include <pivot/graphics/types/RenderObject.hxx>
 
 #include <pivot/builtins/components/Transform.hxx>
+#include <pivot/builtins/events/collision.hxx>
 #include <pivot/builtins/events/tick.hxx>
 #include <pivot/builtins/systems/CollisionSystem.hxx>
 #include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
@@ -15,9 +16,9 @@ using AABB = pivot::graphics::gpu_object::AABB;
 
 namespace
 {
-void collisionSystemImpl(std::reference_wrapper<const pivot::graphics::AssetStorage> assetStorage,
-                         const systems::Description &systemDescription, component::ArrayCombination &cmb,
-                         const event::EventWithComponent &event)
+std::vector<event::Event> collisionSystemImpl(std::reference_wrapper<const pivot::graphics::AssetStorage> assetStorage,
+                                              const systems::Description &, component::ArrayCombination &cmb,
+                                              const event::EventWithComponent &)
 {
     auto collidableStorage = dynamic_cast<const component::FlagComponentStorage &>(cmb.arrays()[0].get());
     auto transformArray =
@@ -42,10 +43,15 @@ void collisionSystemImpl(std::reference_wrapper<const pivot::graphics::AssetStor
     // logger.debug() << "entities " << collidableStorage.getData().size() << " aabb " << entityAABB.size();
 
     auto collisions = getEntityCollisions(entityAABB);
+    std::vector<event::Event> collision_events{};
 
     for (auto [entity1, entity2]: collisions) {
         logger.debug() << "Collision between entity " << entity1 << " and entity " << entity2;
+        collision_events.push_back(
+            event::Event{pivot::builtins::events::collision, {entity1, entity2}, data::Value{data::Void{}}});
     }
+
+    return collision_events;
 }
 }    // namespace
 
@@ -82,6 +88,7 @@ const pivot::ecs::systems::Description makeCollisionSystem(const pivot::graphics
 {
     return pivot::ecs::systems::Description{
         .name = "Collision System",
+        .entityName = "",
         .systemComponents =
             {
                 "Collidable",
@@ -89,6 +96,7 @@ const pivot::ecs::systems::Description makeCollisionSystem(const pivot::graphics
                 "RenderObject",
             },
         .eventListener = events::tick,
+        .eventComponents = {},
         .provenance = pivot::ecs::Provenance::builtin(),
         .system = std::bind_front(collisionSystemImpl, std::cref(assetStorage)),
     };

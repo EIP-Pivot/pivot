@@ -21,6 +21,12 @@ void to_json(nlohmann::json &json, const Asset &value);
 /// Deserialize an Asset from json
 void from_json(const nlohmann::json &json, Asset &value);
 
+/// Serialize an Color to json
+void to_json(nlohmann::json &json, const Color &value);
+
+/// Deserialize an Color from json
+void from_json(const nlohmann::json &json, Color &value);
+
 /// Serialize Void to json
 void to_json(nlohmann::json &json, const Void &value);
 

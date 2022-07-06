@@ -9,6 +9,7 @@
 #include <variant>
 
 #include <pivot/ecs/Core/Data/asset.hxx>
+#include <pivot/ecs/Core/Data/color.hxx>
 #include <pivot/ecs/Core/Data/void.hxx>
 
 namespace pivot::ecs::data
@@ -39,6 +40,9 @@ enum class BasicType {
 
     /// The property has no value
     Void,
+
+    /// The property is of type Color
+    Color,
 };
 
 struct Type;
@@ -79,6 +83,8 @@ template <>
 constexpr std::optional<BasicType> basic_type_representation<glm::vec2> = BasicType::Vec2;
 template <>
 constexpr std::optional<BasicType> basic_type_representation<Asset> = BasicType::Asset;
+template <>
+constexpr std::optional<BasicType> basic_type_representation<Color> = BasicType::Color;
 template <>
 constexpr std::optional<BasicType> basic_type_representation<Void> = BasicType::Void;
 

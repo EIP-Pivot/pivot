@@ -29,6 +29,8 @@ void from_json(const nlohmann::json &json, Value &value)
         // TODO: How to distinguish between an asset and a record ?
         if (json.contains("asset") && json.size() == 1)
             value = json.get<Asset>();
+        else if (json.contains("color") && json.size() == 1)
+            value = json.get<Color>();
         else
             value = json.get<Record>();
     } else if (json.is_null()) {
@@ -46,6 +48,18 @@ void to_json(nlohmann::json &json, const Asset &value) { json["asset"]["name"] =
 
 /// Deserialize an Asset from json
 void from_json(const nlohmann::json &json, Asset &value) { value.name = json["asset"]["name"].get<std::string>(); }
+
+/// Serialize an Color to json
+void to_json(nlohmann::json &json, const Color &value) { json["color"]["rgba"] = value.rgba; }
+
+/// Deserialize an Color from json
+void from_json(const nlohmann::json &json, Color &value)
+{
+    value.rgba[0] = json["color"]["rgba"][0].get<float>();
+    value.rgba[1] = json["color"]["rgba"][1].get<float>();
+    value.rgba[2] = json["color"]["rgba"][2].get<float>();
+    value.rgba[3] = json["color"]["rgba"][3].get<float>();
+}
 
 /// Serialize Void to json
 void to_json([[maybe_unused]] nlohmann::json &json, [[maybe_unused]] const Void &value) {}

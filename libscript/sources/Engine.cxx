@@ -7,9 +7,9 @@
 namespace pivot::ecs::script
 {
 
-Engine::Engine(systems::Index &systemIndex, component::Index &componentIndex,
+Engine::Engine(systems::Index &systemIndex, component::Index &componentIndex, event::Index &eventIndex,
                interpreter::builtins::BuiltinContext context)
-    : _systemIndex(systemIndex), _componentIndex(componentIndex), _interpreter(context)
+    : _systemIndex(systemIndex), _componentIndex(componentIndex), _eventIndex(eventIndex), _interpreter(context)
 {
     std::srand(std::time(nullptr));    // for built-in rand_int
 }

@@ -53,7 +53,8 @@ TEST_CASE("Scripting-Refacto-Engine")
         "	# anyEntity.Position.pos_z = anyEntity.Position.pos_z + anyEntity.Velocity.vel_z# * deltaTime\n";
     component::Index cind;
     systems::Index sind;
-    script::Engine engine(sind, cind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
+    event::Index eind;
+    script::Engine engine(sind, cind, eind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
     engine.loadFile(file, true);
 
     REQUIRE(sind.getDescription("onTickPhysics").has_value());
@@ -100,7 +101,8 @@ TEST_CASE("Scripting-Refacto-Interpreter_One")
 
     component::Index cind;
     systems::Index sind;
-    script::Engine engine(sind, cind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
+    event::Index eind;
+    script::Engine engine(sind, cind, eind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
     // std::string file = "../libscript/tests/tests/systems/interpreter/valid2.pvt";
     // engine.loadFile(file);
     std::string fileContent = "component C\n\tBoolean b\nsystem S(anyEntity<C>) event Tick(Number "
@@ -120,9 +122,20 @@ TEST_CASE("Scripting-Refacto-Interpreter_One")
         .event = event::Event{.description = Sdescription.eventListener, .entities = {1, 2}, .payload = 0.12}};
 
     Sdescription.system(Sdescription, combinations, evt);
-
     std::cout << "Returned " << std::get<bool>(std::get<data::Record>(array1->getValueForEntity(0).value()).at("b"))
               << std::endl;
 
     std::cout << "------Interpreter------end" << std::endl;
+}
+
+TEST_CASE("Scripting-Events")
+{
+    std::cout << "------EVENTS------start" << std::endl;
+    component::Index cind;
+    systems::Index sind;
+    event::Index eind;
+
+    script::Engine engine(sind, cind, eind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
+
+    std::cout << "------EVENTS------end" << std::endl;
 }

@@ -8,6 +8,8 @@
 #include "pivot/ecs/Core/Component/ScriptingComponentArray.hxx"
 #include "pivot/ecs/Core/Component/description.hxx"
 #include "pivot/ecs/Core/Component/index.hxx"
+#include "pivot/ecs/Core/Event/description.hxx"
+#include "pivot/ecs/Core/Event/index.hxx"
 #include "pivot/ecs/Core/Systems/description.hxx"
 #include "pivot/ecs/Core/Systems/index.hxx"
 

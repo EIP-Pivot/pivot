@@ -38,4 +38,13 @@ struct adl_serializer<glm::vec3> {
     /// Specialization to allow serializing and deserializing glm::vec3
     static void from_json(const json &j, glm::vec3 &opt);
 };
+
+template <>
+/// Specialization to allow serializing and deserializing glm::vec2
+struct adl_serializer<glm::vec2> {
+    /// Specialization to allow serializing and deserializing glm::vec2
+    static void to_json(json &j, const glm::vec2 &opt);
+    /// Specialization to allow serializing and deserializing glm::vec2
+    static void from_json(const json &j, glm::vec2 &opt);
+};
 }    // namespace nlohmann

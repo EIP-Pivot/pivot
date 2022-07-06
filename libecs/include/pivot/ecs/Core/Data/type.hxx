@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <map>
 #include <optional>
@@ -29,6 +30,9 @@ enum class BasicType {
 
     /// The property is of type glm::vec3
     Vec3,
+
+    /// The property is of type glm::vec2
+    Vec2,
 
     /// The property is of type Asset
     Asset,
@@ -71,6 +75,8 @@ template <>
 constexpr std::optional<BasicType> basic_type_representation<bool> = BasicType::Boolean;
 template <>
 constexpr std::optional<BasicType> basic_type_representation<glm::vec3> = BasicType::Vec3;
+template <>
+constexpr std::optional<BasicType> basic_type_representation<glm::vec2> = BasicType::Vec2;
 template <>
 constexpr std::optional<BasicType> basic_type_representation<Asset> = BasicType::Asset;
 template <>

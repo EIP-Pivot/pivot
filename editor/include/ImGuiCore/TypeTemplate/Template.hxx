@@ -10,6 +10,7 @@
 #include <misc/cpp/imgui_stdlib.h>
 
 void draw(glm::vec3 &value, const std::string &name) { ImGui::InputFloat3(name.c_str(), glm::value_ptr(value)); }
+void draw(glm::vec2 &value, const std::string &name) { ImGui::InputFloat2(name.c_str(), glm::value_ptr(value)); }
 
 void draw(std::string &value, const std::string &name) { ImGui::InputText(name.c_str(), &value); }
 

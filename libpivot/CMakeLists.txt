@@ -11,6 +11,7 @@ add_library(
     sources/builtins/components/Light.cxx
     sources/builtins/components/Transform.cxx
     sources/builtins/components/Collidable.cxx
+    sources/builtins/components/Text.cxx
 )
 
 

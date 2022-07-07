@@ -73,6 +73,7 @@ std::vector<systems::Description> registerDeclarations(const Node &file, compone
         for (const Node &node: file.children) {
             if (node.type == NodeType::ComponentDeclaration) {    // register component
                 registerComponentDeclaration(node, componentIndex, file.value);
+            } else if (node.type == NodeType::EventDeclaration) {     // register event
             } else if (node.type == NodeType::SystemDeclaration) {    // store system declaration for return
                 systems::Description r = registerSystemDeclaration(node, file.value);
                 if (r.name == "Error 1") {
@@ -386,7 +387,7 @@ systems::Description registerSystemDeclaration(const Node &system, const std::st
     if (cursor == nbChildren || system.children.at(cursor).value != "event") {    // Default Tick event
         evtDesc.name = "Tick";
         evtDesc.payload = data::BasicType::Number;
-        // evtDesc.payloadName = "deltaTime"; // TODO: payload name
+        evtDesc.payloadName = "deltaTime";
         evtDesc.provenance = Provenance();
     } else {    // Custom event
         expectNodeTypeValue(system.children, cursor, NodeType::EventKeyword, "event", true);

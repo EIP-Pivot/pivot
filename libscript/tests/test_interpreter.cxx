@@ -137,5 +137,36 @@ TEST_CASE("Scripting-Events")
 
     script::Engine engine(sind, cind, eind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
 
+    // std::string file = "C:/Users/Najo/eip/pivot/libscript/tests/a.pvt";
+    // engine.loadFile(file);
+    std::string fileContent =
+        "component Stats\n\tNumber xp\n\ncomponent Inventory\n\tNumber gold\n\nevent Kill\n\tStats, "
+        "Inventory\n\tString monster\n\nsystem S(anyEntity<Stats, Inventory>) event Kill(e<Stats, Inventory>, String "
+        "monster)\n\tprint(\"lol\")\n\tprint(\"Before killing monster \", monster)\n\tprint(\"Player xp:\", "
+        "anyEntity.Stats.xp)\n\tprint(\"Player gold:\", anyEntity.Inventory.gold)\n\tif (monster == "
+        "\"Sergeant\")\n\t\tanyEntity.Stats.xp = anyEntity.Stats.xp + 1\n\t\tanyEntity.Inventory.gold = "
+        "anyEntity.Inventory.gold + 1\n\tif (monster == \"Thrax\")\n\t\tanyEntity.Stats.xp = anyEntity.Stats.xp + "
+        "2500\n\t\tanyEntity.Inventory.gold = anyEntity.Inventory.gold + 4\n\tprint(\"After killing monster \", "
+        "monster)\n\tprint(\"Player xp:\", anyEntity.Stats.xp)\n\tprint(\"Player gold:\", anyEntity.Inventory.gold)\n";
+    engine.loadFile(fileContent, true);
+
+    REQUIRE(sind.getDescription("S").has_value());
+    REQUIRE(cind.getDescription("Stats").has_value());
+    REQUIRE(cind.getDescription("Inventory").has_value());
+
+    auto Inventorydescription = cind.getDescription("Inventory").value();
+    auto Statsdescription = cind.getDescription("Stats").value();
+    auto Sdescription = sind.getDescription("S").value();
+    auto array1 = Statsdescription.createContainer(Statsdescription);
+    auto array2 = Inventorydescription.createContainer(Inventorydescription);
+    std::vector<data::Value> entity = {data::Record{{"xp", 42.0}}, data::Record{{"gold", 69.0}}};
+    array1->setValueForEntity(0, entity.at(0));
+    array2->setValueForEntity(0, entity.at(1));
+    component::ArrayCombination combinations{{std::ref(*array1), std::ref(*array2)}};
+    event::EventWithComponent evt = {
+        .event = event::Event{.description = Sdescription.eventListener, .entities = {0}, .payload = "Thrax"}};
+
+    Sdescription.system(Sdescription, combinations, evt);
+
     std::cout << "------EVENTS------end" << std::endl;
 }

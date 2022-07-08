@@ -20,7 +20,7 @@ class Engine
 public:
     ~Engine() = default;
     /// An engine needs a reference to the indexes to register components and systems
-    Engine(systems::Index &systemIndex, component::Index &componentIndex,
+    Engine(systems::Index &systemIndex, component::Index &componentIndex, event::Index &eventIndex,
            interpreter::builtins::BuiltinContext context);
 
     ///	Parse a file to generate the abstract tree from it
@@ -35,6 +35,7 @@ public:
 private:
     systems::Index &_systemIndex;
     component::Index &_componentIndex;
+    event::Index &_eventIndex;
 
     std::unordered_map<std::string, Node> _systems;
     interpreter::Stack _stack;

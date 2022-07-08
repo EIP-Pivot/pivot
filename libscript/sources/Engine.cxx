@@ -46,7 +46,8 @@ std::string Engine::loadFile(const std::string &file, bool isContent, bool verbo
 
     // TODO: return string with error on top of the node
     std::vector<systems::Description> sysDescs = interpreter::registerDeclarations(
-        fileNode, _componentIndex);    // register component descriptions, and retrieve system descriptions
+        fileNode, _componentIndex,
+        _eventIndex);    // register component and event descriptions, and retrieve system descriptions
     for (systems::Description &desc: sysDescs) {
         desc.system = std::bind(&Engine::systemCallback, this, std::placeholders::_1, std::placeholders::_2,
                                 std::placeholders::_3);    // add the callback to the descriptions

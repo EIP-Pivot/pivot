@@ -128,45 +128,28 @@ TEST_CASE("Scripting-Refacto-Interpreter_One")
     std::cout << "------Interpreter------end" << std::endl;
 }
 
-TEST_CASE("Scripting-Events")
+TEST_CASE("Scripting-Event-Declaration")
 {
-    std::cout << "------EVENTS------start" << std::endl;
     component::Index cind;
     systems::Index sind;
     event::Index eind;
 
     script::Engine engine(sind, cind, eind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
 
-    // std::string file = "C:/Users/Najo/eip/pivot/libscript/tests/a.pvt";
+    // std::string file = "C:/Users/jonme/eip/pivot/libscript/tests/b.pvt";
     // engine.loadFile(file);
-    std::string fileContent =
-        "component Stats\n\tNumber xp\n\ncomponent Inventory\n\tNumber gold\n\nevent Kill\n\tStats, "
-        "Inventory\n\tString monster\n\nsystem S(anyEntity<Stats, Inventory>) event Kill(e<Stats, Inventory>, String "
-        "monster)\n\tprint(\"lol\")\n\tprint(\"Before killing monster \", monster)\n\tprint(\"Player xp:\", "
-        "anyEntity.Stats.xp)\n\tprint(\"Player gold:\", anyEntity.Inventory.gold)\n\tif (monster == "
-        "\"Sergeant\")\n\t\tanyEntity.Stats.xp = anyEntity.Stats.xp + 1\n\t\tanyEntity.Inventory.gold = "
-        "anyEntity.Inventory.gold + 1\n\tif (monster == \"Thrax\")\n\t\tanyEntity.Stats.xp = anyEntity.Stats.xp + "
-        "2500\n\t\tanyEntity.Inventory.gold = anyEntity.Inventory.gold + 4\n\tprint(\"After killing monster \", "
-        "monster)\n\tprint(\"Player xp:\", anyEntity.Stats.xp)\n\tprint(\"Player gold:\", anyEntity.Inventory.gold)\n";
+    std::string fileContent = "event Kill\n"
+                              "\tStats, Inventory\n"
+                              "\tString monster\n"
+                              "event Damage\n"
+                              "\tStats\n"
+                              "\tNumber damage\n"
+                              "event Move\n"
+                              "\tPosition, Velocity\n"
+                              "\tNumber deltaTime\n";
     engine.loadFile(fileContent, true);
 
-    REQUIRE(sind.getDescription("S").has_value());
-    REQUIRE(cind.getDescription("Stats").has_value());
-    REQUIRE(cind.getDescription("Inventory").has_value());
-
-    auto Inventorydescription = cind.getDescription("Inventory").value();
-    auto Statsdescription = cind.getDescription("Stats").value();
-    auto Sdescription = sind.getDescription("S").value();
-    auto array1 = Statsdescription.createContainer(Statsdescription);
-    auto array2 = Inventorydescription.createContainer(Inventorydescription);
-    std::vector<data::Value> entity = {data::Record{{"xp", 42.0}}, data::Record{{"gold", 69.0}}};
-    array1->setValueForEntity(0, entity.at(0));
-    array2->setValueForEntity(0, entity.at(1));
-    component::ArrayCombination combinations{{std::ref(*array1), std::ref(*array2)}};
-    event::EventWithComponent evt = {
-        .event = event::Event{.description = Sdescription.eventListener, .entities = {0}, .payload = "Thrax"}};
-
-    Sdescription.system(Sdescription, combinations, evt);
-
-    std::cout << "------EVENTS------end" << std::endl;
+    REQUIRE(eind.getDescription("Kill").has_value());
+    REQUIRE(eind.getDescription("Damage").has_value());
+    REQUIRE(eind.getDescription("Move").has_value());
 }

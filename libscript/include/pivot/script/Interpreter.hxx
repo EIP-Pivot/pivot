@@ -22,7 +22,8 @@ namespace pivot::ecs::script::interpreter
 {
 
 // Parse a file syntax tree to register the component and system declarations
-std::vector<systems::Description> registerDeclarations(const Node &file, component::Index &componentIndex);
+std::vector<systems::Description> registerDeclarations(const Node &file, component::Index &componentIndex,
+                                                       event::Index &eventIndex);
 
 /// Main class of the script interpreter
 class Interpreter
@@ -61,6 +62,7 @@ void validateParams(const std::vector<data::Value> &toValidate, size_t expectedS
 
 // Register description from a declaration
 void registerComponentDeclaration(const Node &component, component::Index &componentIndex, const std::string &fileName);
+void registerEventDeclaration(const Node &event, event::Index &eventIndex, const std::string &filename);
 systems::Description registerSystemDeclaration(const Node &system, const std::string &fileName);
 
 // Consume a child node from a declaration

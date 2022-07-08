@@ -58,7 +58,8 @@ const std::unordered_map<std::string, std::pair<BuiltinFunctionCallback, Paramet
 // Public functions ( can be called anywhere )
 
 // This will go through a file's tree and register all component/system declarations into the global index
-std::vector<systems::Description> registerDeclarations(const Node &file, component::Index &componentIndex)
+std::vector<systems::Description> registerDeclarations(const Node &file, component::Index &componentIndex,
+                                                       event::Index &eventIndex)
 {
     std::vector<systems::Description> result;
     if (file.type != NodeType::File) {
@@ -73,7 +74,8 @@ std::vector<systems::Description> registerDeclarations(const Node &file, compone
         for (const Node &node: file.children) {
             if (node.type == NodeType::ComponentDeclaration) {    // register component
                 registerComponentDeclaration(node, componentIndex, file.value);
-            } else if (node.type == NodeType::EventDeclaration) {     // register event
+            } else if (node.type == NodeType::EventDeclaration) {    // register event
+                registerEventDeclaration(node, eventIndex, file.value);
             } else if (node.type == NodeType::SystemDeclaration) {    // store system declaration for return
                 systems::Description r = registerSystemDeclaration(node, file.value);
                 if (r.name == "Error 1") {
@@ -353,6 +355,31 @@ void registerComponentDeclaration(const Node &component, component::Index &compo
     r.defaultValue = r.type.defaultValue();
     componentIndex.registerComponent(r);
 }
+void registerEventDeclaration(const Node &event, event::Index &eventIndex, const std::string &filename)
+{
+    pivot::ecs::event::Description r = {
+        .name = event.value,
+    };
+    for (const Node &eventParameter: event.children) {
+        switch (eventParameter.type) {
+            case NodeType::EventEntityParameter:
+                // TODO : handle event description with ecs
+                break;
+            case NodeType::EventPayloadType:
+                if (!gVariableTypes.contains(eventParameter.value)) {    // Not a known pivotscript type
+                    logger.err("ERROR") << " at line " << eventParameter.line_nb << " char " << eventParameter.char_nb
+                                        << ": '" << eventParameter.value << "'";
+                    throw UnknownTypeException("This is not a PivotScript type.");
+                }
+                r.payload = gVariableTypes.at(eventParameter.value);
+                break;
+            case NodeType::EventPayloadName: r.payloadName = eventParameter.value; break;
+        }
+    }
+    r.provenance = Provenance::externalRessource(filename);
+    eventIndex.registerEvent(r);
+}
+
 // Register a system declaration node
 systems::Description registerSystemDeclaration(const Node &system, const std::string &fileName)
 {

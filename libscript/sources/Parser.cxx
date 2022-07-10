@@ -975,7 +975,7 @@ std::string replaceAll(std::string str, const std::string &from, const std::stri
 }
 
 std::string unescapeChars(std::string str)
-{    // This is absolutely disgusting, but easier to read than regex, and we don't compile with boost/algorithm
+{    // This isn't very clean, but easier to read than regex
     std::string r = replaceAll(str, "\\t", "\t");
     r = replaceAll(r, "\\n", "\n");
     r = replaceAll(r, "\\r", "\r");

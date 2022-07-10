@@ -113,7 +113,7 @@ void Parser::tokens_from_file(const std::string &file, bool isContent, bool verb
         std::string line = remove_comments(text.substr(lineStart, lineEnd - lineStart));
 
         // clean for -Number to (0 - Number)
-        std::regex Rpattern("(-(?=[0-9]))(\\d+)");
+        std::regex Rpattern("(-(?=\\w+))(\\w+)");
         std::string substitution = "(0 - $2)";
         line = std::regex_replace(line, Rpattern, substitution);
 

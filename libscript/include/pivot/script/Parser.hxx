@@ -86,5 +86,7 @@ void printComponentNode(const Node &component);
 std::string remove_comments(const std::string &line);
 /// Is line empty (or whitespace)
 bool line_is_empty(const std::string &line);
+/// Unescape characters in a string
+std::string unescapeChars(std::string str);
 
 }    // end of namespace pivot::ecs::script::parser

@@ -121,8 +121,49 @@ TEST_CASE("Scripting-Refacto-Interpreter_One")
 
     Sdescription.system(Sdescription, combinations, evt);
 
-    std::cout << "Returned " << std::get<bool>(std::get<data::Record>(array1->getValueForEntity(0).value()).at("b"))
-              << std::endl;
+    bool result = std::get<bool>(std::get<data::Record>(array1->getValueForEntity(0).value()).at("b"));
+    REQUIRE(result == true);
+    std::cout << "Returned " << result << std::endl;
 
     std::cout << "------Interpreter------end" << std::endl;
+}
+
+TEST_CASE("Scripting-Interpreter-EscapeCharacters")
+{
+    std::cout << "------Interpreter - Escaped Characters------start" << std::endl;
+
+    component::Index cind;
+    systems::Index sind;
+    script::Engine engine(sind, cind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
+    // std::string file = "../libscript/tests/escape.pvt";
+    // engine.loadFile(file);
+
+    std::string fileContent = "component C\n"
+                              "\tString str\n"
+                              "system S(anyEntity<C>) event Tick(Number deltaTime)\n"
+                              "\tanyEntity.C.str = \"foo\\tbar\\nfoobar\"\n"
+                              "\tprint(anyEntity.C.str)\n";
+    engine.loadFile(fileContent, true);
+
+    REQUIRE(sind.getDescription("S").has_value());
+    REQUIRE(cind.getDescription("C").has_value());
+
+    auto Cdescription = cind.getDescription("C").value();
+    auto Sdescription = sind.getDescription("S").value();
+    auto array1 = Cdescription.createContainer(Cdescription);
+    std::vector<data::Value> entity = {data::Record{{"str", ""}}};
+    array1->setValueForEntity(0, entity.at(0));
+    component::ArrayCombination combinations{{std::ref(*array1)}};
+    event::EventWithComponent evt = {
+        .event = event::Event{.description = Sdescription.eventListener, .entities = {1, 2}, .payload = 0.12}};
+
+    Sdescription.system(Sdescription, combinations, evt);
+
+    std::string escapedString =
+        std::get<std::string>(std::get<data::Record>(array1->getValueForEntity(0).value()).at("str"));
+
+    REQUIRE(escapedString == "foo\tbar\nfoobar");
+    REQUIRE_FALSE(escapedString == "foo\\tbar\\nfoobar");
+
+    std::cout << "------Interpreter - Escaped Characters------end" << std::endl;
 }

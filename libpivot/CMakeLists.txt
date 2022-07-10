@@ -12,6 +12,7 @@ add_library(
     sources/builtins/components/Transform.cxx
     sources/builtins/components/Collidable.cxx
     sources/builtins/components/Text.cxx
+    sources/builtins/components/Transform2D.cxx
 )
 
 

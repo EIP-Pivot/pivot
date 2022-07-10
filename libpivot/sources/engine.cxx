@@ -22,6 +22,7 @@
 
 #include <pivot/builtins/components/Light.hxx>
 #include <pivot/builtins/components/Text.hxx>
+#include <pivot/builtins/components/Transform2D.hxx>
 
 using namespace pivot;
 using namespace pivot::ecs;
@@ -43,6 +44,7 @@ Engine::Engine()
     m_component_index.registerComponent(builtins::components::SpotLight::description);
     m_component_index.registerComponent(builtins::components::Collidable::description);
     m_component_index.registerComponent(builtins::components::Text::description);
+    m_component_index.registerComponent(builtins::components::Transform2D::description);
 
     m_event_index.registerEvent(builtins::events::tick);
     m_event_index.registerEvent(builtins::events::keyPress);

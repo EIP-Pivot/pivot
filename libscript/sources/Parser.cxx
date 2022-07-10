@@ -10,6 +10,8 @@
 #include "pivot/script/Exceptions.hxx"
 #include "pivot/script/Parser.hxx"
 
+#include <regex>
+
 namespace pivot::ecs::script::parser
 {
 
@@ -109,6 +111,11 @@ void Parser::tokens_from_file(const std::string &file, bool isContent, bool verb
         }
         // get the line string clean of comments (anything after the first found hashtag is deleted)
         std::string line = remove_comments(text.substr(lineStart, lineEnd - lineStart));
+
+        // clean for -Number to (0 - Number)
+        std::regex Rpattern("(-(?=[0-9]))(\\d+)");
+        std::string substitution = "(0 - $2)";
+        line = std::regex_replace(line, Rpattern, substitution);
 
         // if it is just whitespace, ignore and get next line
         if (line_is_empty(line)) {

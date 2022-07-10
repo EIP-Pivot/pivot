@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Logger.hpp>
 #include <optional>
+#include <utils/source_location.hpp>
 
 #ifndef NDEBUG
     #define DEBUG_FUNCTION logger.trace(::function_name()) << "Entered";

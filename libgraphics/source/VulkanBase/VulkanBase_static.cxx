@@ -33,7 +33,7 @@ std::uint32_t VulkanBase::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT m
                                         VkDebugUtilsMessageTypeFlagsEXT messageType,
                                         const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *)
 {
-    using Level = cpplogger::Logger::Level;
+    using Level = cpplogger::Level;
 
     auto type = to_string_message_type(messageType);
     auto level = Level::Trace;

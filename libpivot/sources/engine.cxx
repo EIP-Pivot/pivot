@@ -1,4 +1,9 @@
+#include <imgui.h>
 #include <magic_enum.hpp>
+
+// Must be after imgui
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_vulkan.h>
 
 #include <pivot/engine.hxx>
 
@@ -9,12 +14,15 @@
 #include <pivot/ecs/Components/RigidBody.hxx>
 
 #include <pivot/builtins/events/collision.hxx>
+#include <pivot/builtins/events/editor_tick.hxx>
 #include <pivot/builtins/events/key_press.hxx>
 #include <pivot/builtins/events/tick.hxx>
-#include <pivot/builtins/systems/CollisionSystem.hxx>
-#include <pivot/builtins/systems/CollisionTestSystem.hxx>
+
+#include <pivot/builtins/systems/DrawTextSystem.hxx>
 #include <pivot/builtins/systems/PhysicSystem.hxx>
 #include <pivot/builtins/systems/TestTickSystem.hxx>
+#include <pivot/builtins/systems/CollisionSystem.hxx>
+#include <pivot/builtins/systems/CollisionTestSystem.hxx>
 
 #include <pivot/builtins/components/Collidable.hxx>
 #include <pivot/builtins/components/RenderObject.hxx>
@@ -47,12 +55,14 @@ Engine::Engine()
     m_component_index.registerComponent(builtins::components::Transform2D::description);
 
     m_event_index.registerEvent(builtins::events::tick);
+    m_event_index.registerEvent(builtins::events::editor_tick);
     m_event_index.registerEvent(builtins::events::keyPress);
     m_event_index.registerEvent(builtins::events::collision);
     m_system_index.registerSystem(builtins::systems::physicSystem);
     m_system_index.registerSystem(builtins::systems::makeCollisionSystem(m_vulkan_application.assetStorage));
     m_system_index.registerSystem(builtins::systems::collisionTestSystem);
     m_system_index.registerSystem(builtins::systems::testTickSystem);
+    m_system_index.registerSystem(builtins::systems::drawTextSystem);
 
     m_vulkan_application.addRenderer<pivot::graphics::CullingRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::GraphicsRenderer>();
@@ -71,9 +81,18 @@ void Engine::run()
         auto startTime = std::chrono::high_resolution_clock::now();
         m_vulkan_application.window.pollEvent();
 
+        ImGui_ImplVulkan_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        m_scene_manager.getCurrentScene().getEventManager().sendEvent(
+            {pivot::builtins::events::editor_tick, {}, data::Value(dt)});
+
         this->onTick(dt);
 
         auto aspectRatio = m_vulkan_application.getAspectRatio();
+
+        ImGui::Render();
 
         if (m_current_scene_draw_command)
             m_vulkan_application.draw(m_current_scene_draw_command.value(),
@@ -257,4 +276,5 @@ void Engine::onKeyPressed(graphics::Window &, const graphics::Window::Key key, c
             {pivot::builtins::events::keyPress, {}, data::Value(std::string(magic_enum::enum_name(key)))});
     }
 }
+
 }    // namespace pivot

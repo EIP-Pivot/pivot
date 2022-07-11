@@ -180,7 +180,6 @@ public:
             if (entity.hasSelected()) { editor.DisplayGuizmo(entity.getEntitySelected(), m_camera); }
         }
         UpdateCamera(dt);
-        imGuiManager.render();
     }
 
 public:

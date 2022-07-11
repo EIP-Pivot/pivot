@@ -23,7 +23,7 @@ public:
     /// Add a variable to the stack, name is pure (no '.')
     void push(const std::string &name, const data::Value &var);
     /// Find a variable in the stack (read-only), name can contain access ('.')
-    const data::Value &find(const std::string &name) const;
+    const data::Value find(const std::string &name) const;
     /// Modify the value of a variable in the stack, by name, name can contain access ('.')
     void setValue(const std::string &name, const data::Value &newVal);
 
@@ -33,8 +33,9 @@ public:
 private:
     data::Record _stack;    /// name to variable
 
+    bool setVectorValue(const std::string &name, const data::Value &newVal, data::Record &where);
     data::Value &findMut(const std::string &name, data::Record &where);
-    const data::Value &find(const std::string &name, const data::Record &where) const;
+    const data::Value find(const std::string &name, const data::Record &where) const;
 };
 
 }    // end of namespace pivot::ecs::script::interpreter

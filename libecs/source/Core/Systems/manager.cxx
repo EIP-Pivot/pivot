@@ -25,10 +25,15 @@ void Manager::useSystem(const Description &description)
 
 std::vector<event::Event> Manager::execute(const event::Event &event)
 {
+    std::vector<event::Event> childEvent;
+
     for (const auto &[name, description]: m_systems) {
-        if (event.description.name == description.eventListener.name) return executeOne(description, event);
+        if (event.description.name == description.eventListener.name) {
+            auto events = executeOne(description, event);
+            childEvent.insert(childEvent.end(), events.begin(), events.end());
+        }
     }
-    return {};
+    return childEvent;
 }
 
 Manager::const_iterator Manager::begin() const { return m_systems.begin(); }

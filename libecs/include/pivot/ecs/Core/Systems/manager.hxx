@@ -28,7 +28,7 @@ public:
     /// register system in a scene by his description
     void useSystem(const Description &description);
     /// execute the system listening the event
-    void execute(const event::Event &event);
+    std::vector<event::Event> execute(const event::Event &event);
 
     /// Constant iterator over every system used
     using const_iterator = std::map<std::string, Description>::const_iterator;
@@ -55,7 +55,7 @@ public:
 
 private:
     std::vector<component::Manager::ComponentId> getComponentsId(const std::vector<std::string> &components);
-    void executeOne(const Description &, const event::Event &);
+    std::vector<event::Event> executeOne(const Description &, const event::Event &);
     component::Manager &m_componentManager;
     EntityManager &m_entityManager;
     std::map<std::string, Description> m_systems;

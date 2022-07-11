@@ -136,7 +136,7 @@ void Interpreter::executeSystem(const Node &systemEntry, const systems::Descript
     }
 
     // Push stack data to the component array
-    const data::Record &newInputEntity = std::get<data::Record>(stack.find(desc.entityName));
+    const data::Record newInputEntity = std::get<data::Record>(stack.find(desc.entityName));
     componentIndex = 0;
     for (const std::string &componentString: desc.systemComponents) {
         entity[componentIndex].set(newInputEntity.at(componentString));

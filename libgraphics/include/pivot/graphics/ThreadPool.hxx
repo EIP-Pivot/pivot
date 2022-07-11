@@ -19,13 +19,21 @@ class ThreadPool
 private:
     using WorkUnits = std::function<void(unsigned id)>;
 
+    struct State {
+        std::mutex q_mutex;
+        std::condition_variable q_var;
+        std::queue<WorkUnits> qWork;
+        std::atomic_bool bExit = false;
+    };
+
 public:
     ThreadPool() = default;
     ThreadPool(const ThreadPool &) = delete;
+    ThreadPool(const ThreadPool &&) = delete;
     ~ThreadPool() = default;
 
     /// Create the pool with a given number of thread
-    void start(unsigned size = std::max(((std::thread::hardware_concurrency() * 2) / 3), unsigned(1)));
+    void start(unsigned size = std::max(((std::thread::hardware_concurrency() * 2) / 3), 1u));
     /// Stop and join all of the thread
     void stop();
     /// Return the amount of thread in the pool
@@ -44,20 +52,21 @@ public:
 
         WorkUnits storageFunc([packagedFunction](int id) { (*packagedFunction)(id); });
 
-        qWork.push(storageFunc);
-        q_var.notify_one();
+        {
+            std::unique_lock lock(state.q_mutex);
+            state.qWork.push(storageFunc);
+        }
+        state.q_var.notify_one();
         return packagedFunction->get_future();
     }
 
-private:
-    void new_thread(const unsigned i) noexcept;
+    ThreadPool &operator=(const ThreadPool &other) = delete;
 
 private:
-    std::mutex q_mutex;
-    std::condition_variable q_var;
-    std::queue<WorkUnits> qWork;
+    static void new_thread(State &state, const unsigned i) noexcept;
 
-    std::atomic_bool bExit = false;
+private:
+    State state;
     std::vector<std::jthread> thread_p;
 };
 

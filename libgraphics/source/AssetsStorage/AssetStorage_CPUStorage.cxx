@@ -98,13 +98,7 @@ std::unordered_map<K, V> merge_map_ignore_dup(const std::unordered_map<K, V> &fi
     std::unordered_map<K, V> result;
     result.reserve(first.size() + second.size());
 
-    for (const auto &[key, value]: first) {
-        const auto &iter = second.find(key);
-        if (iter != second.end() && iter->second != value)
-            throw AssetStorage::CPUStorage::CPUStorageError("Duplicate key with differing value");
-        else
-            result.emplace(key, value);
-    }
+    for (const auto &[key, value]: first) { result.emplace(key, value); }
     for (const auto &[key, value]: second) {
         if (result.contains(key)) {
             pivot_assert(first.contains(key), key << " is not the deduplicated buffer.");

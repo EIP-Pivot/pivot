@@ -37,6 +37,7 @@ public:
 public:
     /// Constructor
     VulkanAllocator();
+    VulkanAllocator(const VulkanAllocator &) = delete;
     /// Destructor
     ~VulkanAllocator();
 

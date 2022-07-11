@@ -1,7 +1,7 @@
 #include "pivot/graphics/Renderer/ImGuiRenderer.hxx"
 
-#include "pivot/graphics/pivot.hxx"
 #include "pivot/graphics/vk_debug.hxx"
+#include "pivot/pivot.hxx"
 
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
@@ -95,8 +95,8 @@ void ImGuiRenderer::createImGuiContext(VulkanBase &base_ref, vk::RenderPass &pas
     init_info.QueueFamily = base_ref.queueIndices.graphicsFamily.value();
     init_info.Queue = base_ref.graphicsQueue;
     init_info.DescriptorPool = pool;
-    init_info.MinImageCount = MaxFrameInFlight;
-    init_info.ImageCount = MaxFrameInFlight;
+    init_info.MinImageCount = PIVOT_MAX_FRAMES_IN_FLIGHT;
+    init_info.ImageCount = PIVOT_MAX_FRAMES_IN_FLIGHT;
     init_info.MSAASamples = static_cast<VkSampleCountFlagBits>(base_ref.maxMsaaSample);
     init_info.CheckVkResultFn = vk_utils::vk_try;
 

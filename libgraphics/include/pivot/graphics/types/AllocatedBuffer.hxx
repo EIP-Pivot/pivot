@@ -4,7 +4,7 @@
 #include <vk_mem_alloc.hpp>
 #include <vulkan/vulkan.hpp>
 
-#include "pivot/graphics/pivot.hxx"
+#include "pivot/pivot.hxx"
 
 namespace pivot::graphics
 {
@@ -64,7 +64,8 @@ public:
     /// If the buffer was created with the flag vma::AllocationCreateFlagBits::eMapped, return the mapped pointer
     T *getMappedPointer() const noexcept
     {
-        pivot_assert(flags & vma::AllocationCreateFlagBits::eMapped);
+        pivot_assert(flags & vma::AllocationCreateFlagBits::eMapped,
+                     "Buffer was not created with the \"vma::AllocationCreateFlagBits::eMapped bit\"");
         return static_cast<T *>(info.pMappedData);
     }
 

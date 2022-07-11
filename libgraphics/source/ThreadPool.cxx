@@ -1,6 +1,6 @@
 #include "pivot/graphics/ThreadPool.hxx"
 
-#include "pivot/graphics/pivot.hxx"
+#include "pivot/pivot.hxx"
 
 #include <Logger.hpp>
 

@@ -111,66 +111,20 @@ if(COMPILER_PROFILING)
     endif()
 endif()
 
-fetchcontent_declare(
-    logger
-    GIT_REPOSITORY https://github.com/zcorniere/logger-cpp.git
-    GIT_TAG v0.8.0
-)
-fetchcontent_getproperties(logger)
-if(NOT logger_POPULATED)
-    message(STATUS "Populating logger")
-    fetchcontent_populate(logger)
-    add_subdirectory(${logger_SOURCE_DIR} ${logger_BINARY_DIR})
-    target_compile_definitions(logger PUBLIC LOGGER_EXTERN_DECLARATION)
-endif()
-
-fetchcontent_declare(
-    glm
-    GIT_REPOSITORY https://github.com/g-truc/glm.git
-    GIT_TAG cc98465e3508535ba8c7f6208df934c156a018dc
-)
-fetchcontent_getproperties(glm)
-if(NOT glm_POPULATED)
-    message(STATUS "Populating glm")
-    fetchcontent_populate(glm)
-    set(GLFW_BUILD_DOCS
-        OFF
-        CACHE INTERNAL "" FORCE
-    )
-    set(GLFW_BUILD_TESTS
-        OFF
-        CACHE INTERNAL "" FORCE
-    )
-    set(GLFW_BUILD_EXAMPLES
-        OFF
-        CACHE INTERNAL "" FORCE
-    )
-    add_subdirectory(${glm_SOURCE_DIR} ${glm_BINARY_DIR})
-    target_compile_definitions(
-        glm
-        INTERFACE GLM_FORCE_INLINE
-                  GLM_FORCE_RADIANS
-                  GLM_FORCE_INTRINSICS
-                  GLM_FORCE_DEPTH_ZERO_TO_ONE
-                  GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-    )
-endif()
-
-fetchcontent_declare(
-    magic_enum
-    GIT_REPOSITORY https://github.com/Neargye/magic_enum
-    GIT_TAG v0.8.0
-)
-if(NOT magic_enum_POPULATED)
-    message(STATUS "Populating Magic Enum")
-    fetchcontent_populate(magic_enum)
-    add_subdirectory(${magic_enum_SOURCE_DIR} ${magic_enum_BINARY_DIR})
-endif()
+add_subdirectory(libcommon/)
+add_library(pivot::commom ALIAS pivot-common)
 
 add_subdirectory(libecs/)
+add_library(pivot::ecs ALIAS pivot-ecs)
+
 add_subdirectory(libgraphics/)
+add_library(pivot::graphics ALIAS pivot-graphics)
+
 add_subdirectory(libscript/)
+add_library(pivot::script ALIAS pivot-script)
+
 add_subdirectory(libpivot/)
+add_library(pivot::pivot ALIAS pivot)
 
 option(BUILD_EDITOR "Build pivot editor" ON)
 if(BUILD_EDITOR)
@@ -182,7 +136,3 @@ if(BUILD_LAUNCHER)
     add_subdirectory(launcher/)
 endif()
 
-add_library(pivot::pivot ALIAS pivot)
-add_library(pivot::graphics ALIAS pivot-graphics)
-add_library(pivot::ecs ALIAS pivot-ecs)
-add_library(pivot::script ALIAS pivot-script)

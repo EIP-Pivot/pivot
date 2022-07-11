@@ -1,12 +1,11 @@
 #include "pivot/graphics/VulkanBase.hxx"
 
-#include "pivot/graphics/DebugMacros.hxx"
-#include "pivot/graphics/PivotException.hxx"
+#include "pivot/exception.hxx"
 #include "pivot/graphics/Window.hxx"
-#include "pivot/graphics/pivot.hxx"
 #include "pivot/graphics/types/vk_types.hxx"
 #include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"
+#include "pivot/pivot.hxx"
 
 #include <cstdint>
 #include <map>

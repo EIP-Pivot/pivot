@@ -1,7 +1,7 @@
 #include "pivot/graphics/VulkanApplication.hxx"
-#include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_utils.hxx"
+#include "pivot/pivot.hxx"
 
 #include <Logger.hpp>
 
@@ -156,8 +156,9 @@ void VulkanApplication::recreateSwapchain()
 
 void VulkanApplication::draw(DrawCallResolver::DrawSceneInformation sceneInformation, const CameraData &cameraData)
 try {
-    pivot_assert(!graphicsRenderer.empty() && !computeRenderer.empty());
-    pivot_assert(currentFrame < MaxFrameInFlight);
+    pivot_assert(!graphicsRenderer.empty() && !computeRenderer.empty(), "No Render are setup");
+    pivot_assert(currentFrame < PIVOT_MAX_FRAMES_IN_FLIGHT,
+                 "The current frame is bigger than the max amount of concurrent frame");
     auto &frame = frames[currentFrame];
     vk_utils::vk_try(device.waitForFences(frame.inFlightFences, VK_TRUE, UINT64_MAX));
 
@@ -212,7 +213,6 @@ try {
     std::array<vk::CommandBuffer, 1> submitCmd{
         cmd,
     };
-    pivot_assert(signalSemaphores.size() == waitStages.size());
     vk::SubmitInfo submitInfo{
         .waitSemaphoreCount = waitSemaphores.size(),
         .pWaitSemaphores = waitSemaphores.data(),
@@ -231,7 +231,7 @@ try {
         .pImageIndices = &imageIndex,
     };
     vk_utils::vk_try(presentQueue.presentKHR(presentInfo));
-    currentFrame = (currentFrame + 1) % MaxFrameInFlight;
+    currentFrame = (currentFrame + 1) % PIVOT_MAX_FRAMES_IN_FLIGHT;
 } catch (const vk::OutOfDateKHRError &) {
     return recreateSwapchain();
 }

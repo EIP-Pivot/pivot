@@ -1,6 +1,6 @@
 #include "pivot/graphics/AssetStorage.hxx"
 
-#include "pivot/graphics/DebugMacros.hxx"
+#include "pivot/pivot.hxx"
 
 #include <Logger.hpp>
 
@@ -100,10 +100,13 @@ std::unordered_map<K, V> merge_map_ignore_dup(const std::unordered_map<K, V> &fi
 
     for (const auto &[key, value]: first) { result.emplace(key, value); }
     for (const auto &[key, value]: second) {
-        pivot_assert(!result.contains(key) || result.at(key) != value);
+        if (result.contains(key)) {
+            pivot_assert(first.contains(key), key << " is not the deduplicated buffer.");
+            continue;
+        }
         result.emplace(key, value);
     }
-    pivot_assert(result.size() <= first.size() + second.size());
+    pivot_assert(result.size() <= first.size() + second.size(), "The merged CPUStorage is bigger than its sources.");
     return result;
 }
 

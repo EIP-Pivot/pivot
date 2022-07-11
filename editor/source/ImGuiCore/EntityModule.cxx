@@ -1,6 +1,6 @@
 #include "ImGuiCore/EntityModule.hxx"
+
 #include <misc/cpp/imgui_stdlib.h>
-#include <pivot/graphics/DebugMacros.hxx>
 
 void EntityModule::create()
 {

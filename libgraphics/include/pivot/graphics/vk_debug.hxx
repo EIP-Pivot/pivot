@@ -3,8 +3,8 @@
 #include <string>
 #include <vulkan/vulkan.hpp>
 
-#include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/vk_utils.hxx"
+#include "pivot/pivot.hxx"
 
 /// Debug utils for vulkan
 namespace pivot::graphics::vk_debug

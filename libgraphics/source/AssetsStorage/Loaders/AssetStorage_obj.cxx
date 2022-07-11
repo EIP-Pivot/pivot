@@ -1,6 +1,6 @@
 #include "pivot/graphics/AssetStorage.hxx"
 
-#include "pivot/graphics/DebugMacros.hxx"
+#include "pivot/pivot.hxx"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <tiny_obj_loader.h>
@@ -98,7 +98,7 @@ std::optional<AssetStorage::CPUStorage> loadObjModel(const std::filesystem::path
                                      : ("white")),
         };
         for (const auto &index: shape.mesh.indices) {
-            pivot_assert(index.vertex_index != -1);
+            pivot_assert(index.vertex_index != -1, "No vertices in the obj file");
             Vertex vertex{
                 .pos =
                     {

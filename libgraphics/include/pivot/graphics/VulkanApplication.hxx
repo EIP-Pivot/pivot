@@ -1,7 +1,6 @@
 #pragma once
 
 #include "pivot/graphics/AssetStorage.hxx"
-#include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/DeletionQueue.hxx"
 #include "pivot/graphics/DescriptorAllocator/DescriptorAllocator.hxx"
 #include "pivot/graphics/DescriptorAllocator/DescriptorLayoutCache.hxx"
@@ -10,10 +9,10 @@
 #include "pivot/graphics/VulkanRenderPass.hxx"
 #include "pivot/graphics/VulkanSwapchain.hxx"
 #include "pivot/graphics/interface/IRenderer.hxx"
-#include "pivot/graphics/pivot.hxx"
 #include "pivot/graphics/types/Frame.hxx"
 #include "pivot/graphics/types/vk_types.hxx"
 #include "pivot/graphics/vk_debug.hxx"
+#include "pivot/pivot.hxx"
 
 #include "pivot/graphics/DrawCallResolver.hxx"
 #include "pivot/graphics/Renderer/CullingRenderer.hxx"
@@ -26,6 +25,9 @@
 
 namespace pivot::graphics
 {
+
+static_assert(PIVOT_MAX_FRAMES_IN_FLIGHT >= 1);
+
 /// The validation layers used by the engine
 const std::vector<const char *> validationLayers = {
     "VK_LAYER_KHRONOS_validation",
@@ -132,7 +134,7 @@ private:
     VulkanSwapchain swapchain;
 
     uint8_t currentFrame = 0;
-    std::array<Frame, MaxFrameInFlight> frames;
+    std::array<Frame, PIVOT_MAX_FRAMES_IN_FLIGHT> frames;
 
     VulkanRenderPass renderPass;
 

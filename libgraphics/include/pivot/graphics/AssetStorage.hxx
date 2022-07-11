@@ -1,18 +1,18 @@
 #pragma once
 
+#include "pivot/containers/IndexedStorage.hxx"
 #include "pivot/graphics/DeletionQueue.hxx"
 #include "pivot/graphics/DescriptorAllocator/DescriptorBuilder.hxx"
-#include "pivot/graphics/PivotFlags.hxx"
 #include "pivot/graphics/ThreadPool.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/abstract/AImmediateCommand.hxx"
 #include "pivot/graphics/types/AABB.hxx"
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 #include "pivot/graphics/types/AllocatedImage.hxx"
-#include "pivot/graphics/types/IndexedStorage.hxx"
 #include "pivot/graphics/types/Material.hxx"
 #include "pivot/graphics/types/Vertex.hxx"
 #include "pivot/graphics/types/common.hxx"
+#include "pivot/utility/flags.hxx"
 
 #include <cstdint>
 #include <filesystem>
@@ -465,7 +465,6 @@ template <>
 /// @copydoc AssetStorage::getSize
 inline std::uint32_t AssetStorage::getSize<gpu_object::Material>() const
 {
-    assert(materialBuffer.size == materialStorage.size());
     return materialStorage.size();
 }
 

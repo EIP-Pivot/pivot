@@ -72,7 +72,7 @@ requires(gltf_type_code<T> != -1) std::vector<T> sliceGltfBuffer(const tinygltf:
             case TINYGLTF_COMPONENT_TYPE_FLOAT: {
                 T val;
                 const auto data = getSpan<float>(buffer, start + byteStride * i, ncomp);
-                for (unsigned i = 0; i < data.size(); ++i) { val[i] = data[i]; }
+                for (unsigned j = 0; j < data.size(); ++j) { val[j] = data[j]; }
                 ret.push_back(std::move(val));
             } break;
         }
@@ -110,20 +110,31 @@ namespace pivot::graphics::loaders
 
 static std::vector<std::pair<std::string, AssetStorage::Model>>
 loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::vector<Vertex> &vertexBuffer,
-             std::vector<uint32_t> &indexBuffer, glm::mat4 matrix)
+             std::vector<std::uint32_t> &indexBuffer, const glm::dmat4 &_matrix)
 {
     DEBUG_FUNCTION
     logger.debug("Asset Storage/Gltf") << "Loading node: " << node.name;
 
-    if (node.translation.size() == 3) {
-        matrix = glm::translate(matrix, glm::vec3(glm::make_vec3(node.translation.data())));
+    // Can't pass as copy, trigger note about GCC ABI
+    glm::dmat4 matrix = _matrix;
+    if (node.matrix.size() == 16) {
+        matrix *= glm::make_mat4x4(node.matrix.data());
+    } else {
+        glm::dvec3 translation(0.0f);
+        if (node.translation.size() == 3) { translation = glm::make_vec3(node.translation.data()); }
+
+        glm::dquat rotation{};
+        if (node.rotation.size() == 4) {
+            glm::dquat q = glm::make_quat(node.rotation.data());
+            rotation = glm::dmat4(q);
+        }
+
+        glm::dvec3 scale(1.0f);
+        if (node.scale.size() == 3) { scale = glm::make_vec3(node.scale.data()); }
+
+        matrix *=
+            glm::translate(glm::dmat4(1.0f), translation) * glm::dmat4(rotation) * glm::scale(glm::dmat4(1.0f), scale);
     }
-    if (node.rotation.size() == 4) {
-        glm::quat q = glm::make_quat(node.rotation.data());
-        matrix *= glm::mat4(q);
-    }
-    if (node.scale.size() == 3) { matrix = glm::scale(matrix, glm::vec3(glm::make_vec3(node.scale.data()))); }
-    if (node.matrix.size() == 16) { matrix = glm::make_mat4x4(node.matrix.data()); }
 
     std::vector<std::pair<std::string, AssetStorage::Model>> loaded;
     for (const auto &i: node.children) {
@@ -141,9 +152,9 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
         AssetStorage::Model model{
             .mesh =
                 {
-                    .vertexOffset = static_cast<uint32_t>(vertexBuffer.size()),
+                    .vertexOffset = static_cast<std::uint32_t>(vertexBuffer.size()),
                     .vertexSize = 0,
-                    .indicesOffset = static_cast<uint32_t>(indexBuffer.size()),
+                    .indicesOffset = static_cast<std::uint32_t>(indexBuffer.size()),
                     .indicesSize = 0,
                 },
             .default_material =
@@ -173,12 +184,12 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
 
             model.mesh.vertexSize = positionBuffer.size();
             for (unsigned v = 0; v < positionBuffer.size(); v++) {
+                const auto matrix3 = glm::mat3(matrix);
                 Vertex vert{
-                    .pos = glm::vec4(positionBuffer.at(v), 1.0f) * matrix,
-                    .normal = normalsBuffer.empty() ? glm::vec4(0.0f)
-                                                    : (glm::normalize(glm::vec4(normalsBuffer.at(v), 1.0f) * matrix)),
-                    .texCoord = texCoordsBuffer.empty() ? glm::vec3(0.0f) : texCoordsBuffer.at(v),
-                    .color = colorBuffer.empty() ? glm::vec4(1.0f) : glm::vec4(colorBuffer.at(v), 1.0f),
+                    .pos = positionBuffer.at(v) * matrix3,
+                    .normal = normalsBuffer.empty() ? glm::vec3(0.0f) : (glm::normalize(normalsBuffer.at(v) * matrix3)),
+                    .texCoord = texCoordsBuffer.empty() ? glm::vec2(0.0f) : texCoordsBuffer.at(v),
+                    .color = colorBuffer.empty() ? glm::vec3(1.0f) : colorBuffer.at(v),
                     .tangent = tangentBuffer.empty() ? glm::vec4(0.0f) : tangentBuffer.at(v),
                 };
                 vertexBuffer.push_back(vert);
@@ -192,7 +203,7 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
             const tinygltf::BufferView &bufferView = gltfModel.bufferViews.at(accessor.bufferView);
             const tinygltf::Buffer &buffer = gltfModel.buffers.at(bufferView.buffer);
 
-            model.mesh.indicesSize += static_cast<uint32_t>(accessor.count);
+            model.mesh.indicesSize += static_cast<std::uint32_t>(accessor.count);
 
             // glTF supports different component types of indices
             switch (accessor.componentType) {
@@ -215,46 +226,50 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
     return loaded;
 }
 
-static std::pair<std::string, AssetStorage::CPUMaterial>
-loadGltfMaterial(const IndexedStorage<std::string, AssetStorage::CPUTexture> &texture, const tinygltf::Material &mat,
-                 const unsigned offset)
+static std::pair<std::string, AssetStorage::CPUMaterial> loadGltfMaterial(const std::vector<std::string> &texture,
+                                                                          const tinygltf::Material &mat)
 {
+#define GET_MATERIAL_TEXTURE(value, name)                                                                  \
+    if (mat.value.find(#name) != mat.value.end()) {                                                        \
+        std::size_t idx = mat.value.at(#name).TextureIndex();                                              \
+        material.name = (texture.size() > idx) ? (texture.at(idx)) : (AssetStorage::missing_texture_name); \
+    }
+#define GET_MATERIAL_COLOR(value, name)                                           \
+    if (mat.value.find(#name) != mat.value.end()) {                               \
+        material.name = glm::make_vec4(mat.value.at(#name).ColorFactor().data()); \
+    }
+
+#define GET_MATERIAL_FACTOR(value, name) \
+    if (mat.value.find(#name) != mat.value.end()) { material.name = static_cast<float>(mat.value.at(#name).Factor()); }
+
     DEBUG_FUNCTION
     AssetStorage::CPUMaterial material;
-    if (mat.values.find("baseColorTexture") != mat.values.end()) {
-        material.baseColorTexture = texture.getName(mat.values.at("baseColorTexture").TextureIndex() + offset);
-    }
-    // Metallic roughness workflow
-    if (mat.values.find("metallicRoughnessTexture") != mat.values.end()) {
-        material.metallicRoughnessTexture =
-            texture.getName(mat.values.at("metallicRoughnessTexture").TextureIndex() + offset);
-    }
-    if (mat.values.find("roughnessFactor") != mat.values.end()) {
-        material.roughness = mat.values.at("roughnessFactor").Factor();
-    }
-    if (mat.values.find("metallicFactor") != mat.values.end()) {
-        material.metallic = mat.values.at("metallicFactor").Factor();
-    }
-    if (mat.values.find("baseColorFactor") != mat.values.end()) {
-        material.baseColor = glm::make_vec4(mat.values.at("baseColorFactor").ColorFactor().data());
-    }
-    if (mat.additionalValues.find("normalTexture") != mat.additionalValues.end()) {
-        material.normalTexture = texture.getName(mat.additionalValues.at("normalTexture").TextureIndex() + offset);
-    }
-    if (mat.additionalValues.find("emissiveTexture") != mat.additionalValues.end()) {
-        material.emissiveTexture = texture.getName(mat.additionalValues.at("emissiveTexture").TextureIndex() + offset);
-    }
-    if (mat.additionalValues.find("occlusionTexture") != mat.additionalValues.end()) {
-        material.occlusionTexture =
-            texture.getName(mat.additionalValues.at("occlusionTexture").TextureIndex() + offset);
-    }
+
+    GET_MATERIAL_FACTOR(additionalValues, alphaCutOff);
+
+    GET_MATERIAL_FACTOR(values, roughnessFactor);
+    GET_MATERIAL_FACTOR(values, metallicFactor);
+
+    GET_MATERIAL_COLOR(values, baseColorFactor);
+    GET_MATERIAL_COLOR(additionalValues, emissiveFactor);
+
+    GET_MATERIAL_TEXTURE(values, baseColorTexture);
+    GET_MATERIAL_TEXTURE(values, metallicRoughnessTexture);
+    GET_MATERIAL_TEXTURE(additionalValues, normalTexture);
+    GET_MATERIAL_TEXTURE(additionalValues, occlusionTexture);
+    GET_MATERIAL_TEXTURE(additionalValues, emissiveTexture);
+
+#undef GET_MATERIAL_TEXTURE
+#undef GET_MATERIAL_COLOR
+#undef GET_MATERIAL_FACTOR
     return std::make_pair(mat.name, material);
 }
 
-bool loadGltfModel(const std::filesystem::path &path, AssetStorage::CPUStorage &storage)
+std::optional<AssetStorage::CPUStorage> loadGltfModel(const std::filesystem::path &path)
 try {
     DEBUG_FUNCTION
 
+    AssetStorage::CPUStorage storage;
     tinygltf::Model gltfModel;
     tinygltf::TinyGLTF gltfContext;
     std::string error, warning;
@@ -263,20 +278,21 @@ try {
     bool isLoaded = gltfContext.LoadASCIIFromFile(&gltfModel, &error, &warning, path.string());
     if (!warning.empty()) logger.warn("Asset Storage/GLTF") << warning;
     if (!error.empty()) logger.err("Asset Storage/GLTF") << error;
-    if (!isLoaded) return false;
+    if (!isLoaded) return std::nullopt;
 
-    const auto offset = storage.textureStaging.size();
+    std::vector<std::string> texturePath;
     for (const auto &image: gltfModel.images) {
         const auto filepath = path.parent_path() / image.uri;
-        supportedTexture.at(filepath.extension().string())(filepath, std::ref(storage));
+        storage.texturePaths.emplace(filepath.stem().string(), filepath);
+        texturePath.push_back(filepath.stem().string());
     }
     for (const auto &material: gltfModel.materials) {
-        const auto mat = loadGltfMaterial(storage.textureStaging, material, offset);
+        const auto mat = loadGltfMaterial(texturePath, material);
         storage.materialStaging.add(std::move(mat));
     }
     if (gltfModel.scenes.empty()) {
         logger.warn("Asset Storage/GLTF") << "GLTF file does not contains scene.";
-        return true;
+        return storage;
     }
     const auto &scene = gltfModel.scenes[0];
     for (const auto &idx: scene.nodes) {
@@ -289,13 +305,13 @@ try {
     }
 
     storage.prefabStorage[path.stem().string()] = prefab;
-    return true;
+    return storage;
 } catch (const PivotException &ase) {
     logger.err(ase.getScope()) << "Error while loaded GLTF file : " << ase.what();
-    return false;
+    return std::nullopt;
 } catch (const std::logic_error &le) {
     logger.err("THROW/Asset Storage/Invalid GLTF file") << "The GLTF file is malformed. Reason : " << le.what();
-    return false;
+    return std::nullopt;
 }
 
 }    // namespace pivot::graphics::loaders

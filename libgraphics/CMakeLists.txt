@@ -180,8 +180,10 @@ add_library(
     source/VulkanAllocator.cxx
     source/VulkanLoader.cxx
     source/VulkanSwapchain.cxx
+    source/ThreadPool.cxx
     source/AssetsStorage/AssetStorage.cxx
     source/AssetsStorage/AssetStorage_init.cxx
+    source/AssetsStorage/AssetStorage_CPUStorage.cxx
     source/AssetsStorage/AssetStorage_build.cxx
     source/AssetsStorage/Loaders/AssetStorage_obj.cxx
     source/AssetsStorage/Loaders/AssetStorage_png.cxx
@@ -214,7 +216,8 @@ target_compile_options(
             /W4
             /wd4267
             /wd4201
-            /wd4244>
+            /wd4244
+            /wd4324>
 )
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE <vulkan/vulkan.hpp> <vk_mem_alloc.hpp>)
@@ -229,6 +232,7 @@ target_compile_definitions(
     PUBLIC VULKAN_HPP_NO_CONSTRUCTORS
            VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
            VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1
+           PIVOT_SOURCE_DIRECTORY="${CMAKE_SOURCE_DIR}"
            PIVOT_ASSET_DEFAULT_DIRECTORY="${PIVOT_ASSET_DEFAULT_DIRECTORY}"
            PIVOT_WINDOW_ICON_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../assets"
 )
@@ -263,5 +267,8 @@ build_tests(
     tests/culling.cxx
     tests/bounding_box.cxx
     tests/indexed_storage.cxx
+    tests/asset_storage_cpu_storage.cxx
+    tests/asset_loading_gltf.cxx
+    tests/asset_loading_obj.cxx
     tests/flags.cxx
 )

@@ -6,6 +6,9 @@
 #include <unordered_map>
 #include <vector>
 
+#include "pivot/graphics/pivot.hxx"
+#include "pivot/graphics/types/common.hxx"
+
 namespace pivot
 {
 
@@ -26,9 +29,6 @@ private:
     using size_type = typename std::vector<Value>::size_type;
 
 public:
-    IndexedStorage() = default;
-    ~IndexedStorage() = default;
-
     /// return an iterator over the indexes
     auto begin() { return index.begin(); }
     /// return the end iterator
@@ -52,26 +52,38 @@ public:
     }
 
     /// Append to the current storage
-    void append(const IndexedStorage &stor)
+    void append(const IndexedStorage &other)
     {
-        for (const auto &[name, idx]: stor) { add(name, stor.getStorage().at(idx)); }
+        for (const auto &[name, idx]: other.getIndexes()) {
+            if (contains(name)) throw std::runtime_error("Index already in use !");
+            index.emplace(name, idx + storage.size());
+        }
+        storage.insert(storage.end(), other.getStorage().begin(), other.getStorage().end());
     }
 
+    /// Remove key from storage
+    void erase(const Key &key)
+    {
+        auto idx = getIndex(key);
+        if (idx == -1) throw std::out_of_range("Key not found !");
+        storage.erase(storage.begin() + idx);
+        index.erase(key);
+    }
     /// Add a new item to the storage
     inline void add(const Key &i, Value value)
     {
         if (contains(i)) throw std::runtime_error("Index already in use !");
         storage.push_back(std::move(value));
-        index.insert(std::make_pair(i, storage.size() - 1));
+        index.emplace(i, storage.size() - 1);
     }
     /// @copydoc add
-    inline void add(const std::pair<Key, Value> &value) { add(value.first, std::move(value.second)); }
+    inline void add(const std::pair<Key, Value> value) { add(value.first, std::move(value.second)); }
     /// Valueell if given key already exist in storage
     inline bool contains(const Key &i) const { return index.contains(i); }
     /// return the number of item in the storage
     constexpr auto size() const noexcept
     {
-        assert(storage.size() == index.size());
+        pivot_assert(storage.size() == index.size());
         return storage.size();
     }
     /// return whether or not the size is equal to 0
@@ -81,14 +93,18 @@ public:
     constexpr const auto &getStorage() const noexcept { return storage; }
     /// @copydoc getStorage
     constexpr auto &getStorage() noexcept { return storage; }
+    /// return the internal vector
+    constexpr const auto &getIndexes() const noexcept { return index; }
+    /// @copydoc getIndexes
+    constexpr auto &getIndexes() noexcept { return index; }
 
     /// Get the name associated to given idx
-    constexpr const Key &getName(const size_type &idx) const
+    constexpr std::optional<Key> getName(const size_type &idx) const
     {
         auto findResult =
             std::find_if(index.begin(), index.end(), [&idx](const auto &pair) { return pair.second == idx; });
         if (findResult != index.end()) return findResult->first;
-        throw std::out_of_range("Out of range index: " + std::to_string(idx));
+        return std::nullopt;
     }
     /// return the index of an item name
     inline std::int32_t getIndex(const Key &i) const noexcept
@@ -113,6 +129,8 @@ public:
         if (!index.contains(i)) add(i, {});
         return get(i);
     }
+    /// Equality operator
+    bool operator==(const IndexedStorage &) const = default;
 
 private:
     std::vector<Value> storage;

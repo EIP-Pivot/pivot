@@ -28,14 +28,6 @@ void VulkanApplication::createRenderPass()
         .initialLayout = vk::ImageLayout::eUndefined,
         .finalLayout = vk::ImageLayout::ePresentSrcKHR,
     };
-    const auto depthFormat =
-        vk_utils::findSupportedFormat(physical_device,
-                                      {
-                                          vk::Format::eD32Sfloat,
-                                          vk::Format::eD32SfloatS8Uint,
-                                          vk::Format::eD24UnormS8Uint,
-                                      },
-                                      vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
 
     renderPass.addAttachement(VulkanRenderPass::Color, swapchain.getSwapchainFormat(), maxMsaaSample,
                               vk::ImageLayout::eColorAttachmentOptimal);
@@ -87,9 +79,6 @@ void VulkanApplication::createCommandPool()
 void VulkanApplication::createDepthResources()
 {
     DEBUG_FUNCTION
-    vk::Format depthFormat = pivot::graphics::vk_utils::findSupportedFormat(
-        physical_device, {vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint},
-        vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
     vk::ImageCreateInfo imageInfo{
         .imageType = vk::ImageType::e2D,
         .format = depthFormat,

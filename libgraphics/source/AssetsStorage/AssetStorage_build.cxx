@@ -6,13 +6,32 @@
 namespace pivot::graphics
 {
 
+static AssetStorage::CPUStorage
+batch_load(const std::unordered_map<std::string, std::filesystem::path> &storage_map,
+           const std::function<std::optional<AssetStorage::CPUStorage>(unsigned, const std::filesystem::path &)> load,
+           const std::string &debug_name, ThreadPool &threadPool)
+{
+    AssetStorage::CPUStorage cpuStorage;
+    std::vector<std::pair<std::filesystem::path, std::future<std::optional<AssetStorage::CPUStorage>>>> futures;
+    futures.reserve(storage_map.size());
+
+    /// Model must be loaded first, as they may add new texture to load
+    for (const auto &i: storage_map) futures.emplace_back(i.second, threadPool.push(load, i.second));
+    for (auto &[name, f]: futures) {
+        auto storage = f.get();
+        if (!storage.has_value())
+            logger.warn("Asset Storage") << debug_name << " failed to load: " << name;
+        else
+            cpuStorage.merge(storage.value());
+    }
+    return cpuStorage;
+}
+
 void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
 {
     DEBUG_FUNCTION
     // check for incorrect combination of flags
-    assert(std::popcount(static_cast<std::underlying_type_t<AssetStorage::BuildFlagBits>>(flags)) == 1);
-    assert(cpuStorage.materialStaging.contains(missing_material_name));
-    assert(cpuStorage.textureStaging.contains(missing_texture_name));
+    pivot_assert(std::popcount(static_cast<std::underlying_type_t<AssetStorage::BuildFlagBits>>(flags)) == 1);
 
     // TODO: better separation of loading ressources
     modelStorage.clear();
@@ -28,17 +47,16 @@ void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
 
     createTextureSampler();
 
+    cpuStorage.merge(CPUStorage::default_assets());
     if (flags & (BuildFlagBits::eReloadOldAssets)) {
         cpuStorage.modelPaths.insert(modelPaths.begin(), modelPaths.end());
         cpuStorage.texturePaths.insert(texturePaths.begin(), texturePaths.end());
     }
-    /// Model must be loaded first, as they may add new texture to load
-    for (const auto &i: cpuStorage.modelPaths) {
-        if (!loadModel(i.second)) logger.warn("Asset Storage") << "Model failed to load: " << i.second;
-    }
-    for (const auto &i: cpuStorage.texturePaths) {
-        if (!loadTexture(i.second)) logger.warn("Asset Storage") << "Texture failed to load: " << i.second;
-    }
+
+    threadPool.start();
+    cpuStorage += batch_load(cpuStorage.modelPaths, loadModel, "Model", threadPool);
+    cpuStorage += batch_load(cpuStorage.texturePaths, loadTexture, "Texture", threadPool);
+
     modelStorage.swap(cpuStorage.modelStorage);
     prefabStorage.swap(cpuStorage.prefabStorage);
     modelPaths.swap(cpuStorage.modelPaths);
@@ -57,6 +75,7 @@ void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
     createDescriptorSet(builder);
 
     cpuStorage = {};
+    threadPool.stop();
 }
 
 void AssetStorage::destroy()
@@ -82,14 +101,14 @@ static void copy_with_staging_buffer(VulkanBase &base_ref, vk::BufferUsageFlags 
     auto true_size = data.size();
     auto staging = base_ref.allocator.createBuffer<T>(
         true_size, vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst,
-        vma::MemoryUsage::eCpuToGpu);
+        vma::MemoryUsage::eAuto, vma::AllocationCreateFlagBits::eHostAccessSequentialWrite);
 
     base_ref.allocator.copyBuffer(staging, std::span(data));
     if (true_size > buffer.getSize()) {
         base_ref.allocator.destroyBuffer(buffer);
         buffer = base_ref.allocator.createBuffer<T>(
             true_size, flag | vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst,
-            vma::MemoryUsage::eGpuOnly);
+            vma::MemoryUsage::eAutoPreferDevice);
     }
     base_ref.copyBuffer(staging, buffer);
     base_ref.allocator.destroyBuffer(staging);
@@ -111,7 +130,7 @@ void AssetStorage::pushModelsOnGPU()
                             gpu_object::AABB(std::span(cpuStorage.vertexStagingBuffer.begin() + model.mesh.vertexOffset,
                                                        model.mesh.vertexSize)));
     }
-    assert(modelStorage.size() == meshAABBStorage.size());
+    pivot_assert(modelStorage.size() == meshAABBStorage.size());
 
     copy_with_staging_buffer(base_ref->get(), vk::BufferUsageFlagBits::eVertexBuffer, cpuStorage.vertexStagingBuffer,
                              vertexBuffer);
@@ -180,9 +199,12 @@ void AssetStorage::pushMaterialOnGPU()
         materialStorage.add(
             name,
             {
+                .alphaCutOff = mat.alphaCutOff,
+                .metallicFactor = mat.metallicFactor,
+                .roughnessFactor = mat.roughnessFactor,
                 .baseColor = mat.baseColor,
-                .metallic = mat.metallic,
-                .roughness = mat.roughness,
+                .baseColorFactor = mat.baseColorFactor,
+                .emissiveFactor = mat.emissiveFactor,
                 .baseColorTexture =
                     (mat.baseColorTexture.empty()) ? (-1) : (textureStorage.getIndex(mat.baseColorTexture)),
                 .metallicRoughnessTexture = (mat.metallicRoughnessTexture.empty())

@@ -2,94 +2,10 @@
 
 #include "pivot/graphics/DebugMacros.hxx"
 
-#include <type_traits>
-
 #include <Logger.hpp>
 
 namespace pivot::graphics
 {
-
-static const AssetStorage::CPUTexture default_texture_data{
-
-    .image =
-        {
-            std::byte(0x00),
-            std::byte(0x00),
-            std::byte(0x00),
-            std::byte(0xff),
-
-            std::byte(0xff),
-            std::byte(0xff),
-            std::byte(0xff),
-            std::byte(0xff),
-
-            std::byte(0xff),
-            std::byte(0xff),
-            std::byte(0xff),
-            std::byte(0xff),
-
-            std::byte(0x00),
-            std::byte(0x00),
-            std::byte(0x00),
-            std::byte(0xff),
-        },
-    .size = {2, 2, 1},
-};
-
-static const std::vector<Vertex> quad_vertices = {
-    {
-        .pos = {-0.5f, -0.5f, 0.f},
-        .normal = {0.f, 0.f, 0.f},
-        .texCoord = {-0.5f, -0.5f},
-        .color = {1.0f, 0.0f, 0.0f, 0.0f},
-        .tangent = {0.0f, 0.0f, 0.0f, 0.0f},
-    },
-    {
-        .pos = {0.5f, -0.5f, 0.f},
-        .normal = {0.f, 0.f, 0.f},
-        .texCoord = {0.5f, -0.5f},
-        .color = {0.0f, 1.0f, 0.0f, 0.0f},
-        .tangent = {0.0f, 0.0f, 0.0f, 0.0f},
-    },
-    {
-        .pos = {0.5f, 0.5f, 0.f},
-        .normal = {0.f, 0.f, 0.f},
-        .texCoord = {0.5f, 0.5f},
-        .color = {0.0f, 0.0f, 1.0f, 0.0f},
-        .tangent = {0.0f, 0.0f, 0.0f, 0.0f},
-    },
-    {
-        .pos = {-0.5f, 0.5f, 0.f},
-        .normal = {0.f, 0.f, 0.f},
-        .texCoord = {-0.5f, 0.5f},
-        .color = {1.0f, 1.0f, 1.0f, 0.0f},
-        .tangent = {0.0f, 0.0f, 0.0f, 0.0f},
-    },
-};
-static const std::vector<std::uint32_t> quad_indices = {0, 1, 2, 2, 3, 0};
-
-AssetStorage::CPUStorage::CPUStorage()
-{
-    textureStaging.add(missing_texture_name, default_texture_data);
-    materialStaging.add(missing_material_name, {
-                                                   .baseColorTexture = missing_material_name,
-                                               });
-
-    materialStaging.add("white", {});
-
-    vertexStagingBuffer.insert(vertexStagingBuffer.end(), quad_vertices.begin(), quad_vertices.end());
-    indexStagingBuffer.insert(indexStagingBuffer.end(), quad_indices.begin(), quad_indices.end());
-    modelStorage[quad_mesh] = {
-        .mesh =
-            {
-                .vertexOffset = 0,
-                .vertexSize = static_cast<uint32_t>(quad_vertices.size()),
-                .indicesOffset = 0,
-                .indicesSize = static_cast<uint32_t>(quad_indices.size()),
-            },
-        .default_material = std::nullopt,
-    };
-}
 
 AssetStorage::AssetStorage(VulkanBase &base): base_ref(base) {}
 
@@ -175,18 +91,29 @@ bool AssetStorage::addTexture(const std::vector<std::filesystem::path> &path)
     return load == path.size();
 }
 
-bool AssetStorage::loadModel(const std::filesystem::path &path)
-{
+std::optional<AssetStorage::CPUStorage> AssetStorage::loadModel(unsigned thread_id, const std::filesystem::path &path)
+try {
     auto extension = path.extension().string();
-    logger.debug("Asset Storage") << "Loading model at : " << path;
-    return std::apply(loaders::supportedObject.at(extension), std::make_tuple(path, std::ref(cpuStorage)));
+    if (!loaders::supportedObject.contains(extension))
+        throw AssetStorageError(extension + " filetype not supported for 3D models.");
+    logger.debug("Asset Storage/" + std::to_string(thread_id)) << "Loading model at : " << path;
+
+    return std::apply(loaders::supportedObject.at(extension), std::make_tuple(path));
+} catch (const std::exception &e) {
+    logger.err("Asset Storage/Load Model") << e.what();
+    return std::nullopt;
 }
 
-bool AssetStorage::loadTexture(const std::filesystem::path &path)
-{
+std::optional<AssetStorage::CPUStorage> AssetStorage::loadTexture(unsigned thread_id, const std::filesystem::path &path)
+try {
     auto extension = path.extension().string();
-    logger.debug("Asset Storage") << "Loading texture at : " << path;
-    return std::apply(loaders::supportedTexture.at(extension), std::make_tuple(path, std::ref(cpuStorage)));
+    if (!loaders::supportedTexture.contains(extension))
+        throw AssetStorageError(extension + " filetype not supported for texture.");
+    logger.debug("Asset Storage/" + std::to_string(thread_id)) << "Loading texture at : " << path;
+    return std::apply(loaders::supportedTexture.at(extension), std::make_tuple(path));
+} catch (const std::exception &e) {
+    logger.err("Asset Storage/Load Texture") << e.what();
+    return std::nullopt;
 }
 
 }    // namespace pivot::graphics

@@ -121,8 +121,8 @@ private:
     handleLights(AllocatedBuffer<G> &buffer, const Object<T> &lights, const Object<Transform> &transforms,
                  const std::string &debug_name = "")
     {
-        assert(lights.objects.get().size() == lights.exist.get().size());
-        assert(transforms.objects.get().size() == transforms.exist.get().size());
+        pivot_assert(lights.objects.get().size() == lights.exist.get().size());
+        pivot_assert(transforms.objects.get().size() == transforms.exist.get().size());
 
         std::vector<G> lightsData;
         for (unsigned i = 0; i < lights.objects.get().size() && i < transforms.objects.get().size(); i++) {
@@ -132,17 +132,15 @@ private:
 
             lightsData.emplace_back(light, transform);
         }
-        if (buffer.getAllocatedSize() / sizeof(G) < lightsData.size()) {
+        if (buffer.getSize() < lightsData.size()) {
             if (buffer) base_ref->get().allocator.destroyBuffer(buffer);
-            buffer = base_ref->get().allocator.createBuffer<G>(
-                lightsData.size(), vk::BufferUsageFlagBits::eStorageBuffer, vma::MemoryUsage::eCpuToGpu,
-                vma::AllocationCreateFlagBits::eMapped, debug_name);
+            buffer = base_ref->get().allocator.createMappedBuffer<G>(lightsData.size(), debug_name);
         }
         base_ref->get().allocator.copyBuffer(buffer, std::span(lightsData));
         return lightsData.size();
     }
 
-    void createBuffer(const vk::DeviceSize bufferSize);
+    void createBuffer(vk::DeviceSize bufferSize);
     void createLightBuffer();
     void updateDescriptorSet(const vk::DeviceSize bufferSize);
 
@@ -152,11 +150,5 @@ private:
     Frame frame;
     vk::DescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
 };
-
-// void swap(DrawCallResolver::DrawSceneInformation &lhs, DrawCallResolver::DrawSceneInformation &rhs)
-// {
-//     std::swap(lhs.renderObjects, rhs.renderObjects);
-//     std::swap(lhs.transforms, rhs.transforms);
-// }
 
 }    // namespace pivot::graphics

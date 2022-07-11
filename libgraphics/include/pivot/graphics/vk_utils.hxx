@@ -51,8 +51,10 @@ readBinaryFile(const std::filesystem::path &filename)
 
 /// Read a whole file into a string
 std::string readFile(const std::filesystem::path &filename);
+std::size_t writeFile(const std::filesystem::path &filename, const std::string_view &content);
 
 template <typename T = std::byte>
+/// Write a binary file
 std::size_t writeBinaryFile(const std::filesystem::path &filename, std::span<const T> &code)
 {
     std::ofstream file(filename, std::ios::binary);

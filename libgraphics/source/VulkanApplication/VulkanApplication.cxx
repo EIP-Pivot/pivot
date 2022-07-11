@@ -31,8 +31,12 @@ VulkanApplication::VulkanApplication()
         bEnableValidationLayers = false;
     }
     window.setIcon(iconFilepath);
-    window.addKeyPressCallback(Window::Key::ESCAPE,
-                               [](Window &window, const Window::Key) { window.shouldClose(true); });
+    window.addKeyPressCallback(Window::Key::ESCAPE, [](Window &window, const Window::Key, const Window::Modifier) {
+        window.shouldClose(true);
+    });
+    window.addKeyPressCallback(Window::Key::G, [this](Window &, const Window::Key, const Window::Modifier modifier) {
+        if (modifier & Window::ModifierBits::Ctrl) { allocator.dumpStats(); }
+    });
 }
 
 VulkanApplication::~VulkanApplication()
@@ -152,8 +156,8 @@ void VulkanApplication::recreateSwapchain()
 
 void VulkanApplication::draw(DrawCallResolver::DrawSceneInformation sceneInformation, const CameraData &cameraData)
 try {
-    assert(!graphicsRenderer.empty() && !computeRenderer.empty());
-    assert(currentFrame < MaxFrameInFlight);
+    pivot_assert(!graphicsRenderer.empty() && !computeRenderer.empty());
+    pivot_assert(currentFrame < MaxFrameInFlight);
     auto &frame = frames[currentFrame];
     vk_utils::vk_try(device.waitForFences(frame.inFlightFences, VK_TRUE, UINT64_MAX));
 
@@ -208,7 +212,7 @@ try {
     std::array<vk::CommandBuffer, 1> submitCmd{
         cmd,
     };
-    assert(signalSemaphores.size() == waitStages.size());
+    pivot_assert(signalSemaphores.size() == waitStages.size());
     vk::SubmitInfo submitInfo{
         .waitSemaphoreCount = waitSemaphores.size(),
         .pWaitSemaphores = waitSemaphores.data(),

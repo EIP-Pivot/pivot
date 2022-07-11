@@ -5,8 +5,9 @@
 namespace pivot::graphics::loaders
 {
 
-bool loadKtxImage(const std::filesystem::path &path, AssetStorage::CPUStorage &storage)
+std::optional<AssetStorage::CPUStorage> loadKtxImage(const std::filesystem::path &path)
 try {
+    AssetStorage::CPUStorage storage;
     AssetStorage::CPUTexture texture;
     ktxTexture *ktxTexture = nullptr;
     auto result =
@@ -14,7 +15,7 @@ try {
 
     if (result != KTX_SUCCESS) {
         logger.err("AssetStorage/KTX") << ktxErrorString(result);
-        return false;
+        return std::nullopt;
     }
     ktx_uint8_t *ktxTextureData = ktxTexture_GetData(ktxTexture);
     ktx_size_t ktxTextureSize = ktxTexture_GetDataSize(ktxTexture);
@@ -27,10 +28,10 @@ try {
     };
     ktxTexture_Destroy(ktxTexture);
     storage.textureStaging.add(path.stem().string(), std::move(texture));
-    return true;
+    return storage;
 } catch (const std::runtime_error &re) {
     logger.err("Asset Storage/KTX") << re.what();
-    return false;
+    return std::nullopt;
 }
 
 }    // namespace pivot::graphics::loaders

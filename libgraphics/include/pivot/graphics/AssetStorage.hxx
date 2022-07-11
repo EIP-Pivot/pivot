@@ -3,6 +3,7 @@
 #include "pivot/graphics/DeletionQueue.hxx"
 #include "pivot/graphics/DescriptorAllocator/DescriptorBuilder.hxx"
 #include "pivot/graphics/PivotFlags.hxx"
+#include "pivot/graphics/ThreadPool.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/abstract/AImmediateCommand.hxx"
 #include "pivot/graphics/types/AABB.hxx"
@@ -55,19 +56,27 @@ public:
         std::uint32_t indicesOffset;
         /// Number of indice forming the mesh.
         std::uint32_t indicesSize;
+        /// Equality operator
+        constexpr bool operator==(const Mesh &other) const = default;
     };
 
     /// @brief Represent a CPU-side material
     struct CPUMaterial {
         /// @cond
-        float metallic = 1.0f;
-        float roughness = 1.0f;
+        float alphaCutOff = 1.0f;
+        float metallicFactor = 1.0f;
+        float roughnessFactor = 1.0f;
         glm::vec4 baseColor = glm::vec4(1.0f);
-        std::string baseColorTexture = "";
+        glm::vec4 baseColorFactor = glm::vec4(1.0f);
+        glm::vec4 emissiveFactor = glm::vec4(1.0f);
+        std::string baseColorTexture = missing_texture_name;
         std::string metallicRoughnessTexture = "";
         std::string normalTexture = "";
         std::string occlusionTexture = "";
         std::string emissiveTexture = "";
+        std::string specularGlossinessTexture = "";
+        std::string diffuseTexture = "";
+        bool operator==(const CPUMaterial &) const = default;
         ///@endcond
     };
 
@@ -77,12 +86,16 @@ public:
         Mesh mesh;
         /// Default material id
         std::optional<std::string> default_material;
+        /// Equality operator
+        bool operator==(const Model &) const = default;
     };
 
     /// @brief A group of model
     struct Prefab {
         /// The ids of the composing models
         std::vector<std::string> modelIds;
+        /// Equality operator
+        bool operator==(const Prefab &) const = default;
     };
 
     /// @brief Represent a CPU-side Texture
@@ -91,6 +104,8 @@ public:
         std::vector<std::byte> image;
         /// The size of the texture
         vk::Extent3D size;
+        /// Equality operator
+        bool operator==(const CPUTexture &) const = default;
     };
 
     /// Alias for AllocatedImage
@@ -105,27 +120,55 @@ public:
     using BuildFlags = Flags<BuildFlagBits>;
 
     /// Represent the loaded assets before being uploaded to the GPU
-    struct CPUStorage {
-        /// @cond
-        CPUStorage();
+    class CPUStorage
+    {
+    public:
+        /// CPUStorage error type
+        LOGIC_ERROR(CPUStorage);
 
+        /// Merge two CPUStorage together
+        void merge(const CPUStorage &other);
+
+        /// Operator += overload
+        CPUStorage &operator+=(const CPUStorage &other);
+        /// Equality operator
+        bool operator==(const CPUStorage &) const = default;
+
+    public:
+        /// Return a CPUStorage with default asset
+        static CPUStorage default_assets();
+
+    public:
+        /// store the Models
         std::unordered_map<std::string, Model> modelStorage;
+        /// store the Prefab
         std::unordered_map<std::string, Prefab> prefabStorage;
+        /// Store the Vertex
         std::vector<Vertex> vertexStagingBuffer;
+        /// Store the index of the buffer
         std::vector<std::uint32_t> indexStagingBuffer;
+        /// Store the textures
         IndexedStorage<std::string, CPUTexture> textureStaging;
+        /// Store the Materials
         IndexedStorage<std::string, CPUMaterial> materialStaging;
+        /// Store the path of the model currently loaded
         std::unordered_map<std::string, std::filesystem::path> modelPaths;
+        /// Store the path of the texture currently loaded
         std::unordered_map<std::string, std::filesystem::path> texturePaths;
-        /// @endcond
     };
 
     /// name of the fallback texture if missing
     static constexpr auto missing_texture_name = "internal/missing_texture";
+    /// data of the default texture
+    static const CPUTexture default_texture_data;
     /// name of the default material if missing
     static constexpr auto missing_material_name = "internal/missing_material";
     /// name of the default quad mesh
     static constexpr auto quad_mesh = "internal/quad_mesh";
+    /// Vertices of the default mesh
+    static const std::vector<Vertex> quad_vertices;
+    /// Indeices of the default mesh
+    static const std::vector<std::uint32_t> quad_indices;
 
 public:
     /// Constructor
@@ -166,15 +209,21 @@ public:
     ///     vec3 low;
     ///     vec3 high;
     /// };
+
     /// struct Material {
+    ///     float alphaCutOff;
     ///     float metallic;
     ///     float roughness;
     ///     vec4 baseColor;
+    ///     vec4 baseColorFactor;
+    ///     vec4 emissiveFactor;
     ///     int baseColorTexture;
     ///     int metallicRoughnessTexture;
     ///     int normalTexture;
     ///     int occlusionTexture;
     ///     int emissiveTexture;
+    ///     int specularGlossinessTexture;
+    ///     int diffuseTexture;
     /// };
     ///
     /// layout(set = 0, binding = 0) readonly buffer ObjectAABB{
@@ -270,15 +319,10 @@ public:
 
 private:
     /// Load models
-    bool loadModel(const std::filesystem::path &path);
-    bool loadObjModel(const std::filesystem::path &path);
-    bool loadGltfModel(const std::filesystem::path &path);
+    static std::optional<CPUStorage> loadModel(unsigned, const std::filesystem::path &path);
 
     /// Load texture
-    bool loadTexture(const std::filesystem::path &path);
-    bool loadPngTexture(const std::filesystem::path &path);
-    bool loadJpgTexture(const std::filesystem::path &path);
-    bool loadKtxImage(const std::filesystem::path &path);
+    static std::optional<CPUStorage> loadTexture(unsigned, const std::filesystem::path &path);
 
     // Push to gpu
     void pushModelsOnGPU();
@@ -292,6 +336,7 @@ private:
 private:
     OptionalRef<VulkanBase> base_ref;
     std::filesystem::path asset_dir = PIVOT_ASSET_DEFAULT_DIRECTORY;
+    ThreadPool threadPool;
 
     // Abstract ressouces
     std::unordered_map<std::string, Model> modelStorage;
@@ -321,19 +366,19 @@ private:
 namespace loaders
 {
     /// @brief The function signature of an asset handler
-    using AssetHandler = std::function<bool(const std::filesystem::path &, AssetStorage::CPUStorage &)>;
+    using AssetHandler = std::function<std::optional<AssetStorage::CPUStorage>(const std::filesystem::path &)>;
 
     /// Load a .obj file
-    bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
+    std::optional<AssetStorage::CPUStorage> loadObjModel(const std::filesystem::path &path);
     /// Load a .gltf file
-    bool loadGltfModel(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
+    std::optional<AssetStorage::CPUStorage> loadGltfModel(const std::filesystem::path &path);
 
     /// Load a .png file
-    bool loadPngTexture(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
+    std::optional<AssetStorage::CPUStorage> loadPngTexture(const std::filesystem::path &path);
     /// Load a .jpg file
-    bool loadJpgTexture(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
+    std::optional<AssetStorage::CPUStorage> loadJpgTexture(const std::filesystem::path &path);
     /// Load a .ktx file
-    bool loadKtxImage(const std::filesystem::path &path, AssetStorage::CPUStorage &storage);
+    std::optional<AssetStorage::CPUStorage> loadKtxImage(const std::filesystem::path &path);
 
     /// List of supported texture extensions
     const std::unordered_map<std::string, loaders::AssetHandler> supportedTexture = {

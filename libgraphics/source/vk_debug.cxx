@@ -5,7 +5,7 @@ namespace pivot::graphics::vk_debug
 
 void beginRegion(vk::CommandBuffer &cmdbuffer, const char *pMarkerName, const std::array<float, 4> color)
 {
-    assert(pMarkerName);
+    pivot_assert(pMarkerName);
 #ifndef NDEBUG
     vk::DebugUtilsLabelEXT markerInfo{
         .pLabelName = pMarkerName,

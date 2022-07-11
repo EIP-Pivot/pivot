@@ -151,7 +151,7 @@ void GraphicsRenderer::createPipeline(VulkanBase &base_ref, vk::RenderPass &pass
     builder.setFaceCulling(vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise)
         .setVertexAttributes(Vertex::getInputAttributeDescriptions(
             0, VertexComponentFlagBits::Position | VertexComponentFlagBits::Normal | VertexComponentFlagBits::UV |
-                   VertexComponentFlagBits::Tangent))
+                   VertexComponentFlagBits::Color | VertexComponentFlagBits::Tangent))
         .setVertexShaderPath("shaders/default_pbr.vert.spv")
         .setFragmentShaderPath("shaders/default_pbr.frag.spv");
     storage.pipeline.get().newGraphicsPipeline(

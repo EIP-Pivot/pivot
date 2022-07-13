@@ -202,11 +202,9 @@ int main(const int argc, const char *argv[])
     Application app;
 
     SceneManager::SceneId sceneId;
-    if (cmdLineArg.startupScene.has_value()) {
-        sceneId = app.loadScene(cmdLineArg.startupScene.value());
-    } else {
-        sceneId = app.loadDefaultScene();
-    }
+    if (cmdLineArg.startupScenes.empty()) sceneId = app.loadDefaultScene();
+    for (const auto &scenePath: cmdLineArg.startupScenes) sceneId = app.loadScene(scenePath);
+
     app.changeCurrentScene(sceneId);
 
     app.init();

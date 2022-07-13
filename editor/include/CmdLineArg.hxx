@@ -1,12 +1,12 @@
 #pragma once
 
-#include <optional>
 #include <string>
+#include <vector>
 
 #include <Logger.hpp>
 
 struct CmdLineArgs {
-    const std::optional<const std::string> startupScene;
+    const std::vector<std::string> startupScenes;
     const cpplogger::Level verbosity;
 };
 

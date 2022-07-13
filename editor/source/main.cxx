@@ -35,6 +35,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
 
+#include "CmdLineArg.hxx"
 #include "ImGuiCore/ComponentEditor.hxx"
 #include "ImGuiCore/Editor.hxx"
 #include "ImGuiCore/EntityModule.hxx"
@@ -194,14 +195,15 @@ public:
     std::bitset<UINT16_MAX> button;
 };
 
-int main(int argc, char *argv[])
+int main(const int argc, const char *argv[])
 {
-    logger.start();
+    auto cmdLineArg = getCmdLineArg(argc, argv);
+    logger.start(cmdLineArg.verbosity);
     Application app;
 
     SceneManager::SceneId sceneId;
-    if (argc == 2) {
-        sceneId = app.loadScene(argv[1]);
+    if (cmdLineArg.startupScene.has_value()) {
+        sceneId = app.loadScene(cmdLineArg.startupScene.value());
     } else {
         sceneId = app.loadDefaultScene();
     }

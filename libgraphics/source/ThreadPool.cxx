@@ -33,7 +33,7 @@ void ThreadPool::new_thread(State &state, unsigned id) noexcept
 {
     WorkUnits work;
 
-    logger.trace(file_position()) << "New thread: " << id;
+    logger.trace(function_name()) << "New thread: " << id;
     while (!state.bExit) {
         try {
             {
@@ -53,7 +53,7 @@ void ThreadPool::new_thread(State &state, unsigned id) noexcept
             logger.err("Thread Pool") << "Unkown error on thread " << id;
         }
     }
-    logger.trace(file_position()) << "End thread: " << id;
+    logger.trace(function_name()) << "End thread: " << id;
 }
 
 }    // namespace pivot

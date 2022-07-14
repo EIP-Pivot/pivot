@@ -195,7 +195,7 @@ public:
     std::bitset<UINT16_MAX> button;
 };
 
-int main(const int argc, const char *argv[])
+int main(int argc, const char *argv[])
 {
     auto cmdLineArg = getCmdLineArg(argc, argv);
     logger.start(cmdLineArg.verbosity);

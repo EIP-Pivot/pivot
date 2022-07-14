@@ -199,7 +199,7 @@ void Engine::saveScene(ecs::SceneManager::SceneId id, const std::filesystem::pat
 
 ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
 {
-
+    logger.info("Scene Manager") << "Loading scene at " << path;
     std::ifstream scene_file{path};
     if (!scene_file.is_open()) {
         logger.err() << "Could not open scene file: " << std::strerror(errno);
@@ -214,9 +214,7 @@ ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
     m_vulkan_application.assetStorage.setAssetDirectory(scene_base_path);
     for (auto &asset: scene_json["assets"]) m_vulkan_application.assetStorage.addAsset(asset.get<std::string>());
     auto scene = Scene::load(scene_json, m_component_index, m_system_index);
-    m_vulkan_application.buildAssetStorage(scene_json["assets"].empty()
-                                               ? (graphics::AssetStorage::BuildFlagBits::eReloadOldAssets)
-                                               : (graphics::AssetStorage::BuildFlagBits::eClear));
+    m_vulkan_application.buildAssetStorage(graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
     return this->registerScene(std::move(scene));
 }
 

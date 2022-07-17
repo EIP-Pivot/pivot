@@ -67,6 +67,7 @@ add_library(
     source/Components/Tag.cxx
     source/Components/RigidBody.cxx
     source/Components/Gravity.cxx
+    source/Core/Component/FlagComponentStorage.cxx
 )
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 
@@ -90,4 +91,5 @@ build_tests(
     tests/Core/Event/test_child_event.cxx
     tests/Core/Scene/test_load.cxx
     tests/Core/Scene/test_save.cxx
+    tests/Core/Component/test_flag_component_storage.cxx
 )

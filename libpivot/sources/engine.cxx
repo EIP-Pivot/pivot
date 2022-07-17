@@ -8,11 +8,15 @@
 #include <pivot/ecs/Components/Gravity.hxx>
 #include <pivot/ecs/Components/RigidBody.hxx>
 
+#include <pivot/builtins/events/collision.hxx>
 #include <pivot/builtins/events/key_press.hxx>
 #include <pivot/builtins/events/tick.hxx>
+#include <pivot/builtins/systems/CollisionSystem.hxx>
+#include <pivot/builtins/systems/CollisionTestSystem.hxx>
 #include <pivot/builtins/systems/PhysicSystem.hxx>
 #include <pivot/builtins/systems/TestTickSystem.hxx>
 
+#include <pivot/builtins/components/Collidable.hxx>
 #include <pivot/builtins/components/RenderObject.hxx>
 #include <pivot/builtins/components/Transform.hxx>
 
@@ -36,10 +40,14 @@ Engine::Engine()
     m_component_index.registerComponent(builtins::components::PointLight::description);
     m_component_index.registerComponent(builtins::components::DirectionalLight::description);
     m_component_index.registerComponent(builtins::components::SpotLight::description);
+    m_component_index.registerComponent(builtins::components::Collidable::description);
 
     m_event_index.registerEvent(builtins::events::tick);
     m_event_index.registerEvent(builtins::events::keyPress);
+    m_event_index.registerEvent(builtins::events::collision);
     m_system_index.registerSystem(builtins::systems::physicSystem);
+    m_system_index.registerSystem(builtins::systems::makeCollisionSystem(m_vulkan_application.assetStorage));
+    m_system_index.registerSystem(builtins::systems::collisionTestSystem);
     m_system_index.registerSystem(builtins::systems::testTickSystem);
 
     m_vulkan_application.addRenderer<pivot::graphics::CullingRenderer>();

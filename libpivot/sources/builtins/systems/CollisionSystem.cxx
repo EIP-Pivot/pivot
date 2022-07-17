@@ -31,7 +31,6 @@ std::vector<event::Event> collisionSystemImpl(std::reference_wrapper<const pivot
     std::vector<EntityAABB> entityAABB;
 
     for (Entity entity: collidableStorage.getData()) {
-        // TODO: Do the collision checks I guess ?
         glm::vec3 position = transformArray[entity].position;
         auto &mesh = renderObjectArray[entity].meshID;
         auto bounding_box = assetStorage.get().get_optional<AABB>(mesh);
@@ -39,8 +38,6 @@ std::vector<event::Event> collisionSystemImpl(std::reference_wrapper<const pivot
             entityAABB.emplace_back(bounding_box->get().low + position, bounding_box->get().high + position, entity);
         }
     }
-
-    // logger.debug() << "entities " << collidableStorage.getData().size() << " aabb " << entityAABB.size();
 
     auto collisions = getEntityCollisions(entityAABB);
     std::vector<event::Event> collision_events{};

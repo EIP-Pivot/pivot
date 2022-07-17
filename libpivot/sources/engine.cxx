@@ -14,6 +14,7 @@
 #include <pivot/builtins/systems/CollisionSystem.hxx>
 #include <pivot/builtins/systems/CollisionTestSystem.hxx>
 #include <pivot/builtins/systems/PhysicSystem.hxx>
+#include <pivot/builtins/systems/TestTickSystem.hxx>
 
 #include <pivot/builtins/components/Collidable.hxx>
 #include <pivot/builtins/components/RenderObject.hxx>
@@ -47,6 +48,7 @@ Engine::Engine()
     m_system_index.registerSystem(builtins::systems::physicSystem);
     m_system_index.registerSystem(builtins::systems::makeCollisionSystem(m_vulkan_application.assetStorage));
     m_system_index.registerSystem(builtins::systems::collisionTestSystem);
+    m_system_index.registerSystem(builtins::systems::testTickSystem);
 
     m_vulkan_application.addRenderer<pivot::graphics::CullingRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::GraphicsRenderer>();

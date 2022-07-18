@@ -22,8 +22,6 @@
 #include <pivot/ecs/Core/Event/description.hxx>
 #include <pivot/ecs/Core/Event/index.hxx>
 
-#include <Logger.hpp>
-
 #include "pivot/graphics/Renderer/CullingRenderer.hxx"
 #include "pivot/graphics/Renderer/GraphicsRenderer.hxx"
 #include "pivot/graphics/Renderer/ImGuiRenderer.hxx"

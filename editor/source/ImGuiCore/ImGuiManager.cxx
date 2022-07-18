@@ -7,8 +7,6 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
 
-#include <Logger.hpp>
-
 void ImGuiManager::newFrame(pivot::Engine &engine)
 {
     ImGui_ImplVulkan_NewFrame();

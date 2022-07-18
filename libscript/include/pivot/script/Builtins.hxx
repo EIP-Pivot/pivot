@@ -5,8 +5,6 @@
 #include <iostream>
 #include <vector>
 
-#include <Logger.hpp>
-
 #include "pivot/ecs/Core/Data/value.hxx"
 #include "pivot/script/Exceptions.hxx"
 

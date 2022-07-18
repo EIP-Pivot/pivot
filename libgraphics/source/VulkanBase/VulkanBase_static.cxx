@@ -4,7 +4,6 @@
 #include "pivot/graphics/types/vk_types.hxx"
 #include "pivot/pivot.hxx"
 
-#include <Logger.hpp>
 #include <ostream>
 #include <set>
 #include <stdint.h>

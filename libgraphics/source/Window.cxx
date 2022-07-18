@@ -2,7 +2,6 @@
 #include "pivot/graphics/Window.hxx"
 #include "pivot/pivot.hxx"
 
-#include <Logger.hpp>
 #include <magic_enum.hpp>
 #include <stb_image.h>
 #include <stdexcept>

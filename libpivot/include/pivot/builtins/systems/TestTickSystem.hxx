@@ -1,7 +1,5 @@
 #pragma once
 
-#include <Logger.hpp>
-
 #include <pivot/ecs/Core/Systems/description.hxx>
 
 #include <pivot/builtins/events/tick.hxx>

@@ -3,8 +3,6 @@
 #include <string>
 #include <vector>
 
-#include <Logger.hpp>
-
 struct CmdLineArgs {
     const std::vector<std::string> startupScenes;
     const cpplogger::Level verbosity;

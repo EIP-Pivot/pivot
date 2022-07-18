@@ -3,6 +3,8 @@
 #include <optional>
 #include <utils/source_location.hpp>
 
+#include <Logger.hpp>
+
 #ifndef NDEBUG
     #define DEBUG_FUNCTION logger.trace(::function_name()) << "Entered";
 

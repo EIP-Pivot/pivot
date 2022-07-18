@@ -117,8 +117,12 @@ void VulkanBase::createLogicalDevice(const std::vector<const char *> &deviceExte
     float fQueuePriority = 1.0f;
     queueIndices = QueueFamilyIndices::findQueueFamilies(physical_device, surface);
     std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
-    std::set<uint32_t> uniqueQueueFamilies{queueIndices.graphicsFamily.value(), queueIndices.presentFamily.value(),
-                                           queueIndices.transferFamily.value()};
+    std::set<uint32_t> uniqueQueueFamilies{
+        queueIndices.graphicsFamily.value(),
+        queueIndices.presentFamily.value(),
+        queueIndices.transferFamily.value(),
+        queueIndices.computeFamily.value(),
+    };
 
     logger.info("Logical Device") << "Creating " << uniqueQueueFamilies.size() << " uniques queues";
 

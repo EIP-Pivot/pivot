@@ -102,7 +102,8 @@ void ImGuiRenderer::createImGuiContext(VulkanBase &base_ref, vk::RenderPass &pas
 
     ImGui_ImplVulkan_Init(&init_info, pass);
 
-    base_ref.immediateCommand([&](vk::CommandBuffer cmd) { ImGui_ImplVulkan_CreateFontsTexture(cmd); });
+    base_ref.immediateCommand([&](vk::CommandBuffer cmd) { ImGui_ImplVulkan_CreateFontsTexture(cmd); },
+                              vk::QueueFlagBits::eGraphics);
     ImGui_ImplVulkan_DestroyFontUploadObjects();
 }
 

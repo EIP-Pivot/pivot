@@ -1,11 +1,11 @@
 #pragma once
 
 #include "pivot/graphics/DeletionQueue.hxx"
-#include "pivot/graphics/QueueFamilyIndices.hxx"
 #include "pivot/graphics/VulkanAllocator.hxx"
 #include "pivot/graphics/VulkanImmediateCommand.hxx"
 #include "pivot/graphics/VulkanLoader.hxx"
 #include "pivot/graphics/Window.hxx"
+#include "pivot/graphics/types/QueueFamilyIndices.hxx"
 
 #include <vk_mem_alloc.hpp>
 

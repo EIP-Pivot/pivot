@@ -2,7 +2,7 @@
 
 #include "pivot/graphics/PipelineBuilders/ComputePipelineBuilder.hxx"
 #include "pivot/graphics/PipelineBuilders/GraphicsPipelineBuilder.hxx"
-#include "pivot/graphics/QueueFamilyIndices.hxx"
+#include "pivot/graphics/types/QueueFamilyIndices.hxx"
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"

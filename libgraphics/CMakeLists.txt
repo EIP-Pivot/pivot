@@ -169,6 +169,7 @@ add_library(
     source/types/Frame.cxx
     source/types/Light.cxx
     source/types/UniformBufferObject.cxx
+    source/types/QueueFamilyIndices.cxx
     source/Window.cxx
     source/vk_utils.cxx
     source/vk_init.cxx

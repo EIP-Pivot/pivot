@@ -4,6 +4,7 @@
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 #include "pivot/graphics/types/AllocatedImage.hxx"
 #include "pivot/graphics/types/common.hxx"
+#include "pivot/utility/flags.hxx"
 
 #include <source_location>
 #include <vulkan/vulkan.hpp>
@@ -16,6 +17,13 @@ namespace pivot::graphics
 class VulkanImmediateCommand
 {
 public:
+    enum class TypeFlagsBit : FlagsType {
+        Transfert,
+        Graphics,
+        Compute,
+    };
+    using TypeFlag = Flags<TypeFlagsBit>;
+
     /// Immediate Command error
     RUNTIME_ERROR(VulkanImmediateCommand);
 

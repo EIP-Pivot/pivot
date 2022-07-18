@@ -86,6 +86,12 @@ void VulkanBase::selectPhysicalDevice(const std::vector<const char *> &deviceExt
     logger.info("Physical Device") << "Device extensions: " << deviceExtensions;
     const auto deviceProperties = physical_device.getProperties();
     logger.info("Physical Device") << vk::to_string(deviceProperties.deviceType) << ": " << deviceProperties.deviceName;
+    logger.info("Physical Device") << "Api version: " << VK_VERSION_MAJOR(deviceProperties.apiVersion) << "."
+                                   << VK_VERSION_MINOR(deviceProperties.apiVersion) << "."
+                                   << VK_VERSION_PATCH(deviceProperties.apiVersion);
+    logger.info("Physical Device") << "Driver version: " << VK_VERSION_MAJOR(deviceProperties.driverVersion) << "."
+                                   << VK_VERSION_MINOR(deviceProperties.driverVersion) << "."
+                                   << VK_VERSION_PATCH(deviceProperties.driverVersion);
 
     depthFormat =
         vk_utils::findSupportedFormat(physical_device,
@@ -95,7 +101,7 @@ void VulkanBase::selectPhysicalDevice(const std::vector<const char *> &deviceExt
                                           vk::Format::eD32SfloatS8Uint,
                                       },
                                       vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
-    logger.info("Physical Device") << "Depth format: " << vk::to_string(depthFormat);
+    logger.info("Physical Device") << "Selected Depth format: " << vk::to_string(depthFormat);
 
     maxMsaaSample = vk_utils::getMaxUsableSampleCount(physical_device);
     logger.info("Physical Device") << "MSAA Sample count: " << vk::to_string(maxMsaaSample);
@@ -113,6 +119,8 @@ void VulkanBase::createLogicalDevice(const std::vector<const char *> &deviceExte
     std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
     std::set<uint32_t> uniqueQueueFamilies{queueIndices.graphicsFamily.value(), queueIndices.presentFamily.value(),
                                            queueIndices.transferFamily.value()};
+
+    logger.info("Logical Device") << "Creating " << uniqueQueueFamilies.size() << " uniques queues";
 
     std::ranges::transform(uniqueQueueFamilies, std::back_inserter(queueCreateInfos), [=](const auto &queueFamily) {
         return vk_init::populateDeviceQueueCreateInfo(1, queueFamily, fQueuePriority);

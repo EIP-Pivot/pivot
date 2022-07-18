@@ -201,7 +201,7 @@ add_library(
     source/DescriptorAllocator/DescriptorAllocator.cxx
     source/DescriptorAllocator/DescriptorBuilder.cxx
     source/DescriptorAllocator/DescriptorLayoutCache.cxx
-    source/abstract/AImmediateCommand.cxx
+    source/VulkanImmediateCommand.cxx
     source/culling.cxx
     source/DrawCallResolver.cxx
     source/PipelineStorage.cxx

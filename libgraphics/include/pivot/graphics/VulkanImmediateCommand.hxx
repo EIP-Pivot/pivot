@@ -8,22 +8,22 @@
 #include <source_location>
 #include <vulkan/vulkan.hpp>
 
-namespace pivot::graphics::abstract
+namespace pivot::graphics
 {
 
 /// @class AImmediateCommand
 /// Used to easly add immediateCommand functionality to an herited class
-class AImmediateCommand
+class VulkanImmediateCommand
 {
 public:
     /// Immediate Command error
-    RUNTIME_ERROR(ImmediateCommand);
+    RUNTIME_ERROR(VulkanImmediateCommand);
 
 public:
     /// Default ctor
-    AImmediateCommand();
+    VulkanImmediateCommand();
     /// Default dtor
-    ~AImmediateCommand();
+    ~VulkanImmediateCommand();
 
     /// Initialize the immediate context, using a device an a queue
     void init(vk::Device &, const vk::PhysicalDevice &gpu, const uint32_t queueFamilyIndex);
@@ -40,7 +40,7 @@ public:
                     vk::DeviceSize dstOffset = 0)
     {
         if (src.getBytesSize() - srcOffset > dst.getAllocatedSize() - dstOffset)
-            throw ImmediateCommandError("The destination buffer is too small");
+            throw VulkanImmediateCommandError("The destination buffer is too small");
 
         immediateCommand([&](vk::CommandBuffer &cmd) {
             vk::BufferCopy copyRegion{
@@ -73,4 +73,4 @@ private:
     vk::Queue immediateQueue = VK_NULL_HANDLE;
 };
 
-}    // namespace pivot::graphics::abstract
+}    // namespace pivot::graphics

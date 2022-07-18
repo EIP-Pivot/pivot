@@ -6,7 +6,7 @@
 namespace pivot::graphics
 {
 VulkanBase::VulkanBase(const std::string &windowName, const bool bForceValidation)
-    : VulkanLoader(), abstract::AImmediateCommand(), window(windowName, 800, 600)
+    : VulkanLoader(), VulkanImmediateCommand(), window(windowName, 800, 600)
 {
     bEnableValidationLayers |= bForceValidation;
 }
@@ -24,13 +24,13 @@ void VulkanBase::init(const std::vector<const char *> &instanceExtensions,
     selectPhysicalDevice(deviceExtensions);
     createLogicalDevice(deviceExtensions);
     createAllocator();
-    abstract::AImmediateCommand::init(device, physical_device, queueIndices.transferFamily.value());
+    VulkanImmediateCommand ::init(device, physical_device, queueIndices.transferFamily.value());
 }
 
 void VulkanBase::destroy()
 {
     DEBUG_FUNCTION;
-    abstract::AImmediateCommand::destroy();
+    VulkanImmediateCommand ::destroy();
     baseDeletionQueue.flush();
 }
 

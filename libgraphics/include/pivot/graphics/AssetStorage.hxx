@@ -5,7 +5,7 @@
 #include "pivot/graphics/DescriptorAllocator/DescriptorBuilder.hxx"
 #include "pivot/graphics/ThreadPool.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
-#include "pivot/graphics/abstract/AImmediateCommand.hxx"
+#include "pivot/graphics/VulkanImmediateCommand.hxx"
 #include "pivot/graphics/types/AABB.hxx"
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 #include "pivot/graphics/types/AllocatedImage.hxx"

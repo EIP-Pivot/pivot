@@ -1,15 +1,15 @@
-#include "pivot/graphics/abstract/AImmediateCommand.hxx"
+#include "pivot/graphics/VulkanImmediateCommand.hxx"
 
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
-namespace pivot::graphics::abstract
+namespace pivot::graphics
 {
-AImmediateCommand::AImmediateCommand() {}
+VulkanImmediateCommand::VulkanImmediateCommand() {}
 
-AImmediateCommand::~AImmediateCommand() { destroy(); }
+VulkanImmediateCommand::~VulkanImmediateCommand() { destroy(); }
 
-void AImmediateCommand::init(vk::Device &device, const vk::PhysicalDevice &gpu, const uint32_t queueFamilyIndex)
+void VulkanImmediateCommand::init(vk::Device &device, const vk::PhysicalDevice &gpu, const uint32_t queueFamilyIndex)
 {
     device_ref = device;
     physical_device_ref = gpu;
@@ -19,7 +19,7 @@ void AImmediateCommand::init(vk::Device &device, const vk::PhysicalDevice &gpu, 
     vk_debug::setObjectName(device_ref->get(), immediateQueue, "Immediate Command Queue");
 }
 
-void AImmediateCommand::destroy()
+void VulkanImmediateCommand::destroy()
 {
     if (device_ref) {
         device_ref->get().destroyCommandPool(immediateCommandPool);
@@ -28,8 +28,8 @@ void AImmediateCommand::destroy()
     device_ref = std::nullopt;
 }
 
-void AImmediateCommand::immediateCommand(std::function<void(vk::CommandBuffer &)> function,
-                                         const std::source_location &location)
+void VulkanImmediateCommand::immediateCommand(std::function<void(vk::CommandBuffer &)> function,
+                                              const std::source_location &location)
 {
     pivot_assert(immediateCommandPool && immediateFence && immediateQueue, "Immediate context is not initialised");
     vk::CommandBufferAllocateInfo cmdAllocInfo{
@@ -74,7 +74,7 @@ void AImmediateCommand::immediateCommand(std::function<void(vk::CommandBuffer &)
     device_ref->get().resetCommandPool(immediateCommandPool);
 }
 
-void AImmediateCommand::copyBufferToImage(const AllocatedBuffer<std::byte> &srcBuffer, AllocatedImage &dstImage)
+void VulkanImmediateCommand::copyBufferToImage(const AllocatedBuffer<std::byte> &srcBuffer, AllocatedImage &dstImage)
 {
     immediateCommand([&](vk::CommandBuffer &cmd) {
         vk::BufferImageCopy region{
@@ -95,7 +95,7 @@ void AImmediateCommand::copyBufferToImage(const AllocatedBuffer<std::byte> &srcB
     });
 }
 
-void AImmediateCommand::generateMipmaps(AllocatedImage &image, uint32_t mipLevel)
+void VulkanImmediateCommand::generateMipmaps(AllocatedImage &image, uint32_t mipLevel)
 {
     vk::FormatProperties formatProperties = physical_device_ref->get().getFormatProperties(image.format);
     if (!(formatProperties.optimalTilingFeatures & vk::FormatFeatureFlagBits::eSampledImageFilterLinear)) {
@@ -178,7 +178,7 @@ void AImmediateCommand::generateMipmaps(AllocatedImage &image, uint32_t mipLevel
     image.mipLevels = mipLevel;
 }
 
-void AImmediateCommand::transitionLayout(AllocatedImage &image, vk::ImageLayout layout)
+void VulkanImmediateCommand::transitionLayout(AllocatedImage &image, vk::ImageLayout layout)
 {
     if (image.imageLayout == layout) {
         logger.warn("Transition layout") << "Transfert layout is unecessary, already " << vk::to_string(layout);
@@ -234,8 +234,8 @@ void AImmediateCommand::transitionLayout(AllocatedImage &image, vk::ImageLayout 
         sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
         destinationStage = vk::PipelineStageFlagBits::eEarlyFragmentTests;
     } else {
-        throw ImmediateCommandError("Unsupported layout transition! From " + vk::to_string(image.imageLayout) + " to " +
-                                    vk::to_string(layout));
+        throw VulkanImmediateCommandError("Unsupported layout transition! From " + vk::to_string(image.imageLayout) +
+                                          " to " + vk::to_string(layout));
     }
 
     immediateCommand(
@@ -243,7 +243,7 @@ void AImmediateCommand::transitionLayout(AllocatedImage &image, vk::ImageLayout 
     image.imageLayout = layout;
 }
 
-void AImmediateCommand::createImmediateContext(const uint32_t queueFamilyIndex)
+void VulkanImmediateCommand::createImmediateContext(const uint32_t queueFamilyIndex)
 {
     vk::FenceCreateInfo fenceInfo{};
     immediateFence = device_ref->get().createFence(fenceInfo);
@@ -255,4 +255,4 @@ void AImmediateCommand::createImmediateContext(const uint32_t queueFamilyIndex)
     immediateCommandPool = device_ref->get().createCommandPool(poolInfo);
 }
 
-}    // namespace pivot::graphics::abstract
+}    // namespace pivot::graphics

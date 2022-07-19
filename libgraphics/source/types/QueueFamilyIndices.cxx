@@ -79,4 +79,27 @@ QueueFamilyIndices QueueFamilyIndices::findQueueFamilies(const vk::PhysicalDevic
     return indices;
 }
 
+std::pair<vk::QueueFlags, std::set<std::uint32_t>> QueueFamilyIndices::getUniqueQueues() const noexcept
+{
+    std::set<std::uint32_t> set;
+    vk::QueueFlags flag;
+    if (graphicsFamily.has_value()) {
+        const auto &[_, inserted] = set.insert(graphicsFamily.value());
+        if (inserted) flag |= vk::QueueFlagBits::eGraphics;
+    }
+    if (presentFamily.has_value()) {
+        const auto &[_, inserted] = set.insert(presentFamily.value());
+        if (inserted) flag |= vk::QueueFlagBits::eGraphics;
+    }
+    if (transferFamily.has_value()) {
+        const auto &[_, inserted] = set.insert(transferFamily.value());
+        if (inserted) flag |= vk::QueueFlagBits::eTransfer;
+    }
+    if (computeFamily.has_value()) {
+        const auto &[_, inserted] = set.insert(computeFamily.value());
+        if (inserted) flag |= vk::QueueFlagBits::eCompute;
+    }
+    return {flag, set};
+}
+
 }    // namespace pivot::graphics

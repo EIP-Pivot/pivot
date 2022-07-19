@@ -13,7 +13,6 @@
 namespace pivot::graphics
 {
 
-/// @class AImmediateCommand
 /// Used to easly add immediateCommand functionality to an herited class
 class VulkanImmediateCommand
 {

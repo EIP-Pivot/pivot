@@ -29,28 +29,10 @@ struct QueueFamilyIndices {
                computeFamily.has_value();
     }
 
-    std::pair<vk::QueueFlags, std::set<std::uint32_t>> getUniqueQueues() const noexcept
-    {
-        std::set<std::uint32_t> set;
-        vk::QueueFlags flag;
-        if (graphicsFamily.has_value()) {
-            const auto &[_, inserted] = set.insert(graphicsFamily.value());
-            if (inserted) flag |= vk::QueueFlagBits::eGraphics;
-        }
-        if (presentFamily.has_value()) {
-            const auto &[_, inserted] = set.insert(presentFamily.value());
-            if (inserted) flag |= vk::QueueFlagBits::eGraphics;
-        }
-        if (transferFamily.has_value()) {
-            const auto &[_, inserted] = set.insert(transferFamily.value());
-            if (inserted) flag |= vk::QueueFlagBits::eTransfer;
-        }
-        if (computeFamily.has_value()) {
-            const auto &[_, inserted] = set.insert(computeFamily.value());
-            if (inserted) flag |= vk::QueueFlagBits::eCompute;
-        }
-        return {flag, set};
-    }
+    /// @brief return a set of unique queue
+    ///
+    /// if the same queue has been selected multiple times, it will only appear once in the set
+    std::pair<vk::QueueFlags, std::set<std::uint32_t>> getUniqueQueues() const noexcept;
 
     /// Search for viable queues on the physical device
     ///

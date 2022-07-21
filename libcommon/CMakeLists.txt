@@ -3,7 +3,7 @@ project(pivot-common)
 fetchcontent_declare(
     logger
     GIT_REPOSITORY https://github.com/zcorniere/logger-cpp.git
-    GIT_TAG v0.9.0
+    GIT_TAG v1.0.0
 )
 fetchcontent_getproperties(logger)
 if(NOT logger_POPULATED)
@@ -78,7 +78,7 @@ target_precompile_headers(
     ${PROJECT_NAME}
     PUBLIC
     <pivot/pivot.hxx>
-    <Logger.hpp>
+    <cpplogger/Logger.hpp>
     <glm/glm.hpp>
     <optional>
     <variant>

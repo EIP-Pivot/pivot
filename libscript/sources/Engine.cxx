@@ -1,6 +1,6 @@
 #include "pivot/script/Engine.hxx"
-#include "Logger.hpp"
 #include "pivot/script/Exceptions.hxx"
+#include <cpplogger/Logger.hpp>
 #include <cstdlib>
 #include <ctime>
 

@@ -36,6 +36,7 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include "CmdLineArg.hxx"
+#include "ImGuiCore/AssetBrowser.hxx"
 #include "ImGuiCore/ComponentEditor.hxx"
 #include "ImGuiCore/Editor.hxx"
 #include "ImGuiCore/EntityModule.hxx"
@@ -57,7 +58,8 @@ public:
           editor(getSceneManager(), getCurrentScene()),
           entity(getCurrentScene()),
           componentEditor(m_component_index, getCurrentScene()),
-          systemsEditor(m_system_index, getCurrentScene())
+          systemsEditor(m_system_index, getCurrentScene()),
+          assetBrowser(m_vulkan_application.assetStorage, getCurrentScene())
     {
     }
 
@@ -176,6 +178,7 @@ public:
             entity.create();
             entity.hasSelected() ? componentEditor.create(entity.getEntitySelected()) : componentEditor.create();
             systemsEditor.create();
+            assetBrowser.create();
 
             if (entity.hasSelected()) { editor.DisplayGuizmo(entity.getEntitySelected(), m_camera); }
         }
@@ -189,6 +192,7 @@ public:
     EntityModule entity;
     ComponentEditor componentEditor;
     SystemsEditor systemsEditor;
+    AssetBrowser assetBrowser;
     glm::dvec2 last;
 
     bool bFirstMouse = true;

@@ -13,6 +13,12 @@ void EntityModule::create()
     currentScene = m_scene.id();
     ImGui::Begin("Entity");
     createPopUp();
+    if (ImGui::Button("Add entity")) ImGui::OpenPopup("NewEntity");
+    if (_hasSelected) {
+        ImGui::SameLine();
+        if (ImGui::Button("Remove entity")) removeEntity();
+    }
+    ImGui::Separator();
     for (auto const &[entity, _]: m_scene->getEntities()) {
         if (ImGui::Selectable(
                 std::get<std::string>(
@@ -22,12 +28,13 @@ void EntityModule::create()
             _hasSelected = true;
             entitySelected = entity;
         }
-    }
-    ImGui::Separator();
-    if (ImGui::Button("Add entity")) ImGui::OpenPopup("NewEntity");
-    if (_hasSelected) {
-        ImGui::SameLine();
-        if (ImGui::Button("Remove entity")) removeEntity();
+        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
+            std::cout << std::get<std::string>(
+                             std::get<pivot::ecs::data::Record>(componentManager.GetComponent(entity, tagId).value())
+                                 .at("name"))
+                             .c_str()
+                      << std::endl;
+        }
     }
     ImGui::End();
 }

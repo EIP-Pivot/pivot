@@ -26,6 +26,7 @@ public:
     ComponentEditor(const pivot::ecs::component::Index &index, pivot::ecs::CurrentScene scene)
         : m_index(index), m_scene(scene)
     {
+        m_dropColor = ImVec4(ImColor(66, 66, 66));
     }
 
     void create(Entity entity);
@@ -40,4 +41,5 @@ private:
     Entity currentEntity;
     const pivot::ecs::component::Index &m_index;
     pivot::ecs::CurrentScene m_scene;
+    ImVec4 m_dropColor;
 };

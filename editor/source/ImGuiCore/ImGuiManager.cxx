@@ -11,11 +11,6 @@
 
 void ImGuiManager::newFrame(pivot::Engine &engine)
 {
-    ImGui_ImplVulkan_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-    ImGuizmo::BeginFrame();
-
     ImGui::Begin("Load/Save");
     handleFile<FileAction::Save>("Save Scene", "Scene correctly saved.",
                                  "Failed to save the scene, please check the log.", {{"Scene", "json"}},
@@ -43,5 +38,3 @@ void ImGuiManager::newFrame(pivot::Engine &engine)
         });
     ImGui::End();
 }
-
-void ImGuiManager::render() { ImGui::Render(); }

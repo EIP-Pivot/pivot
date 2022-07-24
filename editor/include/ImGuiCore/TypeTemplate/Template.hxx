@@ -10,6 +10,7 @@
 #include <misc/cpp/imgui_stdlib.h>
 
 void draw(glm::vec3 &value, const std::string &name) { ImGui::InputFloat3(name.c_str(), glm::value_ptr(value)); }
+void draw(glm::vec2 &value, const std::string &name) { ImGui::InputFloat2(name.c_str(), glm::value_ptr(value)); }
 
 void draw(std::string &value, const std::string &name) { ImGui::InputText(name.c_str(), &value); }
 
@@ -20,6 +21,11 @@ void draw(bool &value, const std::string &name) { ImGui::Checkbox(name.c_str(), 
 void draw(double &value, const std::string &name) { ImGui::InputDouble(name.c_str(), &value); }
 
 void draw(pivot::ecs::data::Asset &asset, const std::string &name) { ImGui::InputText(name.c_str(), &asset.name); }
+
+void draw(pivot::ecs::data::Color &color, const std::string &name)
+{
+    ImGui::ColorEdit4(name.c_str(), color.rgba.data());
+}
 
 void draw(pivot::ecs::data::Void &, const std::string &) { ImGui::Text("This component has no data"); }
 

@@ -7,10 +7,13 @@ add_library(
     sources/builtins/systems/ControlSystem.cxx
     sources/builtins/systems/PhysicSystem.cxx
     sources/builtins/systems/CollisionSystem.cxx
+    sources/builtins/systems/DrawTextSystem.cxx
     sources/builtins/components/RenderObject.cxx
     sources/builtins/components/Light.cxx
     sources/builtins/components/Transform.cxx
     sources/builtins/components/Collidable.cxx
+    sources/builtins/components/Text.cxx
+    sources/builtins/components/Transform2D.cxx
 )
 
 

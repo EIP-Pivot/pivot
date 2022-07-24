@@ -20,7 +20,6 @@ public:
 public:
     ImGuiManager(const pivot::ecs::SceneManager &sceneManager): m_sceneManager(sceneManager){};
     void newFrame(pivot::Engine &engine);
-    void render();
 
     template <FileAction A>
     bool handleFile(const std::string &buttonText, const std::string &successText, const std::string &errorText,

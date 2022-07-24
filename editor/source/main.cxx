@@ -57,7 +57,7 @@ public:
           editor(getSceneManager(), getCurrentScene()),
           entity(getCurrentScene()),
           componentEditor(m_component_index, getCurrentScene()),
-          systemsEditor(m_system_index, getCurrentScene())
+          systemsEditor(m_system_index, m_component_index, getCurrentScene())
     {
     }
 

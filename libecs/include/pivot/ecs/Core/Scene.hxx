@@ -5,6 +5,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include <pivot/pivot.hxx>
+
 #include <pivot/ecs/Core/Data/value_serialization.hxx>
 
 #include "pivot/ecs/Core/Component/index.hxx"
@@ -90,11 +92,14 @@ public:
 
     // System methods
 
-    /// Get the system manager
-    pivot::ecs::systems::Manager &getSystemManager();
-
     /// Get the system manager (const)
     const pivot::ecs::systems::Manager &getSystemManager() const;
+
+    /// Register a system in the scene
+    ///
+    /// This optionally automatically registers needed components, by taking them from cIndex
+    void registerSystem(const systems::Description &description,
+                        pivot::OptionalRef<const component::Index> cIndex = std::nullopt);
 
     /// Get the Entity manager
     EntityManager &getEntityManager();
@@ -144,7 +149,6 @@ private:
     std::vector<Entity> mCamera;
     std::uint16_t mCurrentCamera;
     pivot::ecs::component::Manager::ComponentId mTagId;
-    pivot::ecs::component::Index mComponentIndex;
 };
 
 }    // namespace pivot::ecs

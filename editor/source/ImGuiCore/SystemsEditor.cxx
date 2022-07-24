@@ -15,9 +15,10 @@ void SystemsEditor::createPopUp()
 {
     auto &sm = m_scene->getSystemManager();
     if (ImGui::BeginPopup("AddSystem")) {
-        for (const auto &[name, description]: m_index) {
+        for (const auto &[name, description]: m_systemIndex) {
             if (!sm.hasSystem(name))
-                if (ImGui::MenuItem(name.c_str())) sm.useSystem(description);
+                if (ImGui::MenuItem(name.c_str()))
+                    m_scene->registerSystem(description, std::optional(std::ref(m_componentIndex)));
         }
         ImGui::EndPopup();
     }

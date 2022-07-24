@@ -7,7 +7,7 @@ using namespace pivot::ecs::data;
 void AssetBrowser::create()
 {
     ImGui::Begin("Asset");
-    for (const auto &name: m_assetStorage.getModels()) {
+    for (const auto &name: m_assetStorage.getPrefabs()) {
         ImGui::Button(name.c_str());
         dropSource(name);
     }
@@ -19,6 +19,7 @@ void AssetBrowser::dropSource(const std::string &name)
     if (ImGui::BeginDragDropSource()) {
         struct wrapper my_wrapper = {*this, name};
         ImGui::SetDragDropPayload("ASSET", &my_wrapper, sizeof(my_wrapper));
+        ImGui::Button(name.c_str());
         ImGui::EndDragDropSource();
     }
 }

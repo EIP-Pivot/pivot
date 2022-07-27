@@ -41,7 +41,7 @@ public:
     }
 
     /// Construct a child node
-    NodePtr emplaceChild(Key key, Value val)
+    NodePtr emplaceChild(Key key, Value val = {})
     {
         auto ptr = std::make_shared<Node>(key, val);
         addChild(ptr);

@@ -53,31 +53,36 @@ public:
     /// Append to the current storage
     void append(const IndexedStorage &other)
     {
-        for (const auto &[name, idx]: other.getIndexes()) {
-            if (contains(name)) throw std::runtime_error("Index already in use !");
-            index.emplace(name, idx + storage.size());
+        for (const auto &[name, idx]: other.getInternalMap()) {
+            const auto &obj = other.at(idx);
+            insert(name, obj);
         }
-        storage.insert(storage.end(), other.getStorage().begin(), other.getStorage().end());
     }
 
     /// Remove key from storage
     void erase(const Key &key)
     {
-        auto idx = getIndex(key);
+        auto idx = atIndex(key);
         if (idx == -1) throw std::out_of_range("Key not found !");
         storage.erase(storage.begin() + idx);
         index.erase(key);
     }
-    /// Add a new item to the storage
-    inline void add(const Key &i, Value value)
+
+    /// insert a new item to the storage
+    inline bool insert(const Key &i, Value value)
     {
-        if (contains(i)) throw std::runtime_error("Index already in use !");
+        if (contains(i)) {
+            at(i) = value;
+            return false;
+        }
         storage.push_back(std::move(value));
         index.emplace(i, storage.size() - 1);
+        return true;
     }
-    /// @copydoc add
-    inline void add(const std::pair<Key, Value> value) { add(value.first, std::move(value.second)); }
-    /// Valueell if given key already exist in storage
+    /// @copydoc insert
+    inline bool insert(const std::pair<Key, Value> value) { return insert(value.first, std::move(value.second)); }
+
+    /// Does given key already exist in storage ?
     inline bool contains(const Key &i) const { return index.contains(i); }
     /// return the number of item in the storage
     constexpr auto size() const noexcept
@@ -92,13 +97,14 @@ public:
     constexpr const auto &getStorage() const noexcept { return storage; }
     /// @copydoc getStorage
     constexpr auto &getStorage() noexcept { return storage; }
-    /// return the internal vector
-    constexpr const auto &getIndexes() const noexcept { return index; }
-    /// @copydoc getIndexes
-    constexpr auto &getIndexes() noexcept { return index; }
 
-    /// Get the name associated to given idx
-    constexpr std::optional<Key> getName(const size_type &idx) const
+    /// return the internal vector
+    constexpr const auto &getInternalMap() const noexcept { return index; }
+    /// @copydoc getInternalMap
+    constexpr auto &getInternalMap() noexcept { return index; }
+
+    /// get the name associated to given idx
+    constexpr std::optional<Key> getKey(const size_type &idx) const
     {
         auto findResult =
             std::find_if(index.begin(), index.end(), [&idx](const auto &pair) { return pair.second == idx; });
@@ -115,21 +121,22 @@ public:
     }
 
     /// return the item at a given index
-    constexpr Value &get(const size_type &i) { return storage.at(i); }
-    /// @copydoc get
-    constexpr Value &get(const Key &i) { return get(index.at(i)); }
-    /// @copydoc get
-    constexpr const Value &get(const size_type &i) const { return storage.at(i); }
-    /// @copydoc get
-    constexpr const Value &get(const Key &i) const { return get(index.at(i)); }
-    /// Get the item, if it doesnt exist, create the index
+    constexpr Value &at(const size_type &i) { return storage.at(i); }
+    /// @copydoc at
+    constexpr Value &at(const Key &i) { return at(index.at(i)); }
+    /// @copydoc at
+    constexpr const Value &at(const size_type &i) const { return storage.at(i); }
+    /// @copydoc at
+    constexpr const Value &at(const Key &i) const { return at(index.at(i)); }
+    /// get the item, if it doesnt exist, create the index
     inline Value &operator[](const std::string &i)
     {
-        if (!index.contains(i)) add(i, {});
-        return get(i);
+        if (!index.contains(i)) insert(i, {});
+        return at(i);
     }
     /// Equality operator
-    bool operator==(const IndexedStorage &) const = default;
+    bool operator==(const IndexedStorage &) const requires std::equality_comparable<Value>
+    = default;
 
 private:
     std::vector<Value> storage;

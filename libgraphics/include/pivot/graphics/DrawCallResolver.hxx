@@ -28,7 +28,7 @@ public:
     /// Represent a draw batch
     struct DrawBatch {
         /// The id of the mesh
-        std::string meshId;
+        AssetStorage::Primitive primitive;
         /// The first index of the batch
         std::uint32_t first;
         /// The size of the batch

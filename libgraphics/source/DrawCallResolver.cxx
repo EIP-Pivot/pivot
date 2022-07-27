@@ -52,7 +52,6 @@ void DrawCallResolver::destroy()
 void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sceneInformation)
 {
     std::vector<gpu_object::UniformBufferObject> objectGPUData;
-    std::uint32_t drawCount = 0;
 
     frame.packedDraws.clear();
     frame.pipelineBatch.clear();
@@ -70,13 +69,13 @@ void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sce
     pivot_assert(sceneInformation.spotLight.objects.get().size() == sceneInformation.spotLight.exist.get().size(),
                  "ECS Spot light arrays are invalid.");
 
+    std::uint32_t drawCount = 0;
     for (unsigned i = 0;
          i < sceneInformation.renderObjects.objects.get().size() && i < sceneInformation.transform.objects.get().size();
          i++) {
-        if (!sceneInformation.renderObjects.exist.get().at(i) || !sceneInformation.renderObjects.exist.get().at(i))
-            continue;
-        const auto &object = sceneInformation.renderObjects.objects.get().at(i);
-        const auto &transform = sceneInformation.transform.objects.get().at(i);
+        if (!sceneInformation.renderObjects.exist.get()[i] || !sceneInformation.transform.exist.get()[i]) continue;
+        const auto &object = sceneInformation.renderObjects.objects.get()[i];
+        const auto &transform = sceneInformation.transform.objects.get()[i];
 
         // TODO: better Pipeline batch
         if (frame.pipelineBatch.empty() || frame.pipelineBatch.back().pipelineID != object.pipelineID) {
@@ -86,20 +85,34 @@ void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sce
                 .size = 0,
             });
         }
-        auto prefab = storage_ref->get().get_optional<AssetStorage::Prefab>(object.meshID);
-        if (prefab.has_value()) {
-            for (const auto &model: prefab->get().modelIds) {
+        auto model = storage_ref->get().get_optional<AssetStorage::ModelPtr>(object.meshID);
+        if (!model.has_value()) continue;
+        model.value().get()->traverseDown([&](const auto &prefab) mutable {
+            glm::mat4 modelMatrix = transform.getModelMatrix() * prefab.value.localMatrix;
+            for (const auto &primitive: prefab.value.primitives) {
                 frame.pipelineBatch.back().size += 1;
-                frame.packedDraws.push_back({
-                    .meshId = model,
+                frame.packedDraws.push_back(DrawBatch{
+                    .primitive = primitive,
                     .first = drawCount++,
                     .count = 1,
                 });
-                auto obj = object;
-                obj.meshID = model;
-                objectGPUData.emplace_back(transform, obj, storage_ref->get());
+                std::uint32_t materialIndex = -1;
+                if (!object.materialIndex.empty()) {
+                    materialIndex = storage_ref->get().getIndex<gpu_object::Material>(object.materialIndex);
+                } else if (primitive.default_material) {
+                    materialIndex =
+                        storage_ref->get().getIndex<gpu_object::Material>(primitive.default_material.value());
+                } else {
+                    materialIndex =
+                        storage_ref->get().getIndex<gpu_object::Material>(AssetStorage::missing_material_name);
+                }
+                objectGPUData.push_back({
+                    .modelMatrix = modelMatrix,
+                    .materialIndex = materialIndex,
+                    .boundingBoxIndex = storage_ref->get().getIndex<gpu_object::AABB>(primitive.name),
+                });
             }
-        }
+        });
     }
     pivot_assert(frame.packedDraws.size() == objectGPUData.size(), "Incorrect size between draw call and buffer data");
     if (objectGPUData.empty()) return;
@@ -122,16 +135,17 @@ void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sce
                                         "Spot light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
 
     auto sceneData = frame.indirectBuffer.getMappedSpan();
-    for (uint32_t i = 0; i < frame.packedDraws.size(); i++) {
-        const auto &mesh = storage_ref->get().get<AssetStorage::Mesh>(frame.packedDraws.at(i).meshId);
-
-        sceneData[i] = vk::DrawIndexedIndirectCommand{
-            .indexCount = mesh.indicesSize,
+    std::uint32_t index = 0;
+    for (const auto &packedDraw: frame.packedDraws) {
+        // pivot_assert(index < frame.indirectBuffer.size, "Indirect buffer size is too small !");
+        sceneData[index] = vk::DrawIndexedIndirectCommand{
+            .indexCount = packedDraw.primitive.indicesSize,
             .instanceCount = 0,
-            .firstIndex = mesh.indicesOffset,
-            .vertexOffset = static_cast<int32_t>(mesh.vertexOffset),
-            .firstInstance = i,
+            .firstIndex = packedDraw.primitive.indicesOffset,
+            .vertexOffset = static_cast<int32_t>(packedDraw.primitive.vertexOffset),
+            .firstInstance = index,
         };
+        index += 1;
     }
 }
 

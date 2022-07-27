@@ -24,15 +24,15 @@ std::optional<AssetStorage::CPUStorage> loadPngTexture(const std::filesystem::pa
     std::memcpy(image.data(), pixels, imageSize);
     stbi_image_free(pixels);
 
-    storage.textureStaging.add(path.stem().string(), {
-                                                         .image = std::move(image),
-                                                         .size =
-                                                             {
-                                                                 .width = static_cast<uint32_t>(texWidth),
-                                                                 .height = static_cast<uint32_t>(texHeight),
-                                                                 .depth = 1,
-                                                             },
-                                                     });
+    storage.textureStaging.insert(path.stem().string(), {
+                                                            .image = std::move(image),
+                                                            .size =
+                                                                {
+                                                                    .width = static_cast<uint32_t>(texWidth),
+                                                                    .height = static_cast<uint32_t>(texHeight),
+                                                                    .depth = 1,
+                                                                },
+                                                        });
     return storage;
 }
 

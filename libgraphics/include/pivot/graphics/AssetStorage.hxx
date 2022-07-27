@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pivot/containers/IndexedStorage.hxx"
+#include "pivot/containers/Node.hxx"
 #include "pivot/graphics/DeletionQueue.hxx"
 #include "pivot/graphics/DescriptorAllocator/DescriptorBuilder.hxx"
 #include "pivot/graphics/ThreadPool.hxx"
@@ -46,20 +47,6 @@ public:
     /// Error type for the AssetStorage
     LOGIC_ERROR(AssetStorage);
 
-    /// @brief Represent a mesh in the buffers
-    struct Mesh {
-        /// Starting offset of the mesh in the vertex buffer
-        std::uint32_t vertexOffset;
-        /// Number of vertex forming the mesh.
-        std::uint32_t vertexSize;
-        /// Starting offset of the mesh in the indice buffer
-        std::uint32_t indicesOffset;
-        /// Number of indice forming the mesh.
-        std::uint32_t indicesSize;
-        /// Equality operator
-        constexpr bool operator==(const Mesh &other) const = default;
-    };
-
     /// @brief Represent a CPU-side material
     struct CPUMaterial {
         /// @cond
@@ -80,23 +67,32 @@ public:
         ///@endcond
     };
 
-    /// @brief A mesh with a default texture and a default material
-    struct Model {
-        /// Model mesh
-        Mesh mesh;
+    struct Primitive {
+        /// Starting offset of the mesh in the vertex buffer
+        std::uint32_t vertexOffset;
+        /// Number of vertex forming the mesh.
+        std::uint32_t vertexSize;
+        /// Starting offset of the mesh in the indice buffer
+        std::uint32_t indicesOffset;
+        /// Number of indice forming the mesh.
+        std::uint32_t indicesSize;
         /// Default material id
         std::optional<std::string> default_material;
+        std::string name;
+        bool operator==(const Primitive &) const = default;
+    };
+
+    /// @brief A mesh with a default texture and a default material
+    struct Model {
+        std::string name;
+        std::vector<Primitive> primitives;
+        glm::mat4 localMatrix;
         /// Equality operator
         bool operator==(const Model &) const = default;
     };
 
-    /// @brief A group of model
-    struct Prefab {
-        /// The ids of the composing models
-        std::vector<std::string> modelIds;
-        /// Equality operator
-        bool operator==(const Prefab &) const = default;
-    };
+    using ModelNode = Node<std::string, Model>;
+    using ModelPtr = ModelNode::NodePtr;
 
     /// @brief Represent a CPU-side Texture
     struct CPUTexture {
@@ -129,7 +125,10 @@ public:
         /// Merge two CPUStorage together
         void merge(const CPUStorage &other);
 
-        /// Operator += overload
+        /// Does the CPUStorage contains any assets ?
+        bool empty() const noexcept;
+
+        /// Operator += overloadtextureStaging
         CPUStorage &operator+=(const CPUStorage &other);
         /// Equality operator
         bool operator==(const CPUStorage &) const = default;
@@ -140,9 +139,7 @@ public:
 
     public:
         /// store the Models
-        std::unordered_map<std::string, Model> modelStorage;
-        /// store the Prefab
-        std::unordered_map<std::string, Prefab> prefabStorage;
+        std::unordered_map<std::string, ModelPtr> modelStorage;
         /// Store the Vertex
         std::vector<Vertex> vertexStagingBuffer;
         /// Store the index of the buffer
@@ -295,13 +292,7 @@ public:
         return this->modelStorage | std::views::transform([](const auto &i) { return i.first; });
     }
 
-    /// Return the path of all the prefabs currently loaded in the Storage
-    auto getPrefabs() const
-    {
-        return this->prefabStorage | std::views::transform([](const auto &i) { return i.first; });
-    }
-
-    /// Return the path of all the models currently loaded in the Storage
+    /// Return the name of all the models currently loaded in the Storage
     auto getMaterial() const
     {
         return this->materialStorage | std::views::transform([](const auto &i) { return i.first; });
@@ -345,8 +336,7 @@ private:
     ThreadPool threadPool;
 
     // Abstract ressouces
-    std::unordered_map<std::string, Model> modelStorage;
-    std::unordered_map<std::string, Prefab> prefabStorage;
+    std::unordered_map<std::string, ModelPtr> modelStorage;
 
     // Buffers
     IndexedStorage<std::string, gpu_object::AABB> meshAABBStorage;
@@ -354,7 +344,7 @@ private:
     IndexedStorage<std::string, gpu_object::Material> materialStorage;
 
     // CPU-side storage
-    CPUStorage cpuStorage = {};
+    CPUStorage cpuStorage = CPUStorage::default_assets();
     std::unordered_map<std::string, std::filesystem::path> modelPaths;
     std::unordered_map<std::string, std::filesystem::path> texturePaths;
 
@@ -409,26 +399,18 @@ namespace loaders
 
 template <>
 /// @copydoc AssetStorage::get
-inline const AssetStorage::Prefab &AssetStorage::get(const std::string &p) const
+inline const AssetStorage::ModelPtr &AssetStorage::get(const std::string &p) const
 {
-    PIVOT_TEST_CONTAINS(prefabStorage, p);
-    return prefabStorage.at(p);
+    PIVOT_TEST_CONTAINS(modelStorage, p);
+    return modelStorage.at(p);
 }
-
-template <>
-/// @copydoc AssetStorage::get_optional
-inline OptionalRef<const AssetStorage::Prefab> AssetStorage::get_optional(const std::string &p) const
-{
-    auto prefab = prefabStorage.find(p);
-    if (prefab == prefabStorage.end()) return std::nullopt;
-    return prefab->second;
-}
+    #undef PIVOT_TEST_CONTAINS
 
 template <>
 /// @copydoc AssetStorage::get_optional
 inline OptionalRef<const gpu_object::AABB> AssetStorage::get_optional(const std::string &p) const
 {
-    if (meshAABBStorage.contains(p)) { return std::make_optional(std::ref(meshAABBStorage.get(p))); }
+    if (meshAABBStorage.contains(p)) { return std::make_optional(std::ref(meshAABBStorage.at(p))); }
     return std::nullopt;
 }
 
@@ -436,18 +418,18 @@ template <>
 /// @copydoc AssetStorage::get
 inline const AssetStorage::Model &AssetStorage::get(const std::string &p) const
 {
-    PIVOT_TEST_CONTAINS(modelStorage, p);
-    return modelStorage.at(p);
+    const auto &ptr = get<ModelPtr>(p);
+    return ptr->value;
 }
 
 template <>
-/// @copydoc AssetStorage::get
-inline const AssetStorage::Mesh &AssetStorage::get(const std::string &p) const
+/// @copydoc AssetStorage::get_optional
+inline OptionalRef<const AssetStorage::ModelPtr> AssetStorage::get_optional(const std::string &p) const
 {
-    return get<Model>(p).mesh;
+    auto model = modelStorage.find(p);
+    if (model == modelStorage.end()) return std::nullopt;
+    return model->second;
 }
-
-    #undef PIVOT_TEST_CONTAINS
 
 // Get Index of asset in the buffers
 template <>

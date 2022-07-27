@@ -79,67 +79,70 @@ std::optional<AssetStorage::CPUStorage> loadObjModel(const std::filesystem::path
             const auto filepath = base_dir / m.diffuse_texname;
             storage.texturePaths.emplace(filepath.stem().string(), filepath);
         }
-        storage.materialStaging.add(loadMaterial(m));
+        storage.materialStaging.insert(loadMaterial(m));
     }
 
     std::unordered_map<Vertex, uint32_t> uniqueVertices{};
-    AssetStorage::Prefab prefab;
+    auto loadedModel = std::make_shared<AssetStorage::ModelNode>(path.stem());
     for (const auto &shape: shapes) {
-        AssetStorage::Model model{
-            .mesh =
-                {
-                    .vertexOffset = static_cast<uint32_t>(storage.vertexStagingBuffer.size()),
-                    .vertexSize = 0,
-                    .indicesOffset = static_cast<uint32_t>(storage.indexStagingBuffer.size()),
-                    .indicesSize = 0,
-                },
-            .default_material = ((!shape.mesh.material_ids.empty() && shape.mesh.material_ids.at(0) >= 0)
-                                     ? (materials.at(shape.mesh.material_ids.at(0)).name)
-                                     : ("white")),
-        };
-        for (const auto &index: shape.mesh.indices) {
-            pivot_assert(index.vertex_index != -1, "No vertices in the obj file");
-            Vertex vertex{
-                .pos =
-                    {
-                        attrib.vertices[3 * index.vertex_index + 0],
-                        attrib.vertices[3 * index.vertex_index + 1],
-                        attrib.vertices[3 * index.vertex_index + 2],
-                    },
+        std::size_t index_offset = 0;
+        auto loadedShape = loadedModel->emplaceChild(shape.name);
+        for (const auto &face: shape.mesh.num_face_vertices) {
+            AssetStorage::Primitive primitive{
+                .vertexOffset = static_cast<uint32_t>(storage.vertexStagingBuffer.size()),
+                .vertexSize = 0,
+                .indicesOffset = static_cast<uint32_t>(storage.indexStagingBuffer.size()),
+                .indicesSize = 0,
+                .default_material = ((!shape.mesh.material_ids.empty() && shape.mesh.material_ids.at(0) >= 0)
+                                         ? (materials.at(shape.mesh.material_ids.at(face)).name)
+                                         : (AssetStorage::missing_material_name)),
+                .name = shape.name + std::to_string(storage.vertexStagingBuffer.size()),
             };
-            if (!attrib.colors.empty()) {
-                vertex.color = {
-                    attrib.colors[3 * index.vertex_index + 0],
-                    attrib.colors[3 * index.vertex_index + 1],
-                    attrib.colors[3 * index.vertex_index + 2],
+            for (size_t v = 0; v < face; v++) {
+                const auto index = shape.mesh.indices[index_offset + v];
+                pivot_assert(index.vertex_index != -1, "No vertices in the obj file");
+                Vertex vertex{
+                    .pos =
+                        {
+                            attrib.vertices[3 * index.vertex_index + 0],
+                            attrib.vertices[3 * index.vertex_index + 1],
+                            attrib.vertices[3 * index.vertex_index + 2],
+                        },
                 };
-            }
-            if (!attrib.normals.empty() && index.normal_index >= 0) {
-                vertex.normal = {
-                    attrib.normals[3 * index.normal_index + 0],
-                    attrib.normals[3 * index.normal_index + 1],
-                    attrib.normals[3 * index.normal_index + 2],
-                };
-            }
-            if (!attrib.texcoords.empty() && index.texcoord_index >= 0) {
-                vertex.texCoord = {
-                    attrib.texcoords[2 * index.texcoord_index + 0],
-                    attrib.texcoords[2 * index.texcoord_index + 1],
-                };
-            }
+                if (!attrib.colors.empty()) {
+                    vertex.color = {
+                        attrib.colors[3 * index.vertex_index + 0],
+                        attrib.colors[3 * index.vertex_index + 1],
+                        attrib.colors[3 * index.vertex_index + 2],
+                    };
+                }
+                if (!attrib.normals.empty() && index.normal_index >= 0) {
+                    vertex.normal = {
+                        attrib.normals[3 * index.normal_index + 0],
+                        attrib.normals[3 * index.normal_index + 1],
+                        attrib.normals[3 * index.normal_index + 2],
+                    };
+                }
+                if (!attrib.texcoords.empty() && index.texcoord_index >= 0) {
+                    vertex.texCoord = {
+                        attrib.texcoords[2 * index.texcoord_index + 0],
+                        attrib.texcoords[2 * index.texcoord_index + 1],
+                    };
+                }
 
-            if (!uniqueVertices.contains(vertex)) {
-                uniqueVertices.emplace(vertex, storage.vertexStagingBuffer.size() - model.mesh.vertexOffset);
-                storage.vertexStagingBuffer.push_back(vertex);
+                if (!uniqueVertices.contains(vertex)) {
+                    uniqueVertices.emplace(vertex, storage.vertexStagingBuffer.size() - primitive.vertexOffset);
+                    storage.vertexStagingBuffer.push_back(vertex);
+                }
+                storage.indexStagingBuffer.push_back(uniqueVertices.at(vertex));
+                primitive.indicesSize = storage.indexStagingBuffer.size() - primitive.indicesOffset;
+                primitive.vertexSize = storage.vertexStagingBuffer.size() - primitive.vertexOffset;
+                loadedShape->value.primitives.push_back(primitive);
             }
-            storage.indexStagingBuffer.push_back(uniqueVertices.at(vertex));
+            index_offset += face;
         }
-        model.mesh.indicesSize = storage.indexStagingBuffer.size() - model.mesh.indicesOffset;
-        model.mesh.vertexSize = storage.vertexStagingBuffer.size() - model.mesh.vertexOffset;
-        prefab.modelIds.push_back(shape.name + std::to_string(model.mesh.vertexOffset));
-        storage.modelStorage.emplace(shape.name + std::to_string(model.mesh.vertexOffset), model);
     }
-    storage.prefabStorage.emplace(path.stem().string(), prefab);
+    storage.modelStorage.emplace(loadedModel->key, loadedModel);
     return storage;
 }
 

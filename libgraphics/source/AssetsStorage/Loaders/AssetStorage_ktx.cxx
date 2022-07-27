@@ -27,7 +27,7 @@ try {
         .depth = ktxTexture->baseDepth,
     };
     ktxTexture_Destroy(ktxTexture);
-    storage.textureStaging.add(path.stem().string(), std::move(texture));
+    storage.textureStaging.insert(path.stem().string(), std::move(texture));
     return storage;
 } catch (const std::runtime_error &re) {
     logger.err("Asset Storage/KTX") << re.what();

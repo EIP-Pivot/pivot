@@ -66,26 +66,33 @@ const std::vector<std::uint32_t> AssetStorage::quad_indices = {0, 1, 2, 2, 3, 0}
 
 AssetStorage::CPUStorage AssetStorage::CPUStorage::default_assets()
 {
+    auto quad = std::make_shared<ModelNode>(
+        quad_mesh, Model{
+                       .name = quad_mesh,
+                       .primitives =
+                           {
+                               Primitive{
+                                   .vertexOffset = 0,
+                                   .vertexSize = static_cast<std::uint32_t>(quad_vertices.size()),
+                                   .indicesOffset = 0,
+                                   .indicesSize = static_cast<std::uint32_t>(quad_indices.size()),
+                                   .default_material = AssetStorage::missing_material_name,
+                                   .name = quad_mesh,
+                               },
+                           },
+                       .localMatrix = glm::mat4(1.0f),
+                   });
     CPUStorage storage;
-    storage.textureStaging.add(missing_texture_name, default_texture_data);
-    storage.materialStaging.add(missing_material_name, {
-                                                           .baseColorTexture = missing_material_name,
-                                                       });
+    storage.textureStaging.insert(missing_texture_name, default_texture_data);
+    storage.materialStaging.insert(missing_material_name, {
+                                                              .baseColorTexture = missing_material_name,
+                                                          });
 
-    storage.materialStaging.add("white", {});
+    storage.materialStaging.insert("white", {});
 
     storage.vertexStagingBuffer.insert(storage.vertexStagingBuffer.end(), quad_vertices.begin(), quad_vertices.end());
     storage.indexStagingBuffer.insert(storage.indexStagingBuffer.end(), quad_indices.begin(), quad_indices.end());
-    storage.modelStorage[quad_mesh] = {
-        .mesh =
-            {
-                .vertexOffset = 0,
-                .vertexSize = static_cast<std::uint32_t>(quad_vertices.size()),
-                .indicesOffset = 0,
-                .indicesSize = static_cast<std::uint32_t>(quad_indices.size()),
-            },
-        .default_material = std::nullopt,
-    };
+    storage.modelStorage[quad_mesh] = quad;
     return storage;
 }
 
@@ -115,12 +122,10 @@ void AssetStorage::CPUStorage::merge(const AssetStorage::CPUStorage &other)
         if (other.field.contains(name)) throw CPUStorageError("Duplicate key in " #field ": " + name);
 
     TEST_CONTAINS(modelStorage);
-    TEST_CONTAINS(prefabStorage);
     TEST_CONTAINS(textureStaging);
     TEST_CONTAINS(materialStaging);
 #undef TEST_CONTAINS
 
-    prefabStorage = merge_map_ignore_dup(prefabStorage, other.prefabStorage);
     modelPaths = merge_map_ignore_dup(modelPaths, other.modelPaths);
     texturePaths = merge_map_ignore_dup(texturePaths, other.texturePaths);
 
@@ -131,17 +136,22 @@ void AssetStorage::CPUStorage::merge(const AssetStorage::CPUStorage &other)
     auto vertexOffsetStart = vertexStagingBuffer.size();
     auto indexOffsetStart = indexStagingBuffer.size();
     for (const auto &[name, model]: other.modelStorage) {
-        auto newMod = model;
-
-        newMod.mesh.vertexOffset += vertexOffsetStart;
-        newMod.mesh.indicesOffset += indexOffsetStart;
-
-        modelStorage.emplace(name, newMod);
+        for (auto &primitive: model->value.primitives) {
+            primitive.vertexOffset += vertexOffsetStart;
+            primitive.indicesOffset += indexOffsetStart;
+        }
+        modelStorage.emplace(name, model);
     }
     vertexStagingBuffer.insert(vertexStagingBuffer.end(), other.vertexStagingBuffer.begin(),
                                other.vertexStagingBuffer.end());
     indexStagingBuffer.insert(indexStagingBuffer.end(), other.indexStagingBuffer.begin(),
                               other.indexStagingBuffer.end());
+}
+
+bool AssetStorage::CPUStorage::empty() const noexcept
+{
+    return modelStorage.empty() && vertexStagingBuffer.empty() && indexStagingBuffer.empty() &&
+           textureStaging.empty() && materialStaging.empty();
 }
 
 AssetStorage::CPUStorage &AssetStorage::CPUStorage::operator+=(const AssetStorage::CPUStorage &other)

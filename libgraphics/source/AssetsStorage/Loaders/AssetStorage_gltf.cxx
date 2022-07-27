@@ -108,9 +108,9 @@ static inline void fillIndexBuffer(const tinygltf::Buffer &buffer, const tinyglt
 namespace pivot::graphics::loaders
 {
 
-static std::vector<std::pair<std::string, AssetStorage::Model>>
-loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::vector<Vertex> &vertexBuffer,
-             std::vector<std::uint32_t> &indexBuffer, const glm::dmat4 &_matrix)
+static AssetStorage::ModelPtr loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node,
+                                           std::vector<Vertex> &vertexBuffer, std::vector<std::uint32_t> &indexBuffer,
+                                           const glm::dmat4 &_matrix)
 {
     DEBUG_FUNCTION
     logger.debug("Asset Storage/Gltf") << "Loading node: " << node.name;
@@ -136,29 +136,25 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
             glm::translate(glm::dmat4(1.0f), translation) * glm::dmat4(rotation) * glm::scale(glm::dmat4(1.0f), scale);
     }
 
-    std::vector<std::pair<std::string, AssetStorage::Model>> loaded;
+    auto loadedNode = std::make_shared<AssetStorage::ModelNode>(node.name);
     for (const auto &i: node.children) {
-        auto child = loadGltfNode(gltfModel, gltfModel.nodes.at(i), vertexBuffer, indexBuffer, matrix);
-        loaded.insert(loaded.end(), child.begin(), child.end());
+        loadedNode->addChild(loadGltfNode(gltfModel, gltfModel.nodes.at(i), vertexBuffer, indexBuffer, matrix));
     }
-    if (node.mesh <= -1) return loaded;
+    if (node.mesh <= -1) return loadedNode;
 
     const auto &mesh = gltfModel.meshes.at(node.mesh);
     for (const tinygltf::Primitive &primitive: mesh.primitives) {
         /// TODO: support other primitive mode
         if (primitive.mode != TINYGLTF_MODE_TRIANGLES)
             throw AssetStorage::AssetStorageError("Primitive mode not supported !");
-
-        AssetStorage::Model model{
-            .mesh =
-                {
-                    .vertexOffset = static_cast<std::uint32_t>(vertexBuffer.size()),
-                    .vertexSize = 0,
-                    .indicesOffset = static_cast<std::uint32_t>(indexBuffer.size()),
-                    .indicesSize = 0,
-                },
-            .default_material =
-                ((primitive.material > -1) ? (gltfModel.materials.at(primitive.material).name) : ("white")),
+        AssetStorage::Primitive model{
+            .vertexOffset = static_cast<std::uint32_t>(vertexBuffer.size()),
+            .vertexSize = 0,
+            .indicesOffset = static_cast<std::uint32_t>(indexBuffer.size()),
+            .indicesSize = 0,
+            .default_material = ((primitive.material > -1) ? (gltfModel.materials.at(primitive.material).name)
+                                                           : (AssetStorage::missing_material_name)),
+            .name = node.name + std::to_string(vertexBuffer.size()),
         };
         // Vertices
         {
@@ -182,12 +178,11 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
                 throw std::logic_error("One buffer does not have the apropriate size");
             }
 
-            model.mesh.vertexSize = positionBuffer.size();
+            model.vertexSize = positionBuffer.size();
             for (unsigned v = 0; v < positionBuffer.size(); v++) {
-                const auto matrix3 = glm::mat3(matrix);
                 Vertex vert{
-                    .pos = positionBuffer.at(v) * matrix3,
-                    .normal = normalsBuffer.empty() ? glm::vec3(0.0f) : (glm::normalize(normalsBuffer.at(v) * matrix3)),
+                    .pos = positionBuffer.at(v),
+                    .normal = normalsBuffer.empty() ? glm::vec3(0.0f) : (glm::normalize(normalsBuffer.at(v))),
                     .texCoord = texCoordsBuffer.empty() ? glm::vec2(0.0f) : texCoordsBuffer.at(v),
                     .color = colorBuffer.empty() ? glm::vec3(1.0f) : colorBuffer.at(v),
                     .tangent = tangentBuffer.empty() ? glm::vec4(0.0f) : tangentBuffer.at(v),
@@ -203,7 +198,7 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
             const tinygltf::BufferView &bufferView = gltfModel.bufferViews.at(accessor.bufferView);
             const tinygltf::Buffer &buffer = gltfModel.buffers.at(bufferView.buffer);
 
-            model.mesh.indicesSize += static_cast<std::uint32_t>(accessor.count);
+            model.indicesSize += static_cast<std::uint32_t>(accessor.count);
 
             // glTF supports different component types of indices
             switch (accessor.componentType) {
@@ -220,10 +215,9 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
             }
         }
         /// End of Indices
-
-        loaded.push_back(std::make_pair(node.name + std::to_string(model.mesh.vertexOffset), model));
+        loadedNode->value.primitives.push_back(model);
     }
-    return loaded;
+    return loadedNode;
 }
 
 static std::pair<std::string, AssetStorage::CPUMaterial> loadGltfMaterial(const std::vector<std::string> &texture,
@@ -273,7 +267,6 @@ try {
     tinygltf::Model gltfModel;
     tinygltf::TinyGLTF gltfContext;
     std::string error, warning;
-    AssetStorage::Prefab prefab;
 
     bool isLoaded = gltfContext.LoadASCIIFromFile(&gltfModel, &error, &warning, path.string());
     if (!warning.empty()) logger.warn("Asset Storage/GLTF") << warning;
@@ -288,23 +281,26 @@ try {
     }
     for (const auto &material: gltfModel.materials) {
         const auto mat = loadGltfMaterial(texturePath, material);
-        storage.materialStaging.add(std::move(mat));
+        storage.materialStaging.insert(std::move(mat));
     }
     if (gltfModel.scenes.empty()) {
         logger.warn("Asset Storage/GLTF") << "GLTF file does not contains scene.";
         return storage;
     }
-    const auto &scene = gltfModel.scenes[0];
-    for (const auto &idx: scene.nodes) {
-        const auto &node = gltfModel.nodes.at(idx);
-        for (const auto &i:
-             loadGltfNode(gltfModel, node, storage.vertexStagingBuffer, storage.indexStagingBuffer, glm::mat4(1.0f))) {
-            prefab.modelIds.push_back(i.first);
-            storage.modelStorage.insert(i);
+    auto prefabNode = std::make_shared<AssetStorage::ModelNode>(path.stem().string());
+    for (const auto &scene: gltfModel.scenes) {
+        auto sceneNode = std::make_shared<AssetStorage::ModelNode>(scene.name);
+        for (const auto &idx: scene.nodes) {
+            const auto &node = gltfModel.nodes.at(idx);
+            auto loadedNode =
+                loadGltfNode(gltfModel, node, storage.vertexStagingBuffer, storage.indexStagingBuffer, glm::mat4(1.0f));
+            sceneNode->addChild(loadedNode);
+            storage.modelStorage[loadedNode->key] = loadedNode;
         }
+        prefabNode->addChild(sceneNode);
+        storage.modelStorage[sceneNode->key] = sceneNode;
     }
-
-    storage.prefabStorage[path.stem().string()] = prefab;
+    storage.modelStorage[prefabNode->key] = prefabNode;
     return storage;
 } catch (const PivotException &ase) {
     logger.err(ase.getScope()) << "Error while loaded GLTF file : " << ase.what();

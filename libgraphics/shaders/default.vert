@@ -14,7 +14,7 @@ layout(location = 4) out uint materialIndex;
 struct UniformBufferObject {
     mat4 modelMatrix;
     uint materialIndex;
-    uint boundingBoxIndex;
+    int boundingBoxIndex;
 };
 
 layout(std140, set = 1, binding = 0) readonly buffer ObjectBuffer

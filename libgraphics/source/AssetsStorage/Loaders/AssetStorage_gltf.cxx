@@ -137,6 +137,7 @@ static AssetStorage::ModelPtr loadGltfNode(const tinygltf::Model &gltfModel, con
     }
 
     auto loadedNode = std::make_shared<AssetStorage::ModelNode>(node.name);
+    loadedNode->value.localMatrix = matrix;
     for (const auto &i: node.children) {
         loadedNode->addChild(loadGltfNode(gltfModel, gltfModel.nodes.at(i), vertexBuffer, indexBuffer, matrix));
     }

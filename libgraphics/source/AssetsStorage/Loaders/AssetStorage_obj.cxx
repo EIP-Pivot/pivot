@@ -83,7 +83,7 @@ std::optional<asset::CPUStorage> loadObjModel(const std::filesystem::path &path)
     }
 
     std::unordered_map<Vertex, uint32_t> uniqueVertices{};
-    auto loadedModel = std::make_shared<asset::ModelNode>(path.stem());
+    auto loadedModel = std::make_shared<asset::ModelNode>(path.stem().string());
     for (const auto &shape: shapes) {
         std::size_t index_offset = 0;
         auto loadedShape = loadedModel->emplaceChild(shape.name);

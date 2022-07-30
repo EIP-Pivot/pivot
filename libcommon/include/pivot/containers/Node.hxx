@@ -42,9 +42,9 @@ public:
     }
 
     /// Construct a child node
-    NodePtr emplaceChild(Key key, Value val = {})
+    NodePtr emplaceChild(Key child_key, Value child_val = {})
     {
-        auto ptr = std::make_shared<Node>(key, val);
+        auto ptr = std::make_shared<Node>(child_key, child_val);
         addChild(ptr);
         return ptr;
     }
@@ -62,10 +62,10 @@ public:
             return parent->getRoot();
     }
     /// return the number of node down the tree, starting from the current node
-    std::size_t size() const noexcept { return size_imp(0); }
+    std::size_t size() const noexcept { return size_imp(0u); }
 
     /// return the number of node up the tree, starting from the current node
-    std::size_t depth() const noexcept { return depth_imp(0); }
+    std::size_t depth() const noexcept { return depth_imp(0u); }
 
     /// Traverse down the tree and execute function on each node
     void traverseDown(std::invocable<Node &> auto function)

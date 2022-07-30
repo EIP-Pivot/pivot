@@ -3,7 +3,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/AssetStorage.hxx"
 
 #ifndef BASE_PATH
     #define BASE_PATH "./"
@@ -17,7 +17,7 @@ using namespace pivot::graphics;
 TEST_CASE("loadObjFile", "[assetStorage]")
 {
 
-    AssetStorage::CPUStorage storage;
+    asset::CPUStorage storage;
 
     SECTION("Return false when incorrect path") { REQUIRE_FALSE(loaders::loadObjModel(pathToGltf).has_value()); }
 

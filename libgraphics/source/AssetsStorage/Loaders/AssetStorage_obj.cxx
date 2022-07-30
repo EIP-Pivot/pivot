@@ -1,4 +1,4 @@
-#include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/AssetStorage.hxx"
 
 #include "pivot/pivot.hxx"
 
@@ -8,7 +8,7 @@
 namespace pivot::graphics::loaders
 {
 
-static std::pair<std::string, AssetStorage::CPUMaterial> loadMaterial(const tinyobj::material_t &material)
+static std::pair<std::string, asset::CPUMaterial> loadMaterial(const tinyobj::material_t &material)
 {
     std::filesystem::path diffuse = material.diffuse_texname;
     std::filesystem::path normal = material.normal_texname;
@@ -18,7 +18,7 @@ static std::pair<std::string, AssetStorage::CPUMaterial> loadMaterial(const tiny
 
     return {
         material.name,
-        AssetStorage::CPUMaterial{
+        {
             .alphaCutOff = 1.0f,
             .metallicFactor = material.metallic,
             .roughnessFactor = material.roughness,
@@ -52,12 +52,12 @@ static std::pair<std::string, AssetStorage::CPUMaterial> loadMaterial(const tiny
     };
 }
 
-std::optional<AssetStorage::CPUStorage> loadObjModel(const std::filesystem::path &path)
+std::optional<asset::CPUStorage> loadObjModel(const std::filesystem::path &path)
 {
     DEBUG_FUNCTION
     auto base_dir = path.parent_path();
 
-    AssetStorage::CPUStorage storage;
+    asset::CPUStorage storage;
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
@@ -83,19 +83,19 @@ std::optional<AssetStorage::CPUStorage> loadObjModel(const std::filesystem::path
     }
 
     std::unordered_map<Vertex, uint32_t> uniqueVertices{};
-    auto loadedModel = std::make_shared<AssetStorage::ModelNode>(path.stem());
+    auto loadedModel = std::make_shared<asset::ModelNode>(path.stem());
     for (const auto &shape: shapes) {
         std::size_t index_offset = 0;
         auto loadedShape = loadedModel->emplaceChild(shape.name);
         for (const auto &face: shape.mesh.num_face_vertices) {
-            AssetStorage::Primitive primitive{
+            asset::Primitive primitive{
                 .vertexOffset = static_cast<uint32_t>(storage.vertexStagingBuffer.size()),
                 .vertexSize = 0,
                 .indicesOffset = static_cast<uint32_t>(storage.indexStagingBuffer.size()),
                 .indicesSize = 0,
                 .default_material = ((!shape.mesh.material_ids.empty() && shape.mesh.material_ids.at(0) >= 0)
                                          ? (materials.at(shape.mesh.material_ids.at(face)).name)
-                                         : (AssetStorage::missing_material_name)),
+                                         : (asset::missing_material_name)),
                 .name = shape.name + std::to_string(storage.vertexStagingBuffer.size()),
             };
             for (size_t v = 0; v < face; v++) {

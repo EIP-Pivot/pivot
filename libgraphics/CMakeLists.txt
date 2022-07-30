@@ -183,7 +183,7 @@ add_library(
     source/ThreadPool.cxx
     source/AssetsStorage/AssetStorage.cxx
     source/AssetsStorage/AssetStorage_init.cxx
-    source/AssetsStorage/AssetStorage_CPUStorage.cxx
+    source/AssetsStorage/CPUStorage.cxx
     source/AssetsStorage/AssetStorage_build.cxx
     source/AssetsStorage/Loaders/AssetStorage_obj.cxx
     source/AssetsStorage/Loaders/AssetStorage_png.cxx

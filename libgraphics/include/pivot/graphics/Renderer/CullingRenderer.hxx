@@ -2,7 +2,7 @@
 
 #include "pivot/graphics/interface/IRenderer.hxx"
 
-#include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/AssetStorage.hxx"
 #include "pivot/graphics/PipelineStorage.hxx"
 #include "pivot/graphics/types/common.hxx"
 

@@ -1,4 +1,4 @@
-#include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/AssetStorage.hxx"
 
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/pivot.hxx"
@@ -6,13 +6,13 @@
 namespace pivot::graphics
 {
 
-static AssetStorage::CPUStorage
+static asset::CPUStorage
 batch_load(const std::unordered_map<std::string, std::filesystem::path> &storage_map,
-           const std::function<std::optional<AssetStorage::CPUStorage>(unsigned, const std::filesystem::path &)> load,
+           const std::function<std::optional<asset::CPUStorage>(unsigned, const std::filesystem::path &)> load,
            const std::string &debug_name, ThreadPool &threadPool)
 {
-    AssetStorage::CPUStorage cpuStorage;
-    std::vector<std::pair<std::filesystem::path, std::future<std::optional<AssetStorage::CPUStorage>>>> futures;
+    asset::CPUStorage cpuStorage;
+    std::vector<std::pair<std::filesystem::path, std::future<std::optional<asset::CPUStorage>>>> futures;
     futures.reserve(storage_map.size());
 
     /// Model must be loaded first, as they may add new texture to load
@@ -73,7 +73,7 @@ void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
 
     createDescriptorSet(builder);
 
-    cpuStorage = CPUStorage::default_assets();
+    cpuStorage = asset::CPUStorage::default_assets();
     threadPool.stop();
 }
 

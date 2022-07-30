@@ -1,4 +1,4 @@
-#include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/AssetStorage.hxx"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -6,7 +6,7 @@ using namespace pivot::graphics;
 
 TEST_CASE("Panic Texture are loaded", "[assetStorage]")
 {
-    // auto storage = AssetStorage::CPUStorage::default_assets();
+    // auto storage = asset::CPUStorage::default_assets();
     // REQUIRE(storage.texturePaths.empty());
 
     // REQUIRE(storage.textureStaging.size() == 1);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/AssetStorage.hxx"
 #include "pivot/graphics/DescriptorAllocator/DescriptorBuilder.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
@@ -28,7 +28,7 @@ public:
     /// Represent a draw batch
     struct DrawBatch {
         /// The id of the mesh
-        AssetStorage::Primitive primitive;
+        asset::Primitive primitive;
         /// The first index of the batch
         std::uint32_t first;
         /// The size of the batch

@@ -85,7 +85,7 @@ void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sce
                 .size = 0,
             });
         }
-        auto model = storage_ref->get().get_optional<AssetStorage::ModelPtr>(object.meshID);
+        auto model = storage_ref->get().get_optional<asset::ModelPtr>(object.meshID);
         if (!model.has_value()) continue;
         model.value().get()->traverseDown([&](const auto &prefab) mutable {
             glm::mat4 modelMatrix = transform.getModelMatrix() * prefab.value.localMatrix;
@@ -103,8 +103,7 @@ void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sce
                     materialIndex =
                         storage_ref->get().getIndex<gpu_object::Material>(primitive.default_material.value());
                 } else {
-                    materialIndex =
-                        storage_ref->get().getIndex<gpu_object::Material>(AssetStorage::missing_material_name);
+                    materialIndex = storage_ref->get().getIndex<gpu_object::Material>(asset::missing_material_name);
                 }
                 objectGPUData.push_back({
                     .modelMatrix = modelMatrix,

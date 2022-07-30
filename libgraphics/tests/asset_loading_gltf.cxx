@@ -5,7 +5,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/AssetStorage.hxx"
 
 #ifndef BASE_PATH
     #define BASE_PATH "./"
@@ -63,7 +63,7 @@ TEST_CASE("loadGltfFile", "[assetStorage]")
 {
     static_assert(std::numeric_limits<float>::epsilon() < 1.f);
 
-    AssetStorage::CPUStorage storage;
+    asset::CPUStorage storage;
 
     SECTION("Return false when incorrect path") REQUIRE_FALSE(loaders::loadGltfModel(pathToObj).has_value());
 
@@ -118,7 +118,7 @@ TEST_CASE("loadGltfFile", "[assetStorage]")
 
     SECTION("CPUStorage merge")
     {
-        AssetStorage::CPUStorage other_storage;
+        asset::CPUStorage other_storage;
         REQUIRE_NOTHROW(other_storage = loaders::loadGltfModel(pathToOtherGltf).value());
 
         auto before = other_storage.modelStorage.at("0");

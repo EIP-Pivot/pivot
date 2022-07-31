@@ -169,6 +169,7 @@ add_library(
     source/types/Frame.cxx
     source/types/Light.cxx
     source/types/UniformBufferObject.cxx
+    source/types/QueueFamilyIndices.cxx
     source/Window.cxx
     source/vk_utils.cxx
     source/vk_init.cxx
@@ -201,7 +202,7 @@ add_library(
     source/DescriptorAllocator/DescriptorAllocator.cxx
     source/DescriptorAllocator/DescriptorBuilder.cxx
     source/DescriptorAllocator/DescriptorLayoutCache.cxx
-    source/abstract/AImmediateCommand.cxx
+    source/VulkanImmediateCommand.cxx
     source/culling.cxx
     source/DrawCallResolver.cxx
     source/PipelineStorage.cxx

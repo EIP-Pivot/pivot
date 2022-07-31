@@ -77,6 +77,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC logger glm magic_enum)
 target_precompile_headers(
     ${PROJECT_NAME}
     PUBLIC
+    <pivot/pivot.hxx>
     <Logger.hpp>
     <glm/glm.hpp>
     <optional>

@@ -1,11 +1,11 @@
 #pragma once
 
 #include "pivot/graphics/DeletionQueue.hxx"
-#include "pivot/graphics/QueueFamilyIndices.hxx"
 #include "pivot/graphics/VulkanAllocator.hxx"
+#include "pivot/graphics/VulkanImmediateCommand.hxx"
 #include "pivot/graphics/VulkanLoader.hxx"
 #include "pivot/graphics/Window.hxx"
-#include "pivot/graphics/abstract/AImmediateCommand.hxx"
+#include "pivot/graphics/types/QueueFamilyIndices.hxx"
 
 #include <vk_mem_alloc.hpp>
 
@@ -14,7 +14,7 @@ namespace pivot::graphics
 
 /// @class VulkanBase
 /// @brief Handle the bare minimum of Vulkan ressources to perform GPU manipulation
-class VulkanBase : public VulkanLoader, public abstract::AImmediateCommand
+class VulkanBase : public VulkanLoader, public VulkanImmediateCommand
 {
 public:
     /// Exception type for Vulkan base

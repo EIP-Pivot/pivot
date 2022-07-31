@@ -1,7 +1,5 @@
 #pragma once
 
-#include <Logger.hpp>
-
 #include <pivot/builtins/events/collision.hxx>
 #include <pivot/ecs/Core/Systems/description.hxx>
 

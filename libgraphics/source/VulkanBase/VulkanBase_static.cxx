@@ -1,10 +1,9 @@
-#include "pivot/graphics/QueueFamilyIndices.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/VulkanSwapchain.hxx"
+#include "pivot/graphics/types/QueueFamilyIndices.hxx"
 #include "pivot/graphics/types/vk_types.hxx"
 #include "pivot/pivot.hxx"
 
-#include <Logger.hpp>
 #include <ostream>
 #include <set>
 #include <stdint.h>

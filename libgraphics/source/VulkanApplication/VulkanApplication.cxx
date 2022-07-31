@@ -3,8 +3,6 @@
 #include "pivot/graphics/vk_utils.hxx"
 #include "pivot/pivot.hxx"
 
-#include <Logger.hpp>
-
 #ifndef PIVOT_WINDOW_ICON_PATH
 const std::vector<std::string> iconFilepath;
 #else

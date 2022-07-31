@@ -1,8 +1,8 @@
 #include "pivot/script/Interpreter.hxx"
-#include "Logger.hpp"
 #include "magic_enum.hpp"
 #include "pivot/script/Builtins.hxx"
 #include "pivot/script/Exceptions.hxx"
+#include <cpplogger/Logger.hpp>
 #include <limits>
 #include <unordered_map>
 

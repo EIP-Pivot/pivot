@@ -5,10 +5,10 @@
 #include <stack>
 #include <unordered_map>
 
-#include "Logger.hpp"
 #include "magic_enum.hpp"
 #include "pivot/script/Exceptions.hxx"
 #include "pivot/script/Parser.hxx"
+#include <cpplogger/Logger.hpp>
 
 namespace pivot::ecs::script::parser
 {

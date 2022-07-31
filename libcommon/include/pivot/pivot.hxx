@@ -1,9 +1,9 @@
 #pragma once
 
 #include <optional>
-#include <utils/source_location.hpp>
 
-#include <Logger.hpp>
+#include <cpplogger/Logger.hpp>
+#include <cpplogger/utils/source_location.hpp>
 
 #ifndef NDEBUG
     #define DEBUG_FUNCTION logger.trace(::function_name()) << "Entered";

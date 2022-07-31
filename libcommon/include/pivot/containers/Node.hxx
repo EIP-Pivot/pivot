@@ -7,11 +7,11 @@
 namespace pivot
 {
 
-template <typename Key, typename Value>
+template <typename Value>
 /// @class Node
 ///
 /// Implementation for a generic tree
-class Node : public std::enable_shared_from_this<Node<Key, Value>>
+class Node : public std::enable_shared_from_this<Node<Value>>
 {
 public:
     /// alias for std::shared_ptr
@@ -20,11 +20,11 @@ public:
     using NodeRef = Node &;
 
 public:
-    Node() = delete;
+    /// Construc a default value
+    Node() requires std::is_default_constructible_v<Value>
+    = default;
     /// Construct a node with a value
-    constexpr Node(Key key, Value value): key(std::move(key)), value(std::move(value)) {}
-    /// Construct a node with a default value
-    constexpr Node(Key key): Node(std::move(key), {}) {}
+    constexpr Node(Value value): value(std::move(value)) {}
 
     /// Set parent Node
     constexpr void setParent(NodePtr p) { parent = p; }
@@ -33,8 +33,8 @@ public:
     /// @return the amount of child of the current node
     constexpr std::size_t addChild(NodePtr child)
     {
-        /// Need to make sure the key does not repeat
-        if (getNodeInAllTree(child->key)) throw std::logic_error("Duplicated key found in Node tree!");
+        /// Need to make sure the node does not repeat
+        if (getNodeInAllTree(child->value)) throw std::logic_error("Duplicated key found in Node tree!");
 
         child->setParent(this->shared_from_this());
         children.push_back(std::move(child));
@@ -42,9 +42,9 @@ public:
     }
 
     /// Construct a child node
-    NodePtr emplaceChild(Key child_key, Value child_val = {})
+    NodePtr emplaceChild(Value child_val = {})
     {
-        auto ptr = std::make_shared<Node>(child_key, child_val);
+        auto ptr = std::make_shared<Node>(child_val);
         addChild(ptr);
         return ptr;
     }
@@ -68,26 +68,26 @@ public:
     std::size_t depth() const noexcept { return depth_imp(0u); }
 
     /// Traverse down the tree and execute function on each node
-    void traverseDown(std::invocable<Node &> auto function)
+    void traverseDown(std::invocable<Node &> auto &&function)
     {
         function(*this);
         for (auto &child: children) { child->traverseDown(function); }
     }
     /// @copydoc traverseDown
-    void traverseDown(std::invocable<const Node &> auto function) const
+    void traverseDown(std::invocable<Node &> auto &&function) const
     {
         function(*this);
         for (const auto &child: children) { child->traverseDown(function); }
     }
 
     /// Traverse up the tree and execute function on eache node
-    void traverseUp(std::invocable<Node &> auto function)
+    void traverseUp(std::invocable<Node &> auto &&function)
     {
         function(*this);
         if (parent) { parent->traverseUp(function); }
     }
     /// @copydoc traverseUp
-    void traverseUp(std::invocable<const Node &> auto function) const
+    void traverseUp(std::invocable<Node &> auto &&function) const
     {
         function(*this);
         if (parent) { parent->traverseUp(function); }
@@ -96,9 +96,9 @@ public:
     /// @brief get the node with the key, searching from this node down
     ///
     /// return std::nullopt if none was found
-    std::optional<NodePtr> getNode(const Key &k) requires std::equality_comparable<Key>
+    std::optional<NodePtr> getNode(const Value &k) requires std::equality_comparable<Value>
     {
-        if (key == k) {
+        if (value == k) {
             return this->shared_from_this();
         } else {
             for (auto &child: children) {
@@ -111,9 +111,9 @@ public:
     /// @brief get the node with the key; from the root node
     ///
     /// return std::nullopt if none was found
-    std::optional<NodePtr> getNodeInAllTree(const Key &k) requires std::equality_comparable<Key>
+    std::optional<NodePtr> getNodeInAllTree(const Value &k) requires std::equality_comparable<Value>
     {
-        if (key == k) {
+        if (value == k) {
             return this->shared_from_this();
         } else {
             return getRoot()->getNode(k);
@@ -121,11 +121,11 @@ public:
     }
 
     /// Equality operator
-    bool operator==(const Node &) const requires std::equality_comparable<Key> && std::equality_comparable<Value>
+    bool operator==(const Node &) const requires std::equality_comparable<Value>
     = default;
 
     /// Starship operator
-    auto operator<=>(const Node &) const requires std::three_way_comparable<Key> && std::three_way_comparable<Value>
+    auto operator<=>(const Node &) const requires std::three_way_comparable<Value>
     = default;
 
 private:
@@ -142,8 +142,6 @@ private:
     }
 
 public:
-    /// the key
-    Key key;
     /// the value
     Value value;
 

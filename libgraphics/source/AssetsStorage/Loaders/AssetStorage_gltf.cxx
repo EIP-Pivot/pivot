@@ -136,7 +136,8 @@ static asset::ModelPtr loadGltfNode(const tinygltf::Model &gltfModel, const tiny
             glm::translate(glm::dmat4(1.0f), translation) * glm::dmat4(rotation) * glm::scale(glm::dmat4(1.0f), scale);
     }
 
-    auto loadedNode = std::make_shared<asset::ModelNode>(node.name);
+    auto loadedNode = std::make_shared<asset::ModelNode>();
+    loadedNode->value.name = node.name;
     loadedNode->value.localMatrix = matrix;
     for (const auto &i: node.children) {
         loadedNode->addChild(loadGltfNode(gltfModel, gltfModel.nodes.at(i), vertexBuffer, indexBuffer, matrix));
@@ -288,20 +289,22 @@ try {
         logger.warn("Asset Storage/GLTF") << "GLTF file does not contains scene.";
         return storage;
     }
-    auto prefabNode = std::make_shared<asset::ModelNode>(path.stem().string());
+    auto prefabNode = std::make_shared<asset::ModelNode>();
+    prefabNode->value.name = path.stem().string();
     for (const auto &scene: gltfModel.scenes) {
-        auto sceneNode = std::make_shared<asset::ModelNode>(scene.name);
+        auto sceneNode = std::make_shared<asset::ModelNode>();
+        sceneNode->value.name = scene.name;
         for (const auto &idx: scene.nodes) {
             const auto &node = gltfModel.nodes.at(idx);
             auto loadedNode =
                 loadGltfNode(gltfModel, node, storage.vertexStagingBuffer, storage.indexStagingBuffer, glm::mat4(1.0f));
             sceneNode->addChild(loadedNode);
-            storage.modelStorage[loadedNode->key] = loadedNode;
+            storage.modelStorage[loadedNode->value.name] = loadedNode;
         }
         prefabNode->addChild(sceneNode);
-        storage.modelStorage[sceneNode->key] = sceneNode;
+        storage.modelStorage[sceneNode->value.name] = sceneNode;
     }
-    storage.modelStorage[prefabNode->key] = prefabNode;
+    storage.modelStorage[prefabNode->value.name] = prefabNode;
     return storage;
 } catch (const PivotException &ase) {
     logger.err(ase.getScope()) << "Error while loaded GLTF file : " << ase.what();

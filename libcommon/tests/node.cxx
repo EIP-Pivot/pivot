@@ -2,13 +2,13 @@
 
 #include "pivot/containers/Node.hxx"
 
-using NodeType = pivot::Node<std::string, std::string>;
+using NodeType = pivot::Node<std::string>;
 TEST_CASE("Node test", "[node]")
 {
-    auto parent = std::make_shared<NodeType>("parent", "Coléoptère");
-    auto child1 = parent->emplaceChild("child1", "Billy");
-    auto child2 = parent->emplaceChild("child2", "Pyro-Barbarian");
-    auto child11 = child1->emplaceChild("child11", "Rope");
+    auto parent = std::make_shared<NodeType>("parent");
+    auto child1 = parent->emplaceChild("child1");
+    auto child2 = parent->emplaceChild("child2");
+    auto child11 = child1->emplaceChild("child11");
 
     REQUIRE(parent->isRoot());
     REQUIRE(not parent->isLeaf());
@@ -16,27 +16,17 @@ TEST_CASE("Node test", "[node]")
     REQUIRE(child2->isLeaf());
     REQUIRE(parent->size() == 4);
 
-    SECTION("Emplace")
-    {
-        REQUIRE(parent->key == "parent");
-        REQUIRE(parent->value == "Coléoptère");
-
-        REQUIRE(child1->key == "child1");
-        REQUIRE(child1->value == "Billy");
-
-        REQUIRE(child2->key == "child2");
-        REQUIRE(child2->value == "Pyro-Barbarian");
-
-        REQUIRE(child11->key == "child11");
-        REQUIRE(child11->value == "Rope");
-    }
+    REQUIRE(parent->value == "parent");
+    REQUIRE(child1->value == "child1");
+    REQUIRE(child2->value == "child2");
+    REQUIRE(child11->value == "child11");
 
     SECTION("Traversal Down")
     {
         std::vector<std::string> expect = {"parent", "child1", "child11", "child2"};
         std::vector<std::string> test;
 
-        parent->traverseDown([&test](const NodeType &node) { test.push_back(node.key); });
+        parent->traverseDown([&test](const NodeType &node) { test.push_back(node.value); });
         REQUIRE(test == expect);
     }
 
@@ -45,7 +35,7 @@ TEST_CASE("Node test", "[node]")
         std::vector<std::string> expect = {"child11", "child1", "parent"};
         std::vector<std::string> test;
 
-        child11->traverseUp([&test](const NodeType &node) { test.push_back(node.key); });
+        child11->traverseUp([&test](const NodeType &node) { test.push_back(node.value); });
         REQUIRE(test == expect);
     }
 

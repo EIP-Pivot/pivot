@@ -25,16 +25,18 @@ TEST_CASE("loadObjFile", "[assetStorage]")
 
     REQUIRE_NOTHROW(storage.modelStorage.at("basic_cube"));
     const auto &prefab = storage.modelStorage.at("basic_cube");
-    REQUIRE(prefab->size() == 1);
+    CHECK(prefab->size() == 2);
 
-    REQUIRE_NOTHROW(storage.modelStorage.at("square0"));
-    const auto &model = storage.modelStorage.at("square0");
-    // REQUIRE(model.default_material.has_value());
-    // REQUIRE(model.default_material == "white");
-    // REQUIRE(model.mesh.vertexOffset == 0);
-    // REQUIRE(model.mesh.vertexSize == 4);
-    // REQUIRE(model.mesh.indicesOffset == 0);
-    // REQUIRE(model.mesh.indicesSize == 4);
+    CHECK(prefab->value.primitives.empty());
+
+    {
+        prefab->traverseDown([](const auto &node) {
+            for (const auto &prim: node.value.primitives) {
+                REQUIRE(prim.default_material.has_value());
+                REQUIRE(prim.default_material == asset::missing_material_name);
+            }
+        });
+    }
 
     REQUIRE(storage.vertexStagingBuffer.at(0).pos.x == -50.0f);
     REQUIRE(storage.vertexStagingBuffer.at(0).pos.y == 0.0f);

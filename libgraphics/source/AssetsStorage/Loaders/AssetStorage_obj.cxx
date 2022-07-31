@@ -83,10 +83,11 @@ std::optional<asset::CPUStorage> loadObjModel(const std::filesystem::path &path)
     }
 
     std::unordered_map<Vertex, uint32_t> uniqueVertices{};
-    auto loadedModel = std::make_shared<asset::ModelNode>(path.stem().string());
+    auto loadedModel = std::make_shared<asset::ModelNode>();
+    loadedModel->value.name = path.stem().string();
     for (const auto &shape: shapes) {
         std::size_t index_offset = 0;
-        auto loadedShape = loadedModel->emplaceChild(shape.name);
+        auto loadedShape = loadedModel->emplaceChild();
         for (const auto &face: shape.mesh.num_face_vertices) {
             asset::Primitive primitive{
                 .vertexOffset = static_cast<uint32_t>(storage.vertexStagingBuffer.size()),
@@ -142,7 +143,7 @@ std::optional<asset::CPUStorage> loadObjModel(const std::filesystem::path &path)
             index_offset += face;
         }
     }
-    storage.modelStorage.emplace(loadedModel->key, loadedModel);
+    storage.modelStorage.emplace(loadedModel->value.name, loadedModel);
     return storage;
 }
 

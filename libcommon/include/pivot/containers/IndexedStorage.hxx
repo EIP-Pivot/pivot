@@ -55,6 +55,9 @@ public:
     {
         for (const auto &[name, idx]: other.getInternalMap()) {
             const auto &obj = other.at(idx);
+            if constexpr (std::equality_comparable<Value>) {
+                if (contains(name) && at(name) == obj) continue;
+            }
             insert(name, obj);
         }
     }
@@ -80,7 +83,10 @@ public:
         return true;
     }
     /// @copydoc insert
-    inline bool insert(const std::pair<Key, Value> value) { return insert(value.first, std::move(value.second)); }
+    inline bool insert(const std::pair<Key, Value> value)
+    {
+        return insert(std::move(value.first), std::move(value.second));
+    }
 
     /// Does given key already exist in storage ?
     inline bool contains(const Key &i) const { return index.contains(i); }

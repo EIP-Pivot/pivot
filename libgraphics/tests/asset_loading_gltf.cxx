@@ -69,10 +69,9 @@ TEST_CASE("loadGltfFile", "[assetStorage]")
 
     REQUIRE_NOTHROW(storage = loaders::loadGltfModel(pathToGltf).value());
 
-    std::string testIds = "BoomBox0";
+    std::string testIds = "BoomBox";
     REQUIRE_NOTHROW(storage.modelStorage.at("BoomBox"));
-    const auto &prefab = storage.modelStorage.at("BoomBox");
-    REQUIRE(prefab->size() == 1);
+    REQUIRE(storage.modelStorage.size() == 2);
 
     REQUIRE(storage.materialStaging.size() == 1);
     REQUIRE_NOTHROW(storage.materialStaging.at("BoomBox_Mat"));
@@ -94,24 +93,20 @@ TEST_CASE("loadGltfFile", "[assetStorage]")
         REQUIRE(primitive.default_material.has_value());
         REQUIRE(primitive.default_material == "BoomBox_Mat");
     }
-    REQUIRE(model->value.primitives.at(0).vertexOffset == 0);
-    REQUIRE(model->value.primitives.at(0).vertexSize == 3575);
-    REQUIRE(model->value.primitives.at(0).indicesOffset == 0);
-    REQUIRE(model->value.primitives.at(0).indicesSize == 18108);
 
     REQUIRE(storage.vertexStagingBuffer.size() == 3575);
     REQUIRE(storage.indexStagingBuffer.size() == 18108);
 
     PRINT_VERTEX(storage, 0);
-    VERTEX_CHECK_VEC3(storage, 0, pos, 0.00247455505f, -0.00207684329f, 0.00687769148f);
-    VERTEX_CHECK_VEC3(storage, 0, normal, -0.937883496f, -0.345936537f, 0.0265043154f);
+    VERTEX_CHECK_VEC3(storage, 0, pos, 0.00247455505f, 0.00207684329f, -0.00687769148f);
+    VERTEX_CHECK_VEC3(storage, 0, normal, -0.937883496f, 0.345936537f, -0.0265043154f);
     VERTEX_CHECK_VEC3(storage, 0, color, 1.0f, 1.0f, 1.0f);
     VERTEX_CHECK_VEC2(storage, 0, texCoord, 0.0681650937f, 0.192196429f);
     VERTEX_CHECK_VEC4(storage, 0, tangent, -0.295275331f, -0.835973203f, -0.462559491f, 1.00000f);
 
     PRINT_VERTEX(storage, 1000);
-    VERTEX_CHECK_VEC3(storage, 1000, pos, 0.00661812071f, -0.00235924753f, 0.00288167689f);
-    VERTEX_CHECK_VEC3(storage, 1000, normal, 0.8339324f, 0.0814492553f, -0.545823038f);
+    VERTEX_CHECK_VEC3(storage, 1000, pos, 0.00661812071f, 0.00235924753f, -0.00288167689f);
+    VERTEX_CHECK_VEC3(storage, 1000, normal, 0.8339324f, -0.0814492553f, 0.545823038f);
     VERTEX_CHECK_VEC3(storage, 1000, color, 1.0f, 1.0f, 1.0f);
     VERTEX_CHECK_VEC2(storage, 1000, texCoord, 0.90863955f, 0.12404108f);
     VERTEX_CHECK_VEC4(storage, 1000, tangent, -0.114067227f, -0.993130505f, 0.0260791834f, 1.00000f);
@@ -121,13 +116,13 @@ TEST_CASE("loadGltfFile", "[assetStorage]")
         asset::CPUStorage other_storage;
         REQUIRE_NOTHROW(other_storage = loaders::loadGltfModel(pathToOtherGltf).value());
 
-        auto before = other_storage.modelStorage.at("0");
+        auto before = other_storage.modelStorage.at("basic_triangle");
         auto before_vertex_size = other_storage.vertexStagingBuffer.size();
         auto before_index_size = other_storage.indexStagingBuffer.size();
 
         REQUIRE_NOTHROW(other_storage += storage);
 
-        REQUIRE(other_storage.modelStorage.at("0") == before);
+        REQUIRE(other_storage.modelStorage.at("basic_triangle") == before);
         REQUIRE_NOTHROW(other_storage.modelStorage.at("BoomBox"));
         REQUIRE(other_storage.modelStorage.at("BoomBox") == storage.modelStorage.at("BoomBox"));
         REQUIRE_NOTHROW(storage.modelStorage.at(testIds));
@@ -136,43 +131,51 @@ TEST_CASE("loadGltfFile", "[assetStorage]")
             auto &other_model = other_storage.modelStorage.at(testIds);
             auto &model = storage.modelStorage.at(testIds);
 
-            // REQUIRE(model.default_material == other_model.default_material);
-            // REQUIRE(model.mesh.indicesOffset == other_model.mesh.indicesOffset - before_index_size);
-            // REQUIRE(model.mesh.indicesSize == other_model.mesh.indicesSize);
-            // REQUIRE(model.mesh.vertexOffset == other_model.mesh.vertexOffset - before_vertex_size);
-            // REQUIRE(model.mesh.vertexSize == other_model.mesh.vertexSize);
+            REQUIRE(other_model->value.localMatrix == model->value.localMatrix);
+            REQUIRE(other_model->value.name == model->value.name);
+            REQUIRE(other_model->value.primitives.size() == model->value.primitives.size());
+            for (unsigned i = 0; model->value.primitives.size(); i++) {
+                REQUIRE(model->value.primitives.at(i).default_material ==
+                        other_model->value.primitives.at(i).default_material);
+                REQUIRE(model->value.primitives.at(i).indicesOffset ==
+                        other_model->value.primitives.at(i).indicesOffset - before_index_size);
+                REQUIRE(model->value.primitives.at(i).indicesSize == other_model->value.primitives.at(i).indicesSize);
+                REQUIRE(model->value.primitives.at(i).vertexOffset ==
+                        other_model->value.primitives.at(i).vertexOffset - before_vertex_size);
+                REQUIRE(model->value.primitives.at(i).vertexSize == other_model->value.primitives.at(i).vertexSize);
 
-            // std::span<Vertex> vertices(storage.vertexStagingBuffer.data() + model.mesh.vertexOffset,
-            //                            model.mesh.vertexSize);
-            // std::span<Vertex> other_vertices(other_storage.vertexStagingBuffer.data() +
-            // other_model.mesh.vertexOffset,
-            //                                  other_model.mesh.vertexSize);
-            // REQUIRE(vertices.size() == other_vertices.size());
-            // for (unsigned i = 0; i < vertices.size(); i++) REQUIRE(vertices[i] == other_vertices[i]);
+                std::span<Vertex> vertices(storage.vertexStagingBuffer.data() +
+                                               model->value.primitives.at(i).vertexOffset,
+                                           model->value.primitives.at(i).vertexSize);
+                std::span<Vertex> other_vertices(other_storage.vertexStagingBuffer.data() +
+                                                     other_model->value.primitives.at(i).vertexOffset,
+                                                 other_model->value.primitives.at(i).vertexSize);
+                REQUIRE(vertices.size() == other_vertices.size());
+                for (unsigned i = 0; i < vertices.size(); i++) REQUIRE(vertices[i] == other_vertices[i]);
 
-            // std::span<std::uint32_t> indexes(storage.indexStagingBuffer.data() + model.mesh.indicesOffset,
-            //                                  model.mesh.indicesSize);
-            // std::span<std::uint32_t> other_indexes(
-            //     other_storage.indexStagingBuffer.data() + other_model.mesh.indicesOffset,
-            //     other_model.mesh.indicesSize);
-            // REQUIRE(indexes.size() == other_indexes.size());
-            // for (unsigned i = 0; i < indexes.size(); i++) REQUIRE(indexes[i] == other_indexes[i]);
+                std::span<std::uint32_t> indexes(storage.indexStagingBuffer.data() +
+                                                     model->value.primitives.at(i).indicesOffset,
+                                                 model->value.primitives.at(i).indicesSize);
+                std::span<std::uint32_t> other_indexes(other_storage.indexStagingBuffer.data() +
+                                                           other_model->value.primitives.at(i).indicesOffset,
+                                                       other_model->value.primitives.at(i).indicesSize);
+                REQUIRE(indexes.size() == other_indexes.size());
+                for (unsigned i = 0; i < indexes.size(); i++) REQUIRE(indexes[i] == other_indexes[i]);
+            }
         }
 
         REQUIRE_NOTHROW(other_storage.modelStorage.at("basic_triangle"));
 
-        PRINT_VERTEX(other_storage, 3);
-        VERTEX_CHECK_VEC3(other_storage, 3, pos, 0.00247455505f, -0.00207684329f, 0.00687769148f);
-        VERTEX_CHECK_VEC3(other_storage, 3, normal, -0.937883496f, -0.345936537f, 0.0265043154f);
-        VERTEX_CHECK_VEC3(other_storage, 3, color, 1.0f, 1.0f, 1.0f);
-        VERTEX_CHECK_VEC2(other_storage, 3, texCoord, 0.0681650937f, 0.192196429f);
-        VERTEX_CHECK_VEC4(other_storage, 3, tangent, -0.295275331f, -0.835973203f, -0.462559491f, 1.00000f);
+        VERTEX_CHECK_VEC3(storage, 0, pos, 0.00247455505f, 0.00207684329f, -0.00687769148f);
+        VERTEX_CHECK_VEC3(storage, 0, normal, -0.937883496f, 0.345936537f, -0.0265043154f);
+        VERTEX_CHECK_VEC3(storage, 0, color, 1.0f, 1.0f, 1.0f);
+        VERTEX_CHECK_VEC2(storage, 0, texCoord, 0.0681650937f, 0.192196429f);
+        VERTEX_CHECK_VEC4(storage, 0, tangent, -0.295275331f, -0.835973203f, -0.462559491f, 1.00000f);
 
-        PRINT_VERTEX(other_storage, 1003);
-        VERTEX_CHECK_VEC3(other_storage, 1003, pos, 0.00661812071f, -0.00235924753f, 0.00288167689f);
-        VERTEX_CHECK_VEC3(other_storage, 1003, normal, 0.8339324f, 0.0814492553f, -0.545823038f);
-        VERTEX_CHECK_VEC3(other_storage, 1003, color, 1.0f, 1.0f, 1.0f);
-        VERTEX_CHECK_VEC2(other_storage, 1003, texCoord, 0.90863955f, 0.12404108f);
-        VERTEX_CHECK_VEC4(other_storage, 1003, tangent, -0.114067227f, -0.993130505f, 0.0260791834f, 1.00000f);
+        VERTEX_CHECK_VEC3(storage, 1000, pos, 0.00661812071f, 0.00235924753f, -0.00288167689f);
+        VERTEX_CHECK_VEC3(storage, 1000, normal, 0.8339324f, -0.0814492553f, 0.545823038f);
+        VERTEX_CHECK_VEC3(storage, 1000, color, 1.0f, 1.0f, 1.0f);
+        VERTEX_CHECK_VEC2(storage, 1000, texCoord, 0.90863955f, 0.12404108f);
+        VERTEX_CHECK_VEC4(storage, 1000, tangent, -0.114067227f, -0.993130505f, 0.0260791834f, 1.00000f);
     }
 }

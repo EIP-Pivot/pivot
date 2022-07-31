@@ -35,7 +35,7 @@ struct Model {
     bool operator==(const Model &) const = default;
 };
 
-using ModelNode = Node<std::string, Model>;
+using ModelNode = Node<Model>;
 using ModelPtr = ModelNode::NodePtr;
 
 }    // namespace pivot::graphics::asset

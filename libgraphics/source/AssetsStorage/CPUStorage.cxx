@@ -20,22 +20,21 @@ CPUStorage CPUStorage::default_assets()
                                        quad_mesh_vertices.end());
     storage.indexStagingBuffer.insert(storage.indexStagingBuffer.end(), quad_mesh_indices.begin(),
                                       quad_mesh_indices.end());
-    storage.modelStorage[quad_mesh_id] = std::make_shared<ModelNode>(
-        quad_mesh_id, Model{
-                          .name = quad_mesh_id,
-                          .primitives =
-                              {
-                                  Primitive{
-                                      .vertexOffset = 0,
-                                      .vertexSize = static_cast<std::uint32_t>(quad_mesh_vertices.size()),
-                                      .indicesOffset = 0,
-                                      .indicesSize = static_cast<std::uint32_t>(quad_mesh_indices.size()),
-                                      .default_material = missing_material_name,
-                                      .name = quad_mesh_id,
-                                  },
-                              },
-                          .localMatrix = glm::mat4(1.0f),
-                      });
+    storage.modelStorage[quad_mesh_id] = std::make_shared<ModelNode>(Model{
+        .name = quad_mesh_id,
+        .primitives =
+            {
+                Primitive{
+                    .vertexOffset = 0,
+                    .vertexSize = static_cast<std::uint32_t>(quad_mesh_vertices.size()),
+                    .indicesOffset = 0,
+                    .indicesSize = static_cast<std::uint32_t>(quad_mesh_indices.size()),
+                    .default_material = missing_material_name,
+                    .name = quad_mesh_id,
+                },
+            },
+        .localMatrix = glm::mat4(1.0f),
+    });
     return storage;
 }
 
@@ -60,15 +59,6 @@ std::unordered_map<K, V> merge_map_ignore_dup(const std::unordered_map<K, V> &fi
 
 void CPUStorage::merge(const CPUStorage &other)
 {
-#define TEST_CONTAINS(field)           \
-    for (const auto &[name, _]: field) \
-        if (other.field.contains(name)) throw CPUStorageError("Duplicate key in " #field ": " + name);
-
-    TEST_CONTAINS(modelStorage);
-    TEST_CONTAINS(textureStaging);
-    TEST_CONTAINS(materialStaging);
-#undef TEST_CONTAINS
-
     modelPaths = merge_map_ignore_dup(modelPaths, other.modelPaths);
     texturePaths = merge_map_ignore_dup(texturePaths, other.texturePaths);
 

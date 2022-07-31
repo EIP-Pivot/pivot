@@ -46,8 +46,8 @@ TEST_CASE("Test save scene", "[Scene][save]")
         .eventListener = event,
         .system = &test_save_scene_system,
     };
-    scene.getSystemManager().useSystem(description);
-    scene.getSystemManager().useSystem(description2);
+    scene.registerSystem(description);
+    scene.registerSystem(description2);
     if (!std::filesystem::exists("test")) { std::filesystem::create_directory("test"); }
     scene.save("test/save.json");
     REQUIRE(std::filesystem::exists("test/save.json"));

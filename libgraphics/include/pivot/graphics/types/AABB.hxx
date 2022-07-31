@@ -61,6 +61,7 @@ struct AABB {
         };
     }
 
+    /// Equality operator
     bool operator==(const AABB &) const = default;
 };
 

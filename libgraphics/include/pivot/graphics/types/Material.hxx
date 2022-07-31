@@ -36,6 +36,7 @@ struct Material {
     /// Diffuse Texture
     alignas(4) std::int32_t diffuseTexture = -1;
 
+    /// Equality operator
     bool operator==(const Material &) const = default;
 };
 

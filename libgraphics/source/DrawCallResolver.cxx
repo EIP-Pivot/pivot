@@ -88,7 +88,8 @@ void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sce
         auto model = storage_ref->get().get_optional<asset::ModelPtr>(object.meshID);
         if (!model.has_value()) continue;
         model.value().get()->traverseDown([&](const auto &prefab) mutable {
-            glm::mat4 modelMatrix = transform.getModelMatrix() * prefab.value.localMatrix;
+            glm::mat4 modelMatrix = transform.getModelMatrix();
+            prefab.traverseUp([&modelMatrix](const auto &prefab) { modelMatrix *= prefab.value.localMatrix; });
             for (const auto &primitive: prefab.value.primitives) {
                 frame.pipelineBatch.back().size += 1;
                 frame.packedDraws.push_back(DrawBatch{

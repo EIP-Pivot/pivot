@@ -109,21 +109,20 @@ namespace pivot::graphics::loaders
 {
 
 static asset::ModelPtr loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node,
-                                    std::vector<Vertex> &vertexBuffer, std::vector<std::uint32_t> &indexBuffer,
-                                    const glm::dmat4 &_matrix)
+                                    std::vector<Vertex> &vertexBuffer, std::vector<std::uint32_t> &indexBuffer)
 {
     DEBUG_FUNCTION
     logger.debug("Asset Storage/Gltf") << "Loading node: " << node.name;
 
     // Can't pass as copy, trigger note about GCC ABI
-    glm::dmat4 matrix = _matrix;
+    glm::dmat4 matrix(1.0f);
     if (node.matrix.size() == 16) {
         matrix *= glm::make_mat4x4(node.matrix.data());
     } else {
-        glm::dvec3 translation(0.0f);
+        glm::dvec3 translation;
         if (node.translation.size() == 3) { translation = glm::make_vec3(node.translation.data()); }
 
-        glm::dquat rotation{};
+        glm::dquat rotation;
         if (node.rotation.size() == 4) {
             glm::dquat q = glm::make_quat(node.rotation.data());
             rotation = glm::dmat4(q);
@@ -140,7 +139,7 @@ static asset::ModelPtr loadGltfNode(const tinygltf::Model &gltfModel, const tiny
     loadedNode->value.name = node.name;
     loadedNode->value.localMatrix = matrix;
     for (const auto &i: node.children) {
-        loadedNode->addChild(loadGltfNode(gltfModel, gltfModel.nodes.at(i), vertexBuffer, indexBuffer, matrix));
+        loadedNode->addChild(loadGltfNode(gltfModel, gltfModel.nodes.at(i), vertexBuffer, indexBuffer));
     }
     if (node.mesh <= -1) return loadedNode;
 
@@ -296,8 +295,7 @@ try {
         sceneNode->value.name = scene.name;
         for (const auto &idx: scene.nodes) {
             const auto &node = gltfModel.nodes.at(idx);
-            auto loadedNode =
-                loadGltfNode(gltfModel, node, storage.vertexStagingBuffer, storage.indexStagingBuffer, glm::mat4(1.0f));
+            auto loadedNode = loadGltfNode(gltfModel, node, storage.vertexStagingBuffer, storage.indexStagingBuffer);
             sceneNode->addChild(loadedNode);
             storage.modelStorage[loadedNode->value.name] = loadedNode;
         }

@@ -3,7 +3,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/AssetStorage.hxx"
 
 #ifndef BASE_PATH
     #define BASE_PATH "./"
@@ -17,24 +17,26 @@ using namespace pivot::graphics;
 TEST_CASE("loadObjFile", "[assetStorage]")
 {
 
-    AssetStorage::CPUStorage storage;
+    asset::CPUStorage storage;
 
     SECTION("Return false when incorrect path") { REQUIRE_FALSE(loaders::loadObjModel(pathToGltf).has_value()); }
 
     REQUIRE_NOTHROW(storage = loaders::loadObjModel(pathToObj).value());
 
-    REQUIRE_NOTHROW(storage.prefabStorage.at("basic_cube"));
-    const auto &prefab = storage.prefabStorage.at("basic_cube");
-    REQUIRE(prefab.modelIds.size() == 1);
+    REQUIRE_NOTHROW(storage.modelStorage.at("basic_cube"));
+    const auto &prefab = storage.modelStorage.at("basic_cube");
+    CHECK(prefab->size() == 2);
 
-    REQUIRE_NOTHROW(storage.modelStorage.at("square0"));
-    const auto &model = storage.modelStorage.at("square0");
-    REQUIRE(model.default_material.has_value());
-    REQUIRE(model.default_material == "white");
-    REQUIRE(model.mesh.vertexOffset == 0);
-    REQUIRE(model.mesh.vertexSize == 4);
-    REQUIRE(model.mesh.indicesOffset == 0);
-    REQUIRE(model.mesh.indicesSize == 4);
+    CHECK(prefab->value.primitives.empty());
+
+    {
+        prefab->traverseDown([](const auto &node) {
+            for (const auto &prim: node.value.primitives) {
+                REQUIRE(prim.default_material.has_value());
+                REQUIRE(prim.default_material == asset::missing_material_name);
+            }
+        });
+    }
 
     REQUIRE(storage.vertexStagingBuffer.at(0).pos.x == -50.0f);
     REQUIRE(storage.vertexStagingBuffer.at(0).pos.y == 0.0f);

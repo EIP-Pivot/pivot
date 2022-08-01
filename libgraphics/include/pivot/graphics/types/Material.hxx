@@ -35,6 +35,9 @@ struct Material {
     alignas(4) std::int32_t specularGlossinessTexture = -1;
     /// Diffuse Texture
     alignas(4) std::int32_t diffuseTexture = -1;
+
+    /// Equality operator
+    bool operator==(const Material &) const = default;
 };
 
 static_assert(sizeof(Material) % 4 == 0);

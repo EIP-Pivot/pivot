@@ -60,6 +60,9 @@ struct AABB {
 
         };
     }
+
+    /// Equality operator
+    bool operator==(const AABB &) const = default;
 };
 
 static_assert(sizeof(AABB) % 4 == 0);

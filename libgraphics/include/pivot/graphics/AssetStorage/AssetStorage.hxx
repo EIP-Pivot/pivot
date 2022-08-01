@@ -1,6 +1,12 @@
 #pragma once
 
 #include "pivot/containers/IndexedStorage.hxx"
+#include "pivot/containers/Node.hxx"
+#include "pivot/graphics/AssetStorage/CPUMaterial.hxx"
+#include "pivot/graphics/AssetStorage/CPUStorage.hxx"
+#include "pivot/graphics/AssetStorage/CPUTexture.hxx"
+#include "pivot/graphics/AssetStorage/DefaultRessources.hxx"
+#include "pivot/graphics/AssetStorage/Model.hxx"
 #include "pivot/graphics/DeletionQueue.hxx"
 #include "pivot/graphics/DescriptorAllocator/DescriptorBuilder.hxx"
 #include "pivot/graphics/ThreadPool.hxx"
@@ -46,68 +52,6 @@ public:
     /// Error type for the AssetStorage
     LOGIC_ERROR(AssetStorage);
 
-    /// @brief Represent a mesh in the buffers
-    struct Mesh {
-        /// Starting offset of the mesh in the vertex buffer
-        std::uint32_t vertexOffset;
-        /// Number of vertex forming the mesh.
-        std::uint32_t vertexSize;
-        /// Starting offset of the mesh in the indice buffer
-        std::uint32_t indicesOffset;
-        /// Number of indice forming the mesh.
-        std::uint32_t indicesSize;
-        /// Equality operator
-        constexpr bool operator==(const Mesh &other) const = default;
-    };
-
-    /// @brief Represent a CPU-side material
-    struct CPUMaterial {
-        /// @cond
-        float alphaCutOff = 1.0f;
-        float metallicFactor = 1.0f;
-        float roughnessFactor = 1.0f;
-        glm::vec4 baseColor = glm::vec4(1.0f);
-        glm::vec4 baseColorFactor = glm::vec4(1.0f);
-        glm::vec4 emissiveFactor = glm::vec4(1.0f);
-        std::string baseColorTexture = missing_texture_name;
-        std::string metallicRoughnessTexture = "";
-        std::string normalTexture = "";
-        std::string occlusionTexture = "";
-        std::string emissiveTexture = "";
-        std::string specularGlossinessTexture = "";
-        std::string diffuseTexture = "";
-        bool operator==(const CPUMaterial &) const = default;
-        ///@endcond
-    };
-
-    /// @brief A mesh with a default texture and a default material
-    struct Model {
-        /// Model mesh
-        Mesh mesh;
-        /// Default material id
-        std::optional<std::string> default_material;
-        /// Equality operator
-        bool operator==(const Model &) const = default;
-    };
-
-    /// @brief A group of model
-    struct Prefab {
-        /// The ids of the composing models
-        std::vector<std::string> modelIds;
-        /// Equality operator
-        bool operator==(const Prefab &) const = default;
-    };
-
-    /// @brief Represent a CPU-side Texture
-    struct CPUTexture {
-        /// The vulkan image containing the texture
-        std::vector<std::byte> image;
-        /// The size of the texture
-        vk::Extent3D size;
-        /// Equality operator
-        bool operator==(const CPUTexture &) const = default;
-    };
-
     /// Alias for AllocatedImage
     using Texture = AllocatedImage;
 
@@ -118,57 +62,6 @@ public:
     };
     /// @copydoc BuildFlagBits
     using BuildFlags = Flags<BuildFlagBits>;
-
-    /// Represent the loaded assets before being uploaded to the GPU
-    class CPUStorage
-    {
-    public:
-        /// CPUStorage error type
-        LOGIC_ERROR(CPUStorage);
-
-        /// Merge two CPUStorage together
-        void merge(const CPUStorage &other);
-
-        /// Operator += overload
-        CPUStorage &operator+=(const CPUStorage &other);
-        /// Equality operator
-        bool operator==(const CPUStorage &) const = default;
-
-    public:
-        /// Return a CPUStorage with default asset
-        static CPUStorage default_assets();
-
-    public:
-        /// store the Models
-        std::unordered_map<std::string, Model> modelStorage;
-        /// store the Prefab
-        std::unordered_map<std::string, Prefab> prefabStorage;
-        /// Store the Vertex
-        std::vector<Vertex> vertexStagingBuffer;
-        /// Store the index of the buffer
-        std::vector<std::uint32_t> indexStagingBuffer;
-        /// Store the textures
-        IndexedStorage<std::string, CPUTexture> textureStaging;
-        /// Store the Materials
-        IndexedStorage<std::string, CPUMaterial> materialStaging;
-        /// Store the path of the model currently loaded
-        std::unordered_map<std::string, std::filesystem::path> modelPaths;
-        /// Store the path of the texture currently loaded
-        std::unordered_map<std::string, std::filesystem::path> texturePaths;
-    };
-
-    /// name of the fallback texture if missing
-    static constexpr auto missing_texture_name = "internal/missing_texture";
-    /// data of the default texture
-    static const CPUTexture default_texture_data;
-    /// name of the default material if missing
-    static constexpr auto missing_material_name = "internal/missing_material";
-    /// name of the default quad mesh
-    static constexpr auto quad_mesh = "internal/quad_mesh";
-    /// Vertices of the default mesh
-    static const std::vector<Vertex> quad_vertices;
-    /// Indeices of the default mesh
-    static const std::vector<std::uint32_t> quad_indices;
 
 public:
     /// Constructor
@@ -295,13 +188,7 @@ public:
         return this->modelStorage | std::views::transform([](const auto &i) { return i.first; });
     }
 
-    /// Return the path of all the prefabs currently loaded in the Storage
-    auto getPrefabs() const
-    {
-        return this->prefabStorage | std::views::transform([](const auto &i) { return i.first; });
-    }
-
-    /// Return the path of all the models currently loaded in the Storage
+    /// Return the name of all the models currently loaded in the Storage
     auto getMaterial() const
     {
         return this->materialStorage | std::views::transform([](const auto &i) { return i.first; });
@@ -325,10 +212,10 @@ public:
 
 private:
     /// Load models
-    static std::optional<CPUStorage> loadModel(unsigned, const std::filesystem::path &path);
+    static std::optional<asset::CPUStorage> loadModel(unsigned, const std::filesystem::path &path);
 
     /// Load texture
-    static std::optional<CPUStorage> loadTexture(unsigned, const std::filesystem::path &path);
+    static std::optional<asset::CPUStorage> loadTexture(unsigned, const std::filesystem::path &path);
 
     // Push to gpu
     void pushModelsOnGPU();
@@ -345,8 +232,7 @@ private:
     ThreadPool threadPool;
 
     // Abstract ressouces
-    std::unordered_map<std::string, Model> modelStorage;
-    std::unordered_map<std::string, Prefab> prefabStorage;
+    std::unordered_map<std::string, asset::ModelPtr> modelStorage;
 
     // Buffers
     IndexedStorage<std::string, gpu_object::AABB> meshAABBStorage;
@@ -354,7 +240,7 @@ private:
     IndexedStorage<std::string, gpu_object::Material> materialStorage;
 
     // CPU-side storage
-    CPUStorage cpuStorage = {};
+    asset::CPUStorage cpuStorage = asset::CPUStorage::default_assets();
     std::unordered_map<std::string, std::filesystem::path> modelPaths;
     std::unordered_map<std::string, std::filesystem::path> texturePaths;
 
@@ -372,19 +258,19 @@ private:
 namespace loaders
 {
     /// @brief The function signature of an asset handler
-    using AssetHandler = std::function<std::optional<AssetStorage::CPUStorage>(const std::filesystem::path &)>;
+    using AssetHandler = std::function<std::optional<asset::CPUStorage>(const std::filesystem::path &)>;
 
     /// Load a .obj file
-    std::optional<AssetStorage::CPUStorage> loadObjModel(const std::filesystem::path &path);
+    std::optional<asset::CPUStorage> loadObjModel(const std::filesystem::path &path);
     /// Load a .gltf file
-    std::optional<AssetStorage::CPUStorage> loadGltfModel(const std::filesystem::path &path);
+    std::optional<asset::CPUStorage> loadGltfModel(const std::filesystem::path &path);
 
     /// Load a .png file
-    std::optional<AssetStorage::CPUStorage> loadPngTexture(const std::filesystem::path &path);
+    std::optional<asset::CPUStorage> loadPngTexture(const std::filesystem::path &path);
     /// Load a .jpg file
-    std::optional<AssetStorage::CPUStorage> loadJpgTexture(const std::filesystem::path &path);
+    std::optional<asset::CPUStorage> loadJpgTexture(const std::filesystem::path &path);
     /// Load a .ktx file
-    std::optional<AssetStorage::CPUStorage> loadKtxImage(const std::filesystem::path &path);
+    std::optional<asset::CPUStorage> loadKtxImage(const std::filesystem::path &path);
 
     /// List of supported texture extensions
     const std::unordered_map<std::string, loaders::AssetHandler> supportedTexture = {
@@ -394,7 +280,7 @@ namespace loaders
     };
 
     /// List of supported object extensions
-    const std::unordered_map<std::string, AssetHandler> supportedObject = {
+    const std::unordered_map<std::string, loaders::AssetHandler> supportedObject = {
         {".obj", &loadObjModel},
         {".gltf", &loadGltfModel},
     };
@@ -409,45 +295,37 @@ namespace loaders
 
 template <>
 /// @copydoc AssetStorage::get
-inline const AssetStorage::Prefab &AssetStorage::get(const std::string &p) const
+inline const asset::ModelPtr &AssetStorage::get(const std::string &p) const
 {
-    PIVOT_TEST_CONTAINS(prefabStorage, p);
-    return prefabStorage.at(p);
+    PIVOT_TEST_CONTAINS(modelStorage, p);
+    return modelStorage.at(p);
 }
-
-template <>
-/// @copydoc AssetStorage::get_optional
-inline OptionalRef<const AssetStorage::Prefab> AssetStorage::get_optional(const std::string &p) const
-{
-    auto prefab = prefabStorage.find(p);
-    if (prefab == prefabStorage.end()) return std::nullopt;
-    return prefab->second;
-}
+    #undef PIVOT_TEST_CONTAINS
 
 template <>
 /// @copydoc AssetStorage::get_optional
 inline OptionalRef<const gpu_object::AABB> AssetStorage::get_optional(const std::string &p) const
 {
-    if (meshAABBStorage.contains(p)) { return std::make_optional(std::ref(meshAABBStorage.get(p))); }
+    if (meshAABBStorage.contains(p)) { return std::make_optional(std::ref(meshAABBStorage.at(p))); }
     return std::nullopt;
 }
 
 template <>
 /// @copydoc AssetStorage::get
-inline const AssetStorage::Model &AssetStorage::get(const std::string &p) const
+inline const asset::Model &AssetStorage::get(const std::string &p) const
 {
-    PIVOT_TEST_CONTAINS(modelStorage, p);
-    return modelStorage.at(p);
+    const auto &ptr = get<asset::ModelPtr>(p);
+    return ptr->value;
 }
 
 template <>
-/// @copydoc AssetStorage::get
-inline const AssetStorage::Mesh &AssetStorage::get(const std::string &p) const
+/// @copydoc AssetStorage::get_optional
+inline OptionalRef<const asset::ModelPtr> AssetStorage::get_optional(const std::string &p) const
 {
-    return get<Model>(p).mesh;
+    auto model = modelStorage.find(p);
+    if (model == modelStorage.end()) return std::nullopt;
+    return model->second;
 }
-
-    #undef PIVOT_TEST_CONTAINS
 
 // Get Index of asset in the buffers
 template <>
@@ -462,7 +340,7 @@ template <>
 inline std::int32_t AssetStorage::getIndex<AssetStorage::Texture>(const std::string &i) const
 {
     auto idx = textureStorage.getIndex(i);
-    if (idx == -1) return getIndex<Texture>(missing_texture_name);
+    if (idx == -1) return getIndex<Texture>(asset::missing_texture_name);
     return idx;
 }
 
@@ -471,7 +349,7 @@ template <>
 inline std::int32_t AssetStorage::getIndex<gpu_object::Material>(const std::string &i) const
 {
     auto idx = materialStorage.getIndex(i);
-    if (idx == -1) return getIndex<gpu_object::Material>(missing_material_name);
+    if (idx == -1) return getIndex<gpu_object::Material>(asset::missing_material_name);
     return idx;
 }
 

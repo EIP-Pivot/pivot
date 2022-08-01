@@ -1,7 +1,7 @@
 #pragma once
 
 #include <pivot/ecs/Core/Systems/description.hxx>
-#include <pivot/graphics/AssetStorage.hxx>
+#include <pivot/graphics/AssetStorage/AssetStorage.hxx>
 
 namespace pivot::builtins::systems
 {

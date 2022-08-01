@@ -20,8 +20,8 @@
     #define __pivot_check_failed(expr, msg) (logger.warn(::file_position()) << #expr ": " << msg, void(0))
 
 #else
-    #define pivot_assert(e) void(0);
-    #define pivot_check(e) void(0);
+    #define pivot_assert(expr, msg) void(0);
+    #define pivot_check(expr, msg) void(0);
     #define DEBUG_FUNCTION void(0);
 #endif
 

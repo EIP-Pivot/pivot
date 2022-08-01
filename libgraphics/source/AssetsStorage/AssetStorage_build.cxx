@@ -1,4 +1,4 @@
-#include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/AssetStorage.hxx"
 
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/pivot.hxx"
@@ -6,13 +6,13 @@
 namespace pivot::graphics
 {
 
-static AssetStorage::CPUStorage
+static asset::CPUStorage
 batch_load(const std::unordered_map<std::string, std::filesystem::path> &storage_map,
-           const std::function<std::optional<AssetStorage::CPUStorage>(unsigned, const std::filesystem::path &)> load,
+           const std::function<std::optional<asset::CPUStorage>(unsigned, const std::filesystem::path &)> load,
            const std::string &debug_name, ThreadPool &threadPool)
 {
-    AssetStorage::CPUStorage cpuStorage;
-    std::vector<std::pair<std::filesystem::path, std::future<std::optional<AssetStorage::CPUStorage>>>> futures;
+    asset::CPUStorage cpuStorage;
+    std::vector<std::pair<std::filesystem::path, std::future<std::optional<asset::CPUStorage>>>> futures;
     futures.reserve(storage_map.size());
 
     /// Model must be loaded first, as they may add new texture to load
@@ -33,10 +33,11 @@ void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
     // check for incorrect combination of flags
     pivot_assert(std::popcount(static_cast<std::underlying_type_t<AssetStorage::BuildFlagBits>>(flags)) == 1,
                  "More than one BuildFlag is set !");
+    if (cpuStorage.empty()) {
+        logger.warn(function_name()) << "CPUStorage is empty ! It should at least contains the default assets.";
+    }
 
-    // TODO: better separation of loading ressources
     modelStorage.clear();
-    prefabStorage.clear();
     materialStorage.clear();
     meshAABBStorage.clear();
     for (auto &image: textureStorage.getStorage()) {
@@ -48,7 +49,6 @@ void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
 
     createTextureSampler();
 
-    cpuStorage.merge(CPUStorage::default_assets());
     if (flags & (BuildFlagBits::eReloadOldAssets)) {
         cpuStorage.modelPaths.insert(modelPaths.begin(), modelPaths.end());
         cpuStorage.texturePaths.insert(texturePaths.begin(), texturePaths.end());
@@ -59,11 +59,9 @@ void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
     cpuStorage += batch_load(cpuStorage.texturePaths, loadTexture, "Texture", threadPool);
 
     modelStorage.swap(cpuStorage.modelStorage);
-    prefabStorage.swap(cpuStorage.prefabStorage);
     modelPaths.swap(cpuStorage.modelPaths);
     texturePaths.swap(cpuStorage.texturePaths);
 
-    logger.info("Asset Storage") << prefabStorage.size() << " prefab loaded";
     logger.info("Asset Storage") << "Pushing " << modelStorage.size() << " models onto the GPU";
     pushModelsOnGPU();
 
@@ -75,7 +73,7 @@ void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
 
     createDescriptorSet(builder);
 
-    cpuStorage = {};
+    cpuStorage = asset::CPUStorage::default_assets();
     threadPool.stop();
 }
 
@@ -127,11 +125,14 @@ void AssetStorage::pushModelsOnGPU()
     }
 
     for (const auto &[name, model]: modelStorage) {
-        meshAABBStorage.add(name,
-                            gpu_object::AABB(std::span(cpuStorage.vertexStagingBuffer.begin() + model.mesh.vertexOffset,
-                                                       model.mesh.vertexSize)));
+        for (const auto &primitive: model->value.primitives) {
+            meshAABBStorage.insert(primitive.name, gpu_object::AABB(std::span(cpuStorage.vertexStagingBuffer.begin() +
+                                                                                  primitive.vertexOffset,
+                                                                              primitive.vertexSize)));
+        }
     }
-    pivot_assert(modelStorage.size() == meshAABBStorage.size(), "The Model Storage is bigger than the AABB Storage.");
+    // pivot_assert(modelStorage.size() == meshAABBStorage.size(), "The Model Storage is bigger than the AABB
+    // Storage.");
 
     copy_with_staging_buffer(base_ref->get(), vk::BufferUsageFlagBits::eVertexBuffer, cpuStorage.vertexStagingBuffer,
                              vertexBuffer);
@@ -154,7 +155,7 @@ void AssetStorage::pushTexturesOnGPU()
         return;
     }
     for (auto &[name, idx]: cpuStorage.textureStaging) {
-        auto &img = cpuStorage.textureStaging.get(idx);
+        auto &img = cpuStorage.textureStaging.at(idx);
         auto stagingBuffer = base_ref->get().allocator.createBuffer<std::byte>(
             img.image.size(), vk::BufferUsageFlagBits::eTransferSrc, vma::MemoryUsage::eCpuToGpu);
         base_ref->get().allocator.copyBuffer(stagingBuffer, std::span(img.image));
@@ -184,7 +185,7 @@ void AssetStorage::pushTexturesOnGPU()
         base_ref->get().generateMipmaps(image, image.mipLevels);
 
         base_ref->get().allocator.destroyBuffer(stagingBuffer);
-        textureStorage.add(name, std::move(image));
+        textureStorage.insert(name, std::move(image));
     }
 }
 
@@ -197,7 +198,7 @@ void AssetStorage::pushMaterialOnGPU()
     }
     for (auto &[name, idx]: cpuStorage.materialStaging) {
         const auto &mat = cpuStorage.materialStaging.getStorage()[idx];
-        materialStorage.add(
+        materialStorage.insert(
             name,
             {
                 .alphaCutOff = mat.alphaCutOff,

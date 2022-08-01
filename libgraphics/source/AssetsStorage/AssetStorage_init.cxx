@@ -1,4 +1,4 @@
-#include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/AssetStorage.hxx"
 
 #include "pivot/graphics/types/vk_types.hxx"
 #include "pivot/graphics/vk_debug.hxx"

@@ -29,9 +29,8 @@ VulkanApplication::VulkanApplication()
         bEnableValidationLayers = false;
     }
     window.setIcon(iconFilepath);
-    window.addKeyPressCallback(Window::Key::ESCAPE, [](Window &window, const Window::Key, const Window::Modifier) {
-        window.shouldClose(true);
-    });
+    window.addKeyPressCallback(Window::Key::ESCAPE,
+                               [](Window &win, const Window::Key, const Window::Modifier) { win.shouldClose(true); });
     window.addKeyPressCallback(Window::Key::G, [this](Window &, const Window::Key, const Window::Modifier modifier) {
         if (modifier & Window::ModifierBits::Ctrl) { allocator.dumpStats(); }
     });

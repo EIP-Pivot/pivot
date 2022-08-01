@@ -1,4 +1,4 @@
-#include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/AssetStorage.hxx"
 
 #include "pivot/pivot.hxx"
 
@@ -89,7 +89,7 @@ bool AssetStorage::addTexture(const std::vector<std::filesystem::path> &path)
     return load == path.size();
 }
 
-std::optional<AssetStorage::CPUStorage> AssetStorage::loadModel(unsigned thread_id, const std::filesystem::path &path)
+std::optional<asset::CPUStorage> AssetStorage::loadModel(unsigned thread_id, const std::filesystem::path &path)
 try {
     auto extension = path.extension().string();
     if (!loaders::supportedObject.contains(extension))
@@ -102,7 +102,7 @@ try {
     return std::nullopt;
 }
 
-std::optional<AssetStorage::CPUStorage> AssetStorage::loadTexture(unsigned thread_id, const std::filesystem::path &path)
+std::optional<asset::CPUStorage> AssetStorage::loadTexture(unsigned thread_id, const std::filesystem::path &path)
 try {
     auto extension = path.extension().string();
     if (!loaders::supportedTexture.contains(extension))

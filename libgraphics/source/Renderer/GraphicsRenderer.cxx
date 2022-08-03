@@ -50,7 +50,7 @@ bool GraphicsRenderer::onDraw(const RenderingContext &context, const CameraData 
     };
     const vk::Viewport viewport{
         .x = static_cast<float>(context.renderArea.offset.x),
-        .y = static_cast<float>(context.renderArea.offset.x),
+        .y = static_cast<float>(context.renderArea.offset.y),
         .width = static_cast<float>(context.renderArea.extent.width),
         .height = static_cast<float>(context.renderArea.extent.height),
         .minDepth = 0.0f,

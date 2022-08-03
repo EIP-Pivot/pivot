@@ -182,12 +182,21 @@ try {
             .offset = {0, 0},
             .extent = swapchain.getSwapchainExtent(),
         }),
+        .viewport = swapchain.getSwapchainExtent(),
     };
+    context.renderArea.extent.height = std::max(context.renderArea.extent.height, 1u);
+    context.renderArea.extent.width = std::max(context.renderArea.extent.width, 1u);
+    context.renderArea.offset.x = std::max(context.renderArea.offset.x, 0);
+    context.renderArea.offset.y = std::max(context.renderArea.offset.y, 0);
 
     vk::RenderPassBeginInfo renderPassInfo{
         .renderPass = renderPass.getRenderPass(),
         .framebuffer = swapChainFramebuffers.at(imageIndex),
-        .renderArea = context.renderArea,
+        .renderArea =
+            {
+                .offset = {0, 0},
+                .extent = swapchain.getSwapchainExtent(),
+            },
         .clearValueCount = clearValues.size(),
         .pClearValues = clearValues.data(),
     };

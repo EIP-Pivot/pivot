@@ -20,6 +20,7 @@ struct StorageUtils {
 
 struct RenderingContext {
     vk::Rect2D renderArea;
+    vk::Extent2D viewport;
 };
 
 /// Root interface for the Renderers

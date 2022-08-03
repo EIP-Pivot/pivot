@@ -6,7 +6,9 @@ void SceneEditor::create()
     ImGui::Begin("Scene");
     ImGui::PopStyleVar();
     {
-        ImGui::BeginChild("RenderViewport", ImVec2(0, 0));
+        ImGui::BeginChild("RenderViewport", ImVec2(0.0f, 0.0f));
+        size = ImGui::GetContentRegionAvail();
+        offset = ImGui::GetWindowPos();
         ImGui::EndChild();
     }
     if (ImGui::BeginDragDropTarget()) {

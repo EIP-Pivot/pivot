@@ -162,6 +162,18 @@ public:
         }
         UpdateCamera(dt);
         ImGuiManager::render();
+        this->setRenderArea(vk::Rect2D{
+            .offset =
+                {
+                    .x = static_cast<int32_t>(sceneEditor.offset.x),
+                    .y = static_cast<int32_t>(sceneEditor.offset.y),
+                },
+            .extent =
+                {
+                    .width = static_cast<uint32_t>(sceneEditor.size.x),
+                    .height = static_cast<uint32_t>(sceneEditor.size.y),
+                },
+        });
     }
 
 public:

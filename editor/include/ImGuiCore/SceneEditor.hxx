@@ -8,4 +8,8 @@ class SceneEditor
 {
 public:
     void create();
+
+public:
+    ImVec2 offset;
+    ImVec2 size;
 };

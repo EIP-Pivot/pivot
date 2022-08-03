@@ -42,8 +42,17 @@ protected:
     ecs::script::Engine m_scripting_engine;
     builtins::Camera m_camera;
     bool m_paused = true;
+    std::optional<vk::Rect2D> renderArea = std::nullopt;
 
-    virtual void onTick([[maybe_unused]] float delta){};
+    virtual void onTick([[maybe_unused]] float delta) {}
+    void setRenderArea(vk::Rect2D renderArea)
+    {
+        logger.debug("Engine/setRenderArea")
+            << "Offset { .x = " << renderArea.offset.x << ", .y = " << renderArea.offset.y << ", }";
+        logger.debug("Engine/setRenderArea")
+            << "Extent { .width = " << renderArea.extent.width << ", .height = " << renderArea.extent.height << ", }";
+        this->renderArea = renderArea;
+    }
     ecs::CurrentScene getCurrentScene() { return m_scene_manager; };
     const ecs::SceneManager &getSceneManager() { return m_scene_manager; };
 

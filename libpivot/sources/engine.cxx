@@ -51,8 +51,8 @@ Engine::Engine()
     m_system_index.registerSystem(builtins::systems::testTickSystem);
 
     m_vulkan_application.addRenderer<pivot::graphics::CullingRenderer>();
-    m_vulkan_application.addRenderer<pivot::graphics::GraphicsRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::ImGuiRenderer>();
+    m_vulkan_application.addRenderer<pivot::graphics::GraphicsRenderer>();
     m_vulkan_application.init();
 
     m_vulkan_application.window.addGlobalKeyPressCallback(std::bind_front(&Engine::onKeyPressed, this));
@@ -69,11 +69,15 @@ void Engine::run()
 
         this->onTick(dt);
 
-        auto aspectRatio = m_vulkan_application.getAspectRatio();
+        float aspectRatio =
+            (renderArea.has_value())
+                ? (static_cast<float>(renderArea->extent.width) / static_cast<float>(renderArea->extent.height))
+                : (m_vulkan_application.getAspectRatio());
 
         if (m_current_scene_draw_command)
             m_vulkan_application.draw(m_current_scene_draw_command.value(),
-                                      pivot::internals::getGPUCameraData(m_camera, Engine::fov, aspectRatio));
+                                      pivot::internals::getGPUCameraData(m_camera, Engine::fov, aspectRatio),
+                                      renderArea);
 
         if (!m_paused) {
             m_scene_manager.getCurrentScene().getEventManager().sendEvent(

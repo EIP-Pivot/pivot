@@ -71,7 +71,8 @@ public:
     /// @arg camera The information about the camera
     ///
     /// You must have already loaded your models and texture !
-    void draw(DrawCallResolver::DrawSceneInformation sceneInformation, const CameraData &camera);
+    void draw(DrawCallResolver::DrawSceneInformation sceneInformation, const CameraData &camera,
+              std::optional<vk::Rect2D> renderArea = std::nullopt);
 
     /// @brief get Swapchain aspect ratio
     constexpr float getAspectRatio() const noexcept { return swapchain.getAspectRatio(); }

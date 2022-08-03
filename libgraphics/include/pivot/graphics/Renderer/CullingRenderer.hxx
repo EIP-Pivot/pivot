@@ -23,7 +23,8 @@ public:
     bool onRecreate(const vk::Extent2D &size, VulkanBase &base_ref, const vk::DescriptorSetLayout &resolverLayout,
                     vk::RenderPass &pass) override;
 
-    bool onDraw(const CameraData &cameraData, DrawCallResolver &resolver, vk::CommandBuffer &cmd) override;
+    bool onDraw(const RenderingContext &context, const CameraData &cameraData, DrawCallResolver &resolver,
+                vk::CommandBuffer &cmd) override;
 
 private:
     void createPipelineLayout(vk::Device &device, const vk::DescriptorSetLayout &resolverLayout);

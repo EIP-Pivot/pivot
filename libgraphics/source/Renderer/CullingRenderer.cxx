@@ -31,7 +31,8 @@ bool CullingRenderer::onRecreate(const vk::Extent2D &, VulkanBase &base_ref,
     return true;
 }
 
-bool CullingRenderer::onDraw(const CameraData &cameraData, DrawCallResolver &resolver, vk::CommandBuffer &cmd)
+bool CullingRenderer::onDraw(const RenderingContext &, const CameraData &cameraData, DrawCallResolver &resolver,
+                             vk::CommandBuffer &cmd)
 {
     const gpu_object::CullingPushConstant cullingCamera{
         .viewProjection = cameraData.viewProjection,

@@ -44,7 +44,7 @@ bool ImGuiRenderer::onRecreate(const vk::Extent2D &, VulkanBase &, const vk::Des
     return true;
 }
 
-bool ImGuiRenderer::onDraw(const CameraData &, DrawCallResolver &, vk::CommandBuffer &cmd)
+bool ImGuiRenderer::onDraw(const RenderingContext &, const CameraData &, DrawCallResolver &, vk::CommandBuffer &cmd)
 {
     vk_debug::beginRegion(cmd, "Imgui Commands", {1.f, 0.f, 0.f, 1.f});
     if (auto imguiData = ImGui::GetDrawData(); imguiData != nullptr) {

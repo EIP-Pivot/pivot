@@ -152,7 +152,8 @@ void VulkanApplication::recreateSwapchain()
     postInitialization();
 }
 
-void VulkanApplication::draw(DrawCallResolver::DrawSceneInformation sceneInformation, const CameraData &cameraData)
+void VulkanApplication::draw(DrawCallResolver::DrawSceneInformation sceneInformation, const CameraData &cameraData,
+                             std::optional<vk::Rect2D> renderArea)
 try {
     pivot_assert(!graphicsRenderer.empty() && !computeRenderer.empty(), "No Render are setup");
     pivot_assert(currentFrame < PIVOT_MAX_FRAMES_IN_FLIGHT,
@@ -175,14 +176,18 @@ try {
     std::array<vk::ClearValue, 2> clearValues{};
     clearValues.at(0).color = vk::ClearColorValue{vClearColor};
     clearValues.at(1).depthStencil = vk::ClearDepthStencilValue{1.0f, 0};
+
+    RenderingContext context{
+        .renderArea = renderArea.value_or(vk::Rect2D{
+            .offset = {0, 0},
+            .extent = swapchain.getSwapchainExtent(),
+        }),
+    };
+
     vk::RenderPassBeginInfo renderPassInfo{
         .renderPass = renderPass.getRenderPass(),
         .framebuffer = swapChainFramebuffers.at(imageIndex),
-        .renderArea =
-            {
-                .offset = {0, 0},
-                .extent = swapchain.getSwapchainExtent(),
-            },
+        .renderArea = context.renderArea,
         .clearValueCount = clearValues.size(),
         .pClearValues = clearValues.data(),
     };
@@ -192,9 +197,9 @@ try {
     };
     vk_utils::vk_try(cmd.begin(&beginInfo));
     vk_debug::beginRegion(cmd, "main command", {1.f, 1.f, 1.f, 1.f});
-    for (auto &rendy: computeRenderer) rendy->onDraw(cameraData, frame.drawResolver, cmd);
+    for (auto &rendy: computeRenderer) rendy->onDraw(context, cameraData, frame.drawResolver, cmd);
     cmd.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
-    for (auto &rendy: graphicsRenderer) rendy->onDraw(cameraData, frame.drawResolver, cmd);
+    for (auto &rendy: graphicsRenderer) rendy->onDraw(context, cameraData, frame.drawResolver, cmd);
     cmd.endRenderPass();
     vk_debug::endRegion(cmd);
     cmd.end();

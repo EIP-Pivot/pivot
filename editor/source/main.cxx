@@ -151,13 +151,13 @@ public:
 
         editor.create(*this, m_vulkan_application.pipelineStorage);
         m_paused = !editor.getRun();
+        sceneEditor.create();
         if (m_paused) {
             editor.setAspectRatio(m_vulkan_application.getAspectRatio());
             entity.create();
             entity.hasSelected() ? componentEditor.create(entity.getEntitySelected()) : componentEditor.create();
             systemsEditor.create();
             assetBrowser.create();
-            sceneEditor.create();
             if (entity.hasSelected()) { editor.DisplayGuizmo(entity.getEntitySelected(), m_camera); }
         }
         UpdateCamera(dt);

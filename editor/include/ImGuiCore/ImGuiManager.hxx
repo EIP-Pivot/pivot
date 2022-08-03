@@ -18,9 +18,12 @@ public:
     };
 
 public:
-    ImGuiManager(const pivot::ecs::SceneManager &sceneManager): m_sceneManager(sceneManager){};
-    void newFrame(pivot::Engine &engine);
-    void render();
+    ImGuiManager(const pivot::ecs::SceneManager &sceneManager, pivot::Engine &engine)
+        : m_sceneManager(sceneManager), m_engine(engine){};
+    void newFrame();
+    void dockSpace();
+    void menuBar();
+    static void render();
 
     template <FileAction A>
     bool handleFile(const std::string &buttonText, const std::string &successText, const std::string &errorText,
@@ -78,4 +81,5 @@ public:
 
 private:
     const pivot::ecs::SceneManager &m_sceneManager;
+    pivot::Engine &m_engine;
 };

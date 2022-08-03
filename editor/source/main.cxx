@@ -52,7 +52,7 @@ class Application : public pivot::Engine
 public:
     Application()
         : Engine(),
-          imGuiManager(getSceneManager()),
+          imGuiManager(getSceneManager(), *this),
           editor(getSceneManager(), getCurrentScene()),
           entity(getCurrentScene()),
           componentEditor(m_component_index, getCurrentScene()),
@@ -167,7 +167,7 @@ public:
 
     void onTick(float dt) override
     {
-        imGuiManager.newFrame(*this);
+        imGuiManager.newFrame();
 
         editor.create(*this, m_vulkan_application.pipelineStorage);
         m_paused = !editor.getRun();
@@ -181,7 +181,7 @@ public:
             if (entity.hasSelected()) { editor.DisplayGuizmo(entity.getEntitySelected(), m_camera); }
         }
         UpdateCamera(dt);
-        imGuiManager.render();
+        ImGuiManager::render();
     }
 
 public:

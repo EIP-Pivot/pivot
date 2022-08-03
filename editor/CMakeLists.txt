@@ -39,6 +39,7 @@ add_executable(
     source/ImGuiCore/ComponentEditor.cxx
     source/ImGuiCore/SystemsEditor.cxx
     source/ImGuiCore/AssetBrowser.cxx
+    source/ImGuiCore/SceneEditor.cxx
 )
 target_compile_options(
     ${PROJECT_NAME}

@@ -13,12 +13,13 @@ void ImGuiManager::newFrame()
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
     ImGuizmo::BeginFrame();
+    menuBar();
     dockSpace();
 }
 
 void ImGuiManager::dockSpace()
 {
-    ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking;
     window_flags |=
         ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
     window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
@@ -33,7 +34,6 @@ void ImGuiManager::dockSpace()
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
     static bool p_open = true;
-    static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
     ImGui::Begin("Main", &p_open, window_flags);
 
     ImGui::PopStyleVar(3);
@@ -41,10 +41,8 @@ void ImGuiManager::dockSpace()
     ImGuiIO &io = ImGui::GetIO();
     if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
         ImGuiID dockspace_id = ImGui::GetID("DockSpace");
-        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
     }
-
-    menuBar();
 
     ImGui::End();
 }
@@ -52,7 +50,7 @@ void ImGuiManager::dockSpace()
 void ImGuiManager::menuBar()
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{10.0f, 10.0f});
-    if (ImGui::BeginMenuBar()) {
+    if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
             handleFile<FileAction::Save>(
                 "Save Scene", "Scene correctly saved.", "Failed to save the scene, please check the log.",
@@ -82,7 +80,7 @@ void ImGuiManager::menuBar()
                 });
             ImGui::EndMenu();
         }
-        ImGui::EndMenuBar();
+        ImGui::EndMainMenuBar();
     }
     ImGui::PopStyleVar();
 }

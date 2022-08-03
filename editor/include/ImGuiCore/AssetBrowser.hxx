@@ -2,9 +2,6 @@
 
 #include <imgui.h>
 
-// Must be after imgui
-#include <ImGuizmo.h>
-
 #include <pivot/ecs/Core/Data/value.hxx>
 #include <pivot/ecs/Core/SceneManager.hxx>
 #include <pivot/graphics/AssetStorage.hxx>

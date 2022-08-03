@@ -1,35 +1,16 @@
-#include <chrono>
 #include <iostream>
-#include <random>
 
-#include <pivot/graphics/VulkanApplication.hxx>
 #include <pivot/graphics/Window.hxx>
-#include <pivot/graphics/types/RenderObject.hxx>
 #include <pivot/graphics/vk_utils.hxx>
-
-#include <pivot/ecs/Components/Gravity.hxx>
-#include <pivot/ecs/Components/RigidBody.hxx>
-#include <pivot/ecs/Components/Tag.hxx>
-
-#include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
 
 #include <pivot/builtins/systems/ControlSystem.hxx>
 #include <pivot/internal/camera.hxx>
 
-#include <pivot/ecs/Core/Systems/description.hxx>
-#include <pivot/ecs/Core/Systems/index.hxx>
-
 #include <pivot/ecs/Core/Event/description.hxx>
-#include <pivot/ecs/Core/Event/index.hxx>
-
-#include "pivot/graphics/Renderer/CullingRenderer.hxx"
-#include "pivot/graphics/Renderer/GraphicsRenderer.hxx"
-#include "pivot/graphics/Renderer/ImGuiRenderer.hxx"
 
 #include <pivot/ecs/Core/Scene.hxx>
 #include <pivot/ecs/Core/SceneManager.hxx>
 
-#include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
 
@@ -39,9 +20,9 @@
 #include "ImGuiCore/Editor.hxx"
 #include "ImGuiCore/EntityModule.hxx"
 #include "ImGuiCore/ImGuiManager.hxx"
+#include "ImGuiCore/SceneEditor.hxx"
 #include "ImGuiCore/SystemsEditor.hxx"
 
-#include <pivot/builtins/events/tick.hxx>
 #include <pivot/engine.hxx>
 
 using namespace pivot::ecs;
@@ -177,7 +158,7 @@ public:
             entity.hasSelected() ? componentEditor.create(entity.getEntitySelected()) : componentEditor.create();
             systemsEditor.create();
             assetBrowser.create();
-
+            sceneEditor.create();
             if (entity.hasSelected()) { editor.DisplayGuizmo(entity.getEntitySelected(), m_camera); }
         }
         UpdateCamera(dt);
@@ -191,6 +172,7 @@ public:
     ComponentEditor componentEditor;
     SystemsEditor systemsEditor;
     AssetBrowser assetBrowser;
+    SceneEditor sceneEditor;
     glm::dvec2 last;
 
     bool bFirstMouse = true;

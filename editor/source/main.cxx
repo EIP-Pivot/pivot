@@ -50,7 +50,6 @@ public:
 
         Scene &scene = *getCurrentScene();
 
-        window.captureCursor(true);
         window.addKeyReleaseCallback(Window::Key::LEFT_ALT,
                                      [&](Window &window, const Window::Key, const Window::Modifier) {
                                          window.captureCursor(!window.captureCursor());

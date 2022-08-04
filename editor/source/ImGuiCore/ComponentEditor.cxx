@@ -2,6 +2,8 @@
 #include "ImGuiCore/TypeTemplate/Template.hxx"
 #include <magic_enum.hpp>
 
+#include <imgui.h>
+
 using namespace pivot::ecs;
 using namespace pivot::ecs::component;
 using namespace pivot::ecs::data;

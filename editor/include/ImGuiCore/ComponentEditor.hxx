@@ -1,10 +1,5 @@
 #pragma once
 
-#include <imgui.h>
-
-// Must be after imgui
-#include <ImGuizmo.h>
-
 #include <glm/gtc/type_ptr.hpp>
 
 #include <pivot/ecs/Core/types.hxx>

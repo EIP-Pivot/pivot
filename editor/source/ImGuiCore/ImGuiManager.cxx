@@ -92,4 +92,8 @@ void ImGuiManager::menuBar()
     ImGui::PopStyleVar();
 }
 
-void ImGuiManager::render() { ImGui::Render(); }
+void ImGuiManager::render()
+{
+    ImGui::Render();
+    // ImGui::UpdatePlatformWindows();
+}

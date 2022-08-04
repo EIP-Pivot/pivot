@@ -5,7 +5,6 @@
 #include <pivot/ecs/Core/Component/description.hxx>
 #include <pivot/ecs/Core/Data/value.hxx>
 
-#include <ImGuizmo.h>
 #include <imgui.h>
 #include <misc/cpp/imgui_stdlib.h>
 

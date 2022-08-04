@@ -158,7 +158,9 @@ public:
             entity.hasSelected() ? componentEditor.create(entity.getEntitySelected()) : componentEditor.create();
             systemsEditor.create();
             assetBrowser.create();
-            if (entity.hasSelected()) { editor.DisplayGuizmo(entity.getEntitySelected(), m_camera); }
+            if (entity.hasSelected()) {
+                editor.DisplayGuizmo(entity.getEntitySelected(), m_camera, sceneEditor.offset, sceneEditor.size);
+            }
         }
         UpdateCamera(dt);
         ImGuiManager::render();

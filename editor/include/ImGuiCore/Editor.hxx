@@ -27,7 +27,7 @@ public:
 
     bool getRun();
     void setAspectRatio(float aspect);
-    void DisplayGuizmo(Entity entity, const pivot::builtins::Camera &camera);
+    void DisplayGuizmo(Entity entity, const pivot::builtins::Camera &camera, const ImVec2 &offset, const ImVec2 &size);
 
 private:
     void createPopUp(pivot::Engine &engine);

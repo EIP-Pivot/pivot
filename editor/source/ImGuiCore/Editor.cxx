@@ -105,7 +105,8 @@ bool Editor::getRun() { return run; }
 
 void Editor::setAspectRatio(float aspect) { aspectRatio = aspect; }
 
-void Editor::DisplayGuizmo(Entity entity, const pivot::builtins::Camera &camera)
+void Editor::DisplayGuizmo(Entity entity, const pivot::builtins::Camera &camera, const ImVec2 &offset,
+                           const ImVec2 &size)
 {
     using Transform = pivot::builtins::components::Transform;
 
@@ -123,8 +124,7 @@ void Editor::DisplayGuizmo(Entity entity, const pivot::builtins::Camera &camera)
     pivot::graphics::Transform &transform = ro_array.getData()[entity];
     auto matrix = transform.getModelMatrix();
     float *matrix_data = glm::value_ptr(matrix);
-    ImGuiIO &io = ImGui::GetIO();
-    ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+    ImGuizmo::SetRect(offset.x, offset.y, size.x, size.y);
     glm::mat4x4 delta_matrix;
     bool changed = ImGuizmo::Manipulate(view_ptr, projection_ptr, currentGizmoOperation, currentGizmoMode, matrix_data,
                                         glm::value_ptr(delta_matrix), useSnap ? &snap[0] : NULL);

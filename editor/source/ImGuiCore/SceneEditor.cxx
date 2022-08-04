@@ -1,5 +1,7 @@
 #include "ImGuiCore/SceneEditor.hxx"
 
+#include <ImGuizmo.h>
+
 void SceneEditor::create()
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
@@ -7,6 +9,10 @@ void SceneEditor::create()
     ImGui::PopStyleVar();
     {
         ImGui::BeginChild("RenderViewport", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_NoBackground);
+
+        ImGuizmo::SetOrthographic(false);
+        ImGuizmo::SetDrawlist();
+
         size = ImGui::GetContentRegionAvail();
         offset = ImGui::GetWindowPos();
         ImGui::EndChild();

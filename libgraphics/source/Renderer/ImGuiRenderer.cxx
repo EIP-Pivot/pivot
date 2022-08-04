@@ -84,8 +84,18 @@ void ImGuiRenderer::createDescriptorPool(vk::Device &device)
 
 void ImGuiRenderer::createImGuiContext(VulkanBase &base_ref, vk::RenderPass &pass)
 {
+    IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+    ImGuiIO &io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+    ImGui::StyleColorsDark();
+
+    ImGuiStyle &style = ImGui::GetStyle();
+    style.WindowRounding = 0.0f;
+    style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+
     ImGui_ImplGlfw_InitForVulkan(base_ref.window.getWindow(), true);
 
     ImGui_ImplVulkan_InitInfo init_info{};

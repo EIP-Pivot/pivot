@@ -51,8 +51,8 @@ Engine::Engine()
     m_system_index.registerSystem(builtins::systems::testTickSystem);
 
     m_vulkan_application.addRenderer<pivot::graphics::CullingRenderer>();
-    m_vulkan_application.addRenderer<pivot::graphics::ImGuiRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::GraphicsRenderer>();
+    m_vulkan_application.addRenderer<pivot::graphics::ImGuiRenderer>();
     m_vulkan_application.init();
 
     m_vulkan_application.window.addGlobalKeyPressCallback(std::bind_front(&Engine::onKeyPressed, this));

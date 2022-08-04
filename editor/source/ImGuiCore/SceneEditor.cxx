@@ -3,12 +3,10 @@
 void SceneEditor::create()
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::Begin("Scene");
+    ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoBackground);
     ImGui::PopStyleVar();
     {
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(ImColor(0, 0, 0)));
-        ImGui::BeginChild("RenderViewport", ImVec2(0.0f, 0.0f));
-        ImGui::PopStyleColor();
+        ImGui::BeginChild("RenderViewport", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_NoBackground);
         size = ImGui::GetContentRegionAvail();
         offset = ImGui::GetWindowPos();
         ImGui::EndChild();

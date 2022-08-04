@@ -6,6 +6,7 @@
 #include <ImGuizmo.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
+#include <imgui_internal.h>
 
 void ImGuiManager::newFrame()
 {
@@ -47,7 +48,7 @@ void ImGuiManager::dockSpace()
 
             ImGuiID dockspace_id = ImGui::GetID("DockSpace");
             ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags, nullptr);
-
+            m_centerDockId = ImGui::DockBuilderGetCentralNode(dockspace_id)->ID;
             ImGui::PopStyleColor();
         }
     }
@@ -97,3 +98,4 @@ void ImGuiManager::render()
     ImGui::Render();
     // ImGui::UpdatePlatformWindows();
 }
+ImGuiID ImGuiManager::getCenterDockId() { return m_centerDockId; }

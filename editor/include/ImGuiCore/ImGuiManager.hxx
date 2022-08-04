@@ -19,11 +19,12 @@ public:
 
 public:
     ImGuiManager(const pivot::ecs::SceneManager &sceneManager, pivot::Engine &engine)
-        : m_sceneManager(sceneManager), m_engine(engine){};
+        : m_sceneManager(sceneManager), m_engine(engine), m_centerDockId(0){};
     void newFrame();
     void dockSpace();
     void menuBar();
     static void render();
+    ImGuiID getCenterDockId();
 
     template <FileAction A>
     bool handleFile(const std::string &buttonText, const std::string &successText, const std::string &errorText,
@@ -82,4 +83,5 @@ public:
 private:
     const pivot::ecs::SceneManager &m_sceneManager;
     pivot::Engine &m_engine;
+    ImGuiID m_centerDockId{};
 };

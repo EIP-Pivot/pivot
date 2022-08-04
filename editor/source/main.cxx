@@ -38,7 +38,8 @@ public:
           entity(getCurrentScene()),
           componentEditor(m_component_index, getCurrentScene()),
           systemsEditor(m_system_index, m_component_index, getCurrentScene()),
-          assetBrowser(m_vulkan_application.assetStorage, getCurrentScene())
+          assetBrowser(m_vulkan_application.assetStorage, getCurrentScene()),
+          sceneEditor(imGuiManager)
     {
     }
 

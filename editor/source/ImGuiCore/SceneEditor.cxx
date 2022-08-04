@@ -5,7 +5,8 @@
 void SceneEditor::create()
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoBackground);
+    ImGui::SetNextWindowDockID(m_imGuiManager.getCenterDockId());
+    ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove);
     ImGui::PopStyleVar();
     {
         ImGui::BeginChild("RenderViewport", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_NoBackground);

@@ -29,7 +29,7 @@ void ImGuiManager::dockSpace()
         ImGui::SetNextWindowSize(viewport->WorkSize);
         ImGui::SetNextWindowViewport(viewport->ID);
 
-        ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
+        ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_NoDockingInCentralNode;
         ImGuiWindowFlags host_window_flags = 0;
         host_window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
                              ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking;
@@ -48,7 +48,10 @@ void ImGuiManager::dockSpace()
 
             ImGuiID dockspace_id = ImGui::GetID("DockSpace");
             ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags, nullptr);
-            m_centerDockId = ImGui::DockBuilderGetCentralNode(dockspace_id)->ID;
+            if (ImGuiDockNode* node = ImGui::DockBuilderGetCentralNode(dockspace_id)) {
+                m_centerDockId = node->ID;
+                node->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
+            }
             ImGui::PopStyleColor();
         }
     }

@@ -97,11 +97,8 @@ void VulkanApplication::initVulkanRessources()
         rendy->onInit(*this, frames[0].drawResolver.getDescriptorSetLayout());
     });
 
-    postInitialization();
     logger.info("Vulkan Application") << "Initialisation complete !";
 }
-
-void VulkanApplication::postInitialization() {}
 
 void VulkanApplication::buildAssetStorage(AssetStorage::BuildFlags flags)
 {
@@ -148,12 +145,11 @@ void VulkanApplication::recreateSwapchain()
     logger.info("Swapchain recreation") << "New height = " << swapchain.getSwapchainExtent().height
                                         << ", New width =" << swapchain.getSwapchainExtent().width
                                         << ", numberOfImage = " << swapchain.nbOfImage();
-
-    postInitialization();
 }
 
-void VulkanApplication::draw(DrawCallResolver::DrawSceneInformation sceneInformation, const CameraData &cameraData,
-                             std::optional<vk::Rect2D> renderArea)
+VulkanApplication::DrawResult VulkanApplication::draw(DrawCallResolver::DrawSceneInformation sceneInformation,
+                                                      const CameraData &cameraData,
+                                                      std::optional<vk::Rect2D> renderArea)
 try {
     pivot_assert(!graphicsRenderer.empty() && !computeRenderer.empty(), "No Render are setup");
     pivot_assert(currentFrame < PIVOT_MAX_FRAMES_IN_FLIGHT,
@@ -244,8 +240,14 @@ try {
     };
     vk_utils::vk_try(presentQueue.presentKHR(presentInfo));
     currentFrame = (currentFrame + 1) % PIVOT_MAX_FRAMES_IN_FLIGHT;
-} catch (const vk::OutOfDateKHRError &) {
-    return recreateSwapchain();
+    return DrawResult::Success;
+} catch (const vk::OutOfDateKHRError &e) {
+    logger.debug("VulkanApplication/OutOfDateKHRError") << e.what();
+    recreateSwapchain();
+    return DrawResult::FrameSkipped;
+} catch (const vk::Error &e) {
+    logger.debug("VulkanApplication/Vulkan Error") << e.what();
+    return DrawResult::Error;
 }
 
 }    // namespace pivot::graphics

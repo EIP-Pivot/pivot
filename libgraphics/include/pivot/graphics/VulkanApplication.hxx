@@ -54,6 +54,12 @@ public:
     requires std::is_base_of_v<IRenderer, T>
     using RendererStorage = std::vector<std::unique_ptr<T>>;
 
+    enum class DrawResult {
+        Error = -1,
+        Success = 0,
+        FrameSkipped = 1,
+    };
+
 public:
     /// Default constructor
     VulkanApplication();
@@ -71,8 +77,8 @@ public:
     /// @arg camera The information about the camera
     ///
     /// You must have already loaded your models and texture !
-    void draw(DrawCallResolver::DrawSceneInformation sceneInformation, const CameraData &camera,
-              std::optional<vk::Rect2D> renderArea = std::nullopt);
+    DrawResult draw(DrawCallResolver::DrawSceneInformation sceneInformation, const CameraData &camera,
+                    std::optional<vk::Rect2D> renderArea = std::nullopt);
 
     /// @brief get Swapchain aspect ratio
     constexpr float getAspectRatio() const noexcept { return swapchain.getAspectRatio(); }
@@ -102,7 +108,6 @@ public:
     }
 
 private:
-    virtual void postInitialization();
     void recreateSwapchain();
     void initVulkanRessources();
 

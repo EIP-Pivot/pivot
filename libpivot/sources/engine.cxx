@@ -74,10 +74,16 @@ void Engine::run()
                 ? (static_cast<float>(renderArea->extent.width) / static_cast<float>(renderArea->extent.height))
                 : (m_vulkan_application.getAspectRatio());
 
-        if (m_current_scene_draw_command)
-            m_vulkan_application.draw(m_current_scene_draw_command.value(),
-                                      pivot::internals::getGPUCameraData(m_camera, Engine::fov, aspectRatio),
-                                      renderArea);
+        if (m_current_scene_draw_command) {
+            auto result = m_vulkan_application.draw(
+                m_current_scene_draw_command.value(),
+                pivot::internals::getGPUCameraData(m_camera, Engine::fov, aspectRatio), renderArea);
+            if (result == pivot::graphics::VulkanApplication::DrawResult::Error) {
+                std::terminate();
+            } else if (result == pivot::graphics::VulkanApplication::DrawResult::FrameSkipped) {
+                this->onReset();
+            }
+        }
 
         if (!m_paused) {
             m_scene_manager.getCurrentScene().getEventManager().sendEvent(

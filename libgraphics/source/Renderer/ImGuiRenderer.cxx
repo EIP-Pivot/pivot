@@ -31,6 +31,7 @@ bool ImGuiRenderer::onInit(const vk::Extent2D &, VulkanBase &base_ref, const vk:
 
 void ImGuiRenderer::onStop(VulkanBase &base_ref)
 {
+    DEBUG_FUNCTION;
     if (ImGui::GetCurrentContext() != nullptr) {
         ImGui_ImplVulkan_Shutdown();
         ImGui_ImplGlfw_Shutdown();
@@ -39,9 +40,11 @@ void ImGuiRenderer::onStop(VulkanBase &base_ref)
     if (pool) base_ref.device.destroyDescriptorPool(pool);
 }
 
-bool ImGuiRenderer::onRecreate(const vk::Extent2D &, VulkanBase &, const vk::DescriptorSetLayout &, vk::RenderPass &)
+bool ImGuiRenderer::onRecreate(const vk::Extent2D &size, VulkanBase &base,
+                               const vk::DescriptorSetLayout &descriptorSetLayout, vk::RenderPass &pass)
 {
-    return true;
+    onStop(base);
+    return onInit(size, base, descriptorSetLayout, pass);
 }
 
 bool ImGuiRenderer::onDraw(const RenderingContext &, const CameraData &, DrawCallResolver &, vk::CommandBuffer &cmd)

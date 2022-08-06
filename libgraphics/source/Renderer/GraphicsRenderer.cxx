@@ -9,9 +9,10 @@ namespace pivot::graphics
 GraphicsRenderer::GraphicsRenderer(StorageUtils &utils): IGraphicsRenderer(utils) {}
 GraphicsRenderer::~GraphicsRenderer() {}
 
-bool GraphicsRenderer::onInit(const vk::Extent2D &size, VulkanBase &base_ref,
-                              const vk::DescriptorSetLayout &resolverLayout, vk::RenderPass &pass)
+bool GraphicsRenderer::onInit(const vk::Extent2D &, VulkanBase &base_ref, const vk::DescriptorSetLayout &resolverLayout,
+                              vk::RenderPass &pass)
 {
+    DEBUG_FUNCTION;
     bIsMultiDraw = base_ref.deviceFeature.multiDrawIndirect;
 
     createPipelineLayout(base_ref.device, resolverLayout);
@@ -21,6 +22,7 @@ bool GraphicsRenderer::onInit(const vk::Extent2D &size, VulkanBase &base_ref,
 
 void GraphicsRenderer::onStop(VulkanBase &base_ref)
 {
+    DEBUG_FUNCTION;
     if (pipelineLayout) base_ref.device.destroyPipelineLayout(pipelineLayout);
 }
 

@@ -15,13 +15,6 @@ void ImGuiManager::newFrame()
     ImGui::NewFrame();
     ImGuizmo::BeginFrame();
 
-    ImGui::Begin("##");
-
-    auto image = getTextureId("icon_large");
-    ImGui::Image(image.first, image.second);
-
-    ImGui::End();
-
     menuBar();
     dockSpace();
 }

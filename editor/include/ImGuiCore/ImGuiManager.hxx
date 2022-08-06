@@ -33,15 +33,15 @@ public:
     void menuBar();
     static void render();
     ImGuiID getCenterDockId();
-    std::pair<ImTextureID, ImVec2> &getTextureId(const std::string &name)
+    ImTextureID &getTextureId(const std::string &name)
     {
         if (auto iter = imguiTextureId.find(name); iter == imguiTextureId.end()) {
             auto image = m_engine.getTexture(name);
             vk::Sampler sampler = m_engine.getSampler();
             pivot::graphics::AllocatedImage texture = m_engine.getTexture("icon_large");
             ImVec2 size(texture.size.width, texture.size.height);
-            imguiTextureId[name] = std::make_pair(
-                ImGui_ImplVulkan_AddTexture(sampler, image.imageView, (VkImageLayout)image.imageLayout), size);
+            imguiTextureId[name] =
+                ImGui_ImplVulkan_AddTexture(sampler, image.imageView, (VkImageLayout)image.imageLayout);
             return imguiTextureId.at(name);
         } else {
             return iter->second;
@@ -103,7 +103,7 @@ public:
     }
 
 private:
-    std::unordered_map<std::string, std::pair<ImTextureID, ImVec2>> imguiTextureId;
+    std::unordered_map<std::string, ImTextureID> imguiTextureId;
     const pivot::ecs::SceneManager &m_sceneManager;
     pivot::Engine &m_engine;
     ImGuiID m_centerDockId{};

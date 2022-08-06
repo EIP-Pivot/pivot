@@ -3,6 +3,7 @@
 #include <pivot/ecs/Core/SceneManager.hxx>
 #include <pivot/engine.hxx>
 
+#include <backends/imgui_impl_vulkan.h>
 #include <imgui.h>
 #include <nfd.hpp>
 
@@ -19,12 +20,33 @@ public:
 
 public:
     ImGuiManager(const pivot::ecs::SceneManager &sceneManager, pivot::Engine &engine)
-        : m_sceneManager(sceneManager), m_engine(engine), m_centerDockId(0){};
+        : m_sceneManager(sceneManager), m_engine(engine), m_centerDockId(0)
+    {
+        auto path = PIVOT_WINDOW_ICON_PATH "/icon_large.png";
+        m_engine.loadAsset(path);
+    };
+
+    void reset() { imguiTextureId.clear(); }
+
     void newFrame();
     void dockSpace();
     void menuBar();
     static void render();
     ImGuiID getCenterDockId();
+    std::pair<ImTextureID, ImVec2> &getTextureId(const std::string &name)
+    {
+        if (auto iter = imguiTextureId.find(name); iter == imguiTextureId.end()) {
+            auto image = m_engine.getTexture(name);
+            vk::Sampler sampler = m_engine.getSampler();
+            pivot::graphics::AllocatedImage texture = m_engine.getTexture("icon_large");
+            ImVec2 size(texture.size.width, texture.size.height);
+            imguiTextureId[name] = std::make_pair(
+                ImGui_ImplVulkan_AddTexture(sampler, image.imageView, (VkImageLayout)image.imageLayout), size);
+            return imguiTextureId.at(name);
+        } else {
+            return iter->second;
+        }
+    }
 
     template <FileAction A>
     bool handleFile(const std::string &buttonText, const std::string &successText, const std::string &errorText,
@@ -81,6 +103,7 @@ public:
     }
 
 private:
+    std::unordered_map<std::string, std::pair<ImTextureID, ImVec2>> imguiTextureId;
     const pivot::ecs::SceneManager &m_sceneManager;
     pivot::Engine &m_engine;
     ImGuiID m_centerDockId{};

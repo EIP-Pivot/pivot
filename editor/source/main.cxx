@@ -179,6 +179,8 @@ public:
         });
     }
 
+    void onReset() override { imGuiManager.reset(); }
+
 public:
     ImGuiManager imGuiManager;
     Editor editor;

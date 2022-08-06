@@ -40,9 +40,9 @@ VulkanApplication::VulkanApplication()
 VulkanApplication::~VulkanApplication()
 {
     DEBUG_FUNCTION
-    if (device)
+    if (device) {
         device.waitIdle();
-    else {
+    } else {
         /// if the device is not initialized, there is no need to continue further as no other ressources would have
         /// been created
         return;

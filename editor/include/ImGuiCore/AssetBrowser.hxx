@@ -11,14 +11,14 @@ class AssetBrowser
 public:
     struct wrapper {
         AssetBrowser &assetBrowser;
-        std::string asset_name;
+        char name[255];
     };
 
     AssetBrowser(pivot::graphics::AssetStorage &assetStorage, pivot::ecs::CurrentScene scene)
         : m_assetStorage(assetStorage), m_scene(scene){};
     void create();
     void dropSource(const std::string &name);
-    void createEntity(std::string name);
+    void createEntity(std::string_view name);
 
 private:
     pivot::graphics::AssetStorage &m_assetStorage;

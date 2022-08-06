@@ -17,14 +17,15 @@ void AssetBrowser::create()
 void AssetBrowser::dropSource(const std::string &name)
 {
     if (ImGui::BeginDragDropSource()) {
-        struct wrapper my_wrapper = {*this, name};
+        struct wrapper my_wrapper = {*this};
+        std::memcpy(my_wrapper.name, name.c_str(), name.size());
         ImGui::SetDragDropPayload("ASSET", &my_wrapper, sizeof(my_wrapper));
         ImGui::Button(name.c_str());
         ImGui::EndDragDropSource();
     }
 }
 
-void AssetBrowser::createEntity(std::string name)
+void AssetBrowser::createEntity(std::string_view name)
 {
     Entity newEntity = m_scene->CreateEntity();
     auto &cm = m_scene->getComponentManager();
@@ -34,6 +35,6 @@ void AssetBrowser::createEntity(std::string name)
     cm.AddComponent(newEntity, transform, transformIndex);
     auto renderObjectIndex = cm.GetComponentId("RenderObject").value();
     Value renderObject =
-        Value{Record{{"meshID", Asset{std::move(name)}}, {"pipelineID", ""}, {"materialIndex", Asset{""}}}};
+        Value{Record{{"meshID", Asset{std::string(name)}}, {"pipelineID", ""}, {"materialIndex", Asset{""}}}};
     cm.AddComponent(newEntity, renderObject, renderObjectIndex);
 }

@@ -1,11 +1,11 @@
-#include "pivot/graphics/AssetStorage/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/Loaders.hxx"
 
 #include "pivot/pivot.hxx"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <tiny_obj_loader.h>
 
-namespace pivot::graphics::loaders
+namespace pivot::graphics::asset::loaders
 {
 
 static std::pair<std::string, asset::CPUMaterial> loadMaterial(const tinyobj::material_t &material)

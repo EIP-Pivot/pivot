@@ -1,4 +1,4 @@
-#include "pivot/graphics/AssetStorage/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/Loaders.hxx"
 
 #include "pivot/pivot.hxx"
 
@@ -105,7 +105,7 @@ static inline void fillIndexBuffer(const tinygltf::Buffer &buffer, const tinyglt
     indexBuffer.insert(indexBuffer.end(), buf.begin(), buf.end());
 }
 
-namespace pivot::graphics::loaders
+namespace pivot::graphics::asset::loaders
 {
 
 static asset::ModelPtr loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node,
@@ -146,8 +146,7 @@ static asset::ModelPtr loadGltfNode(const tinygltf::Model &gltfModel, const tiny
     const auto &mesh = gltfModel.meshes.at(node.mesh);
     for (const tinygltf::Primitive &primitive: mesh.primitives) {
         /// TODO: support other primitive mode
-        if (primitive.mode != TINYGLTF_MODE_TRIANGLES)
-            throw AssetStorage::AssetStorageError("Primitive mode not supported !");
+        if (primitive.mode != TINYGLTF_MODE_TRIANGLES) throw AssetHandlerError("Primitive mode not supported !");
         asset::Primitive model{
             .vertexOffset = static_cast<std::uint32_t>(vertexBuffer.size()),
             .vertexSize = 0,
@@ -172,7 +171,7 @@ static asset::ModelPtr loadGltfNode(const tinygltf::Model &gltfModel, const tiny
 
             if (positionBuffer.empty()) throw std::logic_error("No verticies found in a mesh node");
             if (!colorBuffer.empty() && colorAccessor.type != TINYGLTF_PARAMETER_TYPE_FLOAT_VEC3)
-                throw AssetStorage::AssetStorageError("Unsupported color type");
+                throw AssetHandlerError("Unsupported color type");
             if ((!normalsBuffer.empty() && positionBuffer.size() != normalsBuffer.size()) ||
                 (!texCoordsBuffer.empty() && positionBuffer.size() != texCoordsBuffer.size()) ||
                 (!colorBuffer.empty() && colorBuffer.size() != texCoordsBuffer.size())) {
@@ -212,7 +211,7 @@ static asset::ModelPtr loadGltfNode(const tinygltf::Model &gltfModel, const tiny
                 case TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE:
                     fillIndexBuffer<std::uint8_t>(buffer, accessor, bufferView, indexBuffer);
                     break;
-                default: throw AssetStorage::AssetStorageError("Index component type not supported!"); break;
+                default: throw AssetHandlerError("Index component type not supported!"); break;
             }
         }
         /// End of Indices

@@ -1,8 +1,8 @@
-#include "pivot/graphics/AssetStorage/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/Loaders.hxx"
 
 #include <ktx.h>
 
-namespace pivot::graphics::loaders
+namespace pivot::graphics::asset::loaders
 {
 
 std::optional<asset::CPUStorage> loadKtxImage(const std::filesystem::path &path)

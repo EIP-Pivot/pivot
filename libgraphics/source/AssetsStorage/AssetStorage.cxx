@@ -1,4 +1,5 @@
 #include "pivot/graphics/AssetStorage/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/Loaders.hxx"
 
 #include "pivot/pivot.hxx"
 
@@ -29,6 +30,32 @@ bool AssetStorage::bindForCompute(vk::CommandBuffer &cmd, const vk::PipelineLayo
     return true;
 }
 
+bool AssetStorage::addAsset(const std::vector<std::filesystem::path> &path)
+{
+    DEBUG_FUNCTION
+    unsigned load = 0;
+    for (const auto &i: path) load += addAsset(i);
+    return load == path.size();
+}
+
+bool AssetStorage::addModel(const std::vector<std::filesystem::path> &path)
+{
+    DEBUG_FUNCTION
+    unsigned load = 0;
+    for (const auto &i: path) load += addModel(i);
+    return load == path.size();
+}
+
+bool AssetStorage::addTexture(const std::vector<std::filesystem::path> &path)
+{
+    DEBUG_FUNCTION
+    unsigned load = 0;
+    for (const auto &i: path) load += addTexture(i);
+    return load == path.size();
+}
+
+using namespace asset;
+
 bool AssetStorage::addAsset(const std::filesystem::path &path)
 {
     DEBUG_FUNCTION
@@ -40,14 +67,6 @@ bool AssetStorage::addAsset(const std::filesystem::path &path)
 
     logger.err("AssetStorage/addAsset") << "Not supported asset extension: " << path.extension();
     return false;
-}
-
-bool AssetStorage::addAsset(const std::vector<std::filesystem::path> &path)
-{
-    DEBUG_FUNCTION
-    unsigned load = 0;
-    for (const auto &i: path) load += addAsset(i);
-    return load == path.size();
 }
 
 bool AssetStorage::addModel(const std::filesystem::path &path)
@@ -62,14 +81,6 @@ bool AssetStorage::addModel(const std::filesystem::path &path)
     return true;
 }
 
-bool AssetStorage::addModel(const std::vector<std::filesystem::path> &path)
-{
-    DEBUG_FUNCTION
-    unsigned load = 0;
-    for (const auto &i: path) load += addModel(i);
-    return load == path.size();
-}
-
 bool AssetStorage::addTexture(const std::filesystem::path &path)
 {
     DEBUG_FUNCTION
@@ -80,13 +91,6 @@ bool AssetStorage::addTexture(const std::filesystem::path &path)
     }
     cpuStorage.texturePaths[path.stem().string()] = asset_dir / path;
     return true;
-}
-bool AssetStorage::addTexture(const std::vector<std::filesystem::path> &path)
-{
-    DEBUG_FUNCTION
-    unsigned load = 0;
-    for (const auto &i: path) load += addTexture(i);
-    return load == path.size();
 }
 
 std::optional<asset::CPUStorage> AssetStorage::loadModel(unsigned thread_id, const std::filesystem::path &path)

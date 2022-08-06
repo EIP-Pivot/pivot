@@ -3,7 +3,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "pivot/graphics/AssetStorage/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/Loaders.hxx"
 
 #ifndef BASE_PATH
     #define BASE_PATH "./"
@@ -19,9 +19,9 @@ TEST_CASE("loadObjFile", "[assetStorage]")
 
     asset::CPUStorage storage;
 
-    SECTION("Return false when incorrect path") { REQUIRE_FALSE(loaders::loadObjModel(pathToGltf).has_value()); }
+    SECTION("Return false when incorrect path") { REQUIRE_FALSE(asset::loaders::loadObjModel(pathToGltf).has_value()); }
 
-    REQUIRE_NOTHROW(storage = loaders::loadObjModel(pathToObj).value());
+    REQUIRE_NOTHROW(storage = asset::loaders::loadObjModel(pathToObj).value());
 
     REQUIRE_NOTHROW(storage.modelStorage.at("basic_cube"));
     const auto &prefab = storage.modelStorage.at("basic_cube");

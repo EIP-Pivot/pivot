@@ -4,8 +4,10 @@
 #include <cstdio>
 #include <fstream>
 #include <iostream>
+#include <span>
 
-#include "pivot/graphics/AssetStorage/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/Loaders.hxx"
+#include "pivot/graphics/types/Vertex.hxx"
 
 #ifndef BASE_PATH
     #define BASE_PATH "./"
@@ -63,11 +65,11 @@ TEST_CASE("loadGltfFile", "[assetStorage]")
 {
     static_assert(std::numeric_limits<float>::epsilon() < 1.f);
 
-    asset::CPUStorage storage;
+    pivot::graphics::asset::CPUStorage storage;
 
-    SECTION("Return false when incorrect path") REQUIRE_FALSE(loaders::loadGltfModel(pathToObj).has_value());
+    SECTION("Return false when incorrect path") REQUIRE_FALSE(asset::loaders::loadGltfModel(pathToObj).has_value());
 
-    REQUIRE_NOTHROW(storage = loaders::loadGltfModel(pathToGltf).value());
+    REQUIRE_NOTHROW(storage = asset::loaders::loadGltfModel(pathToGltf).value());
 
     std::string testIds = "BoomBox";
     REQUIRE_NOTHROW(storage.modelStorage.at("BoomBox"));
@@ -114,7 +116,7 @@ TEST_CASE("loadGltfFile", "[assetStorage]")
     SECTION("CPUStorage merge")
     {
         asset::CPUStorage other_storage;
-        REQUIRE_NOTHROW(other_storage = loaders::loadGltfModel(pathToOtherGltf).value());
+        REQUIRE_NOTHROW(other_storage = asset::loaders::loadGltfModel(pathToOtherGltf).value());
 
         auto before = other_storage.modelStorage.at("basic_triangle");
         auto before_vertex_size = other_storage.vertexStagingBuffer.size();

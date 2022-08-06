@@ -1,10 +1,10 @@
-#include "pivot/graphics/AssetStorage/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/Loaders.hxx"
 
 #include "pivot/pivot.hxx"
 
 #include <stb_image.h>
 
-namespace pivot::graphics::loaders
+namespace pivot::graphics::asset::loaders
 {
 
 std::optional<asset::CPUStorage> loadPngTexture(const std::filesystem::path &path)

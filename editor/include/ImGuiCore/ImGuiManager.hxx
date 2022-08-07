@@ -22,12 +22,14 @@ public:
     ImGuiManager(const pivot::ecs::SceneManager &sceneManager, pivot::Engine &engine)
         : m_sceneManager(sceneManager), m_engine(engine), m_centerDockId(0)
     {
-        auto path = PIVOT_WINDOW_ICON_PATH "/icon_large.png";
-        m_engine.loadAsset(path);
+        for (const auto &directoryEntry: std::filesystem::recursive_directory_iterator(PIVOT_EDITOR_ICON_PATH)) {
+            if (directoryEntry.is_directory()) continue;
+            m_engine.loadAsset(directoryEntry.path(), false);
+        }
     };
 
     void reset() { imguiTextureId.clear(); }
-
+    void setStyle();
     void newFrame();
     void dockSpace();
     void menuBar();
@@ -38,7 +40,7 @@ public:
         if (auto iter = imguiTextureId.find(name); iter == imguiTextureId.end()) {
             auto image = m_engine.getTexture(name);
             vk::Sampler sampler = m_engine.getSampler();
-            pivot::graphics::AllocatedImage texture = m_engine.getTexture("icon_large");
+            pivot::graphics::AllocatedImage texture = m_engine.getTexture(name);
             ImVec2 size(texture.size.width, texture.size.height);
             imguiTextureId[name] =
                 ImGui_ImplVulkan_AddTexture(sampler, image.imageView, (VkImageLayout)image.imageLayout);

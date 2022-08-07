@@ -240,10 +240,10 @@ ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
 
 void Engine::loadScript(const std::filesystem::path &path) { m_scripting_engine.loadFile(path.string(), false, true); }
 
-void Engine::loadAsset(const std::filesystem::path &path)
+void Engine::loadAsset(const std::filesystem::path &path, bool reload)
 {
     m_vulkan_application.assetStorage.addAsset(path);
-    m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
+    if (reload) m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
 }
 
 bool Engine::isKeyPressed(const std::string &key) const

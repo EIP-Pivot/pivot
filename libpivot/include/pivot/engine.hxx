@@ -31,7 +31,7 @@ public:
     ecs::SceneManager::SceneId loadScene(const std::filesystem::path &path);
 
     void loadScript(const std::filesystem::path &path);
-    void loadAsset(const std::filesystem::path &path);
+    void loadAsset(const std::filesystem::path &path, bool reload = true);
     const graphics::AllocatedImage &getTexture(const std::string &name) const
     {
         return m_vulkan_application.assetStorage.get<graphics::AssetStorage::Texture>(name);

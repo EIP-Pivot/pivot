@@ -1,14 +1,17 @@
 #include <utility>
 
 #include "ImGuiCore/AssetBrowser.hxx"
+#include "ImGuiCore/CustomWidget.hxx"
 
 using namespace pivot::ecs::data;
 
 void AssetBrowser::create()
 {
     ImGui::Begin("Asset");
+    auto image = m_imGuiManager.getTextureId("Prefab");
     for (const auto &name: m_assetStorage.getPrefabs()) {
-        ImGui::Button(name.c_str());
+        CustomWidget::ImageText(image, {70, 70}, name);
+        if (ImGui::GetCursorPosX() + 70 <= ImGui::GetWindowWidth()) ImGui::SameLine();
         dropSource(name);
     }
     ImGui::End();
@@ -16,11 +19,12 @@ void AssetBrowser::create()
 
 void AssetBrowser::dropSource(const std::string &name)
 {
-    if (ImGui::BeginDragDropSource()) {
+    auto image = m_imGuiManager.getTextureId("Prefab");
+    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
         struct wrapper my_wrapper = {*this};
         std::memcpy(my_wrapper.name, name.c_str(), name.size());
         ImGui::SetDragDropPayload("ASSET", &my_wrapper, sizeof(my_wrapper));
-        ImGui::Button(name.c_str());
+        CustomWidget::ImageText(image, {70, 70}, name);
         ImGui::EndDragDropSource();
     }
 }

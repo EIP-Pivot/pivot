@@ -38,7 +38,7 @@ public:
           entity(getCurrentScene()),
           componentEditor(m_component_index, getCurrentScene()),
           systemsEditor(m_system_index, m_component_index, getCurrentScene()),
-          assetBrowser(m_vulkan_application.assetStorage, getCurrentScene()),
+          assetBrowser(imGuiManager, m_vulkan_application.assetStorage, getCurrentScene()),
           sceneEditor(imGuiManager)
     {
     }
@@ -94,6 +94,8 @@ public:
             last = pos;
             pivot::builtins::systems::ControlSystem::processMouseMovement(m_camera, glm::dvec2(xoffset, yoffset));
         });
+        imGuiManager.setStyle();
+        m_vulkan_application.buildAssetStorage();
     }
 
     void processKeyboard(const pivot::builtins::Camera::Movement direction, float dt) noexcept

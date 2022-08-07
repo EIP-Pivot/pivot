@@ -7,6 +7,7 @@ CmdLineArgs getCmdLineArg(const int argc, const char *argv[])
     int verbosity = 0;
     argparse::ArgumentParser parser("editor", "1.0", argparse::default_arguments::help);
     parser.add_argument("-s", "--scene").help("Path to the scenes that will be loaded on startup.").append();
+    parser.add_argument("-a", "--asset").help("Path to the assets that will be loaded on startup.").append();
     parser.add_argument("-v", "--verbose")
         .action([&](const auto &) { ++verbosity; })
         .append()
@@ -31,6 +32,7 @@ CmdLineArgs getCmdLineArg(const int argc, const char *argv[])
 
     return {
         .startupScenes = parser.get<std::vector<std::string>>("-s"),
+        .startupAssets = parser.get<std::vector<std::string>>("-a"),
         .verbosity = loggerLevel,
     };
 }

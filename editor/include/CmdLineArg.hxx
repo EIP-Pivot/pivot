@@ -5,6 +5,7 @@
 
 struct CmdLineArgs {
     const std::vector<std::string> startupScenes;
+    const std::vector<std::string> startupAssets;
     const cpplogger::Level verbosity;
 };
 

@@ -95,7 +95,7 @@ public:
             pivot::builtins::systems::ControlSystem::processMouseMovement(m_camera, glm::dvec2(xoffset, yoffset));
         });
         imGuiManager.setStyle();
-        m_vulkan_application.buildAssetStorage();
+        m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
     }
 
     void processKeyboard(const pivot::builtins::Camera::Movement direction, float dt) noexcept

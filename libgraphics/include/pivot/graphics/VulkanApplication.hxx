@@ -54,6 +54,7 @@ public:
     requires std::is_base_of_v<IRenderer, T>
     using RendererStorage = std::vector<std::unique_ptr<T>>;
 
+    /// Result of the draw
     enum class DrawResult {
         Error = -1,
         Success = 0,

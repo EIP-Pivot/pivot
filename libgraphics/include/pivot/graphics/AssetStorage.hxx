@@ -307,6 +307,7 @@ public:
         return this->materialStorage | std::views::transform([](const auto &i) { return i.first; });
     }
 
+    /// Return the vulkan sampler
     vk::Sampler getSampler() const noexcept { return textureSampler; }
 
     template <typename T>

@@ -18,8 +18,11 @@ struct StorageUtils {
     std::reference_wrapper<AssetStorage> assets;
 };
 
+/// Convey information about the rendering
 struct RenderingContext {
+    /// The rectangle where the rendering should take place
     vk::Rect2D renderArea;
+    /// The size of the viewport.
     vk::Extent2D viewport;
 };
 

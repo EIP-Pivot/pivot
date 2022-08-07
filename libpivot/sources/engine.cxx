@@ -232,9 +232,9 @@ ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
         m_scripting_engine.loadFile(scriptPath.string(), false, true);
     }
     m_vulkan_application.assetStorage.setAssetDirectory(scene_base_path);
-    for (auto &asset: scene_json["assets"]) m_vulkan_application.assetStorage.addAsset(asset.get<std::string>());
-    auto scene = Scene::load(scene_json, m_component_index, m_system_index);
+    for (auto &asset: scene_json["assets"]) loadAsset(asset.get<std::string>(), false);
     m_vulkan_application.buildAssetStorage(graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
+    auto scene = Scene::load(scene_json, m_component_index, m_system_index);
     return this->registerScene(std::move(scene));
 }
 

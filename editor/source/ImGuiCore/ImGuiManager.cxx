@@ -63,7 +63,7 @@ void ImGuiManager::setStyle()
     style.Colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
     style.Colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
     style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
-    style.GrabRounding = style.FrameRounding = 2.3f;
+    style.GrabRounding = style.FrameRounding = 0.0f;
 }
 
 void ImGuiManager::newFrame()
@@ -73,7 +73,12 @@ void ImGuiManager::newFrame()
     ImGui::NewFrame();
     ImGuizmo::BeginFrame();
 
-    menuBar();
+    // If menuBar() return true, that mean that it is no longer safe to continue rendering, nor to use the TextureIds.
+    if (menuBar()) {
+        // reset texture Ids and start a new frame
+        reset();
+        return newFrame();
+    }
     dockSpace();
 }
 
@@ -89,10 +94,10 @@ void ImGuiManager::dockSpace()
         ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode |
                                              ImGuiDockNodeFlags_NoDockingInCentralNode |
                                              ImGuiDockNodeFlags_NoWindowMenuButton | ImGuiDockNodeFlags_NoCloseButton;
-        ImGuiWindowFlags host_window_flags = 0;
-        host_window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
-                             ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking;
-        host_window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+        ImGuiWindowFlags host_window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
+                                             ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                                             ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoBringToFrontOnFocus |
+                                             ImGuiWindowFlags_NoNavFocus;
         if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
             host_window_flags |= ImGuiWindowFlags_NoBackground;
 
@@ -117,46 +122,64 @@ void ImGuiManager::dockSpace()
     ImGui::End();
 }
 
-void ImGuiManager::menuBar()
+bool ImGuiManager::menuBar()
 {
+    MenuBarAction menuAction = MenuBarAction::None;
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{10.0f, 10.0f});
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
-            handleFile<FileAction::Save>(
-                "Save Scene", "Scene correctly saved.", "Failed to save the scene, please check the log.",
-                {{"Scene", "json"}},
-                [this](const std::filesystem::path &path) {
-                    m_engine.saveScene(m_sceneManager.getCurrentSceneId(), path);
-                    return true;
-                },
-                "CTRL+S");
+            if (ImGui::MenuItem("Save Scene", "CTRL+S")) menuAction = MenuBarAction::SaveScene;
+            if (ImGui::MenuItem("Load Scene")) menuAction = MenuBarAction::LoadScene;
+            if (ImGui::MenuItem("Load Script")) menuAction = MenuBarAction::LoadScript;
+            if (ImGui::MenuItem("Load asset")) menuAction = MenuBarAction::LoadAsset;
+
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+    }
+    ImGui::PopStyleVar();
+
+    switch (menuAction) {
+        case MenuBarAction::None: return false;
+        case MenuBarAction::SaveScene:
+            handleFile<FileAction::Save>("Save Scene", "Scene correctly saved.",
+                                         "Failed to save the scene, please check the log.", {{"Scene", "json"}},
+                                         [this](const std::filesystem::path &path) {
+                                             m_engine.saveScene(m_sceneManager.getCurrentSceneId(), path);
+                                             return true;
+                                         });
+            break;
+        case MenuBarAction::LoadScene:
             handleFile<FileAction::Open>("Load Scene", "Scene loaded succefully !",
                                          "Scene loading failed, please check the log.", {{"Scene", "json"}},
                                          [this](const std::filesystem::path &path) {
                                              m_engine.loadScene(path);
                                              return true;
                                          });
+            break;
+        case MenuBarAction::LoadScript:
             handleFile<FileAction::Open>("Load Script", "Script loaded succefully !",
                                          "Script loading failed, please look at the logs.",
-                                         {{"PivotScript", "pivotscript"}}, [this](const std::filesystem::path &path) {
+                                         {{"Pivot script", "pivotscript"}}, [this](const std::filesystem::path &path) {
                                              m_engine.loadScript(path);
                                              return true;
                                          });
+            break;
+        case MenuBarAction::LoadAsset:
             handleFile<FileAction::Open>(
                 "Load asset", "Asset loaded succefully !", "Asset loading failed, please look at the logs.",
                 {{"Model", "gltf,obj"}, {"Textures", "jpg,png,ktx"}}, [this](const std::filesystem::path &path) {
                     m_engine.loadAsset(path);
                     return true;
                 });
-            ImGui::EndMenu();
-        }
-        ImGui::EndMainMenuBar();
+            break;
     }
-    ImGui::PopStyleVar();
+    return true;
 }
 
 void ImGuiManager::render()
 {
+    ImGui::EndFrame();
     ImGui::Render();
     // ImGui::UpdatePlatformWindows();
 }

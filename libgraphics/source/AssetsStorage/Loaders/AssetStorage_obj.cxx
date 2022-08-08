@@ -147,4 +147,4 @@ std::optional<asset::CPUStorage> loadObjModel(const std::filesystem::path &path)
     return storage;
 }
 
-}    // namespace pivot::graphics::loaders
+}    // namespace pivot::graphics::asset::loaders

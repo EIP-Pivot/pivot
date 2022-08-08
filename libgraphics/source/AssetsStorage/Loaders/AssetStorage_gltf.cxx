@@ -311,4 +311,4 @@ try {
     return std::nullopt;
 }
 
-}    // namespace pivot::graphics::loaders
+}    // namespace pivot::graphics::asset::loaders

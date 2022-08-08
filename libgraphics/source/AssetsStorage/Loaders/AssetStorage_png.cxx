@@ -36,4 +36,4 @@ std::optional<asset::CPUStorage> loadPngTexture(const std::filesystem::path &pat
     return storage;
 }
 
-}    // namespace pivot::graphics::loaders
+}    // namespace pivot::graphics::asset::loaders

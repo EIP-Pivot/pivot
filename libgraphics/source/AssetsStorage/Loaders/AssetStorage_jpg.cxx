@@ -11,4 +11,4 @@ std::optional<asset::CPUStorage> loadJpgTexture(const std::filesystem::path &pat
     return loadPngTexture(path);
 }
 
-}    // namespace pivot::graphics::loaders
+}    // namespace pivot::graphics::asset::loaders

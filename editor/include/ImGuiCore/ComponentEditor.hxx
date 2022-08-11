@@ -29,6 +29,7 @@ public:
 private:
     void addComponent(const pivot::ecs::component::Description &description);
     void displayComponent();
+    void displayName();
     void deleteComponent(pivot::ecs::component::ComponentRef ref);
     void createPopUp();
 

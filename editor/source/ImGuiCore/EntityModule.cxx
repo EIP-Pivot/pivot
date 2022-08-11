@@ -11,7 +11,7 @@ void EntityModule::create()
         entitySelected = -1;
     }
     currentScene = m_scene.id();
-    ImGui::Begin("Entity");
+    ImGui::Begin(" Entity ");
     createPopUp();
     if (ImGui::Button("Add entity")) ImGui::OpenPopup("NewEntity");
     if (_hasSelected) {

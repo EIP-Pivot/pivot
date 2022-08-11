@@ -7,12 +7,15 @@ using namespace pivot::ecs::data;
 
 void AssetBrowser::create()
 {
-    ImGui::Begin("Asset");
+    ImGui::Begin(" Asset ");
     auto image = m_imGuiManager.getTextureId("Prefab");
+    std::size_t imagesMax = ImGui::GetWindowWidth() / (70 + ImGui::GetStyle().ItemSpacing.x);
+    std::size_t images = 0;
     for (const auto &name: m_assetStorage.getPrefabs()) {
         CustomWidget::ImageText(image, {70, 70}, name);
-        if (ImGui::GetCursorPosX() + 70 <= ImGui::GetWindowWidth()) ImGui::SameLine();
         dropSource(name);
+        images++;
+        if (imagesMax != 0 && images % imagesMax != 0) ImGui::SameLine();
     }
     ImGui::End();
 }

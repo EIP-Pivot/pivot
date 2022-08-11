@@ -1,13 +1,78 @@
-#include "ImGuiCore/SceneEditor.hxx"
+#include <glm/gtc/type_ptr.hpp>
+#include <imgui_internal.h>
+#include <numbers>
+#include <pivot/builtins/components/Transform.hxx>
 
-#include <ImGuizmo.h>
+#include "ImGuiCore/CustomWidget.hxx"
+#include "ImGuiCore/SceneEditor.hxx"
 
 void SceneEditor::create()
 {
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
     ImGui::SetNextWindowDockID(m_imGuiManager.getCenterDockId());
-    ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove);
-    ImGui::PopStyleVar();
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(3.f, 8.f));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.f, 0.f));
+    ImGui::PushStyleColor(ImGuiCol_MenuBarBg, ImVec4(0.037f, 0.037f, 0.049f, 1.00f));
+    ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_MenuBar);
+    toolbar();
+    ImGui::PopStyleVar(3);
+    ImGui::PopStyleColor();
+    viewport();
+    ImGui::End();
+}
+
+void SceneEditor::toolbar()
+{
+    if (ImGui::BeginMenuBar()) {
+        imGuizmoOperation();
+        imGuizmoMode();
+        ImGui::EndMenuBar();
+    }
+}
+
+void SceneEditor::imGuizmoOperation()
+{
+    auto move = m_imGuiManager.getTextureId("MoveTool");
+    auto rotate = m_imGuiManager.getTextureId("RotateTool");
+    auto scale = m_imGuiManager.getTextureId("ScaleTool");
+
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.f);
+    if (CustomWidget::RadioImageButton("Translate", move, ImVec2(19.f, 19.f),
+                                       currentGizmoOperation == ImGuizmo::TRANSLATE))
+        currentGizmoOperation = ImGuizmo::TRANSLATE;
+    if (CustomWidget::RadioImageButton("Rotate", rotate, ImVec2(19.f, 19.f), currentGizmoOperation == ImGuizmo::ROTATE))
+        currentGizmoOperation = ImGuizmo::ROTATE;
+    if (CustomWidget::RadioImageButton("Scale", scale, ImVec2(19.f, 19.f), currentGizmoOperation == ImGuizmo::SCALE))
+        currentGizmoOperation = ImGuizmo::SCALE;
+    ImGui::PopStyleVar(2);
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 5.f);
+    ImGui::Separator();
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 5.f);
+}
+
+void SceneEditor::imGuizmoMode()
+{
+    if (currentGizmoOperation != ImGuizmo::SCALE) {
+        auto move = m_imGuiManager.getTextureId("MoveTool");
+        auto rotate = m_imGuiManager.getTextureId("RotateTool");
+
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.f);
+        if (CustomWidget::RadioImageButton("Local", move, ImVec2(19.f, 19.f), currentGizmoMode == ImGuizmo::LOCAL))
+            currentGizmoMode = ImGuizmo::LOCAL;
+        if (CustomWidget::RadioImageButton("World", rotate, ImVec2(19.f, 19.f), currentGizmoMode == ImGuizmo::WORLD))
+            currentGizmoMode = ImGuizmo::WORLD;
+        ImGui::PopStyleVar(2);
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 5.f);
+        ImGui::Separator();
+    } else {
+        currentGizmoMode = ImGuizmo::LOCAL;
+    }
+}
+
+void SceneEditor::viewport()
+{
     {
         ImGui::BeginChild("RenderViewport", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_NoBackground);
 
@@ -26,5 +91,36 @@ void SceneEditor::create()
         }
         ImGui::EndDragDropTarget();
     }
-    ImGui::End();
+}
+
+void SceneEditor::setAspectRatio(float aspect) { aspectRatio = aspect; }
+
+void SceneEditor::DisplayGuizmo(Entity entity, const pivot::builtins::Camera &camera)
+{
+    using Transform = pivot::builtins::components::Transform;
+
+    const auto view = camera.getView();
+    const auto projection = camera.getProjection(pivot::Engine::fov, aspectRatio);
+
+    const float *view_ptr = glm::value_ptr(view);
+    const float *projection_ptr = glm::value_ptr(projection);
+
+    // TODO: Refactor this out, to compute only when the scene changes
+    auto &cm = m_currentScene->getComponentManager();
+    auto &array = cm.GetComponentArray(cm.GetComponentId(Transform::description.name).value());
+    auto &ro_array = dynamic_cast<pivot::ecs::component::DenseTypedComponentArray<pivot::graphics::Transform> &>(array);
+    if (!ro_array.entityHasValue(entity)) return;
+    pivot::graphics::Transform &transform = ro_array.getData()[entity];
+    auto matrix = transform.getModelMatrix();
+    float *matrix_data = glm::value_ptr(matrix);
+    ImGuizmo::SetRect(offset.x, offset.y, size.x, size.y);
+    glm::mat4x4 delta_matrix;
+    bool changed = ImGuizmo::Manipulate(view_ptr, projection_ptr, currentGizmoOperation, currentGizmoMode, matrix_data,
+                                        glm::value_ptr(delta_matrix), useSnap ? &snap[0] : NULL);
+    if (!changed) return;
+
+    glm::vec3 rotation_deg;
+    ImGuizmo::DecomposeMatrixToComponents(matrix_data, glm::value_ptr(transform.position), glm::value_ptr(rotation_deg),
+                                          glm::value_ptr(transform.scale));
+    transform.rotation = rotation_deg * std::numbers::pi_v<float> / 180.0f;
 }

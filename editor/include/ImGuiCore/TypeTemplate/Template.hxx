@@ -9,17 +9,17 @@
 
 void draw(glm::vec3 &value, const std::string &name) { CustomWidget::CustomVec3(name, value); }
 
-void draw(std::string &value, const std::string &name) { ImGui::InputText(name.c_str(), &value); }
+void draw(std::string &value, const std::string &name) { CustomWidget::CustomInputText(name, value); }
 
-void draw(int &value, const std::string &name) { ImGui::InputInt(name.c_str(), &value); }
+void draw(int &value, const std::string &name) { CustomWidget::CustomInputInt(name, value); }
 
 void draw(bool &value, const std::string &name) { ImGui::Checkbox(name.c_str(), &value); }
 
-void draw(double &value, const std::string &name) { ImGui::InputDouble(name.c_str(), &value); }
+void draw(double &value, const std::string &name) { CustomWidget::CustomInputDouble(name, value); }
 
 void draw(pivot::ecs::data::Asset &asset, const std::string &name)
 {
-    ImGui::InputText(name.c_str(), &asset.name);
+    CustomWidget::CustomInputText(name, asset.name);
     if (ImGui::BeginDragDropTarget()) {
         if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET")) {
             pivot_assert(payload->Data, "Empty drag and drop payload");

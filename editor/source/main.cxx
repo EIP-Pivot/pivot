@@ -20,6 +20,7 @@
 #include "ImGuiCore/Editor.hxx"
 #include "ImGuiCore/EntityModule.hxx"
 #include "ImGuiCore/ImGuiManager.hxx"
+#include "ImGuiCore/ImGuiTheme.hxx"
 #include "ImGuiCore/SceneEditor.hxx"
 #include "ImGuiCore/SystemsEditor.hxx"
 
@@ -39,7 +40,7 @@ public:
           componentEditor(m_component_index, getCurrentScene()),
           systemsEditor(m_system_index, m_component_index, getCurrentScene()),
           assetBrowser(imGuiManager, m_vulkan_application.assetStorage, getCurrentScene()),
-          sceneEditor(imGuiManager)
+          sceneEditor(imGuiManager, getCurrentScene())
     {
     }
 
@@ -94,8 +95,9 @@ public:
             last = pos;
             pivot::builtins::systems::ControlSystem::processMouseMovement(m_camera, glm::dvec2(xoffset, yoffset));
         });
-        imGuiManager.setStyle();
         m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
+        // resize or loading asset reset imgui -> style reset
+        //        ImGuiTheme::setStyle();
     }
 
     void processKeyboard(const pivot::builtins::Camera::Movement direction, float dt) noexcept
@@ -103,25 +105,25 @@ public:
         using Camera = pivot::builtins::Camera;
         switch (direction) {
             case Camera::Movement::FORWARD: {
-                m_camera.position.x += m_camera.front.x * 2.5f * (dt * 500);
-                m_camera.position.z += m_camera.front.z * 2.5f * (dt * 500);
+                m_camera.position.x += m_camera.front.x * 10.f * dt;
+                m_camera.position.z += m_camera.front.z * 10.f * dt;
             } break;
             case Camera::Movement::BACKWARD: {
-                m_camera.position.x -= m_camera.front.x * 2.5f * (dt * 500);
-                m_camera.position.z -= m_camera.front.z * 2.5f * (dt * 500);
+                m_camera.position.x -= m_camera.front.x * 10.f * dt;
+                m_camera.position.z -= m_camera.front.z * 10.f * dt;
             } break;
             case Camera::Movement::RIGHT: {
-                m_camera.position.x += m_camera.right.x * 2.5f * (dt * 500);
-                m_camera.position.z += m_camera.right.z * 2.5f * (dt * 500);
+                m_camera.position.x += m_camera.right.x * 10.f * dt;
+                m_camera.position.z += m_camera.right.z * 10.f * dt;
             } break;
             case Camera::Movement::LEFT: {
-                m_camera.position.x -= m_camera.right.x * 2.5f * (dt * 500);
-                m_camera.position.z -= m_camera.right.z * 2.5f * (dt * 500);
+                m_camera.position.x -= m_camera.right.x * 10.f * dt;
+                m_camera.position.z -= m_camera.right.z * 10.f * dt;
             } break;
             case Camera::Movement::UP: {
-                m_camera.position.y += 2.5f * (dt * 500);
+                m_camera.position.y += 10.f * dt;
             } break;
-            case Camera::Movement::DOWN: m_camera.position.y -= 2.5f * (dt * 500); break;
+            case Camera::Movement::DOWN: m_camera.position.y -= 10.f * dt; break;
         }
     }
 
@@ -150,20 +152,19 @@ public:
 
     void onTick(float dt) override
     {
+        ImGuiTheme::setStyle();
         imGuiManager.newFrame();
 
         editor.create(*this, m_vulkan_application.pipelineStorage);
         m_paused = !editor.getRun();
         sceneEditor.create();
         if (m_paused) {
-            editor.setAspectRatio(m_vulkan_application.getAspectRatio());
+            sceneEditor.setAspectRatio(m_vulkan_application.getAspectRatio());
             entity.create();
             entity.hasSelected() ? componentEditor.create(entity.getEntitySelected()) : componentEditor.create();
             systemsEditor.create();
             assetBrowser.create();
-            if (entity.hasSelected()) {
-                editor.DisplayGuizmo(entity.getEntitySelected(), m_camera, sceneEditor.offset, sceneEditor.size);
-            }
+            if (entity.hasSelected()) { sceneEditor.DisplayGuizmo(entity.getEntitySelected(), m_camera); }
         }
         UpdateCamera(dt);
         ImGuiManager::render();

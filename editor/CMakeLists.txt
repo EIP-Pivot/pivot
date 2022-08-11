@@ -41,6 +41,7 @@ add_executable(
     source/ImGuiCore/AssetBrowser.cxx
     source/ImGuiCore/SceneEditor.cxx
     source/ImGuiCore/CustomWidget.cxx
+    source/ImGuiCore/ImGuiTheme.cxx
 )
 
 target_compile_definitions(

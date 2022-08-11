@@ -28,7 +28,7 @@ public:
 
 public:
     ImGuiManager(const pivot::ecs::SceneManager &sceneManager, pivot::Engine &engine)
-        : m_sceneManager(sceneManager), m_engine(engine), m_centerDockId(0)
+        : m_sceneManager(sceneManager), m_engine(engine)
     {
         for (const auto &directoryEntry: std::filesystem::recursive_directory_iterator(PIVOT_EDITOR_ICON_PATH)) {
             if (directoryEntry.is_directory()) continue;
@@ -37,7 +37,6 @@ public:
     };
 
     void reset() { imguiTextureId.clear(); }
-    void setStyle();
     void newFrame();
     void dockSpace();
     bool menuBar();

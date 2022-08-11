@@ -1,12 +1,13 @@
 #include "ImGuiCore/SystemsEditor.hxx"
+#include "ImGuiCore/CustomWidget.hxx"
 
 #include <imgui.h>
 
 void SystemsEditor::create()
 {
-    ImGui::Begin("Systems");
+    ImGui::Begin(" Systems ");
     displaySystem();
-    if (ImGui::Button("Add System")) { ImGui::OpenPopup("AddSystem"); }
+    if (CustomWidget::ButtonCenteredOnLine("Add System")) { ImGui::OpenPopup("AddSystem"); }
     createPopUp();
     ImGui::End();
 }

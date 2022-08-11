@@ -24,11 +24,13 @@ void SceneEditor::create()
 
 void SceneEditor::toolbar()
 {
+    ImGui::PushStyleColor(ImGuiCol_Separator, ImVec4(0.20f, 0.25f, 0.29f, 1.00f));
     if (ImGui::BeginMenuBar()) {
         imGuizmoOperation();
         imGuizmoMode();
         ImGui::EndMenuBar();
     }
+    ImGui::PopStyleColor();
 }
 
 void SceneEditor::imGuizmoOperation()

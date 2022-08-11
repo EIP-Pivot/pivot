@@ -10,6 +10,12 @@ ImGuiTheme::ImGuiTheme()
     colors.insert({"Button", ImVec4(0.936275, 0.275375, 0, 1.00f)});
     colors.insert({"ButtonHover", ImVec4(0.127451, 0.127451, 0.127451, 1.00f)});
     colors.insert({"ButtonActive", ImVec4(0.0509804, 0.0509804, 0.0509804, 1.00f)});
+    colors.insert({"Separator", ImVec4(0.129412, 0.129412, 0.129412, 1.00f)});
+    colors.insert({"SeparatorHovered", ImVec4(0.937255, 0.27451, 0, 1.00f)});
+    colors.insert({"SeparatorActive", ImVec4(0.937255, 0.27451, 0, 1.00f)});
+    colors.insert({"Header", ImVec4(0.129412, 0.129412, 0.129412, 0.55f)});
+    colors.insert({"HeaderHovered", ImVec4(0.129412, 0.129412, 0.129412, 0.80f)});
+    colors.insert({"HeaderActive", ImVec4(0.129412, 0.129412, 0.129412, 1.00f)});
 }
 
 void ImGuiTheme::setStyle() { setColorsStyle(); }
@@ -48,17 +54,17 @@ void ImGuiTheme::setColorsStyle()
     style.Colors[ImGuiCol_Button] = colors["Button"];
     style.Colors[ImGuiCol_ButtonHovered] = colors["ButtonHover"];
     style.Colors[ImGuiCol_ButtonActive] = colors["ButtonActive"];
-    style.Colors[ImGuiCol_Header] = ImVec4(0.20f, 0.25f, 0.29f, 0.55f);
-    style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
-    style.Colors[ImGuiCol_HeaderActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-    style.Colors[ImGuiCol_Separator] = ImVec4(0.20f, 0.25f, 0.29f, 1.00f);
-    style.Colors[ImGuiCol_SeparatorHovered] = ImVec4(0.10f, 0.40f, 0.75f, 0.78f);
-    style.Colors[ImGuiCol_SeparatorActive] = ImVec4(0.10f, 0.40f, 0.75f, 1.00f);
+    style.Colors[ImGuiCol_Header] = colors["Header"];
+    style.Colors[ImGuiCol_HeaderHovered] = colors["HeaderHovered"];
+    style.Colors[ImGuiCol_HeaderActive] = colors["HeaderActive"];
+    style.Colors[ImGuiCol_Separator] = colors["Separator"];
+    style.Colors[ImGuiCol_SeparatorHovered] = colors["SeparatorHovered"];
+    style.Colors[ImGuiCol_SeparatorActive] = colors["SeparatorActive"];
     style.Colors[ImGuiCol_ResizeGrip] = ImVec4(0.26f, 0.59f, 0.98f, 0.25f);
     style.Colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
     style.Colors[ImGuiCol_ResizeGripActive] = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
     style.Colors[ImGuiCol_Tab] = colors["Dark"];
-    style.Colors[ImGuiCol_TabHovered] = ImVec4(0.08f, 0.08f, 0.092f, 1.00f);
+    style.Colors[ImGuiCol_TabHovered] = colors["Gray"];
     style.Colors[ImGuiCol_TabActive] = colors["Gray"];
     style.Colors[ImGuiCol_TabUnfocused] = colors["Dark"];
     style.Colors[ImGuiCol_TabUnfocusedActive] = colors["Gray"];

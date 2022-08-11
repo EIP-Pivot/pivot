@@ -87,34 +87,35 @@ bool ImGuiManager::menuBar()
     }
     ImGui::PopStyleVar(3);
 
+    bool bFileResult = false;
     switch (menuAction) {
         case MenuBarAction::None: return false;
         case MenuBarAction::SaveScene:
-            handleFile<FileAction::Save>("Save Scene", "Scene correctly saved.",
-                                         "Failed to save the scene, please check the log.", {{"Scene", "json"}},
-                                         [this](const std::filesystem::path &path) {
-                                             m_engine.saveScene(m_sceneManager.getCurrentSceneId(), path);
-                                             return true;
-                                         });
+            bFileResult = handleFile<FileAction::Save>("Save Scene", "Scene correctly saved.",
+                                                       "Failed to save the scene, please check the log.",
+                                                       {{"Scene", "json"}}, [this](const std::filesystem::path &path) {
+                                                           m_engine.saveScene(m_sceneManager.getCurrentSceneId(), path);
+                                                           return true;
+                                                       });
             break;
         case MenuBarAction::LoadScene:
-            handleFile<FileAction::Open>("Load Scene", "Scene loaded succefully !",
-                                         "Scene loading failed, please check the log.", {{"Scene", "json"}},
-                                         [this](const std::filesystem::path &path) {
-                                             m_engine.loadScene(path);
-                                             return true;
-                                         });
+            bFileResult = handleFile<FileAction::Open>("Load Scene", "Scene loaded succefully !",
+                                                       "Scene loading failed, please check the log.",
+                                                       {{"Scene", "json"}}, [this](const std::filesystem::path &path) {
+                                                           m_engine.loadScene(path);
+                                                           return true;
+                                                       });
             break;
         case MenuBarAction::LoadScript:
-            handleFile<FileAction::Open>("Load Script", "Script loaded succefully !",
-                                         "Script loading failed, please look at the logs.",
-                                         {{"Pivot script", "pivotscript"}}, [this](const std::filesystem::path &path) {
-                                             m_engine.loadScript(path);
-                                             return true;
-                                         });
+            bFileResult = handleFile<FileAction::Open>(
+                "Load Script", "Script loaded succefully !", "Script loading failed, please look at the logs.",
+                {{"Pivot script", "pivotscript"}}, [this](const std::filesystem::path &path) {
+                    m_engine.loadScript(path);
+                    return true;
+                });
             break;
         case MenuBarAction::LoadAsset:
-            handleFile<FileAction::Open>(
+            bFileResult = handleFile<FileAction::Open>(
                 "Load asset", "Asset loaded succefully !", "Asset loading failed, please look at the logs.",
                 {{"Model", "gltf,obj"}, {"Textures", "jpg,png,ktx"}}, [this](const std::filesystem::path &path) {
                     m_engine.loadAsset(path);
@@ -122,6 +123,7 @@ bool ImGuiManager::menuBar()
                 });
             break;
     }
+    if (!bFileResult) render();
     return true;
 }
 

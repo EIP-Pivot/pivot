@@ -259,19 +259,10 @@ static std::pair<std::string, asset::CPUMaterial> loadGltfMaterial(const std::ve
     return std::make_pair(mat.name, material);
 }
 
-std::optional<asset::CPUStorage> loadGltfModel(const std::filesystem::path &path)
+std::optional<asset::CPUStorage> extractFromModel(const std::filesystem::path &path, const tinygltf::Model &gltfModel)
 try {
     DEBUG_FUNCTION
-
     asset::CPUStorage storage;
-    tinygltf::Model gltfModel;
-    tinygltf::TinyGLTF gltfContext;
-    std::string error, warning;
-
-    bool isLoaded = gltfContext.LoadASCIIFromFile(&gltfModel, &error, &warning, path.string());
-    if (!warning.empty()) logger.warn("Asset Storage/GLTF") << warning;
-    if (!error.empty()) logger.err("Asset Storage/GLTF") << error;
-    if (!isLoaded) return std::nullopt;
 
     std::vector<std::string> texturePath;
     for (const auto &image: gltfModel.images) {
@@ -284,7 +275,7 @@ try {
         storage.materialStaging.insert(std::move(mat));
     }
     if (gltfModel.scenes.empty()) {
-        logger.warn("Asset Storage/GLTF") << "GLTF file does not contains scene.";
+        logger.warn("Asset Storage") << path.extension() << " file does not contains scene.";
         return storage;
     }
     auto prefabNode = std::make_shared<asset::ModelNode>();
@@ -304,11 +295,42 @@ try {
     storage.modelStorage[prefabNode->value.name] = prefabNode;
     return storage;
 } catch (const PivotException &ase) {
-    logger.err(ase.getScope()) << "Error while loaded GLTF file : " << ase.what();
+    logger.err(ase.getScope()) << "Error while loaded file : " << ase.what();
     return std::nullopt;
 } catch (const std::logic_error &le) {
-    logger.err("THROW/Asset Storage/Invalid GLTF file") << "The GLTF file is malformed. Reason : " << le.what();
+    logger.err("THROW/Asset Storage/Logic Error") << le.what();
     return std::nullopt;
+}
+
+std::optional<asset::CPUStorage> loadGltfModel(const std::filesystem::path &path)
+{
+    DEBUG_FUNCTION
+
+    tinygltf::Model gltfModel;
+    tinygltf::TinyGLTF gltfContext;
+    std::string error, warning;
+
+    bool isLoaded = gltfContext.LoadASCIIFromFile(&gltfModel, &error, &warning, path.string());
+    if (!warning.empty()) logger.warn("Asset Storage/GLTF") << warning;
+    if (!error.empty()) logger.err("Asset Storage/GLTF") << error;
+    if (!isLoaded) return std::nullopt;
+    return extractFromModel(path, gltfModel);
+}
+
+std::optional<asset::CPUStorage> loadGlbModel(const std::filesystem::path &path)
+{
+    DEBUG_FUNCTION
+
+    asset::CPUStorage storage;
+    tinygltf::Model gltfModel;
+    tinygltf::TinyGLTF gltfContext;
+    std::string error, warning;
+
+    bool isLoaded = gltfContext.LoadBinaryFromFile(&gltfModel, &error, &warning, path.string());
+    if (!warning.empty()) logger.warn("Asset Storage/GLB") << warning;
+    if (!error.empty()) logger.err("Asset Storage/GLB") << error;
+    if (!isLoaded) return std::nullopt;
+    return extractFromModel(path, gltfModel);
 }
 
 }    // namespace pivot::graphics::asset::loaders

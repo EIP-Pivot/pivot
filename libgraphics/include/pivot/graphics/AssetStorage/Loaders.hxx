@@ -19,6 +19,8 @@ LOGIC_ERROR(AssetHandler);
 std::optional<asset::CPUStorage> loadObjModel(const std::filesystem::path &path);
 /// Load a .gltf file
 std::optional<asset::CPUStorage> loadGltfModel(const std::filesystem::path &path);
+/// Load a .glb file
+std::optional<asset::CPUStorage> loadGlbModel(const std::filesystem::path &path);
 
 /// Load a .png file
 std::optional<asset::CPUStorage> loadPngTexture(const std::filesystem::path &path);
@@ -38,6 +40,7 @@ const std::unordered_map<std::string, loaders::AssetHandler> supportedTexture = 
 const std::unordered_map<std::string, loaders::AssetHandler> supportedObject = {
     {".obj", &loadObjModel},
     {".gltf", &loadGltfModel},
+    {".glb", &loadGlbModel},
 };
 
 }    // namespace pivot::graphics::asset::loaders

@@ -35,7 +35,7 @@ void ImGuiManager::newFrame(pivot::Engine &engine)
                                  });
     handleFile<FileAction::Open>(
         "Load asset", "Asset loaded succefully !", "Asset loading failed, please look at the logs.",
-        {{"Model", "gltf,obj"}, {"Textures", "jpg,png,ktx"}}, [&engine](const std::filesystem::path &path) {
+        {{"Model", "gltf,glb,obj"}, {"Textures", "jpg,png,ktx"}}, [&engine](const std::filesystem::path &path) {
             engine.loadAsset(path);
             return true;
         });

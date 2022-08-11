@@ -21,6 +21,7 @@
 #include "ImGuiCore/EntityModule.hxx"
 #include "ImGuiCore/ImGuiManager.hxx"
 #include "ImGuiCore/ImGuiTheme.hxx"
+#include "ImGuiCore/MenuBar.hxx"
 #include "ImGuiCore/SceneEditor.hxx"
 #include "ImGuiCore/SystemsEditor.hxx"
 
@@ -40,7 +41,8 @@ public:
           componentEditor(m_component_index, getCurrentScene()),
           systemsEditor(m_system_index, m_component_index, getCurrentScene()),
           assetBrowser(imGuiManager, m_vulkan_application.assetStorage, getCurrentScene()),
-          sceneEditor(imGuiManager, getCurrentScene())
+          sceneEditor(imGuiManager, getCurrentScene()),
+          menuBar(getSceneManager(), *this)
     {
     }
 
@@ -154,6 +156,10 @@ public:
     {
         imGuiTheme.setStyle();
         imGuiManager.newFrame();
+        if (!menuBar.render()) {
+            imGuiManager.reset();
+            return onTick(dt);
+        }
         imGuiTheme.setColors();
         editor.create(*this, m_vulkan_application.pipelineStorage);
         m_paused = !editor.getRun();
@@ -193,6 +199,7 @@ public:
     AssetBrowser assetBrowser;
     SceneEditor sceneEditor;
     ImGuiTheme imGuiTheme;
+    MenuBar menuBar;
     glm::dvec2 last;
 
     bool bFirstMouse = true;

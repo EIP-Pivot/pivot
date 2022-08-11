@@ -39,6 +39,7 @@ add_executable(
     source/ImGuiCore/ComponentEditor.cxx
     source/ImGuiCore/SystemsEditor.cxx
     source/ImGuiCore/AssetBrowser.cxx
+    source/ImGuiCore/MenuBar.cxx
     source/ImGuiCore/SceneEditor.cxx
     source/ImGuiCore/CustomWidget.cxx
     source/ImGuiCore/ImGuiTheme.cxx

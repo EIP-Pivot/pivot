@@ -12,19 +12,6 @@ constexpr std::false_type always_false;
 
 class ImGuiManager
 {
-public:
-    enum class FileAction {
-        Open,
-        Save,
-    };
-
-    enum class MenuBarAction {
-        None,
-        SaveScene,
-        LoadScene,
-        LoadScript,
-        LoadAsset,
-    };
 
 public:
     ImGuiManager(const pivot::ecs::SceneManager &sceneManager, pivot::Engine &engine)
@@ -39,7 +26,6 @@ public:
     void reset() { imguiTextureId.clear(); }
     void newFrame();
     void dockSpace();
-    bool menuBar();
     static void render();
     ImGuiID getCenterDockId();
     ImTextureID &getTextureId(const std::string &name)
@@ -55,41 +41,6 @@ public:
         } else {
             return iter->second;
         }
-    }
-
-    template <FileAction A>
-    bool handleFile(const std::string &buttonText, const std::string &successText, const std::string &errorText,
-                    const std::vector<nfdfilteritem_t> &acceptedFiles,
-                    const std::function<bool(const std::filesystem::path &)> &&handler)
-    {
-
-        bool result_handler = false;
-
-        NFD::Guard nfd_guard;
-        NFD::UniquePath path;
-        nfdresult_t result = nfdresult_t::NFD_ERROR;
-
-        if constexpr (A == FileAction::Save) {
-            result = NFD::SaveDialog(path, acceptedFiles.data(), acceptedFiles.size());
-        } else if constexpr (A == FileAction::Open) {
-            result = NFD::OpenDialog(path, acceptedFiles.data(), acceptedFiles.size());
-        } else {
-            static_assert(always_false<decltype(A)>, "Unreachable branch");
-        }
-
-        switch (result) {
-            case NFD_OKAY: {
-                logger.info(buttonText) << path;
-                handler(path.get());
-            } break;
-            case NFD_ERROR: {
-                logger.err("File Dialog") << NFD::GetError();
-                NFD::ClearError();
-            } break;
-            case NFD_CANCEL: break;
-        }
-
-        return result_handler;
     }
 
 private:

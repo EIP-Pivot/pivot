@@ -15,12 +15,8 @@ void ImGuiManager::newFrame()
     ImGui::NewFrame();
     ImGuizmo::BeginFrame();
 
-    // If menuBar() return true, that mean that it is no longer safe to continue rendering, nor to use the TextureIds.
-    if (menuBar()) {
-        // reset texture Ids and start a new frame
-        reset();
-        return newFrame();
-    }
+    ImGui::ShowMetricsWindow();
+
     dockSpace();
 }
 
@@ -66,65 +62,6 @@ void ImGuiManager::dockSpace()
         }
     }
     ImGui::End();
-}
-
-bool ImGuiManager::menuBar()
-{
-    MenuBarAction menuAction = MenuBarAction::None;
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{10.0f, 10.0f});
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5.0f, 5.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-    if (ImGui::BeginMainMenuBar()) {
-        if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("Save Scene", "CTRL+S")) menuAction = MenuBarAction::SaveScene;
-            if (ImGui::MenuItem("Load Scene")) menuAction = MenuBarAction::LoadScene;
-            if (ImGui::MenuItem("Load Script")) menuAction = MenuBarAction::LoadScript;
-            if (ImGui::MenuItem("Load asset")) menuAction = MenuBarAction::LoadAsset;
-
-            ImGui::EndMenu();
-        }
-        ImGui::EndMainMenuBar();
-    }
-    ImGui::PopStyleVar(3);
-
-    bool bFileResult = false;
-    switch (menuAction) {
-        case MenuBarAction::None: return false;
-        case MenuBarAction::SaveScene:
-            bFileResult = handleFile<FileAction::Save>("Save Scene", "Scene correctly saved.",
-                                                       "Failed to save the scene, please check the log.",
-                                                       {{"Scene", "json"}}, [this](const std::filesystem::path &path) {
-                                                           m_engine.saveScene(m_sceneManager.getCurrentSceneId(), path);
-                                                           return true;
-                                                       });
-            break;
-        case MenuBarAction::LoadScene:
-            bFileResult = handleFile<FileAction::Open>("Load Scene", "Scene loaded succefully !",
-                                                       "Scene loading failed, please check the log.",
-                                                       {{"Scene", "json"}}, [this](const std::filesystem::path &path) {
-                                                           m_engine.loadScene(path);
-                                                           return true;
-                                                       });
-            break;
-        case MenuBarAction::LoadScript:
-            bFileResult = handleFile<FileAction::Open>(
-                "Load Script", "Script loaded succefully !", "Script loading failed, please look at the logs.",
-                {{"Pivot script", "pivotscript"}}, [this](const std::filesystem::path &path) {
-                    m_engine.loadScript(path);
-                    return true;
-                });
-            break;
-        case MenuBarAction::LoadAsset:
-            bFileResult = handleFile<FileAction::Open>(
-                "Load asset", "Asset loaded succefully !", "Asset loading failed, please look at the logs.",
-                {{"Model", "gltf,obj"}, {"Textures", "jpg,png,ktx"}}, [this](const std::filesystem::path &path) {
-                    m_engine.loadAsset(path);
-                    return true;
-                });
-            break;
-    }
-    if (!bFileResult) render();
-    return true;
 }
 
 void ImGuiManager::render()

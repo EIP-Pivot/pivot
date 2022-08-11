@@ -160,7 +160,7 @@ public:
             imGuiManager.reset();
             return onTick(dt);
         }
-        imGuiTheme.setColors();
+        if (menuBar.shouldDisplayColorwindow()) imGuiTheme.setColors();
         editor.create(*this, m_vulkan_application.pipelineStorage);
         m_paused = !editor.getRun();
         sceneEditor.create();

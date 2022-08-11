@@ -82,8 +82,17 @@ bool MenuBar::render()
                 ImGui::EndMenu();
             }
         }
+
+        if (ImGui::BeginMenu("Debug")) {
+            if (ImGui::MenuItem("Metrics Window", "", showMetricsWindow)) { showMetricsWindow = !showMetricsWindow; }
+            if (ImGui::MenuItem("Color Window", "", displayColors)) { displayColors = !displayColors; }
+            ImGui::EndMenu();
+        }
         ImGui::EndMainMenuBar();
     }
+
+    if (showMetricsWindow) ImGui::ShowMetricsWindow();
+
     ImGui::PopStyleVar(3);
     return true;
 }

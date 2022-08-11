@@ -83,21 +83,13 @@ void ImGuiTheme::setColorsStyle()
 void ImGuiTheme::setColors()
 {
     ImGui::Begin("Colors");
-    std::cout << "------- Colors -------" << std::endl;
     for (auto &[key, value]: colors) { getColor(key, value); }
-    std::cout << "----------------------" << std::endl;
     ImGui::End();
 }
 
 void ImGuiTheme::getColor(const std::string &label, ImVec4 &color)
 {
-    float col[4] = {color.x, color.y, color.z, color.w};
-    ImGui::ColorEdit4(label.c_str(), col);
-    std::cout << label << ": " << col[0] << ", " << col[1] << ", " << col[2] << ", " << col[3] << std::endl;
-    color.x = col[0];
-    color.y = col[1];
-    color.z = col[2];
-    color.w = col[3];
+    ImGui::ColorEdit4(label.c_str(), (float *)&color);
 }
 
 void ImGuiTheme::setDefaultFramePadding() { ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.f, 3.f)); }

@@ -15,8 +15,6 @@ void ImGuiManager::newFrame()
     ImGui::NewFrame();
     ImGuizmo::BeginFrame();
 
-    ImGui::ShowMetricsWindow();
-
     dockSpace();
 }
 

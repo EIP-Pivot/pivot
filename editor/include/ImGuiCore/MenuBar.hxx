@@ -39,6 +39,11 @@ public:
 
     bool render();
 
+    bool shouldDisplayColorwindow() const { return displayColors; }
+
 private:
     std::unordered_map<std::string, std::vector<FileInteraction>> fileSubMenu;
+
+    bool showMetricsWindow = false;
+    bool displayColors = false;
 };

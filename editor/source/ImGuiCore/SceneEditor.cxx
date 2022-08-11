@@ -10,12 +10,13 @@ void SceneEditor::create()
 {
     ImGui::SetNextWindowDockID(m_imGuiManager.getCenterDockId());
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(3.f, 8.f));
+    //    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(3.f, 0.f));
+    ImGui::PushStyleColor(ImGuiCol_MenuBarBg, ImGui::GetStyle().Colors[ImGuiCol_WindowBg]);
+    ImGui::Begin(" Scene ", nullptr,
+                 ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_MenuBar);
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.f, 0.f));
-    ImGui::PushStyleColor(ImGuiCol_MenuBarBg, ImVec4(0.037f, 0.037f, 0.049f, 1.00f));
-    ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_MenuBar);
     toolbar();
-    ImGui::PopStyleVar(3);
+    ImGui::PopStyleVar(2);
     ImGui::PopStyleColor();
     viewport();
     ImGui::End();
@@ -38,12 +39,12 @@ void SceneEditor::imGuizmoOperation()
 
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.f);
-    if (CustomWidget::RadioImageButton("Translate", move, ImVec2(19.f, 19.f),
+    if (CustomWidget::RadioImageButton("Translate", move, ImVec2(17.f, 17.f),
                                        currentGizmoOperation == ImGuizmo::TRANSLATE))
         currentGizmoOperation = ImGuizmo::TRANSLATE;
-    if (CustomWidget::RadioImageButton("Rotate", rotate, ImVec2(19.f, 19.f), currentGizmoOperation == ImGuizmo::ROTATE))
+    if (CustomWidget::RadioImageButton("Rotate", rotate, ImVec2(17.f, 17.f), currentGizmoOperation == ImGuizmo::ROTATE))
         currentGizmoOperation = ImGuizmo::ROTATE;
-    if (CustomWidget::RadioImageButton("Scale", scale, ImVec2(19.f, 19.f), currentGizmoOperation == ImGuizmo::SCALE))
+    if (CustomWidget::RadioImageButton("Scale", scale, ImVec2(17.f, 17.f), currentGizmoOperation == ImGuizmo::SCALE))
         currentGizmoOperation = ImGuizmo::SCALE;
     ImGui::PopStyleVar(2);
     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 5.f);
@@ -59,9 +60,9 @@ void SceneEditor::imGuizmoMode()
 
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.f);
-        if (CustomWidget::RadioImageButton("Local", move, ImVec2(19.f, 19.f), currentGizmoMode == ImGuizmo::LOCAL))
+        if (CustomWidget::RadioImageButton("Local", move, ImVec2(17.f, 17.f), currentGizmoMode == ImGuizmo::LOCAL))
             currentGizmoMode = ImGuizmo::LOCAL;
-        if (CustomWidget::RadioImageButton("World", rotate, ImVec2(19.f, 19.f), currentGizmoMode == ImGuizmo::WORLD))
+        if (CustomWidget::RadioImageButton("World", rotate, ImVec2(17.f, 17.f), currentGizmoMode == ImGuizmo::WORLD))
             currentGizmoMode = ImGuizmo::WORLD;
         ImGui::PopStyleVar(2);
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 5.f);

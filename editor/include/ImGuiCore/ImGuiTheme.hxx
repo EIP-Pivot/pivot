@@ -1,12 +1,20 @@
 #pragma once
 
 #include <imgui.h>
+#include <map>
 
 class ImGuiTheme
 {
 public:
-    static void setStyle();
+    ImGuiTheme();
+    void setStyle();
+
+    void setColors();
+    void getColor(const std::string &label, ImVec4 &color);
+    static void setDefaultFramePadding();
+    static void unsetDefaultFramePadding();
 
 private:
-    static void setColorsStyle();
+    std::map<std::string, ImVec4> colors;
+    void setColorsStyle();
 };

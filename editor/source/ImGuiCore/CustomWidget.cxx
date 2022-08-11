@@ -162,8 +162,8 @@ bool CustomWidget::ButtonCenteredOnLine(const std::string &label, float alignmen
 bool CustomWidget::RadioImageButton(const std::string &label, ImTextureID texture_id, const ImVec2 &size, bool active)
 {
     bool buttonValue;
-    ImVec4 bgColor(0.037f, 0.037f, 0.049f, 1.00f);
-    ImVec4 activeColor(0.f, 0.382353f, 1.f, 1.00f);
+    ImVec4 bgColor = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
+    ImVec4 activeColor = ImGui::GetStyle().Colors[ImGuiCol_Button];
     ImVec4 hoverColor(0.08f, 0.08f, 0.092f, 1.00f);
 
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.f, 5.f));

@@ -54,13 +54,13 @@ void ImGuiManager::dockSpace()
 
             ImGuiID dockspace_id = ImGui::GetID("DockSpace");
             ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2{0.f, 0.f});
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 5.0f));
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 7.0f));
             ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
             ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags, nullptr);
             ImGui::PopStyleVar(3);
             if (ImGuiDockNode *node = ImGui::DockBuilderGetCentralNode(dockspace_id)) {
                 m_centerDockId = node->ID;
-                node->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
+                //                node->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
             }
             ImGui::PopStyleColor();
         }

@@ -2,12 +2,14 @@
 
 #include "ImGuiCore/AssetBrowser.hxx"
 #include "ImGuiCore/CustomWidget.hxx"
+#include "ImGuiCore/ImGuiTheme.hxx"
 
 using namespace pivot::ecs::data;
 
 void AssetBrowser::create()
 {
     ImGui::Begin(" Asset ");
+    ImGuiTheme::setDefaultFramePadding();
     auto image = m_imGuiManager.getTextureId("Prefab");
     std::size_t imagesMax = ImGui::GetWindowWidth() / (70 + ImGui::GetStyle().ItemSpacing.x);
     std::size_t images = 0;
@@ -17,6 +19,7 @@ void AssetBrowser::create()
         images++;
         if (imagesMax != 0 && images % imagesMax != 0) ImGui::SameLine();
     }
+    ImGuiTheme::unsetDefaultFramePadding();
     ImGui::End();
 }
 

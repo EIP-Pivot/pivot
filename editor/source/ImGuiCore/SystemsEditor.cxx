@@ -1,14 +1,17 @@
 #include "ImGuiCore/SystemsEditor.hxx"
 #include "ImGuiCore/CustomWidget.hxx"
+#include "ImGuiCore/ImGuiTheme.hxx"
 
 #include <imgui.h>
 
 void SystemsEditor::create()
 {
     ImGui::Begin(" Systems ");
+    ImGuiTheme::setDefaultFramePadding();
     displaySystem();
     if (CustomWidget::ButtonCenteredOnLine("Add System")) { ImGui::OpenPopup("AddSystem"); }
     createPopUp();
+    ImGuiTheme::unsetDefaultFramePadding();
     ImGui::End();
 }
 

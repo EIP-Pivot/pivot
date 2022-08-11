@@ -1,4 +1,5 @@
 #include "ImGuiCore/ComponentEditor.hxx"
+#include "ImGuiCore/ImGuiTheme.hxx"
 #include "ImGuiCore/TypeTemplate/Template.hxx"
 #include <magic_enum.hpp>
 
@@ -12,9 +13,11 @@ void ComponentEditor::create(Entity entity)
 {
     currentEntity = entity;
     ImGui::Begin(" Component editor ");
+    ImGuiTheme::setDefaultFramePadding();
     createPopUp();
     displayComponent();
     if (CustomWidget::ButtonCenteredOnLine("Add Component")) { ImGui::OpenPopup("AddComponent"); }
+    ImGuiTheme::unsetDefaultFramePadding();
     ImGui::End();
 }
 

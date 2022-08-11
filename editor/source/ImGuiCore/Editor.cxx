@@ -2,6 +2,7 @@
 #include <misc/cpp/imgui_stdlib.h>
 
 #include "ImGuiCore/Editor.hxx"
+#include "ImGuiCore/ImGuiTheme.hxx"
 
 using namespace pivot::ecs;
 
@@ -11,6 +12,7 @@ void Editor::create(pivot::Engine &engine, pivot::graphics::PipelineStorage &pip
     ImVec2 newSceneSize = ImVec2(20, 15);
     ImGuiIO &io = ImGui::GetIO();
     ImGui::Begin(" Editor ");
+    ImGuiTheme::setDefaultFramePadding();
     if (!run) {
         createPopUp(engine);
         for (SceneManager::SceneId sceneId = 0; sceneId < m_sceneManager.getLivingScene(); sceneId++) {
@@ -46,6 +48,7 @@ void Editor::create(pivot::Engine &engine, pivot::graphics::PipelineStorage &pip
     ImGui::Text("Fps: %.1f", ImGui::GetIO().Framerate);
     ImGui::Text("ms/frame %.3f", 1000.0f / ImGui::GetIO().Framerate);
     ImGui::Checkbox("Systems", &run);
+    ImGuiTheme::unsetDefaultFramePadding();
     ImGui::End();
 }
 

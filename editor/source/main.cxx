@@ -152,9 +152,9 @@ public:
 
     void onTick(float dt) override
     {
-        ImGuiTheme::setStyle();
+        imGuiTheme.setStyle();
         imGuiManager.newFrame();
-
+        imGuiTheme.setColors();
         editor.create(*this, m_vulkan_application.pipelineStorage);
         m_paused = !editor.getRun();
         sceneEditor.create();
@@ -192,6 +192,7 @@ public:
     SystemsEditor systemsEditor;
     AssetBrowser assetBrowser;
     SceneEditor sceneEditor;
+    ImGuiTheme imGuiTheme;
     glm::dvec2 last;
 
     bool bFirstMouse = true;

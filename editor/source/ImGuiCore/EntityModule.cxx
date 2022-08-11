@@ -1,4 +1,5 @@
 #include "ImGuiCore/EntityModule.hxx"
+#include "ImGuiCore/ImGuiTheme.hxx"
 
 #include <misc/cpp/imgui_stdlib.h>
 
@@ -12,6 +13,7 @@ void EntityModule::create()
     }
     currentScene = m_scene.id();
     ImGui::Begin(" Entity ");
+    ImGuiTheme::setDefaultFramePadding();
     createPopUp();
     if (ImGui::Button("Add entity")) ImGui::OpenPopup("NewEntity");
     if (_hasSelected) {
@@ -36,6 +38,7 @@ void EntityModule::create()
                       << std::endl;
         }
     }
+    ImGuiTheme::unsetDefaultFramePadding();
     ImGui::End();
 }
 

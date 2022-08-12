@@ -23,6 +23,17 @@ public:
     /// Default equality operator
     bool operator==(const Transform &) const = default;
 
+    /// Compute transform with root
+    Transform with_root(const Transform &root)
+    {
+        return Transform{
+            .position = this->position + root.position,
+            .rotation = this->rotation + root.rotation,
+            .scale = this->scale,
+            .root = EntityRef::empty(),
+        };
+    }
+
 private:
     static glm::mat4 recomposeMatrix(const Transform &tran)
     {

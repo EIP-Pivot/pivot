@@ -76,7 +76,12 @@ void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sce
         if (!sceneInformation.renderObjects.exist.get().at(i) || !sceneInformation.renderObjects.exist.get().at(i))
             continue;
         const auto &object = sceneInformation.renderObjects.objects.get().at(i);
-        const auto &transform = sceneInformation.transform.objects.get().at(i);
+        Transform transform = sceneInformation.transform.objects.get().at(i);
+
+        if (!transform.root.is_empty()) {
+            const Transform &root = sceneInformation.transform.objects.get().at(transform.root.ref);
+            transform = transform.with_root(root);
+        }
 
         // TODO: better Pipeline batch
         if (frame.pipelineBatch.empty() || frame.pipelineBatch.back().pipelineID != object.pipelineID) {

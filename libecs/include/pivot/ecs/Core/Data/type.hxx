@@ -9,7 +9,7 @@
 
 #include <pivot/ecs/Core/Data/asset.hxx>
 #include <pivot/ecs/Core/Data/void.hxx>
-#include <pivot/ecs/Core/Data/entity.hxx>
+#include <pivot/utility/entity.hxx>
 
 namespace pivot::ecs::data
 {

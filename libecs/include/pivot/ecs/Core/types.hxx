@@ -1,7 +1,11 @@
 #pragma once
 
 #include <bitset>
-#include <limits>
+
+#include <pivot/utility/entity.hxx>
+
+using Entity = pivot::Entity;
+const Entity MAX_ENTITIES = pivot::MAX_ENTITIES;
 
 constexpr std::uint32_t fnv1a_32(char const *s, std::size_t count)
 {
@@ -9,10 +13,6 @@ constexpr std::uint32_t fnv1a_32(char const *s, std::size_t count)
 }
 
 constexpr std::uint32_t operator"" _hash(char const *s, std::size_t count) { return fnv1a_32(s, count); }
-
-using Entity = std::uint32_t;
-const Entity MAX_ENTITIES = 500000;
-const Entity NULL_ENTITY = std::numeric_limits<Entity>::max();
 
 using ComponentType = std::uint8_t;
 const ComponentType MAX_COMPONENTS = 32;

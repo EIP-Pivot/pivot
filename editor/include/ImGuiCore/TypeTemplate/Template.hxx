@@ -25,7 +25,7 @@ void draw(pivot::ecs::data::Void &, const std::string &name)
 {
     ImGui::Text("%s: This component has no data", name.c_str());
 }
-void draw(pivot::ecs::data::EntityRef &value, const std::string &name)
+void draw(pivot::EntityRef &value, const std::string &name)
 {
     // FIXME: Handle entity reference input. Be careful about handling null
     // references. Empty input should store EntityRef::empty() in the reference.

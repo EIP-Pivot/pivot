@@ -6,6 +6,7 @@
 
 using namespace nlohmann;
 using namespace pivot::ecs::data;
+using EntityRef = pivot::EntityRef;
 
 TEST_CASE("Values can be serialized", "[data][save]")
 {

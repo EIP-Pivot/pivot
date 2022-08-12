@@ -49,7 +49,10 @@ void to_json([[maybe_unused]] nlohmann::json &json, [[maybe_unused]] const Void 
 
 /// Deserialize Void from json
 void from_json([[maybe_unused]] const nlohmann::json &json, [[maybe_unused]] Void &value) {}
+}    // namespace pivot::ecs::data
 
+namespace pivot
+{
 /// Serialize an EntityRef to json
 void to_json(nlohmann::json &json, const EntityRef &value)
 {
@@ -69,7 +72,7 @@ void from_json(const nlohmann::json &json, EntityRef &value)
         value.ref = json["entity"].get<Entity>();
     }
 }
-}    // namespace pivot::ecs::data
+}    // namespace pivot
 
 namespace nlohmann
 {

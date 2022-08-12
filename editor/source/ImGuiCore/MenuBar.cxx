@@ -17,7 +17,7 @@ MenuBar::MenuBar(const pivot::ecs::SceneManager &sceneManager, pivot::Engine &en
                     .handler =
                         [&](const std::filesystem::path &path) {
                             engine.saveScene(sceneManager.getCurrentSceneId(), path);
-                            return true;
+                            return FileResult::Success;
                         },
                 },
                 FileInteraction{
@@ -29,7 +29,7 @@ MenuBar::MenuBar(const pivot::ecs::SceneManager &sceneManager, pivot::Engine &en
                     .handler =
                         [&](const std::filesystem::path &path) {
                             engine.loadScene(path);
-                            return true;
+                            return FileResult::ResetFrame;
                         },
                 },
                 FileInteraction{
@@ -41,7 +41,7 @@ MenuBar::MenuBar(const pivot::ecs::SceneManager &sceneManager, pivot::Engine &en
                     .handler =
                         [&](const std::filesystem::path &path) {
                             engine.loadScript(path);
-                            return true;
+                            return FileResult::Success;
                         },
                 },
                 FileInteraction{
@@ -53,7 +53,7 @@ MenuBar::MenuBar(const pivot::ecs::SceneManager &sceneManager, pivot::Engine &en
                     .handler =
                         [&](const std::filesystem::path &path) {
                             engine.loadAsset(path);
-                            return true;
+                            return FileResult::ResetFrame;
                         },
                 },
             },
@@ -73,7 +73,8 @@ bool MenuBar::render()
                     if (ImGui::MenuItem(fileInteraction.sButtonText.c_str())) {
                         switch (fileInteraction.open()) {
                             case FileResult::HandlerError:
-                            case FileResult::Success: return false;
+                            case FileResult::ResetFrame: return false;
+                            case FileResult::Success:
                             case FileResult::Error:
                             case FileResult::Cancel: break;
                         }
@@ -112,9 +113,7 @@ MenuBar::FileResult MenuBar::FileInteraction::open() const
     }
 
     switch (result) {
-        case NFD_OKAY:
-            logger.info(sButtonText) << path;
-            return (handler(path.get())) ? (MenuBar::FileResult::Success) : (MenuBar::FileResult::HandlerError);
+        case NFD_OKAY: logger.info(sButtonText) << path; return handler(path.get());
         case NFD_ERROR:
             logger.err("File Dialog") << NFD::GetError();
             NFD::ClearError();

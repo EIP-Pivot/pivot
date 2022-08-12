@@ -17,11 +17,14 @@ public:
     };
 
     enum class FileResult {
-        Success,
-        HandlerError,
-        Cancel,
-        Error,
+        ResetFrame = 2,
+        Cancel = 1,
+        Success = 0,
+        HandlerError = -1,
+        Error = -2,
     };
+
+    using Handler = std::function<FileResult(const std::filesystem::path &)>;
 
     struct FileInteraction {
         const FileAction action;
@@ -29,8 +32,7 @@ public:
         const std::string sSuccesText;
         const std::string sErrorText;
         const std::vector<nfdfilteritem_t> acceptedFiles;
-        const std::function<bool(const std::filesystem::path &)> handler;
-
+        Handler handler;
         FileResult open() const;
     };
 

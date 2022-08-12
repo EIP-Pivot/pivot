@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pivot/graphics/types/vk_types.hxx"
+#include <pivot/utility/entity.hxx>
 
 #include <stdexcept>
 
@@ -38,5 +39,8 @@ public:
 
     /// Scale component
     glm::vec3 scale = glm::vec3(1.0f);
+
+    /// Root of the transform
+    pivot::EntityRef root;
 };
 }    // namespace pivot::graphics

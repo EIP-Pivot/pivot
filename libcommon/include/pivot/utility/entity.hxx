@@ -11,7 +11,7 @@ const Entity MAX_ENTITIES = 500000;
 const Entity NULL_ENTITY = std::numeric_limits<Entity>::max();
 
 struct EntityRef {
-    Entity ref;
+    Entity ref = NULL_ENTITY;
 
     auto operator<=>(const EntityRef &) const = default;
 

@@ -26,6 +26,12 @@ void to_json(nlohmann::json &json, const Void &value);
 
 /// Deserialize Void from json
 void from_json(const nlohmann::json &json, Void &value);
+
+/// Serialize EntityRef to json
+void to_json(nlohmann::json &json, const EntityRef &value);
+
+/// Deserialize EntityRef from json
+void from_json(const nlohmann::json &json, EntityRef &value);
 }    // namespace pivot::ecs::data
 
 namespace nlohmann

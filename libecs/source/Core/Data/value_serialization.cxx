@@ -24,6 +24,8 @@ void from_json(const nlohmann::json &json, Value &value)
         // TODO: How to distinguish between an asset and a record ?
         if (json.contains("asset") && json.size() == 1)
             value = json.get<Asset>();
+        else if (json.contains("entity") && json.size() == 1)
+            value = json.get<EntityRef>();
         else
             value = json.get<Record>();
     } else if (json.is_null()) {
@@ -47,6 +49,26 @@ void to_json([[maybe_unused]] nlohmann::json &json, [[maybe_unused]] const Void 
 
 /// Deserialize Void from json
 void from_json([[maybe_unused]] const nlohmann::json &json, [[maybe_unused]] Void &value) {}
+
+/// Serialize an EntityRef to json
+void to_json(nlohmann::json &json, const EntityRef &value)
+{
+    if (value.is_empty()) {
+        json["entity"] = nullptr;
+    } else {
+        json["entity"] = value.ref;
+    }
+}
+
+/// Deserialize an EntityRef from json
+void from_json(const nlohmann::json &json, EntityRef &value)
+{
+    if (json["entity"].is_null()) {
+        value = EntityRef::empty();
+    } else {
+        value.ref = json["entity"].get<Entity>();
+    }
+}
 }    // namespace pivot::ecs::data
 
 namespace nlohmann

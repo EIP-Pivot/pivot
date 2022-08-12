@@ -21,7 +21,16 @@ void draw(double &value, const std::string &name) { ImGui::InputDouble(name.c_st
 
 void draw(pivot::ecs::data::Asset &asset, const std::string &name) { ImGui::InputText(name.c_str(), &asset.name); }
 
-void draw(pivot::ecs::data::Void &, const std::string &) { ImGui::Text("This component has no data"); }
+void draw(pivot::ecs::data::Void &, const std::string &name)
+{
+    ImGui::Text("%s: This component has no data", name.c_str());
+}
+void draw(pivot::ecs::data::EntityRef &value, const std::string &name)
+{
+    // FIXME: Handle entity reference input. Be careful about handling null
+    // references. Empty input should store EntityRef::empty() in the reference.
+    ImGui::Text("%s: Entity ref %u", name.c_str(), value.ref);
+}
 
 void draw(pivot::ecs::data::Value &value, const std::string &name);
 void draw(pivot::ecs::data::Record &values, const std::string &)

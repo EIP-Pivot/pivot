@@ -17,6 +17,8 @@ TEST_CASE("Values can be serialized", "[data][save]")
     REQUIRE(json(Value{Record{{"name", "bob"}, {"age", 42}}}).dump() == R"({"age":42,"name":"bob"})");
     REQUIRE(json(Value{Asset{"cube"}}).dump() == R"({"asset":{"name":"cube"}})");
     REQUIRE(json(Value{Void{}}).dump() == "null");
+    REQUIRE(json(Value{EntityRef::empty()}).dump() == R"({"entity":null})");
+    REQUIRE(json(Value{EntityRef{42}}).dump() == R"({"entity":42})");
 }
 
 TEST_CASE("Values can be deserialized", "[data][save]")
@@ -29,6 +31,8 @@ TEST_CASE("Values can be deserialized", "[data][save]")
     REQUIRE(json::parse(R"({"age":42,"name":"bob"})").get<Value>() == Value{Record{{"name", "bob"}, {"age", 42}}});
     REQUIRE(json::parse(R"({"asset":{"name":"cube"}})").get<Value>() == Value{Asset{"cube"}});
     REQUIRE(json::parse("null").get<Value>() == Value{Void{}});
+    REQUIRE(json::parse(R"({"entity":null})").get<Value>() == Value{EntityRef::empty()});
+    REQUIRE(json::parse(R"({"entity":42})").get<Value>() == Value{EntityRef{42}});
 
     REQUIRE_THROWS(json::parse("[1.0,2.0,3.0,4.0]").get<Value>());
     REQUIRE_THROWS(json::parse("[1.0,2.0]").get<Value>());

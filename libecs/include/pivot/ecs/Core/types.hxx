@@ -1,6 +1,7 @@
 #pragma once
 
 #include <bitset>
+#include <limits>
 
 constexpr std::uint32_t fnv1a_32(char const *s, std::size_t count)
 {
@@ -11,6 +12,7 @@ constexpr std::uint32_t operator"" _hash(char const *s, std::size_t count) { ret
 
 using Entity = std::uint32_t;
 const Entity MAX_ENTITIES = 500000;
+const Entity NULL_ENTITY = std::numeric_limits<Entity>::max();
 
 using ComponentType = std::uint8_t;
 const ComponentType MAX_COMPONENTS = 32;

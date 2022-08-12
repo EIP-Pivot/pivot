@@ -73,13 +73,18 @@ void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sce
     for (unsigned i = 0;
          i < sceneInformation.renderObjects.objects.get().size() && i < sceneInformation.transform.objects.get().size();
          i++) {
-        if (!sceneInformation.renderObjects.exist.get().at(i) || !sceneInformation.renderObjects.exist.get().at(i))
+        if (!sceneInformation.renderObjects.exist.get().at(i) || !sceneInformation.transform.exist.get().at(i))
             continue;
         const auto &object = sceneInformation.renderObjects.objects.get().at(i);
         Transform transform = sceneInformation.transform.objects.get().at(i);
 
         if (!transform.root.is_empty()) {
+            if (!sceneInformation.transform.exist.get().at(transform.root.ref)) continue;
             const Transform &root = sceneInformation.transform.objects.get().at(transform.root.ref);
+            if (!root.root.is_empty()) {
+                logger.warn() << "Entity " << i << " root also has a root. Not displaying.";
+                continue;
+            }
             transform = transform.with_root(root);
         }
 

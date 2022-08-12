@@ -29,7 +29,11 @@ void draw(pivot::EntityRef &value, const std::string &name)
 {
     // FIXME: Handle entity reference input. Be careful about handling null
     // references. Empty input should store EntityRef::empty() in the reference.
-    ImGui::Text("%s: Entity ref %u", name.c_str(), value.ref);
+    if (value.is_empty()) {
+        ImGui::Text("%s: Empty entity ref", name.c_str());
+    } else {
+        ImGui::Text("%s: Entity ref %u", name.c_str(), value.ref);
+    }
 }
 
 void draw(pivot::ecs::data::Value &value, const std::string &name);

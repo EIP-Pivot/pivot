@@ -41,6 +41,6 @@ public:
     glm::vec3 scale = glm::vec3(1.0f);
 
     /// Root of the transform
-    pivot::EntityRef root;
+    pivot::EntityRef root = EntityRef::empty();
 };
 }    // namespace pivot::graphics

@@ -114,10 +114,9 @@ static asset::ModelPtr loadGltfNode(const tinygltf::Model &gltfModel, const tiny
     DEBUG_FUNCTION
     logger.debug("Asset Storage/Gltf") << "Loading node: " << node.name;
 
-    // Can't pass as copy, trigger note about GCC ABI
     glm::dmat4 matrix(1.0f);
     if (node.matrix.size() == 16) {
-        matrix *= glm::make_mat4x4(node.matrix.data());
+        matrix = glm::make_mat4x4(node.matrix.data());
     } else {
         glm::dvec3 translation;
         if (node.translation.size() == 3) { translation = glm::make_vec3(node.translation.data()); }
@@ -131,7 +130,7 @@ static asset::ModelPtr loadGltfNode(const tinygltf::Model &gltfModel, const tiny
         glm::dvec3 scale(1.0f);
         if (node.scale.size() == 3) { scale = glm::make_vec3(node.scale.data()); }
 
-        matrix *=
+        matrix =
             glm::translate(glm::dmat4(1.0f), translation) * glm::dmat4(rotation) * glm::scale(glm::dmat4(1.0f), scale);
     }
 
@@ -259,7 +258,8 @@ static std::pair<std::string, asset::CPUMaterial> loadGltfMaterial(const std::ve
     return std::make_pair(mat.name, material);
 }
 
-std::optional<asset::CPUStorage> extractFromModel(const std::filesystem::path &path, const tinygltf::Model &gltfModel)
+static std::optional<asset::CPUStorage> extractFromModel(const std::filesystem::path &path,
+                                                         const tinygltf::Model &gltfModel)
 try {
     DEBUG_FUNCTION
     asset::CPUStorage storage;

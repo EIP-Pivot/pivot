@@ -79,8 +79,13 @@ public:
     const std::vector<T> &getComponents() const { return this->m_components; }
 
     /// Parse a pivot value into the type stored y the array
-    static T parseValue(data::Value value)
+    T parseValue(data::Value value)
     {
+        auto value_type = value.type();
+        if (value_type != m_description.type) {
+            throw InvalidComponentValue(m_description.name, m_description.type, value_type);
+        }
+
         T parsed;
         helpers::Helpers<T>::updateTypeWithValue(parsed, value);
         return parsed;

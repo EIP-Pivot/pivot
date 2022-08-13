@@ -4,6 +4,7 @@ add_library(
     ${PROJECT_NAME} STATIC
     sources/engine.cxx
     sources/internal/camera.cxx
+    sources/internal/TransformArray.cxx
     sources/builtins/systems/ControlSystem.cxx
     sources/builtins/systems/PhysicSystem.cxx
     sources/builtins/systems/CollisionSystem.cxx

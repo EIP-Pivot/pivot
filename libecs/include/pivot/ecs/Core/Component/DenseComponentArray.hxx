@@ -78,6 +78,14 @@ public:
     /// Returns the vector containing the component data
     const std::vector<T> &getComponents() const { return this->m_components; }
 
+    /// Parse a pivot value into the type stored y the array
+    static T parseValue(data::Value value)
+    {
+        T parsed;
+        helpers::Helpers<T>::updateTypeWithValue(parsed, value);
+        return parsed;
+    }
+
 protected:
     /// Description of the component
     Description m_description;

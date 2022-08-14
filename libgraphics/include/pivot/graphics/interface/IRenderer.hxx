@@ -18,6 +18,14 @@ struct StorageUtils {
     std::reference_wrapper<AssetStorage> assets;
 };
 
+/// Convey information about the rendering
+struct RenderingContext {
+    /// The rectangle where the rendering should take place
+    vk::Rect2D renderArea;
+    /// The size of the viewport.
+    vk::Extent2D viewport;
+};
+
 /// Root interface for the Renderers
 class IRenderer
 {
@@ -33,7 +41,8 @@ public:
     /// Called when the renderer is being removed from the frame
     virtual void onStop(VulkanBase &base_ref) = 0;
     /// Called once per frame
-    virtual bool onDraw(const CameraData &cameraData, DrawCallResolver &resolver, vk::CommandBuffer &cmd) = 0;
+    virtual bool onDraw(const RenderingContext &context, const CameraData &cameraData, DrawCallResolver &resolver,
+                        vk::CommandBuffer &cmd) = 0;
     /// Called when the something change (ie: swapchain resize, assets, etc...)
     virtual bool onRecreate(const vk::Extent2D &size, VulkanBase &base_ref,
                             const vk::DescriptorSetLayout &resolverLayout, vk::RenderPass &pass) = 0;

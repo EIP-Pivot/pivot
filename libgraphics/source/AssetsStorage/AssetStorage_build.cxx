@@ -177,6 +177,7 @@ void AssetStorage::pushTexturesOnGPU()
         allocInfo.usage = vma::MemoryUsage::eGpuOnly;
         auto image = base_ref->get().allocator.createImage(imageInfo, allocInfo);
         image.createImageView(base_ref->get().device);
+        base_ref->get().allocator.setAllocationName(image, "Texture " + name);
         vk_debug::setObjectName(base_ref->get().device, image.image, "Texture " + name);
         vk_debug::setObjectName(base_ref->get().device, image.imageView, "Texture " + name + " ImageView");
 

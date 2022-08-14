@@ -3,6 +3,8 @@
 #include <deque>
 #include <functional>
 
+namespace pivot::graphics
+{
 /// @class DeletionQueue
 ///
 /// @brief A simple LI.LO struct
@@ -13,7 +15,12 @@ class DeletionQueue
 public:
     /// Push new function in the DeletionQueue
     /// @param function The function to be pushed into the queue
-    inline void push(std::function<void()> &&function) { deletor.push_back(function); }
+
+    inline void push(const std::invocable auto function)
+    {
+        static_assert(sizeof(function) < 200, "Don't capture too much in the lambda !");
+        deletor.push_back([function] { function(); });
+    }
 
     /// Flush the queue and execute all the function in reverse order
     ///
@@ -35,3 +42,4 @@ public:
 private:
     std::deque<std::function<void()>> deletor;
 };
+}    // namespace pivot::graphics

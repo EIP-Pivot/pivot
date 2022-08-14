@@ -3,10 +3,16 @@
 #include <GLFW/glfw3.h>
 #include <glm/vec2.hpp>
 #include <optional>
+#include <span>
 #include <string>
 #include <unordered_map>
 #include <vulkan/vulkan.hpp>
 
+#include "pivot/exception.hxx"
+#include "pivot/utility/flags.hxx"
+
+namespace pivot::graphics
+{
 /// @class Window
 ///
 /// @brief A class allowing some abstaction over the GLFW library
@@ -30,7 +36,8 @@ class Window
 {
 public:
     /// Enum of the different key input
-    enum class Key : std::size_t {
+    enum class Key {
+        UNKNOWN = GLFW_KEY_UNKNOWN,
         A = GLFW_KEY_A,
         Z = GLFW_KEY_Z,
         E = GLFW_KEY_E,
@@ -70,16 +77,30 @@ public:
         RIGHT = GLFW_KEY_RIGHT,
         LEFT = GLFW_KEY_LEFT,
     };
+
+    /// Represent the modifier key
+    enum class ModifierBits : FlagsType {
+        Alt = GLFW_MOD_ALT,
+        Ctrl = GLFW_MOD_CONTROL,
+        Shift = GLFW_MOD_SHIFT,
+        Super = GLFW_MOD_SUPER,
+    };
+    /// Flag type
+    using Modifier = Flags<ModifierBits>;
+
     /// Enum of the different key state
-    enum class KeyAction : std::uint8_t {
+    enum class Action {
         Pressed = GLFW_PRESS,
         Release = GLFW_RELEASE,
     };
 
     /// Keyboard event callback signature
-    using KeyEvent = std::function<void(Window &window, const Key key)>;
+    using KeyEvent = std::function<void(Window &window, const Key key, const Modifier modifier)>;
     /// Mouse movement event callback signature
     using MouseEvent = std::function<void(Window &window, const glm::dvec2 pos)>;
+
+    /// Error type for Window
+    RUNTIME_ERROR(Window);
 
 public:
     /// Create a new Window
@@ -114,15 +135,17 @@ public:
     /// Tell wether or not a key is pressed
     ///
     /// @return true if the key is pressed, otherwise false
-    inline bool isKeyPressed(Key key) const noexcept
+    inline bool isKeyPressed(Key _key) const noexcept
     {
+        auto key = getTrueKey(_key);
         return glfwGetKey(this->window, static_cast<unsigned>(key)) == GLFW_PRESS;
     }
     /// Tell wether or not a key is not pressed
     ///
     /// @return true if the key is not pressed, otherwise false
-    inline bool isKeyReleased(Key key) const noexcept
+    inline bool isKeyReleased(Key _key) const noexcept
     {
+        auto key = getTrueKey(_key);
         return glfwGetKey(this->window, static_cast<unsigned>(key)) == GLFW_RELEASE;
     }
 
@@ -132,25 +155,44 @@ public:
     /// @param event The callback function to call when an event occur
     ///
     /// @see KeyEvent
-    void setKeyPressCallback(Key key, KeyEvent event = {});
+    void addKeyPressCallback(Key key, KeyEvent event);
 
-    /// Setup a callback function for provided key when it is release
+    /// Setup a callback function when a key is pressed
+    ///
+    /// @param event The callback function to call when an event occur
+    ///
+    /// @see KeyEvent
+    void addGlobalKeyPressCallback(KeyEvent event);
+
+    /// Setup a callback function for provided key when it is released
     ///
     /// @param key Which key this callback is listening to
     /// @param event The callback function to call when an event occur
     ///
     /// @see KeyEvent
-    void setKeyReleaseCallback(Key key, KeyEvent event = {});
+    void addKeyReleaseCallback(Key key, KeyEvent event);
+
+    /// Setup a callback function when a key is released
+    ///
+    /// @param event The callback function to call when an event occur
+    ///
+    /// @see KeyEvent
+    void addGlobalKeyReleaseCallback(KeyEvent event);
 
     /// Setup a callback function for mouse movement
     /// @param event The callback function to call when the cursor move
     ///
     /// @see MouseEvent
-    void setMouseMovementCallback(MouseEvent event = {});
+    void addMouseMovementCallback(MouseEvent event);
 
     /// Set the title of the window
     /// @param title New title for the window
     void setTitle(const std::string &title) noexcept;
+
+    /// Set the icon of the window
+    void setIcon(const std::span<const GLFWimage> &) noexcept;
+    /// Set the icon of the window
+    void setIcon(const std::span<const std::string> &);
 
     /// Get the title of the window
     /// @return The title of the window
@@ -186,21 +228,25 @@ private:
     void setErrorCallback(GLFWerrorfun &&f) noexcept;
 
     void setUserPointer(void *ptr) noexcept;
-    void initWindow(const unsigned width, const unsigned height) noexcept;
+    void initWindow(const unsigned width, const unsigned height);
     glm::ivec2 updateSize() const noexcept;
+    Key getTrueKey(const Key &ex) const noexcept;
 
     static void error_callback(int code, const char *msg) noexcept;
-    friend void cursor_callback(GLFWwindow *win, double xpos, double ypos);
-    friend void keyboard_callback(GLFWwindow *win, int key, int, int action, int);
+    static void cursor_callback(GLFWwindow *win, double xpos, double ypos);
+    static void keyboard_callback(GLFWwindow *win, int key, int scancode, int action, int mods);
 
 private:
-    std::optional<MouseEvent> mouseCallback = {};
-    std::unordered_map<Key, KeyEvent> keyPressMap;
-    std::unordered_map<Key, KeyEvent> keyReleaseMap;
+    std::vector<MouseEvent> mouseCallback = {};
+    std::vector<KeyEvent> globalKeyReleaseMap;
+    std::vector<KeyEvent> globalKeyPressMap;
+
+    std::unordered_map<Key, std::vector<KeyEvent>> keyPressMap;
+    std::unordered_map<Key, std::vector<KeyEvent>> keyReleaseMap;
 
     std::string windowName;
     GLFWwindow *window = nullptr;
 };
+}    // namespace pivot::graphics
 
-void cursor_callback(GLFWwindow *win, double xpos, double ypos);
-void keyboard_callback(GLFWwindow *win, int key, int, int action, int);
+ENABLE_FLAGS_FOR_ENUM(pivot::graphics::Window::ModifierBits);

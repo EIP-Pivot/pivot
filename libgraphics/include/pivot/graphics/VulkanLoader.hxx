@@ -2,6 +2,8 @@
 
 #include <vulkan/vulkan.hpp>
 
+namespace pivot::graphics
+{
 /// @class VulkanLoader
 ///
 /// @brief A class to abstract dynamic lookout of Vulkan function
@@ -19,10 +21,11 @@ protected:
     /// Create a logical device, and use it to load symbols
     void createLogicalDevice(vk::PhysicalDevice &gpu, vk::DeviceCreateInfo &info);
 
-protected:
+public:
     /// @cond
-    vk::DynamicLoader loader;
     vk::Instance instance = VK_NULL_HANDLE;
     vk::Device device = VK_NULL_HANDLE;
+    vk::DynamicLoader loader;
     /// @endcond
 };
+}    // namespace pivot::graphics

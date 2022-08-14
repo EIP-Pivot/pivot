@@ -5,34 +5,55 @@
 
 #include "pivot/graphics/vk_init.hxx"
 
-namespace vk_utils
+namespace pivot::graphics::vk_utils
 {
-void vk_try(vk::Result res)
+std::string readFile(const std::filesystem::path &filename)
 {
-    if (res < vk::Result::eSuccess) { throw VulkanException(res); }
-}
+    assert(!std::filesystem::is_symlink(filename));
 
-void vk_try(VkResult res) { vk_try(vk::Result(res)); }
+    /// Must be opened in binary mode, so Windows won't mess with the newlines
+    std::string fileContent;
+    std::ifstream file(filename, std::ios::binary);
+    size_t fileSize = std::filesystem::file_size(filename);
 
-std::vector<std::byte> readFile(const std::string &filename)
-{
-    size_t fileSize = 0;
-    std::vector<std::byte> fileContent;
-    std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
-    if (!file.is_open()) { throw std::runtime_error("failed to open file " + filename); }
-    fileSize = file.tellg();
+    if (!file.is_open()) throw std::runtime_error("failed to open file " + filename.string());
     fileContent.resize(fileSize);
-    file.seekg(0);
-    file.read((char *)fileContent.data(), fileSize);
+    file.read(fileContent.data(), fileSize);
+    assert(!file.bad());
+    assert(!file.fail());
+    assert(fileSize == (unsigned long)file.gcount());
     file.close();
     return fileContent;
 }
 
-vk::ShaderModule createShaderModule(const vk::Device &device, const std::vector<std::byte> &code)
+std::size_t writeFile(const std::filesystem::path &filename, const std::string_view &content)
+{
+    std::ofstream file(filename);
+    file << content;
+    file.close();
+    return content.size();
+}
+
+vk::ShaderModule createShaderModule(const vk::Device &device, std::span<const std::byte> code)
 {
     auto createInfo = vk_init::populateVkShaderModuleCreateInfo(code);
     return device.createShaderModule(createInfo);
+}
+
+vk::SampleCountFlagBits getMaxUsableSampleCount(vk::PhysicalDevice &physical_device)
+{
+    vk::PhysicalDeviceProperties physicalDeviceProperties = physical_device.getProperties();
+
+    vk::SampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts &
+                                  physicalDeviceProperties.limits.framebufferDepthSampleCounts;
+    if (counts & vk::SampleCountFlagBits::e64) return vk::SampleCountFlagBits::e64;
+    if (counts & vk::SampleCountFlagBits::e32) return vk::SampleCountFlagBits::e32;
+    if (counts & vk::SampleCountFlagBits::e16) return vk::SampleCountFlagBits::e16;
+    if (counts & vk::SampleCountFlagBits::e8) return vk::SampleCountFlagBits::e8;
+    if (counts & vk::SampleCountFlagBits::e4) return vk::SampleCountFlagBits::e4;
+    if (counts & vk::SampleCountFlagBits::e2) return vk::SampleCountFlagBits::e2;
+
+    return vk::SampleCountFlagBits::e1;
 }
 
 vk::Format findSupportedFormat(vk::PhysicalDevice &gpu, const std::vector<vk::Format> &candidates,
@@ -40,59 +61,36 @@ vk::Format findSupportedFormat(vk::PhysicalDevice &gpu, const std::vector<vk::Fo
 {
     for (vk::Format format: candidates) {
         vk::FormatProperties props = gpu.getFormatProperties(format);
-        if (tiling == vk::ImageTiling::eLinear && (props.linearTilingFeatures & features) == features) {
+        if (tiling == vk::ImageTiling::eOptimal && (props.optimalTilingFeatures & features) == features) {
             return format;
-        } else if (tiling == vk::ImageTiling::eOptimal && (props.optimalTilingFeatures & features) == features) {
+        } else if (tiling == vk::ImageTiling::eLinear && (props.linearTilingFeatures & features) == features) {
             return format;
         }
     }
     throw std::runtime_error("failed to find supported format");
 }
 
-bool hasStencilComponent(vk::Format format) noexcept
-{
-    return format == vk::Format::eD32SfloatS8Uint || format == vk::Format::eD24UnormS8Uint;
-}
-
 namespace tools
 {
-    const std::string to_string(vk::SampleCountFlagBits count) noexcept
+    std::string bytesToString(uint64_t bytes)
     {
-        switch (count) {
-            case vk::SampleCountFlagBits::e1: return "No MSAA";
-            case vk::SampleCountFlagBits::e2: return "2X MSAA";
-            case vk::SampleCountFlagBits::e4: return "4X MSAA";
-            case vk::SampleCountFlagBits::e8: return "8X MSAA";
-            case vk::SampleCountFlagBits::e16: return "16X MSAA";
-            case vk::SampleCountFlagBits::e32: return "32X MSAA";
-            case vk::SampleCountFlagBits::e64: return "64X MSAA";
-            default: return "Unknown";
-        }
-    }
-    const std::string to_string(vk::CullModeFlagBits count) noexcept
-    {
-        switch (count) {
-            case vk::CullModeFlagBits::eNone: return "No culling";
-            case vk::CullModeFlagBits::eBack: return "Back culling";
-            case vk::CullModeFlagBits::eFront: return "Front culling";
-            case vk::CullModeFlagBits::eFrontAndBack: return "Both side culling";
-            default: return "Unknown";
-        }
+        constexpr uint64_t GB = 1024 * 1024 * 1024;
+        constexpr uint64_t MB = 1024 * 1024;
+        constexpr uint64_t KB = 1024;
+
+        std::stringstream buffer;
+        buffer.precision(2);
+
+        if (bytes > GB)
+            buffer << uint64_t(float(bytes) / float(GB)) << " GB";
+        else if (bytes > MB)
+            buffer << uint64_t(float(bytes) / float(MB)) << " MB";
+        else if (bytes > KB)
+            buffer << uint64_t(float(bytes) / float(KB)) << " KB";
+        else
+            buffer << uint64_t(float(bytes) / float(MB)) << " bytes";
+        return buffer.str();
     }
 
-    std::string physicalDeviceTypeString(vk::PhysicalDeviceType type) noexcept
-    {
-        switch (type) {
-#define STR(r) \
-    case vk::PhysicalDeviceType::e##r: return #r
-            STR(Other);
-            STR(IntegratedGpu);
-            STR(DiscreteGpu);
-            STR(VirtualGpu);
-            STR(Cpu);
-#undef STR
-            default: return "UNKNOWN_DEVICE_TYPE";
-        }
-    }
 }    // namespace tools
-}    // namespace vk_utils
+}    // namespace pivot::graphics::vk_utils

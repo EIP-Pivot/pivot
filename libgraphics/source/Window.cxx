@@ -1,9 +1,40 @@
 
 #include "pivot/graphics/Window.hxx"
-#include "pivot/graphics/DebugMacros.hxx"
+#include "pivot/pivot.hxx"
+
+#include <magic_enum.hpp>
+#include <stb_image.h>
 #include <stdexcept>
 
-Window::Window(std::string n, unsigned w, unsigned h): windowName(n) { initWindow(w, h); }
+static int translate_key(int key, int scancode)
+{
+    // https://github.com/ocornut/imgui/blob/60bea052a92cbb4a93b221002fdf04f0da3698e1/backends/imgui_impl_glfw.cpp#L294
+    if (key >= GLFW_KEY_KP_0 && key <= GLFW_KEY_KP_EQUAL) return key;
+    const char *key_name = glfwGetKeyName(key, scancode);
+    if (key_name && key_name[0] != 0 && key_name[1] == 0) {
+        const char char_names[] = "`-=[]\\,;\'./";
+        const int char_keys[] = {GLFW_KEY_GRAVE_ACCENT,  GLFW_KEY_MINUS,     GLFW_KEY_EQUAL, GLFW_KEY_LEFT_BRACKET,
+                                 GLFW_KEY_RIGHT_BRACKET, GLFW_KEY_BACKSLASH, GLFW_KEY_COMMA, GLFW_KEY_SEMICOLON,
+                                 GLFW_KEY_APOSTROPHE,    GLFW_KEY_PERIOD,    GLFW_KEY_SLASH, 0};
+
+        pivot_assert(std::size(char_names) == std::size(char_keys), "Special caracters are not of the same size.");
+        if (key_name[0] >= '0' && key_name[0] <= '9') {
+            key = GLFW_KEY_0 + (key_name[0] - '0');
+        } else if (key_name[0] >= 'A' && key_name[0] <= 'Z') {
+            key = GLFW_KEY_A + (key_name[0] - 'A');
+        } else if (key_name[0] >= 'a' && key_name[0] <= 'z') {
+            key = GLFW_KEY_A + (key_name[0] - 'a');
+        } else if (const char *p = std::strchr(char_names, key_name[0])) {
+            key = char_keys[p - char_names];
+        }
+    }
+    return key;
+}
+
+namespace pivot::graphics
+{
+
+Window::Window(std::string n, unsigned w, unsigned h): windowName(std::move(n)) { initWindow(w, h); }
 
 Window::~Window()
 {
@@ -21,14 +52,40 @@ vk::SurfaceKHR Window::createSurface(const vk::Instance &instance)
     return surface;
 }
 
-void Window::setKeyPressCallback(Window::Key key, Window::KeyEvent event) { keyPressMap.insert({key, event}); }
-void Window::setKeyReleaseCallback(Window::Key key, Window::KeyEvent event) { keyReleaseMap.insert({key, event}); }
-void Window::setMouseMovementCallback(Window::MouseEvent event) { mouseCallback = event; }
+void Window::addKeyPressCallback(Window::Key key, Window::KeyEvent event) { keyPressMap[key].push_back(event); }
+void Window::addGlobalKeyPressCallback(Window::KeyEvent event) { globalKeyPressMap.push_back(event); }
+
+void Window::addKeyReleaseCallback(Window::Key key, Window::KeyEvent event) { keyReleaseMap[key].push_back(event); }
+void Window::addGlobalKeyReleaseCallback(Window::KeyEvent event) { globalKeyReleaseMap.push_back(event); }
+
+void Window::addMouseMovementCallback(Window::MouseEvent event) { mouseCallback.push_back(event); }
 
 void Window::setTitle(const std::string &t) noexcept
 {
     windowName = t;
     glfwSetWindowTitle(window, windowName.c_str());
+}
+
+void Window::setIcon(const std::span<const GLFWimage> &images) noexcept
+{
+    glfwSetWindowIcon(window, images.size(), images.data());
+}
+
+void Window::setIcon(const std::span<const std::string> &windowIcons)
+{
+    std::vector<GLFWimage> images;
+    for (const auto &icon: windowIcons) {
+        int texWidth, texHeight, texChannels;
+        stbi_uc *pixels = stbi_load(icon.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+        if (!pixels) throw std::runtime_error("Failed to load icon at path: " + icon);
+        images.push_back({
+            .width = texWidth,
+            .height = texHeight,
+            .pixels = pixels,
+        });
+    }
+    setIcon(images);
+    for (const auto &i: images) { stbi_image_free(i.pixels); }
 }
 
 vk::Extent2D Window::getSize() const noexcept
@@ -51,14 +108,12 @@ void Window::captureCursor(bool capture) noexcept
 
 bool Window::captureCursor() noexcept { return glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED; }
 
-// static
 std::vector<const char *> Window::getRequiredExtensions()
 {
     uint32_t glfwExtensionCount = 0;
     const char **glfwExtentsions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
-    std::vector<const char *> extensions(glfwExtentsions, glfwExtentsions + glfwExtensionCount);
-    return extensions;
+    return {glfwExtentsions, glfwExtentsions + glfwExtensionCount};
 }
 
 void Window::setKeyCallback(GLFWkeyfun &&f) noexcept { glfwSetKeyCallback(window, f); }
@@ -69,14 +124,15 @@ void Window::setErrorCallback(GLFWerrorfun &&f) noexcept { glfwSetErrorCallback(
 
 void Window::setUserPointer(void *ptr) noexcept { glfwSetWindowUserPointer(window, ptr); }
 
-void Window::initWindow(const unsigned width, const unsigned height) noexcept
+void Window::initWindow(const unsigned width, const unsigned height)
 {
     glfwInit();
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-
     this->setErrorCallback(error_callback);
+
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     window = glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);
+    if (!window) throw WindowError("Failed to create a GLFW window !");
+
     this->setUserPointer(this);
     this->setKeyCallback(keyboard_callback);
     this->setCursorPosCallback(cursor_callback);
@@ -89,30 +145,44 @@ glm::ivec2 Window::updateSize() const noexcept
     return size;
 };
 
-void Window::error_callback(int code, const char *msg) noexcept
+Window::Key Window::getTrueKey(const Window::Key &ex) const noexcept
 {
-    logger->err("Window") << msg;
-    LOGGER_ENDL;
+    auto key = magic_enum::enum_integer(ex);
+    auto translate = translate_key(key, 0);
+    auto true_key = magic_enum::enum_cast<Window::Key>(translate);
+    if (true_key.has_value()) return true_key.value();
+    return Key::UNKNOWN;
 }
 
-void cursor_callback(GLFWwindow *win, double xpos, double ypos)
+void Window::error_callback(int, const char *msg) noexcept { logger.err("Window") << msg; }
+
+void Window::cursor_callback(GLFWwindow *win, double xpos, double ypos)
 {
-    auto window = (Window *)glfwGetWindowUserPointer(win);
-    if (window->mouseCallback) (*window->mouseCallback)(*window, glm::dvec2(xpos, ypos));
+    auto window = static_cast<Window *>(glfwGetWindowUserPointer(win));
+    for (auto &&fn: window->mouseCallback) fn(*window, glm::dvec2(xpos, ypos));
 }
 
-void keyboard_callback(GLFWwindow *win, int key, int, int action, int)
+void Window::keyboard_callback(GLFWwindow *win, int key, int scancode, int action, int modifier)
 {
-    auto window = (Window *)glfwGetWindowUserPointer(win);
-    auto _key = static_cast<Window::Key>(key);
+#define FOR_EACH(vec) \
+    for (auto &&fn: vec) fn(*window, _key, _modifier);
+
+    auto window = static_cast<Window *>(glfwGetWindowUserPointer(win));
+    auto _key = static_cast<Window::Key>(translate_key(key, scancode));
+    auto _modifier = static_cast<Window::Modifier>(modifier);
 
     switch (action) {
         case GLFW_PRESS:
-            if (window->keyPressMap.contains(_key)) window->keyPressMap.at(_key)(*window, _key);
+            FOR_EACH(window->globalKeyPressMap);
+            if (window->keyPressMap.contains(_key)) FOR_EACH(window->keyPressMap.at(_key));
             break;
         case GLFW_RELEASE:
-            if (window->keyReleaseMap.contains(_key)) window->keyReleaseMap.at(_key)(*window, _key);
+            FOR_EACH(window->globalKeyReleaseMap);
+            if (window->keyReleaseMap.contains(_key))
+                if (window->keyReleaseMap.contains(_key)) FOR_EACH(window->keyReleaseMap.at(_key));
             break;
         default: break;
     }
+#undef FOR_EACH
 }
+}    // namespace pivot::graphics

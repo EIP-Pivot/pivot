@@ -1,9 +1,9 @@
 #pragma once
 
-#include "pivot/ecs/Core/types.hxx"
 #include "pivot/ecs/Core/EcsException.hxx"
-#include <queue>
+#include "pivot/ecs/Core/types.hxx"
 #include <array>
+#include <queue>
 #include <unordered_map>
 
 /*! \cond
@@ -16,7 +16,7 @@ public:
     void DestroyEntity(Entity entity);
     void SetSignature(Entity entity, Signature signature);
     Signature GetSignature(Entity entity);
-    std::unordered_map<Entity, Signature> getEntities();
+    std::unordered_map<Entity, Signature> getEntities() const;
     uint32_t getLivingEntityCount();
 
 private:

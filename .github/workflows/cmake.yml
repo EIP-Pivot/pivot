@@ -2,68 +2,169 @@ name: CMake
 on: push
 
 jobs:
-  build-linux:
-    runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        build_type: [Debug, Release]
-        cxx_compiler: [g++-10] #, clang++-11, clang++-12]
-
-    steps:
-      - name: Install dependencies
-        run: |
-          wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
-          sudo wget -qP /etc/apt/sources.list.d https://packages.lunarg.com/vulkan/lunarg-vulkan-focal.list
-          sudo apt-get update
-          sudo apt-get install vulkan-sdk xorg-dev
-
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-
-      - name: Configure CMake
-        run: cmake
-          -B ${{github.workspace}}/build
-          -D CMAKE_CXX_COMPILER=${{matrix.cxx_compiler}}
-
-      - name: Build lib
-        run: cmake
-          --build ${{github.workspace}}/build
-          --config ${{matrix.build_type}}
-
-      - name: Run tests
-        run: ctest --test-dir build
-
-  build-windows:
-    runs-on: windows-latest
+  build:
     env:
       VULKAN_SDK: C:/VulkanSDK
 
     strategy:
       fail-fast: false
       matrix:
+        config:
+          - os: windows-2019
+            working_directory: \build\
+            extra_cmake: ' -A "x64"'
+            compiler: 'cl'
+          - os: windows-2022
+            working_directory: \build\
+            extra_cmake: ' -A "x64"'
+            compiler: 'cl'
+
+          - os: ubuntu-20.04
+            working_directory: /build/
+            extra_cmake: ''
+            compiler: 'g++-11'
+          - os: ubuntu-22.04
+            working_directory: /build/
+            extra_cmake: ''
+            compiler: 'g++-12'
+
         build_type: [Debug, Release]
 
+    runs-on: ${{matrix.config.os}}
+    name: ${{ matrix.config.os }} - ${{ matrix.config.compiler }} - ${{ matrix.build_type }}
+    steps:
+      - name: Install dependencies - Linux
+        if: runner.os == 'Linux'
+        run: |
+          wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+          sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.3.211-focal.list https://packages.lunarg.com/vulkan/1.3.211/lunarg-vulkan-1.3.211-focal.list
+          sudo apt update
+          sudo apt install -y ${{ matrix.config.compiler }} vulkan-sdk xorg-dev libgtk-3-dev
+
+      - name: Install dependencies - Windows
+        if: runner.os == 'Windows'
+        run: |
+          iwr https://sdk.lunarg.com/sdk/download/1.3.211.0/windows/vulkan-sdk.exe -outfile vulkan-sdk.exe
+          ./vulkan-sdk install --accept-licenses --confirm-command --root $env:VULKAN_SDK
+
+      - uses: rui314/setup-mold@v1
+
+      - uses: actions/checkout@v2
+
+      - name: Create build directory
+        run: mkdir -p ${{ github.workspace }}${{ matrix.config.working_directory }}
+
+      - uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/build/_deps/
+          key: ${{ matrix.config.os }}-${{ matrix.config.compiler }}-${{ matrix.build_type }}-${{ github.ref_name }}-${{ hashFiles('.github/workflows/cmake.yml') }}
+          restore-keys: |
+              ${{ matrix.config.os }}-${{ matrix.config.compiler }}-${{ matrix.build_type }}-dev-${{ hashFiles('.github/workflows/cmake.yml') }}
+              ${{ matrix.config.os }}-${{ matrix.config.compiler }}-${{ matrix.build_type }}-dev-
+
+      - name: Configure CMake
+        working-directory: ${{ github.workspace }}${{ matrix.config.working_directory }}
+        run: cmake -D CMAKE_CXX_COMPILER=${{ matrix.config.compiler }} ${{ matrix.config.extra_cmake }} ..
+
+      - name: Build lib
+        working-directory: ${{ github.workspace }}${{ matrix.config.working_directory }}
+        run: cmake --build . --config ${{ matrix.build_type }}
+
+      - name: Run tests
+        working-directory: ${{ github.workspace }}${{ matrix.config.working_directory }}
+        run: ctest -C ${{ matrix.build_type }} -T test --output-on-failure
+
+  format:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: clang-format Check
+        uses: jidicula/clang-format-action@v4.6.0
+
+  documentation:
+    needs: build
+    runs-on: ubuntu-latest
     steps:
       - name: Install dependencies
         run: |
-          iwr https://sdk.lunarg.com/sdk/download/latest/windows/vulkan-sdk.exe -outfile vulkan-sdk.exe
-          ./vulkan-sdk install --accept-licenses --confirm-command --root $env:VULKAN_SDK
+          wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+          sudo wget -qP /etc/apt/sources.list.d https://packages.lunarg.com/vulkan/lunarg-vulkan-focal.list
+          sudo apt-get update
+          sudo apt-get install vulkan-sdk xorg-dev doxygen libgtk-3-dev
+
+      - name: Dependencies version
+        run: |
+          doxygen --version
 
       - uses: actions/checkout@v2
         with:
           submodules: recursive
 
+      - name: Create build directory
+        run: mkdir -p ${{ github.workspace }}/build/
+
       - name: Configure CMake
-        run: cmake
-          -B ${{github.workspace}}/build
+        working-directory: ${{ github.workspace }}/build/
+        run: cmake ..
+          -D BUILD_DOCUMENTATION=ON
+
+      - name: Build doc
+        working-directory: ${{ github.workspace }}/build/
+        run: cmake --build .
+          --target doc
+
+      - name: Check no warnings
+        if: ${{github.event_name != 'workflow_dispatch'}}
+        run: '! test -s ${{github.workspace}}/build/doxygen-warnings.log'
+
+      - uses: actions/upload-artifact@v2
+        if: ${{contains(env.refsDocSaved, github.ref)
+          || github.event_name == 'workflow_dispatch'}}
+        with:
+          name: doc
+          path: |
+            ${{github.workspace}}/build/html
+            ${{github.workspace}}/build/doxygen-warnings.log
+          retention-days: 15
+
+  coverage:
+    needs: build
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Install dependencies - Linux
+        run: |
+          wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+          sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.3.211-focal.list https://packages.lunarg.com/vulkan/1.3.211/lunarg-vulkan-1.3.211-focal.list
+          sudo apt update
+          sudo apt install -y g++-11 vulkan-sdk xorg-dev libgtk-3-dev lcov
+
+      - uses: actions/checkout@v2
+
+      - name: Create build directory
+        run: mkdir -p ${{ github.workspace }}/build/
+
+      - uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/build/_deps/
+          key: ubuntu-20.04-build-Debug-${{ github.ref_name }}-${{ hashFiles('.github/workflows/cmake.yml') }}
+
+      - name: Configure CMake
+        working-directory: ${{ github.workspace }}/build/
+        run: cmake ..
+          -D CMAKE_CXX_COMPILER=g++-11
+          -D CODE_COVERAGE=ON
 
       - name: Build lib
-        run: cmake
-          --build ${{github.workspace}}/build
-          --config ${{matrix.build_type}}
+        working-directory: ${{ github.workspace }}/build/
+        run: cmake --build .
+          --config Debug
+          --target coverage
 
-      - name: Run tests
-        run: ctest --test-dir build -C ${{matrix.build_type}}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: coverage
+          path: |
+            ${{github.workspace}}/build/coverage
+          retention-days: 4

@@ -1,50 +1,42 @@
 #pragma once
 
-#include <cstring>
-#include <filesystem>
+#include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/DeletionQueue.hxx"
+#include "pivot/graphics/DescriptorAllocator/DescriptorAllocator.hxx"
+#include "pivot/graphics/DescriptorAllocator/DescriptorLayoutCache.hxx"
+#include "pivot/graphics/PipelineStorage.hxx"
+#include "pivot/graphics/VulkanBase.hxx"
+#include "pivot/graphics/VulkanRenderPass.hxx"
+#include "pivot/graphics/VulkanSwapchain.hxx"
+#include "pivot/graphics/interface/IRenderer.hxx"
+#include "pivot/graphics/types/Frame.hxx"
+#include "pivot/graphics/types/vk_types.hxx"
+#include "pivot/graphics/vk_debug.hxx"
+#include "pivot/pivot.hxx"
+
+#include "pivot/graphics/DrawCallResolver.hxx"
+#include "pivot/graphics/Renderer/CullingRenderer.hxx"
+#include "pivot/graphics/Renderer/GraphicsRenderer.hxx"
+#include "pivot/graphics/Renderer/ImGuiRenderer.hxx"
+
 #include <optional>
-#include <unordered_map>
 #include <vector>
-#include <vk_mem_alloc.hpp>
 #include <vulkan/vulkan.hpp>
 
-#include "pivot/graphics/DeletionQueue.hxx"
-#include "pivot/graphics/Swapchain.hxx"
-#include "pivot/graphics/VulkanLoader.hxx"
-#include "pivot/graphics/Window.hxx"
-#include "pivot/graphics/types/Frame.hxx"
-#include "pivot/graphics/types/Material.hxx"
-#include "pivot/graphics/types/Mesh.hxx"
-#include "pivot/graphics/types/RenderObject.hxx"
-#include "pivot/graphics/types/vk_types.hxx"
-#include "pivot/graphics/vk_utils.hxx"
-#include "pivot/graphics/config.hxx"
+namespace pivot::graphics
+{
 
-#ifndef MAX_OBJECT
-#define MAX_OBJECT 5000
-#endif
+static_assert(PIVOT_MAX_FRAMES_IN_FLIGHT >= 1);
 
-#ifndef MAX_TEXTURES
-#define MAX_TEXTURES 1000
-#endif
-
-#ifndef MAX_COMMANDS
-#define MAX_COMMANDS MAX_OBJECT
-#endif
-
-#ifndef MAX_MATERIALS
-#define MAX_MATERIALS 100
-#endif
-
+/// The validation layers used by the engine
 const std::vector<const char *> validationLayers = {
     "VK_LAYER_KHRONOS_validation",
 };
 
+/// The device extensions required by the engine
 const std::vector<const char *> deviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 };
-
-constexpr uint8_t MAX_FRAME_FRAME_IN_FLIGHT = 3;
 
 /// @class VulkanApplication
 /// @brief Main class of the graphics engine
@@ -54,24 +46,19 @@ constexpr uint8_t MAX_FRAME_FRAME_IN_FLIGHT = 3;
 /// Then you will call the init() method, to initialise the Vulkan ressources
 ///
 /// You can now call the draw() method when you are ready to render a new frame
-
-class VulkanApplication : public VulkanLoader
+class VulkanApplication : public VulkanBase
 {
-private:
-#ifdef NDEBUG
-    bool bEnableValidationLayers = false;
-#else
-    bool bEnableValidationLayers = true;
-#endif
-    struct DrawBatch {
-        std::string meshId;
-        uint32_t first;
-        uint32_t count;
-    };
+public:
+    template <typename T>
+    /// Alias for storing a Renderer and its associated command buffer
+    requires std::is_base_of_v<IRenderer, T>
+    using RendererStorage = std::vector<std::unique_ptr<T>>;
 
-    struct SceneObjectsGPUData {
-        std::vector<DrawBatch> objectDrawBatches;
-        std::vector<gpuObject::UniformBufferObject> objectGPUData;
+    /// Result of the draw
+    enum class DrawResult {
+        Error = -1,
+        Success = 0,
+        FrameSkipped = 1,
     };
 
 public:
@@ -91,183 +78,77 @@ public:
     /// @arg camera The information about the camera
     ///
     /// You must have already loaded your models and texture !
-    void draw(const std::vector<std::reference_wrapper<const RenderObject>> &sceneInformation,
-              const gpuObject::CameraData &camera
-#ifdef CULLING_DEBUG
-              ,
-              const std::optional<std::reference_wrapper<const gpuObject::CameraData>> cullingCamera = std::nullopt
-#endif
-    );
-
-    /// @brief load the 3D models into CPU memory
-    ///
-    /// @arg paths the path for all individual file to load
-    /// @return the number of file successfully loaded
-    size_t load3DModels(const std::vector<std::filesystem::path> &paths);
-
-    /// @brief load the Textures into CPU memory
-    ///
-    /// @arg paths the path for all individual file to load
-    /// @return the number of file successfully loaded
-    size_t loadTextures(const std::vector<std::filesystem::path> &);
+    DrawResult draw(DrawCallResolver::DrawSceneInformation sceneInformation, const CameraData &camera,
+                    std::optional<vk::Rect2D> renderArea = std::nullopt);
 
     /// @brief get Swapchain aspect ratio
-    float getAspectRatio() const;
+    constexpr float getAspectRatio() const noexcept { return swapchain.getAspectRatio(); }
+
+    /// Build the asset Storage
+    void buildAssetStorage(AssetStorage::BuildFlags flags = AssetStorage::BuildFlagBits::eClear);
+
+    template <validRenderer T>
+    /// Add a Renderer to the frame
+    T &addRenderer()
+    {
+        DEBUG_FUNCTION
+        StorageUtils utils{
+            .pipeline = pipelineStorage,
+            .assets = assetStorage,
+        };
+        auto rendy = std::make_unique<T>(utils);
+        auto &ret = *rendy;
+        if constexpr (std::is_base_of_v<IGraphicsRenderer, T>) {
+            graphicsRenderer.emplace_back(std::move(rendy));
+        } else if constexpr (std::is_base_of_v<IComputeRenderer, T>) {
+            computeRenderer.emplace_back(std::move(rendy));
+        } else {
+            throw std::logic_error("Unsuported Renderer : " + rendy->getType());
+        }
+        return ret;
+    }
 
 private:
-    void pushModelsToGPU();
-    void pushTexturesToGPU();
-
-    template <vk_utils::is_copyable T>
-    void copyBuffer(AllocatedBuffer &buffer, const std::vector<T> &data);
-    template <vk_utils::is_copyable T>
-    void copyBuffer(AllocatedBuffer &buffer, const T *data, size_t size);
-
-    void immediateCommand(std::function<void(vk::CommandBuffer &)> &&function);
-    void copyBufferToImage(const vk::Buffer &srcBuffer, vk::Image &dstImage, const vk::Extent3D &extent);
-    void copyBufferToBuffer(const vk::Buffer &srcBuffer, vk::Buffer &dstBuffer, const vk::DeviceSize &size);
-    void transitionImageLayout(vk::Image &image, vk::Format format, vk::ImageLayout oldLayout,
-                               vk::ImageLayout newLayout, uint32_t mipLevels = 1);
-    void generateMipmaps(vk::Image &image, vk::Format imageFormat, vk::Extent3D size, uint32_t mipLevel);
-
-    static bool checkValidationLayerSupport();
-    static uint32_t debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                                  VkDebugUtilsMessageTypeFlagsEXT messageType,
-                                  const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *);
-    static vk::SampleCountFlagBits getMexUsableSampleCount(vk::PhysicalDevice &physical_device);
-    static bool isDeviceSuitable(const vk::PhysicalDevice &gpu, const vk::SurfaceKHR &surface);
-    static uint32_t rateDeviceSuitability(const vk::PhysicalDevice &device);
-    static bool checkDeviceExtensionSupport(const vk::PhysicalDevice &device);
-
-    SceneObjectsGPUData buildSceneObjectsGPUData(const std::vector<std::reference_wrapper<const RenderObject>> &objects,
-                                                 const gpuObject::CameraData &camera);
-    void buildIndirectBuffers(const std::vector<DrawBatch> &scene, Frame &frame);
-
-    void postInitialization();
     void recreateSwapchain();
     void initVulkanRessources();
 
-    AllocatedBuffer createBuffer(uint32_t allocSize, vk::BufferUsageFlags usage, vma::MemoryUsage memoryUsage);
-
-    void createInstance();
-    void createDebugMessenger();
-    void createAllocator();
-    void createSurface();
-    void pickPhysicalDevice();
-    void createLogicalDevice();
-    void createUniformBuffers();
-    void createSyncStructure();
-
-    void createDescriptorSetLayout();
-    void createTextureDescriptorSetLayout();
-
-    void createDescriptorPool();
-    void createDescriptorSets();
-    void createTextureDescriptorSets();
     void createCommandPool();
     void createCommandBuffers();
 
-    void createPipelineCache();
-    void createPipelineLayout();
-    void createPipeline();
     void createDepthResources();
     void createColorResources();
     void createRenderPass();
-    void createIndirectBuffer();
-    void createTextureSampler();
     void createFramebuffers();
-    void initDearImgui();
 
 public:
-    /// The Window used to render 3D objects
-    Window window;
-
-    /// This will the store the textures, 3D models before behind uploaded to the GPU
-    struct {
-        std::unordered_map<std::string, std::vector<std::byte>> loadedTextures;
-        std::unordered_map<std::string, vk::Extent3D> loadedTexturesSize;
-        std::vector<Vertex> vertexBuffer;
-        std::vector<uint32_t> indexBuffer;
-    } cpuStorage;
-    /// Internal storage for the material
-    MaterialStorage materials;
-    /// Internal storage for the meshes
-    MeshStorage loadedMeshes;
-    /// Internal storage for the meshes' bounding boxes
-    MeshBoundingBoxStorage meshesBoundingBoxes;
-    /// Internal storage for the textures
-    ImageStorage loadedTextures;
+    /// The application asssets storage
+    AssetStorage assetStorage;
+    /// The application pipeline storage
+    PipelineStorage pipelineStorage;
 
 private:
-    /// @cond
-    uint32_t mipLevels = 0;
-    vk::SampleCountFlagBits maxMsaaSample = vk::SampleCountFlagBits::e1;
+    DescriptorAllocator descriptorAllocator;
+    DescriptorLayoutCache layoutCache;
 
-    AllocatedBuffer vertexBuffers;
-    AllocatedBuffer indicesBuffers;
+    vk::DescriptorPool imGuiPool = VK_NULL_HANDLE;
+    vk::CommandPool commandPool = VK_NULL_HANDLE;
 
-    struct UploadContex {
-        vk::Fence uploadFence = VK_NULL_HANDLE;
-        vk::CommandPool commandPool = VK_NULL_HANDLE;
-    } uploadContext = {};
+    RendererStorage<IGraphicsRenderer> graphicsRenderer;
+    RendererStorage<IComputeRenderer> computeRenderer;
 
     DeletionQueue mainDeletionQueue;
     DeletionQueue swapchainDeletionQueue;
-    vk::DebugUtilsMessengerEXT debugUtilsMessenger = VK_NULL_HANDLE;
-    vk::PhysicalDevice physical_device = VK_NULL_HANDLE;
-    vma::Allocator allocator = VK_NULL_HANDLE;
-    Swapchain swapchain;
-    vk::SurfaceKHR surface = VK_NULL_HANDLE;
-
-    //  Queues
-    vk::Queue graphicsQueue = VK_NULL_HANDLE;
-    vk::Queue presentQueue = VK_NULL_HANDLE;
+    VulkanSwapchain swapchain;
 
     uint8_t currentFrame = 0;
-    Frame frames[MAX_FRAME_FRAME_IN_FLIGHT];
+    std::array<Frame, PIVOT_MAX_FRAMES_IN_FLIGHT> frames;
 
-    vk::RenderPass renderPass = VK_NULL_HANDLE;
-    vk::DescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
-    vk::DescriptorSetLayout texturesSetLayout = VK_NULL_HANDLE;
-    vk::DescriptorPool descriptorPool = VK_NULL_HANDLE;
-    vk::DescriptorSet texturesSet = VK_NULL_HANDLE;
-
-    vk::Sampler textureSampler = VK_NULL_HANDLE;
-
-    vk::CommandPool commandPool = VK_NULL_HANDLE;
-    std::vector<vk::CommandBuffer> commandBuffers;
+    VulkanRenderPass renderPass;
 
     AllocatedImage depthResources = {};
     AllocatedImage colorImage = {};
 
-    vk::PipelineCache pipelineCache = VK_NULL_HANDLE;
-    vk::PipelineLayout pipelineLayout = VK_NULL_HANDLE;
-    vk::Pipeline graphicsPipeline = VK_NULL_HANDLE;
-
     std::vector<vk::Framebuffer> swapChainFramebuffers;
-    /// @endcond
 };
 
-#ifndef VULKAN_APPLICATION_IMPLEMENTATION
-#define VULKAN_APPLICATION_IMPLEMENTATION
-
-template <vk_utils::is_copyable T>
-void VulkanApplication::copyBuffer(AllocatedBuffer &buffer, const T *data, size_t size)
-{
-    void *mapped = nullptr;
-    vmaMapMemory(allocator, buffer.memory, &mapped);
-    std::memcpy(mapped, data, size);
-    vmaUnmapMemory(allocator, buffer.memory);
-}
-
-template <vk_utils::is_copyable T>
-void VulkanApplication::copyBuffer(AllocatedBuffer &buffer, const std::vector<T> &data)
-{
-    vk::DeviceSize size = sizeof(data[0]) * data.size();
-    void *mapped = nullptr;
-    vmaMapMemory(allocator, buffer.memory, &mapped);
-    std::memcpy(mapped, data.data(), size);
-    vmaUnmapMemory(allocator, buffer.memory);
-}
-
-#endif
+}    // namespace pivot::graphics

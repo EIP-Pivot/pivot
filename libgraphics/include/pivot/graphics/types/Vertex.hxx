@@ -1,9 +1,26 @@
 #pragma once
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtx/hash.hpp>
 #include <vector>
 #include <vulkan/vulkan.hpp>
+
+#include "pivot/utility/flags.hxx"
+
+namespace pivot::graphics
+{
+
+/// Select which Vertex component are required for the vulkan pipeline
+enum class VertexComponentFlagBits : FlagsType {
+    Position = BIT(1),
+    Normal = BIT(2),
+    UV = BIT(3),
+    Color = BIT(4),
+    Tangent = BIT(5),
+};
+/// Flag type of VertexComponentFlagBits
+using VertexComponentFlags = Flags<VertexComponentFlagBits>;
 
 /// @struct Vertex
 /// @brief Represent a vertex of the 3D model
@@ -11,70 +28,45 @@ struct Vertex {
     /// Position of the vertex
     glm::vec3 pos;
     /// Normal of the vertex
-    glm::vec3 normal;
-    /// Color of the vertex, ignored if a texture is provided
-    glm::vec3 color;
+    glm::vec3 normal = glm::vec3(0.0f);
     /// UV coordinate of the vertex
-    glm::vec2 texCoord;
+    glm::vec2 texCoord = glm::vec2(0.0f);
+    /// Color of the vertex, ignored if a texture is provided
+    glm::vec3 color = glm::vec3(1.0f);
+    /// Tangent of the vertex
+    glm::vec4 tangent = glm::vec4(0.0f);
 
     /// Equality operator overload
     /// @param other The other object to compare
     /// @return true if both object are equal
-    bool operator==(const Vertex &other) const
-    {
-        return pos == other.pos && color == other.color && normal == other.normal && texCoord == other.texCoord;
-    }
+    bool operator==(const Vertex &other) const noexcept;
 
     /// Get the description for Vulkan pipeline input binding
-    static vk::VertexInputBindingDescription getBindingDescription() noexcept
-    {
-        vk::VertexInputBindingDescription bindingDescription{
-            .binding = 0,
-            .stride = sizeof(Vertex),
-            .inputRate = vk::VertexInputRate::eVertex,
-        };
+    static vk::VertexInputBindingDescription getBindingDescription() noexcept;
 
-        return bindingDescription;
-    }
+    /// Return the input attribute for the given vertex component
+    static vk::VertexInputAttributeDescription inputAttributeDescription(std::uint32_t binding, std::uint32_t location,
+                                                                         VertexComponentFlagBits component);
 
-    /// Get the layout of the Vertex struct for Vulkan pipeline input
-    static std::vector<vk::VertexInputAttributeDescription> getAttributeDescriptons() noexcept
-    {
-        std::vector<vk::VertexInputAttributeDescription> attributeDescriptions(4);
-
-        attributeDescriptions[0].binding = 0;
-        attributeDescriptions[0].location = 0;
-        attributeDescriptions[0].format = vk::Format::eR32G32B32Sfloat;
-        attributeDescriptions[0].offset = offsetof(Vertex, pos);
-
-        attributeDescriptions[1].binding = 0;
-        attributeDescriptions[1].location = 1;
-        attributeDescriptions[1].format = vk::Format::eR32G32B32Sfloat;
-        attributeDescriptions[1].offset = offsetof(Vertex, normal);
-
-        attributeDescriptions[2].binding = 0;
-        attributeDescriptions[2].location = 2;
-        attributeDescriptions[2].format = vk::Format::eR32G32B32Sfloat;
-        attributeDescriptions[2].offset = offsetof(Vertex, color);
-
-        attributeDescriptions[3].binding = 0;
-        attributeDescriptions[3].location = 3;
-        attributeDescriptions[3].format = vk::Format::eR32G32Sfloat;
-        attributeDescriptions[3].offset = offsetof(Vertex, texCoord);
-        return attributeDescriptions;
-    }
+    /// Return the vertex input attribute needed for the vulkan pipeline
+    static std::vector<vk::VertexInputAttributeDescription>
+    getInputAttributeDescriptions(std::uint32_t binding, const VertexComponentFlags components);
 };
+}    // namespace pivot::graphics
+
+ENABLE_FLAGS_FOR_ENUM(pivot::graphics::VertexComponentFlagBits);
 
 namespace std
 {
 /// @brief Specialization of std::hash for the Vertex structure
 template <>
-struct hash<Vertex> {
+struct hash<pivot::graphics::Vertex> {
     /// @cond
-    size_t operator()(Vertex const &vertex) const
+    size_t operator()(const pivot::graphics::Vertex &vertex) const
     {
         return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^
-               (hash<glm::vec3>()(vertex.color) ^ (hash<glm::vec2>()(vertex.texCoord) << 1));
+               ((hash<glm::vec2>()(vertex.texCoord) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
+               (hash<glm::vec4>()(vertex.tangent));
     }
     /// @endcond
 };

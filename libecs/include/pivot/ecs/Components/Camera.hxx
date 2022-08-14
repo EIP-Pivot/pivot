@@ -1,18 +1,21 @@
 #pragma once
 
-#include <pivot/graphics/types/vk_types.hxx>
-
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
-#ifndef MAX_PROJECTION_LIMIT
-#define MAX_PROJECTION_LIMIT 100.0f
+#include <pivot/ecs/Core/Component/description.hxx>
+
+#ifndef PIVOT_MAX_PROJECTION_LIMIT
+    #define PIVOT_MAX_PROJECTION_LIMIT 10000.0f
 #endif
 
-#ifndef MIN_PROJECTION_LIMIT
-#define MIN_PROJECTION_LIMIT 0.1f
+#ifndef PIVOT_MIN_PROJECTION_LIMIT
+    #define PIVOT_MIN_PROJECTION_LIMIT 0.1f
 #endif
+
+namespace pivot::builtins
+{
 
 /// @class Camera
 ///
@@ -25,6 +28,9 @@ public:
     static constexpr const double YAW = -90.0;
     static constexpr const double PITCH = 0.0;
     /// @endcond
+
+    /// Component description
+    static const pivot::ecs::component::Description description;
 
 public:
     /// Default Constructor, can be init with default position
@@ -44,29 +50,15 @@ public:
     /// @endcond
 
     /// Get camera projection
-    glm::mat4 getProjection(float fFOV = 70.f, float fAspectRatio = 1700.f / 900.f, float fCloseClippingPlane = 0.1,
-                            float fFarClippingPlane = MAX_PROJECTION_LIMIT) const
+    inline glm::mat4 getProjection(float fFOV, float fAspectRatio,
+                                   float fCloseClippingPlane = PIVOT_MIN_PROJECTION_LIMIT,
+                                   float fFarClippingPlane = PIVOT_MAX_PROJECTION_LIMIT) const
     {
         return glm::perspective(glm::radians(fFOV), fAspectRatio, fCloseClippingPlane, fFarClippingPlane);
     }
 
     /// Get camera view
-    glm::mat4 getView() const { return glm::lookAt(position, position + front, up); }
-
-    /// Get GpuObject of the camera
-    gpuObject::CameraData getGPUCameraData(float fFOV = 70.f, float fAspectRatio = 1700.f / 900.f,
-                                           float fCloseClippingPlane = 0.1,
-                                           float fFarClippingPlane = MAX_PROJECTION_LIMIT) const
-    {
-        auto projection = getProjection(fFOV, fAspectRatio, fCloseClippingPlane, fFarClippingPlane);
-        projection[1][1] *= -1;
-        auto view = getView();
-        gpuObject::CameraData data{
-            .position = glm::vec4(position, 1.0f),
-            .viewproj = projection * view,
-        };
-        return data;
-    }
+    inline glm::mat4 getView() const { return glm::lookAt(position, position + front, up); }
 
     /// @cond
     void updateCameraVectors()
@@ -82,3 +74,5 @@ public:
     }
     /// @endcond
 };
+
+}    // namespace pivot::builtins

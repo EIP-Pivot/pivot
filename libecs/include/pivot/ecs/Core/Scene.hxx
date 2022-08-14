@@ -1,30 +1,48 @@
 #pragma once
 
-#include "pivot/ecs/Core/types.hxx"
-#include "pivot/ecs/Core/ComponentManager.hxx"
+#include <filesystem>
+#include <fstream>
+
+#include <nlohmann/json.hpp>
+
+#include <pivot/pivot.hxx>
+
+#include <pivot/ecs/Core/Data/value_serialization.hxx>
+
+#include "pivot/ecs/Core/Component/index.hxx"
+#include "pivot/ecs/Core/Component/manager.hxx"
+
+#include "pivot/ecs/Core/Systems/index.hxx"
+#include "pivot/ecs/Core/Systems/manager.hxx"
+
+#include "pivot/ecs/Core/Event/manager.hxx"
+
 #include "pivot/ecs/Core/EntityManager.hxx"
-#include "pivot/ecs/Core/SystemManager.hxx"
-#include "pivot/ecs/Core/EventManager.hxx"
+#include "pivot/ecs/Core/types.hxx"
 #include <memory>
 
 #include "pivot/ecs/Components/Camera.hxx"
 #include "pivot/ecs/Components/Tag.hxx"
 
+namespace pivot::ecs
+{
+
 /// @class IScene
 ///
 /// @brief Scene interface for transitional event
-class IScene {
+class IScene
+{
 protected:
     /// Called when scene is create
-    virtual void OnCreate() {};
+    virtual void OnCreate(){};
     /// Called every frame
-    virtual void OnTick() {};
+    virtual void OnTick(){};
     /// Called when scene is set to pause
-    virtual void OnPause() {};
+    virtual void OnPause(){};
     /// Called when scene is resume
-    virtual void OnResume() {};
+    virtual void OnResume(){};
     /// Called when scene is delete
-    virtual void OnStop() {};
+    virtual void OnStop(){};
 };
 
 /// @class Scene
@@ -34,16 +52,13 @@ class Scene : public IScene
 {
 public:
     /// Default constructor, if no name specified it will generate a name like Scene 1
-    Scene(std::string sceneName = "Scene"): name(sceneName){};
-
-    /// Init manager
-    void Init();
+    Scene(std::string sceneName = "Scene");
 
     /// Get scene name
-    std::string getName();
+    const std::string &getName() const;
 
     /// Set scene name
-    void setName(std::string newName){ name = newName; }
+    void setName(std::string newName) { name = newName; }
 
     // Entity methods
 
@@ -55,167 +70,50 @@ public:
     Entity CreateEntity(std::string newName);
 
     /// Get entity list
-    std::unordered_map<Entity, Signature> getEntities();
+    std::unordered_map<Entity, Signature> getEntities() const;
 
     /// @param[in] entity  Entity to remove.
     void DestroyEntity(Entity entity);
-
-    /// Check if entity get a component
-    template <typename T>
-    bool hasComponent(Entity entity)
-    {
-        Signature entitySignature = mEntityManager->GetSignature(entity);
-        return isRegister<T>() && entitySignature.test(mComponentManager->GetComponentType<T>());
-    }
 
     /// Get signature of an entity
     Signature getSignature(Entity entity);
 
     /// Get name of an entity
-    std::string &getEntityName(Entity entity);
+    std::string getEntityName(Entity entity);
 
     /// Get the number of entity in the scene
     uint32_t getLivingEntityCount();
 
-    // Component methods
+    /// Get the component manager
+    pivot::ecs::component::Manager &getComponentManager();
 
-    /// Register a new component before its usage
-    /// @code
-    /// gCoordinator.RegisterComponent<{YourComponent}>();
-    /// @endcode
-    template <typename T>
-    void RegisterComponent()
-    {
-        mComponentManager->RegisterComponent<T>();
-    }
-
-    /// Check if the component is register in the scene
-    template <typename T>
-    bool isRegister()
-    {
-        return mComponentManager->isRegister<T>();
-    }
-
-    /// Add a component to Entity
-    /// @code
-    /// gCoordinator.AddComponent<{YourComponent}>({YourEntity});
-    /// @endcode
-    template <typename T>
-    void AddComponent(Entity entity, T component)
-    {
-        mComponentManager->AddComponent<T>(entity, component);
-
-        auto signature = mEntityManager->GetSignature(entity);
-        signature.set(mComponentManager->GetComponentType<T>(), true);
-        mEntityManager->SetSignature(entity, signature);
-
-        mSystemManager->EntitySignatureChanged(entity, signature);
-    }
-
-    /// Remove a component to Entity
-    /// @code
-    /// gCoordinator.RemoveComponent<{YourComponent}>({YourEntity});
-    /// @endcode
-    template <typename T>
-    void RemoveComponent(Entity entity)
-    {
-        mComponentManager->RemoveComponent<T>(entity);
-
-        auto signature = mEntityManager->GetSignature(entity);
-        signature.set(mComponentManager->GetComponentType<T>(), false);
-        mEntityManager->SetSignature(entity, signature);
-
-        mSystemManager->EntitySignatureChanged(entity, signature);
-    }
-
-    /// Get component from Entity
-    /// @code
-    /// gCoordinator.GetComponent<{YourComponent}>({YourEntity});
-    /// @endcode
-    template <typename T>
-    T &GetComponent(Entity entity)
-    {
-        return mComponentManager->GetComponent<T>(entity);
-    }
-
-    /// Get component type, return in uint8_t;
-    /// Needed to create signature
-    /// @code
-    /// gCoordinator.GetComponentType<{YourComponent}>();
-    /// @endcode
-    template <typename T>
-    ComponentType GetComponentType()
-    {
-        return mComponentManager->GetComponentType<T>();
-    }
-
-    /// Get the list of component type use in signature
-    std::unordered_map<const char *, ComponentType> getComponentsTypes();
+    /// Get the component manager (const)
+    const pivot::ecs::component::Manager &getComponentManager() const;
 
     // System methods
 
-    /// Register a system before its usage
-    /// @code
-    /// gCoordinator.RegisterSystem<{YourSystem}>();
-    /// @endcode
-    template <typename T>
-    std::shared_ptr<T> RegisterSystem()
-    {
-        auto system = mSystemManager->RegisterSystem<T>();
-        mSystems.push_back(system);
-        return system;
-    }
+    /// Get the system manager (const)
+    const pivot::ecs::systems::Manager &getSystemManager() const;
 
-    /// Set a signature on your System to get the good list of entity.
-    /// In this exemple, the system will pass on all entity wich have {YourComponent}
-    /// @code
-    /// Signature signature;
-    /// signature.set(gCoordinator.GetComponentType<{YourComponent}>());
-    /// signature.set(gCoordinator.GetComponentType<Transform>());
-    /// gCoordinator.SetSystemSignature<{YourSystem}>(signature);
-    /// @endcode
-    template <typename T>
-    void SetSystemSignature(Signature signature)
-    {
-        mSystemManager->SetSignature<T>(signature);
-        for (Entity entity = 0; entity < getLivingEntityCount(); entity++) {
-            if ( (getSignature(entity) & signature) == signature)
-                mSystemManager->setEntityToSystem<T>(entity);
-        }
-    }
+    /// Register a system in the scene
+    ///
+    /// This optionally automatically registers needed components, by taking them from cIndex
+    void registerSystem(const systems::Description &description,
+                        pivot::OptionalRef<const component::Index> cIndex = std::nullopt);
 
-    /// Check if a system is register in a scene
-    template <typename T>
-    bool hasSystem()
-    {
-        return mSystemManager->hasSystem<T>();
-    }
+    /// Get the Entity manager
+    EntityManager &getEntityManager();
 
-    /// Update registered systems
-    void Update(float dt);
+    /// Get the Entity manager (const)
+    const EntityManager &getEntityManager() const;
 
     // Event methods
 
-    /// Add a event listener who will treat the Event that as been send
-    /// The eventId is a uint32_t
-    /// @code
-    /// gCoordinator.AddEventListener({YourEventId}, {YourFunction});
-    /// @endcode
-    void AddEventListener(EventId eventId, std::function<void(Event &)> const &listener);
+    /// Get the event manager
+    pivot::ecs::event::Manager &getEventManager();
 
-    /// Send an Event (with data)
-    /// @code
-    /// Event event({YourEventId});
-    /// event.SetParam({ParamID}, {YourData});
-    /// gCoordinator.SendEvent(event);
-    /// @endcode
-    void SendEvent(Event &event);
-
-    /// Send an EventId
-    /// @code
-    /// gCoordinator.SendEvent({YourEventId});
-    /// @endcode
-    void SendEvent(EventId eventId);
+    /// Get the event manager (const)
+    const pivot::ecs::event::Manager &getEventManager() const;
 
     // Camera
     /// Set camera to use
@@ -225,17 +123,32 @@ public:
     /// Switch camera
     void switchCamera();
     /// Get current camera
-    Camera &getCamera();
+    builtins::Camera &getCamera();
     /// Get camera list
     std::vector<Entity> &getCameras();
 
+    /// Function used to retrieve the real path of an asset if possible
+    using AssetTranslator = std::function<std::optional<std::string>(const std::string &)>;
+    /// Function used to retrieve the real path of an external ressource
+    using ScriptTranslator = std::function<std::optional<std::string>(const std::string &)>;
+    /// Save scene in json file
+    void save(const std::filesystem::path &path, std::optional<AssetTranslator> assetTranslator = std::nullopt,
+              std::optional<ScriptTranslator> scriptTranslator = std::nullopt) const;
+
+    // Load
+    /// Load a scene from JSON object
+    static std::unique_ptr<Scene> load(const nlohmann::json &obj, const pivot::ecs::component::Index &cIndex,
+                                       const pivot::ecs::systems::Index &sIndex);
+
 private:
     std::string name;
-    std::unique_ptr<ComponentManager> mComponentManager;
-    std::unique_ptr<EntityManager> mEntityManager;
-    std::unique_ptr<EventManager> mEventManager;
-    std::unique_ptr<SystemManager> mSystemManager;
-    std::vector<std::shared_ptr<System>> mSystems;
+    pivot::ecs::component::Manager mComponentManager;
+    EntityManager mEntityManager;
+    pivot::ecs::systems::Manager mSystemManager;
+    pivot::ecs::event::Manager mEventManager;
     std::vector<Entity> mCamera;
     std::uint16_t mCurrentCamera;
+    pivot::ecs::component::Manager::ComponentId mTagId;
 };
+
+}    // namespace pivot::ecs

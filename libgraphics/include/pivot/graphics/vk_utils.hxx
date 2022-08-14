@@ -1,53 +1,80 @@
 #pragma once
 
 #include <cstddef>
-#include <cstdint>
-#include <stdexcept>
+#include <filesystem>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <vulkan/vulkan.hpp>
 
-#include "pivot/graphics/VulkanException.hxx"
+#include "pivot/exception.hxx"
+#include "pivot/graphics/types/AllocatedBuffer.hxx"
 
-#define VK_TRY(x)                                                       \
-    {                                                                   \
-        vk::Result err = x;                                             \
-        if (err < vk::Result::eSuccess) { throw VulkanException(err); } \
-    }
-
-namespace vk_utils
+namespace pivot::graphics::vk_utils
 {
+
 template <typename T>
-concept is_copyable = requires
+concept wrappedVulkanType = requires
 {
-    std::is_standard_layout_v<T>;
-    typename std::vector<T>;
+    typename T::CType;
+    requires requires(T a) { a.objectType; };
 };
 
-void vk_try(vk::Result res);
-void vk_try(VkResult res);
-template <class... FailedValue>
-bool vk_try_mutiple(const vk::Result result, const FailedValue... failedResult)
+/// Test if a vk::Result is considered as a success.
+constexpr void vk_try(vk::Result err)
 {
-    if (((result == failedResult) || ...)) {
-        return true;
-    } else {
-        VK_TRY(result);
-        return false;
-    }
+    if (err < vk::Result::eSuccess) throw std::runtime_error(vk::to_string(err));
 }
 
-std::vector<std::byte> readFile(const std::string &filename);
-vk::ShaderModule createShaderModule(const vk::Device &device, const std::vector<std::byte> &code);
+/// @copydoc vk_try
+constexpr void vk_try(VkResult res) { vk_try(vk::Result(res)); }
+
+/// Read a whole file into a vector of byte.
+template <typename T = std::byte>
+requires std::is_trivial_v<T> && std::is_standard_layout_v<T> std::vector<T>
+readBinaryFile(const std::filesystem::path &filename)
+{
+    assert(!std::filesystem::is_symlink(filename));
+    size_t fileSize = std::filesystem::file_size(filename);
+    std::ifstream file(filename, std::ios::binary);
+    std::vector<T> fileContent(fileSize / sizeof(T));
+
+    if (!file.is_open()) throw std::runtime_error("failed to open file " + filename.string());
+    file.read(reinterpret_cast<char *>(fileContent.data()), fileSize * sizeof(T));
+    assert(!file.bad());
+    assert(!file.fail());
+    assert(fileSize == (unsigned long)file.gcount());
+    file.close();
+    return fileContent;
+}
+
+/// Read a whole file into a string
+std::string readFile(const std::filesystem::path &filename);
+std::size_t writeFile(const std::filesystem::path &filename, const std::string_view &content);
+
+template <typename T = std::byte>
+/// Write a binary file
+std::size_t writeBinaryFile(const std::filesystem::path &filename, std::span<const T> &code)
+{
+    std::ofstream file(filename, std::ios::binary);
+    file.write(reinterpret_cast<const char *>(code.data()), code.size_bytes());
+    file.close();
+    return code.size();
+}
+
+/// Create a vk::ShaderModule from bytecode.
+vk::ShaderModule createShaderModule(const vk::Device &device, std::span<const std::byte> code);
+
+/// Return the max MSAA sample supported by the device
+vk::SampleCountFlagBits getMaxUsableSampleCount(vk::PhysicalDevice &physical_device);
+/// Return the optimal format supported by the device from a given set of candidates
 vk::Format findSupportedFormat(vk::PhysicalDevice &gpu, const std::vector<vk::Format> &candidates,
                                vk::ImageTiling tiling, vk::FormatFeatureFlags features);
-bool hasStencilComponent(vk::Format format) noexcept;
 
 namespace tools
 {
-    const std::string to_string(vk::SampleCountFlagBits count) noexcept;
-    const std::string to_string(vk::CullModeFlagBits count) noexcept;
-
-    std::string physicalDeviceTypeString(vk::PhysicalDeviceType type) noexcept;
+    /// Print KB/MB/GB value from a number of bytes.
+    std::string bytesToString(uint64_t bytes);
 }    // namespace tools
-}    // namespace vk_utils
+
+}    // namespace pivot::graphics::vk_utils

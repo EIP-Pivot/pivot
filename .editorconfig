@@ -1,0 +1,11 @@
+# http://editorconfig.org
+root = true
+
+# Basic common configuration
+[*]
+end_of_line = lf
+insert_final_newline = true
+
+[*.yml]
+tab_width = 2
+

@@ -1,7 +1,6 @@
-#include "ImGuiCore/ComponentEditor.hxx"
-#include "ImGuiCore/TypeTemplate/Template.hxx"
 #include <magic_enum.hpp>
-#include <misc/cpp/imgui_stdlib.h>
+
+#include "ImGuiCore/ComponentEditor.hxx"
 
 using namespace pivot::ecs;
 using namespace pivot::ecs::component;
@@ -49,7 +48,7 @@ void ComponentEditor::displayComponent()
             ImGui::TreePop();
             ImGui::Indent();
             Value value = ref;
-            draw(value, "oui");
+            m_value_input.drawInput(value, "oui");
             ref = value;
             ImGui::Unindent();
         }

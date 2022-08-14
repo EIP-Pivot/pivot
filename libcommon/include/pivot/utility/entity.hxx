@@ -2,6 +2,7 @@
 
 #include <cinttypes>
 #include <compare>
+#include <iostream>
 #include <limits>
 
 namespace pivot
@@ -21,4 +22,15 @@ struct EntityRef {
 };
 
 static_assert(sizeof(EntityRef) == sizeof(Entity), "Not transparent");
+
+inline std::ostream &operator<<(std::ostream &os, const EntityRef &entity)
+{
+    os << "Entity(";
+    if (entity.is_empty()) {
+        os << "NULL";
+    } else {
+        os << entity.ref;
+    }
+    return os << ")";
+}
 }    // namespace pivot

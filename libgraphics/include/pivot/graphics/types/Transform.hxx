@@ -1,13 +1,14 @@
 #pragma once
 
-#include "pivot/graphics/types/vk_types.hxx"
-#include <pivot/utility/entity.hxx>
-
+#include <iostream>
 #include <stdexcept>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
+
+#include "pivot/graphics/types/vk_types.hxx"
+#include <pivot/utility/entity.hxx>
 
 namespace pivot::graphics
 {
@@ -54,4 +55,16 @@ public:
     /// Root of the transform
     pivot::EntityRef root = EntityRef::empty();
 };
+
+inline std::ostream &operator<<(std::ostream &os, const glm::vec3 &vec)
+{
+    return os << "(" << vec.x << "," << vec.y << "," << vec.z << ")";
+}
+inline std::ostream &operator<<(std::ostream &os, const Transform &transform)
+{
+    return os << "Position: " << transform.position << std::endl
+              << "Rotation: " << transform.rotation << std::endl
+              << "Scale: " << transform.scale << std::endl
+              << "Root: " << transform.root;
+}
 }    // namespace pivot::graphics

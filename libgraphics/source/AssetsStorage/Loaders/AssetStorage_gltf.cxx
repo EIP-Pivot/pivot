@@ -273,21 +273,17 @@ try {
         logger.warn("Asset Storage") << path.extension() << " file does not contains scene.";
         return storage;
     }
-    auto prefabNode = std::make_shared<asset::ModelNode>();
-    prefabNode->value.name = path.stem().string();
     for (const auto &scene: gltfModel.scenes) {
         auto sceneNode = std::make_shared<asset::ModelNode>();
-        sceneNode->value.name = scene.name;
+        sceneNode->value.name = (gltfModel.scenes.size() == 1) ? (path.stem().string()) : (scene.name);
         for (const auto &idx: scene.nodes) {
             const auto &node = gltfModel.nodes.at(idx);
             auto loadedNode = loadGltfNode(gltfModel, node, storage.vertexStagingBuffer, storage.indexStagingBuffer);
             sceneNode->addChild(loadedNode);
             storage.modelStorage[loadedNode->value.name] = loadedNode;
         }
-        prefabNode->addChild(sceneNode);
         storage.modelStorage[sceneNode->value.name] = sceneNode;
     }
-    storage.modelStorage[prefabNode->value.name] = prefabNode;
     return storage;
 } catch (const PivotException &ase) {
     logger.err(ase.getScope()) << "Error while loaded file : " << ase.what();

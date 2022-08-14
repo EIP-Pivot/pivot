@@ -30,7 +30,7 @@ TEST_CASE("Correct description for tag component", "[component][tag]")
     REQUIRE_THROWS(Helpers<Tag>::updateTypeWithValue(tag, Value{Record{}}));
 }
 
-TEST_CASE("Tag array rejects duplicated tags", "[component][ecs]")
+TEST_CASE("Tag array works", "[component][ecs]")
 {
     TagArray array(Tag::description);
 
@@ -42,4 +42,8 @@ TEST_CASE("Tag array rejects duplicated tags", "[component][ecs]")
     REQUIRE_THROWS_AS(array.setValueForEntity(2, name1), TagArray::DuplicateEntityTag);
     REQUIRE_NOTHROW(array.setValueForEntity(0, std::nullopt));
     REQUIRE_NOTHROW(array.setValueForEntity(2, name1));
+
+    REQUIRE(array.getEntityID("name") == 2);
+    REQUIRE(array.getEntityID("other name") == 1);
+    REQUIRE(array.getEntityID("no one") == std::nullopt);
 }

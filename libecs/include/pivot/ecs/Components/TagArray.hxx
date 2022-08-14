@@ -1,7 +1,7 @@
 #pragma once
 
-#include <set>
 #include <stdexcept>
+#include <unordered_map>
 
 #include <pivot/ecs/Components/Tag.hxx>
 #include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
@@ -32,8 +32,11 @@ public:
         DuplicateEntityTag(const std::string &tag): std::logic_error("Duplicate entity tag: " + tag) {}
     };
 
+    /// Get the id of an Entity by its name
+    std::optional<Entity> getEntityID(const std::string &name);
+
 private:
-    std::set<std::string> m_tag_names;
+    std::unordered_map<std::string, Entity> m_tag_names;
 };
 
 }    // namespace pivot::ecs::component

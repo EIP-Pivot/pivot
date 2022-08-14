@@ -81,6 +81,9 @@ public:
     /// Get name of an entity
     std::string getEntityName(Entity entity);
 
+    /// Get the id of an entity by its name
+    std::optional<Entity> getEntityID(const std::string &name);
+
     /// Get the number of entity in the scene
     uint32_t getLivingEntityCount();
 

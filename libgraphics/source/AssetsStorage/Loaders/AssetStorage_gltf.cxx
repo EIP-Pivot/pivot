@@ -114,29 +114,24 @@ static asset::ModelPtr loadGltfNode(const tinygltf::Model &gltfModel, const tiny
     DEBUG_FUNCTION
     logger.debug("Asset Storage/Gltf") << "Loading node: " << node.name;
 
-    glm::dmat4 matrix(1.0f);
-    if (node.matrix.size() == 16) {
-        matrix = glm::make_mat4x4(node.matrix.data());
-    } else {
-        glm::dvec3 translation;
-        if (node.translation.size() == 3) { translation = glm::make_vec3(node.translation.data()); }
-
-        glm::dquat rotation;
-        if (node.rotation.size() == 4) {
-            glm::dquat q = glm::make_quat(node.rotation.data());
-            rotation = glm::dmat4(q);
-        }
-
-        glm::dvec3 scale(1.0f);
-        if (node.scale.size() == 3) { scale = glm::make_vec3(node.scale.data()); }
-
-        matrix =
-            glm::translate(glm::dmat4(1.0f), translation) * glm::dmat4(rotation) * glm::scale(glm::dmat4(1.0f), scale);
-    }
-
     auto loadedNode = std::make_shared<asset::ModelNode>();
     loadedNode->value.name = node.name;
-    loadedNode->value.localMatrix = matrix;
+
+    // Generate local node matrix
+    glm::vec3 translation = glm::vec3(0.0f);
+    if (node.translation.size() == 3) { translation = glm::make_vec3(node.translation.data()); }
+    glm::mat4 rotation = glm::mat4(1.0f);
+    if (node.rotation.size() == 4) {
+        glm::quat q = glm::make_quat(node.rotation.data());
+        rotation = glm::mat4(q);
+    }
+    glm::vec3 scale = glm::vec3(1.0f);
+    if (node.scale.size() == 3) { scale = glm::make_vec3(node.scale.data()); }
+    if (node.matrix.size() == 16) { loadedNode->value.localMatrix = glm::make_mat4x4(node.matrix.data()); };
+
+    loadedNode->value.localMatrix = glm::translate(glm::mat4(1.0f), translation) * glm::mat4(rotation) *
+                                    glm::scale(glm::mat4(1.0f), scale) * loadedNode->value.localMatrix;
+
     for (const auto &i: node.children) {
         loadedNode->addChild(loadGltfNode(gltfModel, gltfModel.nodes.at(i), vertexBuffer, indexBuffer));
     }

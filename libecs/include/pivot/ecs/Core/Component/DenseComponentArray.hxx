@@ -91,6 +91,8 @@ public:
         return parsed;
     }
 
+    data::Value unparseValue(const T &value) { return helpers::Helpers<T>::createValueFromType(value); }
+
 protected:
     /// Description of the component
     Description m_description;

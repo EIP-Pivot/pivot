@@ -11,6 +11,7 @@ CullingRenderer::~CullingRenderer() {}
 
 bool CullingRenderer::onInit(VulkanBase &base_ref, const vk::DescriptorSetLayout &resolverLayout)
 {
+    DEBUG_FUNCTION;
     indices = base_ref.queueIndices;
     createPipelineLayout(base_ref.device, resolverLayout);
     createPipeline();
@@ -19,6 +20,7 @@ bool CullingRenderer::onInit(VulkanBase &base_ref, const vk::DescriptorSetLayout
 
 void CullingRenderer::onStop(VulkanBase &base_ref)
 {
+    DEBUG_FUNCTION;
     if (cullingLayout) base_ref.device.destroyPipelineLayout(cullingLayout);
 }
 
@@ -31,7 +33,8 @@ bool CullingRenderer::onRecreate(const vk::Extent2D &, VulkanBase &base_ref,
     return true;
 }
 
-bool CullingRenderer::onDraw(const CameraData &cameraData, DrawCallResolver &resolver, vk::CommandBuffer &cmd)
+bool CullingRenderer::onDraw(const RenderingContext &, const CameraData &cameraData, DrawCallResolver &resolver,
+                             vk::CommandBuffer &cmd)
 {
     const gpu_object::CullingPushConstant cullingCamera{
         .viewProjection = cameraData.viewProjection,

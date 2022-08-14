@@ -73,7 +73,7 @@ TEST_CASE("loadGltfFile", "[assetStorage]")
 
     std::string testIds = "BoomBox";
     REQUIRE_NOTHROW(storage.modelStorage.at("BoomBox"));
-    REQUIRE(storage.modelStorage.size() == 2);
+    REQUIRE(storage.modelStorage.size() == 1);
 
     REQUIRE(storage.materialStaging.size() == 1);
     REQUIRE_NOTHROW(storage.materialStaging.at("BoomBox_Mat"));

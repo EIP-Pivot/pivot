@@ -40,39 +40,6 @@ if(NOT ktx_POPULATED)
 endif()
 
 fetchcontent_declare(
-    tinygltf
-    GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
-    GIT_TAG 912856823dcb2badf2074055b6d006f7bb3800b8
-)
-fetchcontent_getproperties(tinygltf)
-if(NOT tinygltf_POPULATED)
-    message(STATUS "Populating tinygltf")
-    fetchcontent_populate(tinygltf)
-    set(TINYGLTF_HEADER_ONLY
-        OFF
-        CACHE INTERNAL "" FORCE
-    )
-    set(TINYGLTF_BUILD_LOADER_EXAMPLE
-        OFF
-        CACHE INTERNAL "" FORCE
-    )
-    set(TINYGLTF_INSTALL
-        OFF
-        CACHE INTERNAL "" FORCE
-    )
-    add_subdirectory(${tinygltf_SOURCE_DIR} ${tinygltf_BINARY_DIR})
-    target_compile_definitions(
-        tinygltf
-        PUBLIC TINYGLTF_NO_STB_IMAGE
-               TINYGLTF_NO_STB_IMAGE_WRITE
-               TINYGLTF_NO_INCLUDE_STB_IMAGE
-               TINYGLTF_NO_INCLUDE_STB_IMAGE_WRITE
-               TINYGLTF_NO_EXTERNAL_IMAGE
-               TINYGLTF_NO_INCLUDE_RAPIDJSON
-    )
-endif()
-
-fetchcontent_declare(
     vma
     GIT_REPOSITORY https://github.com/YaaZ/VulkanMemoryAllocator-Hpp.git
     GIT_TAG da6ea76eecf12a1decc76f58a3e096bcc555bd94
@@ -106,9 +73,33 @@ if(NOT stb_POPULATED)
 endif()
 
 fetchcontent_declare(
+    tinygltf
+    GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
+    GIT_TAG 0fa56e239c77cc864dc248842e8887d985cf8e3f
+)
+fetchcontent_getproperties(tinygltf)
+if(NOT tinygltf_POPULATED)
+    message(STATUS "Populating tinygltf")
+    fetchcontent_populate(tinygltf)
+    set(TINYGLTF_HEADER_ONLY
+        ON
+        CACHE INTERNAL "" FORCE
+    )
+    set(TINYGLTF_BUILD_LOADER_EXAMPLE
+        OFF
+        CACHE INTERNAL "" FORCE
+    )
+    set(TINYGLTF_INSTALL
+        OFF
+        CACHE INTERNAL "" FORCE
+    )
+    add_subdirectory(${tinygltf_SOURCE_DIR} ${tinygltf_BINARY_DIR})
+endif()
+
+fetchcontent_declare(
     tinyobjloader
     GIT_REPOSITORY https://github.com/tinyobjloader/tinyobjloader.git
-    GIT_TAG 8322e00ae685ea623ab6ac5a6cebcfa2d22fbf93
+    GIT_TAG a1e8bad32e1ccd26a7936c5354ecf856aec2cf59
 )
 fetchcontent_getproperties(tinyobjloader)
 if(NOT tinyobjloader_POPULATED)
@@ -221,7 +212,7 @@ target_compile_options(
 )
 
 target_precompile_headers(${PROJECT_NAME} REUSE_FROM pivot-common)
-#target_precompile_headers(${PROJECT_NAME} PRIVATE <vulkan/vulkan.hpp> <vk_mem_alloc.hpp>)
+# target_precompile_headers(${PROJECT_NAME} PRIVATE <vulkan/vulkan.hpp> <vk_mem_alloc.hpp>)
 
 set(PIVOT_ASSET_DEFAULT_DIRECTORY
     "${CMAKE_SOURCE_DIR}/editor/assets/"

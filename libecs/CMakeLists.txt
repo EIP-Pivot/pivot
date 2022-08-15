@@ -32,17 +32,6 @@ fetch_boost_library(utility)
 fetch_boost_library(predef)
 fetch_boost_library(io)
 
-fetchcontent_declare(
-    nlohmann_json
-    GIT_REPOSITORY https://github.com/nlohmann/json.git
-    GIT_TAG v3.10.5
-)
-if(NOT nlohmann_json_POPULATED)
-    message(STATUS "Populating json")
-    fetchcontent_populate(nlohmann_json)
-    add_subdirectory(${nlohmann_json_SOURCE_DIR} ${nlohmann_json_BINARY_DIR})
-endif()
-
 add_library(
     ${PROJECT_NAME}
     source/Core/Scene.cxx

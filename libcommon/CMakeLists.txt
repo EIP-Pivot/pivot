@@ -70,9 +70,20 @@ target_compile_options(
             /wd4244>
 )
 
+fetchcontent_declare(
+    nlohmann_json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG v3.10.5
+)
+if(NOT nlohmann_json_POPULATED)
+    message(STATUS "Populating json")
+    fetchcontent_populate(nlohmann_json)
+    add_subdirectory(${nlohmann_json_SOURCE_DIR} ${nlohmann_json_BINARY_DIR})
+endif()
+
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC logger glm magic_enum)
+target_link_libraries(${PROJECT_NAME} PUBLIC logger glm magic_enum nlohmann_json)
 
 target_precompile_headers(
     ${PROJECT_NAME}

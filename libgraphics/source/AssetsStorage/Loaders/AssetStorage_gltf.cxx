@@ -5,8 +5,26 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <span>
-#include <tiny_gltf.h>
 #include <type_traits>
+
+#define TINYGLTF_NO_INCLUDE_JSON
+#define TINYGLTF_NO_STB_IMAGE_WRITE
+#define TINYGLTF_NO_INCLUDE_STB_IMAGE
+#define TINYGLTF_NO_INCLUDE_STB_IMAGE_WRITE
+#define TINYGLTF_NO_INCLUDE_RAPIDJSON
+#define TINYGLTF_IMPLEMENTATION
+#include <nlohmann/json.hpp>
+#include <stb_image.h>
+#include <tiny_gltf.h>
+
+bool loadImageDataFunc(tinygltf::Image *image, const int imageIndex, std::string *error, std::string *warning,
+                       int req_width, int req_height, const unsigned char *bytes, int size, void *userData)
+{
+    std::filesystem::path path = image->uri;
+    if (pivot::graphics::asset::loaders::supportedTexture.contains(path.extension().string())) return true;
+
+    return tinygltf::LoadImageData(image, imageIndex, error, warning, req_width, req_height, bytes, size, userData);
+}
 
 template <typename T>
 constexpr std::int16_t gltf_component_type_code = -1;
@@ -301,6 +319,7 @@ std::optional<asset::CPUStorage> loadGltfModel(const std::filesystem::path &path
     tinygltf::TinyGLTF gltfContext;
     std::string error, warning;
 
+    gltfContext.SetImageLoader(loadImageDataFunc, nullptr);
     bool isLoaded = gltfContext.LoadASCIIFromFile(&gltfModel, &error, &warning, path.string());
     if (!warning.empty()) logger.warn("Asset Storage/GLTF") << warning;
     if (!error.empty()) logger.err("Asset Storage/GLTF") << error;
@@ -317,6 +336,7 @@ std::optional<asset::CPUStorage> loadGlbModel(const std::filesystem::path &path)
     tinygltf::TinyGLTF gltfContext;
     std::string error, warning;
 
+    gltfContext.SetImageLoader(loadImageDataFunc, nullptr);
     bool isLoaded = gltfContext.LoadBinaryFromFile(&gltfModel, &error, &warning, path.string());
     if (!warning.empty()) logger.warn("Asset Storage/GLB") << warning;
     if (!error.empty()) logger.err("Asset Storage/GLB") << error;

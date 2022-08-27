@@ -54,7 +54,7 @@ void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
         cpuStorage.texturePaths.insert(texturePaths.begin(), texturePaths.end());
     }
 
-    // threadPool.start();
+    threadPool.start();
     cpuStorage += batch_load(cpuStorage.modelPaths, loadModel, "Model", threadPool);
     cpuStorage += batch_load(cpuStorage.texturePaths, loadTexture, "Texture", threadPool);
 

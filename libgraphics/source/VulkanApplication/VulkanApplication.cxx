@@ -151,9 +151,12 @@ VulkanApplication::DrawResult VulkanApplication::draw(DrawCallResolver::DrawScen
                                                       const CameraData &cameraData,
                                                       std::optional<vk::Rect2D> renderArea)
 try {
-    pivot_assert(!graphicsRenderer.empty() && !computeRenderer.empty(), "No Render are setup");
     pivot_assert(currentFrame < PIVOT_MAX_FRAMES_IN_FLIGHT,
                  "The current frame is bigger than the max amount of concurrent frame");
+    if (!pivot_check(!graphicsRenderer.empty() && !computeRenderer.empty(), "No Renderers are setup")) {
+        // This is technically a success, even thought nothing was drawn.
+        return DrawResult::Success;
+    }
     auto &frame = frames[currentFrame];
     vk_utils::vk_try(device.waitForFences(frame.inFlightFences, VK_TRUE, UINT64_MAX));
 

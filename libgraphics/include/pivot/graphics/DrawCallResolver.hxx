@@ -95,6 +95,13 @@ public:
         ///@endcond
     };
 
+private:
+    static vk::DescriptorSetLayout descriptorSetLayout;
+
+public:
+    /// @return Get the descritor set layout
+    static constexpr const vk::DescriptorSetLayout &getDescriptorSetLayout() noexcept { return descriptorSetLayout; }
+
 public:
     /// Constructor
     DrawCallResolver();
@@ -111,9 +118,6 @@ public:
 
     /// Get the frame data of a given frame
     constexpr const Frame &getFrameData() const { return frame; }
-
-    /// @return Get the descritor set layout
-    constexpr const vk::DescriptorSetLayout &getDescriptorSetLayout() const noexcept { return descriptorSetLayout; }
 
 private:
     template <class T, class G>
@@ -149,7 +153,6 @@ private:
     OptionalRef<VulkanBase> base_ref;
     OptionalRef<AssetStorage> storage_ref;
     Frame frame;
-    vk::DescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
 };
 
 }    // namespace pivot::graphics

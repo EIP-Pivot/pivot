@@ -90,12 +90,11 @@ void VulkanApplication::initVulkanRessources()
     createFramebuffers();
 
     std::ranges::for_each(graphicsRenderer, [this](auto &rendy) {
-        rendy->onInit(swapchain.getSwapchainExtent(), *this, frames[0].drawResolver.getDescriptorSetLayout(),
+        rendy->onInit(swapchain.getSwapchainExtent(), *this, DrawCallResolver::getDescriptorSetLayout(),
                       renderPass.getRenderPass());
     });
-    std::ranges::for_each(computeRenderer, [this](auto &rendy) {
-        rendy->onInit(*this, frames[0].drawResolver.getDescriptorSetLayout());
-    });
+    std::ranges::for_each(computeRenderer,
+                          [this](auto &rendy) { rendy->onInit(*this, DrawCallResolver::getDescriptorSetLayout()); });
 
     logger.info("Vulkan Application") << "Initialisation complete !";
 }
@@ -106,11 +105,11 @@ void VulkanApplication::buildAssetStorage(AssetStorage::BuildFlags flags)
 
     assetStorage.build(DescriptorBuilder(layoutCache, descriptorAllocator), flags);
     std::ranges::for_each(computeRenderer, [this](auto &rendy) {
-        rendy->onRecreate(swapchain.getSwapchainExtent(), *this, frames[0].drawResolver.getDescriptorSetLayout(),
+        rendy->onRecreate(swapchain.getSwapchainExtent(), *this, DrawCallResolver::getDescriptorSetLayout(),
                           renderPass.getRenderPass());
     });
     std::ranges::for_each(graphicsRenderer, [this](auto &rendy) {
-        rendy->onRecreate(swapchain.getSwapchainExtent(), *this, frames[0].drawResolver.getDescriptorSetLayout(),
+        rendy->onRecreate(swapchain.getSwapchainExtent(), *this, DrawCallResolver::getDescriptorSetLayout(),
                           renderPass.getRenderPass());
     });
     logger.info("Vulkan Application") << "Asset Storage rebuild !";
@@ -135,7 +134,7 @@ void VulkanApplication::recreateSwapchain()
     createColorResources();
     createDepthResources();
     createRenderPass();
-    auto layout = frames[0].drawResolver.getDescriptorSetLayout();
+    auto layout = DrawCallResolver::getDescriptorSetLayout();
 
     std::ranges::for_each(graphicsRenderer, [&](auto &rendy) {
         rendy->onRecreate(swapchain.getSwapchainExtent(), *this, layout, renderPass.getRenderPass());
@@ -151,16 +150,14 @@ VulkanApplication::DrawResult VulkanApplication::draw(DrawCallResolver::DrawScen
                                                       const CameraData &cameraData,
                                                       std::optional<vk::Rect2D> renderArea)
 try {
-    pivot_assert(currentFrame < PIVOT_MAX_FRAMES_IN_FLIGHT,
-                 "The current frame is bigger than the max amount of concurrent frame");
     if (!pivot_check(!graphicsRenderer.empty() && !computeRenderer.empty(), "No Renderers are setup")) {
         // This is technically a success, even thought nothing was drawn.
         return DrawResult::Success;
     }
-    auto &frame = frames[currentFrame];
+    auto &frame = frames.get();
     vk_utils::vk_try(device.waitForFences(frame.inFlightFences, VK_TRUE, UINT64_MAX));
 
-    uint32_t imageIndex = swapchain.getNextImageIndex(UINT64_MAX, frame.imageAvailableSemaphore);
+    const uint32_t imageIndex = swapchain.getNextImageIndex(UINT64_MAX, frame.imageAvailableSemaphore);
 
     auto &cmd = frame.cmdBuffer;
 
@@ -242,7 +239,7 @@ try {
         .pImageIndices = &imageIndex,
     };
     vk_utils::vk_try(presentQueue.presentKHR(presentInfo));
-    currentFrame = (currentFrame + 1) % PIVOT_MAX_FRAMES_IN_FLIGHT;
+    frames.advance();
     return DrawResult::Success;
 } catch (const vk::OutOfDateKHRError &e) {
     logger.debug("VulkanApplication/OutOfDateKHRError") << e.what();

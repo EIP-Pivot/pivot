@@ -8,6 +8,8 @@
 namespace pivot::graphics
 {
 
+vk::DescriptorSetLayout DrawCallResolver::descriptorSetLayout = VK_NULL_HANDLE;
+
 DrawCallResolver::DrawCallResolver() {}
 
 DrawCallResolver::~DrawCallResolver() {}

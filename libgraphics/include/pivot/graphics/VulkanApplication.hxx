@@ -14,6 +14,7 @@
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/pivot.hxx"
 
+#include "pivot/containers/RotaryBuffer.hxx"
 #include "pivot/graphics/DrawCallResolver.hxx"
 #include "pivot/graphics/Renderer/CullingRenderer.hxx"
 #include "pivot/graphics/Renderer/GraphicsRenderer.hxx"
@@ -82,7 +83,7 @@ public:
                     std::optional<vk::Rect2D> renderArea = std::nullopt);
 
     /// @brief get Swapchain aspect ratio
-    constexpr float getAspectRatio() const noexcept { return swapchain.getAspectRatio(); }
+    inline float getAspectRatio() const noexcept { return swapchain.getAspectRatio(); }
 
     /// Build the asset Storage
     void buildAssetStorage(AssetStorage::BuildFlags flags = AssetStorage::BuildFlagBits::eClear);
@@ -140,8 +141,7 @@ private:
     DeletionQueue swapchainDeletionQueue;
     VulkanSwapchain swapchain;
 
-    uint8_t currentFrame = 0;
-    std::array<Frame, PIVOT_MAX_FRAMES_IN_FLIGHT> frames;
+    RotaryBuffer<Frame, PIVOT_MAX_FRAMES_IN_FLIGHT> frames;
 
     VulkanRenderPass renderPass;
 

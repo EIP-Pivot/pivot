@@ -56,7 +56,10 @@ if(NOT magic_enum_POPULATED)
     add_subdirectory(${magic_enum_SOURCE_DIR} ${magic_enum_BINARY_DIR})
 endif()
 
-add_library(${PROJECT_NAME} STATIC sources/lib.cxx)
+add_library(${PROJECT_NAME} STATIC sources/lib.cxx $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
+            sources/UnixPlatform.cxx>
+            $<$<CXX_COMPILER_ID:MSVC>:
+            sources/WindowsPlatform.cxx>)
 
 target_compile_options(
     ${PROJECT_NAME}

@@ -30,7 +30,7 @@
 
 #else
     #define pivot_assert(expr, msg) void(0);
-    #define pivot_check(expr, msg) (LIKELY(!!(expr)));
+    #define pivot_check(expr, msg) (LIKELY(!!(expr)))
     #define DEBUG_FUNCTION void(0);
 #endif
 

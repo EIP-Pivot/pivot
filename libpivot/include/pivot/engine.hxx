@@ -40,6 +40,9 @@ public:
 
     static constexpr float fov = 80;
 
+private:
+    void setIcons();
+
 protected:
     ecs::component::Index m_component_index;
     ecs::event::Index m_event_index;

@@ -88,6 +88,23 @@ void Window::setIcon(const std::span<const std::string> &windowIcons)
     for (const auto &i: images) { stbi_image_free(i.pixels); }
 }
 
+void Window::setIconFromMemory(const std::vector<std::span<const unsigned char>> &windowIcons)
+{
+    std::vector<GLFWimage> images;
+    for (const auto &icon: windowIcons) {
+        int texWidth, texHeight, texChannels;
+        stbi_uc *pixels =
+            stbi_load_from_memory(icon.data(), icon.size(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+        images.push_back({
+            .width = texWidth,
+            .height = texHeight,
+            .pixels = pixels,
+        });
+    }
+    setIcon(images);
+    for (const auto &i: images) { stbi_image_free(i.pixels); }
+}
+
 vk::Extent2D Window::getSize() const noexcept
 {
     auto s = updateSize();

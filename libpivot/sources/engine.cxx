@@ -55,12 +55,12 @@ Engine::Engine()
     m_vulkan_application.addRenderer<pivot::graphics::ImGuiRenderer>();
     m_vulkan_application.init();
 
+    setIcons();
     m_vulkan_application.window.addGlobalKeyPressCallback(std::bind_front(&Engine::onKeyPressed, this));
 }
 
 void Engine::run()
 {
-
     float dt = 0.0f;
     FrameLimiter<60> fpsLimiter;
     while (!m_vulkan_application.window.shouldClose()) {

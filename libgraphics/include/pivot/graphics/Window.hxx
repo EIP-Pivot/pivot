@@ -191,8 +191,10 @@ public:
 
     /// Set the icon of the window
     void setIcon(const std::span<const GLFWimage> &) noexcept;
-    /// Set the icon of the window
+    /// @copydoc setIcon
     void setIcon(const std::span<const std::string> &);
+    /// @copydoc setIcon
+    void setIconFromMemory(const std::vector<std::span<const unsigned char>> &);
 
     /// Get the title of the window
     /// @return The title of the window

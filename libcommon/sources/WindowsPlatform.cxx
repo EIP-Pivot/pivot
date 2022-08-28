@@ -7,7 +7,7 @@
 namespace pivot
 {
 
-bool plateform::isDebuggerPresent() { return !!::isDebuggerPresent(); }
+bool plateform::isDebuggerPresent() { return !!::IsDebuggerPresent(); }
 
 }    // namespace pivot
 

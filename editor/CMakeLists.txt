@@ -53,3 +53,21 @@ target_compile_definitions(
 target_pivot_compile_option(${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE pivot nfd argparse)
+
+install(TARGETS ${PROJECT_NAME}
+        DESTINATION .
+        OPTIONAL)
+
+install(DIRECTORY ${CMAKE_BINARY_DIR}/shaders/ DESTINATION ./shaders)
+
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ImGuiConfig/imgui.ini DESTINATION .)
+
+set(CPACK_GENERATOR NSIS)
+set(CPACK_PACKAGE_NAME "PivotEditor")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "PivotEditor")
+set(CPACK_PACKAGE_VERSION "1.0.0")
+set(CPACK_PACKAGE_VERSION_MAJOR "1")
+set(CPACK_PACKAGE_VERSION_MINOR "0")
+set(CPACK_PACKAGE_VERSION_PATCH "0")
+
+include(CPack)

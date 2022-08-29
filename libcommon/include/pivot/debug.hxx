@@ -21,6 +21,17 @@
     #endif
 #endif
 
+#if (defined(__clang__) || defined(__GNUC__))
+    #define FORCEINLINE inline __attribute__((always_inline)) /* Force code to be inline */
+    #define FORCENOINLINE __attribute__((noinline))           /* Force code to NOT be inline */
+#elif defined(_MSC_VER)
+    #define FORCEINLINE __forceinline /* Force code to be inline */
+    #define FORCENOINLINE __declspec(noinline)
+#else
+    #define FORCEINLINE
+    #define FORCENOINLINE
+#endif
+
 #if defined(_WIN32) || defined(_WIN64)
     #define PLATFORM_WINDOWS
 #elif defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))

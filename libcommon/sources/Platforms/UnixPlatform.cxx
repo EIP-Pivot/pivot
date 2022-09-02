@@ -1,18 +1,17 @@
-#include "pivot/Platform.hxx"
+#include "pivot/Platforms/UnixPlatform.hxx"
 
-#ifdef PLATFORM_UNIX
+#if defined(PLATFORM_UNIX)
 
     #include <fcntl.h>
+    #include <iterator>
     #include <string.h>
     #include <sys/utsname.h>
     #include <unistd.h>
 
-    #include <unordered_map>
-
 namespace pivot
 {
 
-bool plateform::isDebuggerPresent()
+bool UnixPlateform::isDebuggerPresent()
 {
     // If a process is tracing this one then TracerPid in /proc/self/status will
     // be the id of the tracing process. Use SignalHandler safe functions

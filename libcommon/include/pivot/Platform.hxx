@@ -4,13 +4,10 @@
 
 #include "pivot/debug.hxx"
 
-namespace pivot
-{
-namespace plateform
-{
-
-    bool isDebuggerPresent();
-
-}    // namespace plateform
-
-}    // namespace pivot
+#if defined(PLATFORM_WINDOWS)
+    #include "pivot/Platforms/WindowsPlatform.hxx"
+#elif defined(PLATFORM_UNIX)
+    #include "pivot/Platforms/UnixPlatform.hxx"
+#else
+static_assert(false, "Unsuported Platform !")
+#endif

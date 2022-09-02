@@ -25,25 +25,20 @@ bool plateform::isDebuggerPresent()
 
     char Buffer[256];
     ssize_t Length = read(StatusFile, Buffer, sizeof(Buffer));
+    close(StatusFile);
 
-    bool bDebugging = false;
-    const char *TracerString = "TracerPid:\t";
-    const ssize_t LenTracerString = strlen(TracerString);
-    int i = 0;
+    constexpr char TracerString[] = "TracerPid:\t";
+    constexpr ssize_t LenTracerString = std::size(TracerString);
 
-    while ((Length - i) > LenTracerString) {
+    for (int i = 0; (Length - i) > LenTracerString; i++) {
         // TracerPid is found
         if (strncmp(&Buffer[i], TracerString, LenTracerString) == 0) {
             // 0 if no process is tracing.
-            bDebugging = Buffer[i + LenTracerString] != '0';
-            break;
+            return Buffer[i + LenTracerString] != '0';
         }
-
-        ++i;
     }
 
-    close(StatusFile);
-    return bDebugging;
+    return false;
 }
 
 }    // namespace pivot

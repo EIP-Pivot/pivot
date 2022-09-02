@@ -8,6 +8,8 @@ static_assert(false, "MSVC Compiler header included without compiling with MSVC"
 
 #endif
 
+#include <intrin.h>
+
 namespace pivot
 {
 class MSVCCompiler

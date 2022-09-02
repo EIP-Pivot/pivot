@@ -8,6 +8,8 @@ static_assert(false, "Windows Platform header included on a non windows platform
 
 #endif
 
+#include <intrin.h>
+
 namespace pivot
 {
 class WindowsPlatform

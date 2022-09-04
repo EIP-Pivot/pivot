@@ -12,7 +12,7 @@ fetchcontent_getproperties(nativefiledialog)
 if(NOT nativefiledialog_POPULATED)
     message(STATUS "Populating nativefiledialog")
     fetchcontent_populate(nativefiledialog)
-    add_subdirectory(${nativefiledialog_SOURCE_DIR} ${nativefiledialog_BINARY_DIR})
+    add_subdirectory(${nativefiledialog_SOURCE_DIR} ${nativefiledialog_BINARY_DIR} EXCLUDE_FROM_ALL)
     target_compile_definitions(nfd PUBLIC NFD_THROWS_EXCEPTIONS)
 endif()
 
@@ -26,7 +26,7 @@ fetchcontent_getproperties(argparse)
 if(NOT argparse_POPULATED)
     message(STATUS "Populating argparse")
     fetchcontent_populate(argparse)
-    add_subdirectory(${argparse_SOURCE_DIR} ${argparse_BINARY_DIR})
+    add_subdirectory(${argparse_SOURCE_DIR} ${argparse_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
 add_executable(

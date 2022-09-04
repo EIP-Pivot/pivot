@@ -25,15 +25,17 @@ public:
     bool operator==(const Transform &) const = default;
 
     /// Compute transform with root
-    Transform with_root(const Transform &root)
+    Transform with_root(const Transform &root) const
     {
-        return Transform{
-            .position = this->position + root.position,
-            .rotation = this->rotation + root.rotation,
-            .scale = this->scale,
-            .root = EntityRef::empty(),
-        };
+        return Transform::from_matrix(this->getModelMatrix() / root.getModelMatrix());
     }
+
+    Transform remove_root(const Transform &root) const
+    {
+        return Transform::from_matrix(this->getModelMatrix() * root.getModelMatrix());
+    }
+
+    static Transform from_matrix(const glm::mat4 mat);
 
 private:
     static glm::mat4 recomposeMatrix(const Transform &tran)

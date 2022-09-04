@@ -7,6 +7,7 @@
 #include <pivot/ecs/Core/Component/description_helpers.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
 #include <pivot/ecs/Core/Data/value_serialization.hxx>
+#include <pivot/graphics/types/Transform.hxx>
 #include <pivot/internal/TransformArray.hxx>
 
 using namespace nlohmann;
@@ -15,6 +16,22 @@ using namespace pivot::ecs::component;
 using namespace pivot::builtins::components;
 using namespace pivot::internal;
 using namespace pivot;
+
+void check_matrices(const glm::mat4 &received, const glm::mat4 &expected)
+{
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) { REQUIRE(received[i][j] == expected[i][j]); }
+    }
+}
+
+// std::ostream &operator<<(std::ostram &)
+
+void check_transform(const graphics::Transform &received, const graphics::Transform &expected)
+{
+    REQUIRE(received.position == expected.position);
+    REQUIRE(received.rotation == expected.rotation);
+    REQUIRE(received.scale == expected.scale);
+}
 
 TEST_CASE("Transform component works", "[graphics][component]")
 {
@@ -34,6 +51,15 @@ TEST_CASE("Transform component works", "[graphics][component]")
                                                      {"rotation", Value{glm::vec3{0, 0, 0}}},
                                                      {"scale", Value{glm::vec3{1, 1, 1}}},
                                                      {"root", Value{pivot::EntityRef::empty()}}}});
+
+    const pivot::graphics::Transform object{{1, 2, 3}, {1, 2, 3}, {1, 2, 3}, EntityRef::empty()};
+    const pivot::graphics::Transform root{{3, 1, 2}, {3, 1, 2}, {3, 1, 2}, EntityRef::empty()};
+    const pivot::graphics::Transform identity{{0, 0, 0}, {0, 0, 0}, {1, 1, 1}, EntityRef::empty()};
+
+    // auto object_with_root = object.with_root(root);
+    // auto model_matrix_with_root = object_with_root.getModelMatrix() * root.getModelMatrix();
+    // auto model_matrix_normal = object.getModelMatrix();
+    REQUIRE(object.with_root(identity) == object);
 }
 
 namespace

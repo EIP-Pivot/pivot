@@ -165,6 +165,7 @@ endif()
 add_library(
     ${PROJECT_NAME} STATIC
     source/lib.cxx
+    source/types/Transform.cxx
     source/types/Vertex.cxx
     source/types/Frame.cxx
     source/types/Light.cxx

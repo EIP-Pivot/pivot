@@ -69,6 +69,9 @@ void TransformArray::setRoot(Entity entity, Entity root)
     // If the entity is the root of other entities, the depth is larger than 1
     if (!m_reverse_root.at(entity).empty()) { throw RootDepthExceeded(*m_reverse_root.at(entity).begin()); }
 
+    // Add root transform component to model matrix
+    transform = transform.with_root(m_components.at(root));
+
     // Add new root
     transform.root.ref = root;
 
@@ -88,6 +91,9 @@ void TransformArray::removeRoot(Entity entity)
 
     // Remove backlink to the root entity
     m_reverse_root.at(transform.root.ref).erase(entity);
+
+    // Remove root transform component of model matrix
+    transform = transform.remove_root(m_components.at(transform.root.ref));
 
     // Remove root
     transform.root = EntityRef::empty();

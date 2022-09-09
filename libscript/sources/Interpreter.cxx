@@ -114,7 +114,7 @@ std::vector<systems::Description> registerDeclarations(const Node &file, compone
 // This will execute a SystemEntryPoint node by executing all of its statements
 void Interpreter::executeSystem(const Node &systemEntry, const systems::Description &desc,
                                 component::ArrayCombination::ComponentCombination &entityComponentCombination,
-                                const event::EventWithComponent &trigger, Stack &stack)
+                                event::EventWithComponent &trigger, Stack &stack)
 {
     // systemComponents : [ "Position", "Velocity" ]
     // entity : [ PositionRecord, VelocityRecord ]
@@ -136,6 +136,9 @@ void Interpreter::executeSystem(const Node &systemEntry, const systems::Descript
     }
 
     stack.updateEntity(desc.entityName, entityComponents);
+    for (std::size_t i = 0; i < desc.eventListener.entities.size(); i++) {
+        stack.updateEntity(desc.eventListener.entities[i], trigger.components[i]);
+    }
 }
 
 // Private functions (never called elsewhere than this file and tests)

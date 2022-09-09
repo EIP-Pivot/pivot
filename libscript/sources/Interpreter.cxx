@@ -53,7 +53,10 @@ const std::unordered_map<std::string, std::pair<BuiltinFunctionCallback, Paramet
     {"randint", {interpreter::builtins::builtin_randint, {1, {{data::BasicType::Number}}}}},
     {"pow", {interpreter::builtins::builtin_power, {2, {{data::BasicType::Number}, {data::BasicType::Number}}}}},
     {"sqrt", {interpreter::builtins::builtin_sqrt, {1, {{data::BasicType::Number}}}}},
-    {"abs", {interpreter::builtins::builtin_abs, {1, {{data::BasicType::Number}}}}}};
+    {"abs", {interpreter::builtins::builtin_abs, {1, {{data::BasicType::Number}}}}},
+    {"vec3",
+     {interpreter::builtins::builtin_vec3,
+      {3, {{data::BasicType::Number}, {data::BasicType::Number}, {data::BasicType::Number}}}}}};
 
 // Public functions ( can be called anywhere )
 

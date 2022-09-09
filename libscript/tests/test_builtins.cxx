@@ -43,3 +43,12 @@ TEST_CASE("Builtin not equal", "[script][builtin]")
     REQUIRE(equal(Value{3}, Value{4}));
     REQUIRE_THROWS(equal(Value{"haha"}, Value{2}));
 }
+
+TEST_CASE("Builtin vec3", "[script][builtin]")
+{
+    auto context = BuiltinContext::mock();
+
+    auto result = builtin_vec3({{1.}, {2.}, {3.}}, context);
+    REQUIRE(std::holds_alternative<glm::vec3>(result));
+    REQUIRE(std::get<glm::vec3>(result) == glm::vec3{1, 2, 3});
+}

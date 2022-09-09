@@ -2,12 +2,12 @@
 
 #if defined(PLATFORM_UNIX)
 
+    #include <cstring>
     #include <fcntl.h>
     #include <iterator>
     #include <string.h>
     #include <sys/utsname.h>
     #include <unistd.h>
-    #include <cstring>
 
 namespace pivot
 {
@@ -26,7 +26,7 @@ bool UnixPlateform::isDebuggerPresent()
     char Buffer[256];
     Buffer[255] = 0;
     ssize_t Length = read(StatusFile, Buffer, sizeof(Buffer) - 1);
-    if (Length == -1)  {
+    if (Length == -1) {
         // Failed - unknown debugger status.
         return false;
     }

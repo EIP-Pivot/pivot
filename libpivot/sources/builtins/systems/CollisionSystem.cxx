@@ -54,6 +54,8 @@ std::vector<event::Event> collisionSystemImpl(std::reference_wrapper<const pivot
         logger.debug() << "Collision between entity " << entity1 << " and entity " << entity2;
         collision_events.push_back(
             event::Event{pivot::builtins::events::collision, {entity1, entity2}, data::Value{data::Void{}}});
+        collision_events.push_back(
+            event::Event{pivot::builtins::events::collision, {entity2, entity1}, data::Value{data::Void{}}});
     }
 
     return collision_events;

@@ -55,7 +55,9 @@ void ComponentEditor::displayComponent()
         if (ImGui::TreeNode(ref.description().name.c_str())) {
             ImGui::TreePop();
             Value value = ref;
+            ImGui::PushID(ref.description().name.c_str());
             draw(value, "oui");
+            ImGui::PopID();
             ref = value;
             ImGui::Separator();
         }

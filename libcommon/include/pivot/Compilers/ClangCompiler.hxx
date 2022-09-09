@@ -10,8 +10,11 @@ namespace pivot
 {
 class ClangCompiler
 {
-    FORCEINLINE void *return_address() { return __builtin_return_address(0); }
-    FORCEINLINE void *return_address_pointer() { return __builtin_frame_address(0); }
+public:
+    FORCEINLINE static void *return_address() { return __builtin_return_address(0); }
+    FORCEINLINE static void *return_address_pointer() { return __builtin_frame_address(0); }
+
+    [[noreturn]] FORCEINLINE static void unreachable() { __builtin_unreachable(); }
 };
 
 using Compiler = ClangCompiler;

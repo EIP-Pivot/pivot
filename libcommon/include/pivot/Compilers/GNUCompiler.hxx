@@ -10,8 +10,11 @@ namespace pivot
 {
 class GNUCompiler
 {
-    FORCEINLINE void *return_address() { return __builtin_return_address(0); }
-    FORCEINLINE void *return_address_pointer() { return __builtin_extract_return_addr(return_address()); }
+public:
+    FORCEINLINE static void *return_address() { return __builtin_return_address(0); }
+    FORCEINLINE static void *return_address_pointer() { return __builtin_extract_return_addr(return_address()); }
+
+    [[noreturn]] FORCEINLINE static void unreachable() { __builtin_unreachable(); }
 };
 
 using Compiler = GNUCompiler;

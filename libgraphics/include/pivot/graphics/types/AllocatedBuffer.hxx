@@ -31,15 +31,18 @@ template <BufferValid T>
 class AllocatedBuffer
 {
 public:
+    /// Return true if the buffer can be accessed with getMappedSpan()
+    constexpr bool isMappable() const noexcept { return bool(flags & vma::AllocationCreateFlagBits::eMapped); }
+
     /// get the number of valid item in the buffer
-    auto getSize() const noexcept { return size; }
+    constexpr auto getSize() const noexcept { return size; }
     /// get the allocated size (can be different from the size)
-    auto getAllocatedSize() const noexcept { return info.size; }
+    constexpr auto getAllocatedSize() const noexcept { return info.size; }
 
     /// @brief get the byte size
     ///
     /// When `T` is not `void`, the size of buffer will be multiplied by `sizeof(T)`
-    auto getBytesSize() const noexcept
+    constexpr auto getBytesSize() const noexcept
     {
         if constexpr (std::is_same_v<T, void>) {
             return getSize();
@@ -50,7 +53,7 @@ public:
 
     /// return the info struct used when creating a descriptor set
     /// @see DescriptorBuilder::bindBuffer
-    vk::DescriptorBufferInfo getBufferInfo(vk::DeviceSize offset = 0) const noexcept
+    constexpr vk::DescriptorBufferInfo getBufferInfo(vk::DeviceSize offset = 0) const noexcept
     {
         return {
             .buffer = buffer,
@@ -62,10 +65,9 @@ public:
     /// @brief return the mapped pointer
     ///
     /// If the buffer was created with the flag vma::AllocationCreateFlagBits::eMapped, return the mapped pointer
-    T *getMappedPointer() const noexcept
+    constexpr T *getMappedPointer() const noexcept
     {
-        pivot_assert(flags & vma::AllocationCreateFlagBits::eMapped,
-                     "Buffer was not created with the \"vma::AllocationCreateFlagBits::eMapped bit\"");
+        pivot_assert(isMappable(), "Buffer was not created with the \"vma::AllocationCreateFlagBits::eMapped bit\"");
         return static_cast<T *>(info.pMappedData);
     }
 
@@ -73,20 +75,20 @@ public:
     ///
     /// If the buffer was created with the flag vma::AllocationCreateFlagBits::eMapped, return the mapped pointer,
     /// wrapped into a span
-    std::span<T> getMappedSpan() const noexcept { return std::span(getMappedPointer(), getBytesSize()); }
+    constexpr std::span<T> getMappedSpan() const noexcept { return std::span(getMappedPointer(), getBytesSize()); }
 
     /// Test if the Vulkan buffer is created
-    operator bool() const noexcept { return buffer && memory && size > 0; }
+    constexpr operator bool() const noexcept { return buffer && memory && size > 0; }
 
     template <BufferValid O>
     /// Allow to convert AllocatedBuffer<void> to AllocatedBuffer<T>
     requires std::is_same_v<T, void>
-    operator AllocatedBuffer<O>() const noexcept { return *this; }
+    constexpr operator AllocatedBuffer<O>() const noexcept { return *this; }
 
     template <BufferValid O>
     /// Allow to convert AllocatedBuffer<void> to AllocatedBuffer<T>
     requires std::is_same_v<T, void> AllocatedBuffer<T>
-    operator=(const AllocatedBuffer<O> &other) const noexcept
+    constexpr operator=(const AllocatedBuffer<O> &other) const noexcept
     {
         *this = other;
         return *this;

@@ -182,9 +182,9 @@ add_library(
     source/VulkanLoader.cxx
     source/VulkanSwapchain.cxx
     source/ThreadPool.cxx
+    source/AssetsStorage/CPUStorage.cxx
     source/AssetsStorage/AssetStorage.cxx
     source/AssetsStorage/AssetStorage_init.cxx
-    source/AssetsStorage/AssetStorage_CPUStorage.cxx
     source/AssetsStorage/AssetStorage_build.cxx
     source/AssetsStorage/Loaders/AssetStorage_obj.cxx
     source/AssetsStorage/Loaders/AssetStorage_png.cxx

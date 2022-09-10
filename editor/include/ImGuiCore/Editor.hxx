@@ -8,7 +8,6 @@
 #include <pivot/ecs/Core/SceneManager.hxx>
 #include <pivot/engine.hxx>
 #include <pivot/graphics/VulkanApplication.hxx>
-#include <pivot/graphics/types/common.hxx>
 
 class Editor
 {

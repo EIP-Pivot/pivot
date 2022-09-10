@@ -11,7 +11,7 @@
 #include "pivot/graphics/types/AllocatedImage.hxx"
 #include "pivot/graphics/types/Material.hxx"
 #include "pivot/graphics/types/Vertex.hxx"
-#include "pivot/graphics/types/common.hxx"
+
 #include "pivot/utility/flags.hxx"
 
 #include "pivot/graphics/AssetStorage/CPUMaterial.hxx"

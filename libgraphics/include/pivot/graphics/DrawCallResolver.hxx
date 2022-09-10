@@ -7,7 +7,7 @@
 #include "pivot/graphics/types/Light.hxx"
 #include "pivot/graphics/types/RenderObject.hxx"
 #include "pivot/graphics/types/UniformBufferObject.hxx"
-#include "pivot/graphics/types/common.hxx"
+
 #include "pivot/graphics/types/vk_types.hxx"
 #include "pivot/graphics/vk_debug.hxx"
 

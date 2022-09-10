@@ -88,7 +88,7 @@ void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sce
                 .size = 0,
             });
         }
-        auto prefab = storage_ref->get().get_optional<AssetStorage::Prefab>(object.meshID);
+        auto prefab = storage_ref->get().get_optional<asset::Prefab>(object.meshID);
         if (prefab.has_value()) {
             for (const auto &model: prefab->get().modelIds) {
                 frame.pipelineBatch.back().size += 1;
@@ -125,7 +125,7 @@ void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sce
 
     auto sceneData = frame.indirectBuffer.getMappedSpan();
     for (uint32_t i = 0; i < frame.packedDraws.size(); i++) {
-        const auto &mesh = storage_ref->get().get<AssetStorage::Mesh>(frame.packedDraws.at(i).meshId);
+        const auto &mesh = storage_ref->get().get<asset::Mesh>(frame.packedDraws.at(i).meshId);
 
         sceneData[i] = vk::DrawIndexedIndirectCommand{
             .indexCount = mesh.indicesSize,

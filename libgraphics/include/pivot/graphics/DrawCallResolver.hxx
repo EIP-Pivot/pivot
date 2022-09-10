@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/AssetStorage.hxx"
 #include "pivot/graphics/DescriptorAllocator/DescriptorBuilder.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/types/AllocatedBuffer.hxx"

@@ -91,6 +91,21 @@ void VulkanImmediateCommand::immediateCommand(std::function<void(vk::CommandBuff
     device_ref->get().resetCommandPool(pool);
 }
 
+void VulkanImmediateCommand::copyImageToImage(const AllocatedImage &srcBuffer, AllocatedImage &dstImage)
+{
+    pivot_assert(srcBuffer.size == dstImage.size, "The size of the image are not the same");
+    immediateCommand(
+        [&](vk::CommandBuffer &cmd) {
+            vk::ImageCopy region{
+                .srcOffset = {0, 0, 0},
+                .dstOffset = {0, 0, 0},
+                .extent = srcBuffer.size,
+            };
+            cmd.copyImage(srcBuffer.image, srcBuffer.imageLayout, dstImage.image, dstImage.imageLayout, region);
+        },
+        vk::QueueFlagBits::eTransfer);
+}
+
 void VulkanImmediateCommand::copyBufferToImage(const AllocatedBuffer<std::byte> &srcBuffer, AllocatedImage &dstImage)
 {
     immediateCommand(

@@ -64,6 +64,8 @@ public:
 
     /// Copy buffer to image
     void copyBufferToImage(const AllocatedBuffer<std::byte> &srdBuffer, AllocatedImage &dstImage);
+    /// Copy image to image
+    void copyImageToImage(const AllocatedImage &srcBuffer, AllocatedImage &dstImage);
     /// Generate mipmaps for the image
     void generateMipmaps(AllocatedImage &image, uint32_t mipLevel);
 

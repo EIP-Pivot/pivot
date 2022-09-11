@@ -7,18 +7,10 @@
 #include <vector>
 
 #include "pivot/pivot.hxx"
+#include "pivot/utility/concept.hxx"
 
 namespace pivot
 {
-
-template <typename T>
-/// Only accept hashable type
-concept Hashable = requires(T a)
-{
-    {
-        std::hash<T>{}(a)
-        } -> std::convertible_to<std::size_t>;
-};
 
 template <Hashable Key, typename Value>
 /// Store a type in a vector, while keeping a map to the indexes

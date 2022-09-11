@@ -6,9 +6,9 @@
 #include <vk_mem_alloc.hpp>
 #include <vulkan/vulkan.hpp>
 
+#include "pivot/containers/IndexedStorage.hxx"
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 #include "pivot/graphics/types/AllocatedImage.hxx"
-
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
@@ -71,6 +71,18 @@ public:
             allocator.setAllocationName(buffer.memory, debug_name.c_str());
         }
         return buffer;
+    }
+
+    template <Hashable K, typename T>
+    IndexableBuffer<K, T> createIndexableBuffer(const IndexedStorage<K, T> source, vk::BufferUsageFlags usage,
+                                                vma::MemoryUsage memoryUsage = vma::MemoryUsage::eAuto,
+                                                vma::AllocationCreateFlags flags = {},
+                                                const std::string &debug_name = "")
+    {
+        IndexableBuffer<K, T> storage = createBuffer<T>(source.size(), usage, memoryUsage, flags, debug_name);
+        copyBuffer(storage, source.getStorage());
+        storage.index = source.getIndexes();
+        return storage;
     }
 
     template <typename T>

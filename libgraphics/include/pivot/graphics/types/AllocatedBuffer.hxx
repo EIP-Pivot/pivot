@@ -5,6 +5,7 @@
 #include <vulkan/vulkan.hpp>
 
 #include "pivot/pivot.hxx"
+#include "pivot/utility/concept.hxx"
 
 namespace pivot::graphics
 {
@@ -102,6 +103,18 @@ public:
     vma::AllocationInfo info = {};
     vma::AllocationCreateFlags flags = {};
     //// @endcond
+};
+
+template <Hashable T, BufferValid V>
+/// @class IndexableBuffer
+/// Hold a buffer, but the index of each element can be indexed using a key
+class IndexableBuffer : public AllocatedBuffer<V>
+{
+public:
+    std::uint32_t getIndex(const T &name) const { return index.at(name); }
+
+private:
+    std::unordered_map<T, std::uint32_t> index;
 };
 
 }    // namespace pivot::graphics

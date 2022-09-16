@@ -48,6 +48,7 @@ protected:
     builtins::Camera m_camera;
     bool m_paused = true;
     std::optional<vk::Rect2D> renderArea = std::nullopt;
+    std::filesystem::path m_asset_directory;
 
     virtual void onFrameStart() {}
     virtual void onTick([[maybe_unused]] float delta) {}
@@ -56,7 +57,6 @@ protected:
     void setRenderArea(vk::Rect2D renderArea) { this->renderArea = renderArea; }
     ecs::CurrentScene getCurrentScene() { return m_scene_manager; };
     const ecs::SceneManager &getSceneManager() { return m_scene_manager; };
-
 private:
     ecs::SceneManager m_scene_manager;
     std::optional<graphics::DrawSceneInformation> m_current_scene_draw_command;

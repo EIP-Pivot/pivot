@@ -1,5 +1,8 @@
 #include <imgui.h>
 #include <magic_enum.hpp>
+#include <boost/dll/runtime_symbol_info.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/range/iterator_range.hpp>
 
 // Must be after imgui
 #include <backends/imgui_impl_glfw.h>
@@ -69,13 +72,34 @@ Engine::Engine()
     m_system_index.registerSystem(builtins::systems::testTickSystem);
     m_system_index.registerSystem(builtins::systems::drawTextSystem);
 
+    auto current_entry = boost::dll::program_location().parent_path();
+    auto find_asset_folder = [](const boost::filesystem::path &entry) -> std::optional<std::filesystem::path> {
+        for(auto& directory_entry : boost::make_iterator_range(boost::filesystem::directory_iterator(entry), {})) {
+            if (!boost::filesystem::is_directory(directory_entry))
+                continue;
+            if (directory_entry.path().filename() == "assets")
+                return std::filesystem::path(directory_entry.path().string());
+        }
+        return {};
+    };
+    for (int i = 0; i < 4; i++) {
+        auto path = find_asset_folder(current_entry);
+        if (path.has_value()) {
+            m_asset_directory = path.value();
+            break;
+        }
+        current_entry = current_entry.parent_path();
+    }
+
     m_vulkan_application.addRenderer<pivot::graphics::CullingRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::GraphicsRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::ImGuiRenderer>();
+
     m_vulkan_application.addResolver<pivot::graphics::DrawCallResolver>(0);
     m_vulkan_application.addResolver<pivot::graphics::LightDataResolver>(1);
     m_vulkan_application.addResolver<pivot::graphics::AssetResolver>(2);
-    m_vulkan_application.init();
+
+    m_vulkan_application.init(m_asset_directory);
 
     m_vulkan_application.window.addGlobalKeyPressCallback(std::bind_front(&Engine::onKeyPressed, this));
 }

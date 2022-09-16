@@ -3,16 +3,6 @@
 #include "pivot/graphics/vk_utils.hxx"
 #include "pivot/pivot.hxx"
 
-#ifndef PIVOT_WINDOW_ICON_PATH
-const std::vector<std::string> iconFilepath;
-#else
-const std::vector<std::string> iconFilepath = {
-    PIVOT_WINDOW_ICON_PATH "/icon_large.png",
-    PIVOT_WINDOW_ICON_PATH "/icon_medium.png",
-    PIVOT_WINDOW_ICON_PATH "/icon_small.png",
-};
-#endif
-
 namespace pivot::graphics
 {
 
@@ -28,13 +18,6 @@ VulkanApplication::VulkanApplication()
         logger.warn("Vulkan Instance") << "Validation layers requested, but not available!";
         bEnableValidationLayers = false;
     }
-    window.setIcon(iconFilepath);
-    window.addKeyPressCallback(Window::Key::ESCAPE, [](Window &window, const Window::Key, const Window::Modifier) {
-        window.shouldClose(true);
-    });
-    window.addKeyPressCallback(Window::Key::G, [this](Window &, const Window::Key, const Window::Modifier modifier) {
-        if (modifier & Window::ModifierBits::Ctrl) { allocator.dumpStats(); }
-    });
 }
 
 VulkanApplication::~VulkanApplication()
@@ -62,9 +45,21 @@ VulkanApplication::~VulkanApplication()
     VulkanBase::destroy();
 }
 
-void VulkanApplication::init()
+void VulkanApplication::init(const std::filesystem::path &asset_dir)
 {
     DEBUG_FUNCTION();
+    const std::vector<std::string> iconFile = {
+        asset_dir.string() + "/icon_large.png",
+        asset_dir.string() + "/icon_medium.png",
+        asset_dir.string() + "/icon_small.png",
+    };
+    window.setIcon(iconFile);
+    window.addKeyPressCallback(Window::Key::ESCAPE, [](Window &window, const Window::Key, const Window::Modifier) {
+        window.shouldClose(true);
+    });
+    window.addKeyPressCallback(Window::Key::G, [this](Window &, const Window::Key, const Window::Modifier modifier) {
+        if (modifier & Window::ModifierBits::Ctrl) { allocator.dumpStats(); }
+    });
     VulkanBase::init({}, deviceExtensions, validationLayers);
     assetStorage.build(DescriptorBuilder(layoutCache, descriptorAllocator));
     initVulkanRessources();

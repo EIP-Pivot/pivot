@@ -45,11 +45,6 @@ add_executable(
     source/ImGuiCore/ImGuiTheme.cxx
 )
 
-target_compile_definitions(
-        ${PROJECT_NAME}
-        PRIVATE PIVOT_EDITOR_ICON_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../editor/assets/Editor"
-)
-
 target_pivot_compile_option(${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE pivot nfd argparse)
@@ -59,6 +54,8 @@ install(TARGETS ${PROJECT_NAME}
         OPTIONAL)
 
 install(DIRECTORY ${CMAKE_BINARY_DIR}/shaders/ DESTINATION ./shaders)
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/assets/ DESTINATION ./assets)
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ImGuiConfig/imgui.ini DESTINATION .)
 

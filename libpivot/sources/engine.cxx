@@ -82,7 +82,7 @@ Engine::Engine()
         }
         return std::nullopt;
     };
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < PIVOT_ASSET_SEARCH_DEPTH; i++) {
         auto path = find_asset_folder(current_entry);
         if (path.has_value()) {
             m_asset_directory = path.value();

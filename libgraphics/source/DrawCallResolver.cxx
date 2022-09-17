@@ -10,11 +10,7 @@ namespace pivot::graphics
 
 vk::DescriptorSetLayout DrawCallResolver::descriptorSetLayout = VK_NULL_HANDLE;
 
-DrawCallResolver::DrawCallResolver() {}
-
-DrawCallResolver::~DrawCallResolver() {}
-
-void DrawCallResolver::init(VulkanBase &base, AssetStorage &stor, DescriptorBuilder &builder)
+bool DrawCallResolver::initialize(VulkanBase &base, const AssetStorage &stor, DescriptorBuilder &builder)
 {
 
     DEBUG_FUNCTION
@@ -41,7 +37,7 @@ void DrawCallResolver::init(VulkanBase &base, AssetStorage &stor, DescriptorBuil
     updateDescriptorSet(defaultBufferSize);
 }
 
-void DrawCallResolver::destroy()
+bool DrawCallResolver::destroy(VulkanBase &)
 {
     DEBUG_FUNCTION
     base_ref->get().allocator.destroyBuffer(frame.indirectBuffer);
@@ -49,9 +45,10 @@ void DrawCallResolver::destroy()
     base_ref->get().allocator.destroyBuffer(frame.omniLightBuffer);
     base_ref->get().allocator.destroyBuffer(frame.directLightBuffer);
     base_ref->get().allocator.destroyBuffer(frame.spotLightBuffer);
+    return true;
 }
 
-void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sceneInformation)
+bool DrawCallResolver::prepareForDraw(const DrawSceneInformation &sceneInformation)
 {
     std::vector<gpu_object::UniformBufferObject> objectGPUData;
     std::uint32_t drawCount = 0;
@@ -104,7 +101,9 @@ void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sce
         }
     }
     pivot_assert(frame.packedDraws.size() == objectGPUData.size(), "Incorrect size between draw call and buffer data");
-    if (objectGPUData.empty()) return;
+
+    // Nothing to draw, exist early.
+    if (objectGPUData.empty()) return true;
     if (objectGPUData.size() > frame.currentBufferSize || objectGPUData.size() < frame.currentBufferSize / 2) {
         createBuffer(objectGPUData.size());
     }
@@ -135,6 +134,7 @@ void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sce
             .firstInstance = i,
         };
     }
+    return true;
 }
 
 void DrawCallResolver::createBuffer(vk::DeviceSize bufferSize)

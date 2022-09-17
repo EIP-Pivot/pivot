@@ -178,28 +178,16 @@ public:
     }
 
     /// Return the name of all the texture currently loaded in the Storage
-    auto getTextures() const
-    {
-        return this->textureStorage | std::views::transform([](const auto &i) { return i.first; });
-    }
+    auto getTextures() const { return this->textureStorage | std::views::keys; }
 
     /// Return the name of all the models currently loaded in the Storage
-    auto getModels() const
-    {
-        return this->modelStorage | std::views::transform([](const auto &i) { return i.first; });
-    }
+    auto getModels() const { return this->modelStorage | std::views::keys; }
 
     /// Return the path of all the prefabs currently loaded in the Storage
-    auto getPrefabs() const
-    {
-        return this->prefabStorage | std::views::transform([](const auto &i) { return i.first; });
-    }
+    auto getPrefabs() const { return this->prefabStorage | std::views::keys; }
 
     /// Return the path of all the models currently loaded in the Storage
-    auto getMaterial() const
-    {
-        return this->materialStorage | std::views::transform([](const auto &i) { return i.first; });
-    }
+    auto getMaterial() const { return this->materialStorage | std::views::keys; }
 
     /// Return the vulkan sampler
     vk::Sampler getSampler() const noexcept { return textureSampler; }

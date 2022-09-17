@@ -146,7 +146,7 @@ void VulkanApplication::recreateSwapchain()
                                         << ", numberOfImage = " << swapchain.nbOfImage();
 }
 
-VulkanApplication::DrawResult VulkanApplication::draw(DrawCallResolver::DrawSceneInformation sceneInformation,
+VulkanApplication::DrawResult VulkanApplication::draw(DrawSceneInformation sceneInformation,
                                                       const CameraData &cameraData,
                                                       std::optional<vk::Rect2D> renderArea)
 try {

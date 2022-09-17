@@ -1,12 +1,6 @@
 #pragma once
 
-#include "pivot/graphics/AssetStorage/AssetStorage.hxx"
-#include "pivot/graphics/DescriptorAllocator/DescriptorBuilder.hxx"
-#include "pivot/graphics/VulkanBase.hxx"
-#include "pivot/graphics/types/AllocatedBuffer.hxx"
-#include "pivot/graphics/types/Light.hxx"
-#include "pivot/graphics/types/RenderObject.hxx"
-#include "pivot/graphics/types/UniformBufferObject.hxx"
+#include "pivot/graphics/interface/IResolver.hxx"
 
 #include "pivot/graphics/types/vk_types.hxx"
 #include "pivot/graphics/vk_debug.hxx"
@@ -19,7 +13,7 @@ namespace pivot::graphics
 
 /// @class DrawCallResolver
 /// @brief Used to build the per frame draw informations
-class DrawCallResolver
+class DrawCallResolver : public IResolver
 {
 public:
     /// The default size of the buffers
@@ -75,26 +69,6 @@ public:
         vk::DeviceSize spotLightCount = 0;
     };
 
-    template <class T>
-    /// Wrapper for the T/bool pair returned from the ECS
-    struct Object {
-        /// The array of component
-        std::reference_wrapper<const std::vector<T>> objects;
-        /// Indicate which entities have the component
-        std::reference_wrapper<const std::vector<bool>> exist;
-    };
-
-    /// Informations needed to draw a scene. Including all objects and al lights
-    struct DrawSceneInformation {
-        /// @cond
-        Object<RenderObject> renderObjects;
-        Object<PointLight> pointLight;
-        Object<DirectionalLight> directionalLight;
-        Object<SpotLight> spotLight;
-        Object<Transform> transform;
-        ///@endcond
-    };
-
 private:
     static vk::DescriptorSetLayout descriptorSetLayout;
 
@@ -103,18 +77,21 @@ public:
     static constexpr const vk::DescriptorSetLayout &getDescriptorSetLayout() noexcept { return descriptorSetLayout; }
 
 public:
-    /// Constructor
-    DrawCallResolver();
-    /// Destructor
-    ~DrawCallResolver();
-
     /// Initialize the ressources
-    void init(VulkanBase &, AssetStorage &, DescriptorBuilder &);
+    bool initialize(VulkanBase &, const AssetStorage &, DescriptorBuilder &) override;
     /// Destroy them
-    void destroy();
+    bool destroy(VulkanBase &base) override;
 
     /// Build the buffer for the draw
-    void prepareForDraw(DrawSceneInformation sceneInformation);
+    bool prepareForDraw(const DrawSceneInformation &sceneInformation) override;
+
+    DescriptorPair getManagedDescriptorSet() const override
+    {
+        return {
+            .layout = descriptorSetLayout,
+            .set = frame.objectDescriptor,
+        };
+    }
 
     /// Get the frame data of a given frame
     constexpr const Frame &getFrameData() const { return frame; }
@@ -151,7 +128,7 @@ private:
 
 private:
     OptionalRef<VulkanBase> base_ref;
-    OptionalRef<AssetStorage> storage_ref;
+    OptionalRef<const AssetStorage> storage_ref;
     Frame frame;
 };
 

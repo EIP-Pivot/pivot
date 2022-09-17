@@ -18,7 +18,7 @@ public:
     ~Frame() = default;
 
     /// Initialize the frame's ressources
-    void initFrame(VulkanBase &base, DescriptorBuilder build, AssetStorage &stor, vk::CommandPool &pool);
+    void initFrame(VulkanBase &base, DescriptorBuilder build, const AssetStorage &stor, vk::CommandPool &pool);
     /// Destroy the frame's ressources
     void destroy(VulkanBase &base, vk::CommandPool &pool);
 

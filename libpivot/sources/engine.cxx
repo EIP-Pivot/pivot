@@ -80,7 +80,7 @@ Engine::Engine()
             if (directory_entry.path().filename() == "assets")
                 return std::filesystem::path(directory_entry.path().string());
         }
-        return {};
+        return std::nullopt;
     };
     for (int i = 0; i < 4; i++) {
         auto path = find_asset_folder(current_entry);

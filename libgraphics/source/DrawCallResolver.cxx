@@ -17,24 +17,22 @@ bool DrawCallResolver::initialize(VulkanBase &base, const AssetStorage &stor, De
     base_ref = base;
     storage_ref = stor;
     createBuffer(defaultBufferSize);
-    createLightBuffer();
 
     auto success = builder
-                       .bindBuffer(0, frame.objectBuffer.getBufferInfo(), vk::DescriptorType::eStorageBuffer,
-                                   vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute)
-                       .bindBuffer(1, frame.indirectBuffer.getBufferInfo(), vk::DescriptorType::eStorageBuffer,
+                       .bindBuffer(0, frame.indirectBuffer.getBufferInfo(), vk::DescriptorType::eStorageBuffer,
                                    vk::ShaderStageFlagBits::eCompute)
-                       .bindBuffer(2, frame.omniLightBuffer.getBufferInfo(), vk::DescriptorType::eStorageBuffer,
-                                   vk::ShaderStageFlagBits::eFragment)
-                       .bindBuffer(3, frame.directLightBuffer.getBufferInfo(), vk::DescriptorType::eStorageBuffer,
-                                   vk::ShaderStageFlagBits::eFragment)
-                       .bindBuffer(4, frame.spotLightBuffer.getBufferInfo(), vk::DescriptorType::eStorageBuffer,
-                                   vk::ShaderStageFlagBits::eFragment)
+                       .bindBuffer(1, frame.objectBuffer.getBufferInfo(), vk::DescriptorType::eStorageBuffer,
+                                   vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute)
                        .build(base_ref->get().device, frame.objectDescriptor, descriptorSetLayout);
-    pivot_assert(success, "Descriptor set failed to build.");
+
+    if (!pivot_check(success, "Descriptor set failed to build.")) { return success; }
+
     vk_debug::setObjectName(base_ref->get().device, frame.objectDescriptor,
                             "Object Descriptor Set " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
-    updateDescriptorSet(defaultBufferSize);
+    vk_debug::setObjectName(base_ref->get().device, frame.objectDescriptor,
+                            "Object Descriptor Set Layout " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
+    updateDescriptorSet();
+    return true;
 }
 
 bool DrawCallResolver::destroy(VulkanBase &)
@@ -42,9 +40,6 @@ bool DrawCallResolver::destroy(VulkanBase &)
     DEBUG_FUNCTION
     base_ref->get().allocator.destroyBuffer(frame.indirectBuffer);
     base_ref->get().allocator.destroyBuffer(frame.objectBuffer);
-    base_ref->get().allocator.destroyBuffer(frame.omniLightBuffer);
-    base_ref->get().allocator.destroyBuffer(frame.directLightBuffer);
-    base_ref->get().allocator.destroyBuffer(frame.spotLightBuffer);
     return true;
 }
 
@@ -61,13 +56,6 @@ bool DrawCallResolver::prepareForDraw(const DrawSceneInformation &sceneInformati
                  "ECS Render Object arrays are invalid.");
     pivot_assert(sceneInformation.transform.objects.get().size() == sceneInformation.transform.exist.get().size(),
                  "ECS Transform arrays are invalid.");
-    pivot_assert(sceneInformation.pointLight.objects.get().size() == sceneInformation.pointLight.exist.get().size(),
-                 "ECS Point tights arrays are invalid.");
-    pivot_assert(sceneInformation.directionalLight.objects.get().size() ==
-                     sceneInformation.directionalLight.exist.get().size(),
-                 "ECS Directional lights arrays are invalid.");
-    pivot_assert(sceneInformation.spotLight.objects.get().size() == sceneInformation.spotLight.exist.get().size(),
-                 "ECS Spot light arrays are invalid.");
 
     for (unsigned i = 0;
          i < sceneInformation.renderObjects.objects.get().size() && i < sceneInformation.transform.objects.get().size();
@@ -107,20 +95,11 @@ bool DrawCallResolver::prepareForDraw(const DrawSceneInformation &sceneInformati
     if (objectGPUData.size() > frame.currentBufferSize || objectGPUData.size() < frame.currentBufferSize / 2) {
         createBuffer(objectGPUData.size());
     }
-    updateDescriptorSet(objectGPUData.size());
+    updateDescriptorSet();
 
     pivot_assert(frame.currentBufferSize > 0, "Buffer size is 0");
-    pivot_assert(frame.currentDescriptorSetSize > 0, "Descriptor set size are 0");
 
     base_ref->get().allocator.copyBuffer(frame.objectBuffer, std::span(objectGPUData));
-
-    frame.pointLightCount = handleLights(frame.omniLightBuffer, sceneInformation.pointLight, sceneInformation.transform,
-                                         "Point light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
-    frame.directionalLightCount =
-        handleLights(frame.directLightBuffer, sceneInformation.directionalLight, sceneInformation.transform,
-                     "Directionnal light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
-    frame.spotLightCount = handleLights(frame.spotLightBuffer, sceneInformation.spotLight, sceneInformation.transform,
-                                        "Spot light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
 
     auto sceneData = frame.indirectBuffer.getMappedSpan();
     for (uint32_t i = 0; i < frame.packedDraws.size(); i++) {
@@ -151,28 +130,14 @@ void DrawCallResolver::createBuffer(vk::DeviceSize bufferSize)
     frame.currentBufferSize = bufferSize;
 }
 
-void DrawCallResolver::createLightBuffer()
+void DrawCallResolver::updateDescriptorSet()
 {
-    base_ref->get().allocator.destroyBuffer(frame.omniLightBuffer);
-    base_ref->get().allocator.destroyBuffer(frame.directLightBuffer);
-    base_ref->get().allocator.destroyBuffer(frame.spotLightBuffer);
-
-    frame.omniLightBuffer = base_ref->get().allocator.createMappedBuffer<gpu_object::PointLight>(
-        1, "Point light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
-    frame.directLightBuffer = base_ref->get().allocator.createMappedBuffer<gpu_object::DirectionalLight>(
-        1, "Directional light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
-    frame.spotLightBuffer = base_ref->get().allocator.createMappedBuffer<gpu_object::SpotLight>(
-        1, "Spot light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
-}
-
-void DrawCallResolver::updateDescriptorSet(vk::DeviceSize bufferSize)
-{
-    pivot_assert(bufferSize > 0, "Buffer size is 0");
     auto bufferInfo = frame.objectBuffer.getBufferInfo();
     auto indirectInfo = frame.indirectBuffer.getBufferInfo();
-    auto omniLightInfo = frame.omniLightBuffer.getBufferInfo();
-    auto directLightInfo = frame.directLightBuffer.getBufferInfo();
-    auto spotLightInfo = frame.spotLightBuffer.getBufferInfo();
+
+    pivot_check(bufferInfo.range != 0, "The bufferInfo is empty ! This will trigger validation warnings");
+    pivot_check(indirectInfo.range != 0, "The indirectInfo is empty ! This will trigger validation warnings");
+
     std::vector<vk::WriteDescriptorSet> descriptorWrites{
         {
             .dstSet = frame.objectDescriptor,
@@ -180,7 +145,7 @@ void DrawCallResolver::updateDescriptorSet(vk::DeviceSize bufferSize)
             .dstArrayElement = 0,
             .descriptorCount = 1,
             .descriptorType = vk::DescriptorType::eStorageBuffer,
-            .pBufferInfo = &bufferInfo,
+            .pBufferInfo = &indirectInfo,
         },
         {
             .dstSet = frame.objectDescriptor,
@@ -188,35 +153,10 @@ void DrawCallResolver::updateDescriptorSet(vk::DeviceSize bufferSize)
             .dstArrayElement = 0,
             .descriptorCount = 1,
             .descriptorType = vk::DescriptorType::eStorageBuffer,
-            .pBufferInfo = &indirectInfo,
-        },
-        {
-            .dstSet = frame.objectDescriptor,
-            .dstBinding = 2,
-            .dstArrayElement = 0,
-            .descriptorCount = 1,
-            .descriptorType = vk::DescriptorType::eStorageBuffer,
-            .pBufferInfo = &omniLightInfo,
-        },
-        {
-            .dstSet = frame.objectDescriptor,
-            .dstBinding = 3,
-            .dstArrayElement = 0,
-            .descriptorCount = 1,
-            .descriptorType = vk::DescriptorType::eStorageBuffer,
-            .pBufferInfo = &directLightInfo,
-        },
-        {
-            .dstSet = frame.objectDescriptor,
-            .dstBinding = 4,
-            .dstArrayElement = 0,
-            .descriptorCount = 1,
-            .descriptorType = vk::DescriptorType::eStorageBuffer,
-            .pBufferInfo = &spotLightInfo,
+            .pBufferInfo = &bufferInfo,
         },
     };
     base_ref->get().device.updateDescriptorSets(descriptorWrites, 0);
-    frame.currentDescriptorSetSize = bufferSize;
 }
 
 }    // namespace pivot::graphics

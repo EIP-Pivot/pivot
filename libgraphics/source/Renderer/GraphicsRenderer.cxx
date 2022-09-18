@@ -10,12 +10,12 @@ GraphicsRenderer::GraphicsRenderer(StorageUtils &utils): IGraphicsRenderer(utils
 GraphicsRenderer::~GraphicsRenderer() {}
 
 bool GraphicsRenderer::onInit(const vk::Extent2D &, VulkanBase &base_ref, const vk::DescriptorSetLayout &resolverLayout,
-                              vk::RenderPass &pass)
+                              const vk::DescriptorSetLayout &lightLayout, vk::RenderPass &pass)
 {
     DEBUG_FUNCTION;
     bIsMultiDraw = base_ref.deviceFeature.multiDrawIndirect;
 
-    createPipelineLayout(base_ref.device, resolverLayout);
+    createPipelineLayout(base_ref.device, resolverLayout, lightLayout);
     createPipeline(base_ref, pass);
     return true;
 }
@@ -27,7 +27,8 @@ void GraphicsRenderer::onStop(VulkanBase &base_ref)
 }
 
 bool GraphicsRenderer::onRecreate(const vk::Extent2D &size, VulkanBase &base_ref,
-                                  const vk::DescriptorSetLayout &resolverLayout, vk::RenderPass &pass)
+                                  const vk::DescriptorSetLayout &resolverLayout,
+                                  const vk::DescriptorSetLayout &lightLayout, vk::RenderPass &pass)
 {
     onStop(base_ref);
     storage.pipeline.get().removePipeline("pbr");
@@ -35,19 +36,19 @@ bool GraphicsRenderer::onRecreate(const vk::Extent2D &size, VulkanBase &base_ref
     storage.pipeline.get().removePipeline("unlit");
     storage.pipeline.get().removePipeline("wireframe");
     storage.pipeline.get().removePipeline("skybox");
-    return onInit(size, base_ref, resolverLayout, pass);
+    return onInit(size, base_ref, resolverLayout, lightLayout, pass);
 }
 
 bool GraphicsRenderer::onDraw(const RenderingContext &context, const CameraData &cameraData, DrawCallResolver &resolver,
-                              vk::CommandBuffer &cmd)
+                              LightDataResolver &light, vk::CommandBuffer &cmd)
 {
     const gpu_object::VertexPushConstant vertexCamere{
         .viewProjection = cameraData.viewProjection,
     };
     const gpu_object::FragmentPushConstant fragmentCamera{
-        .omniLightCount = static_cast<uint32_t>(resolver.getFrameData().pointLightCount),
-        .directLightCount = static_cast<uint32_t>(resolver.getFrameData().directionalLightCount),
-        .spotLightCount = static_cast<uint32_t>(resolver.getFrameData().spotLightCount),
+        .omniLightCount = static_cast<uint32_t>(light.getFrameData().pointLightCount),
+        .directLightCount = static_cast<uint32_t>(light.getFrameData().directionalLightCount),
+        .spotLightCount = static_cast<uint32_t>(light.getFrameData().spotLightCount),
         .position = cameraData.position,
     };
     const vk::Viewport viewport{
@@ -60,9 +61,11 @@ bool GraphicsRenderer::onDraw(const RenderingContext &context, const CameraData 
     };
 
     vk_debug::beginRegion(cmd, "Draw Commands", {0.f, 1.f, 0.f, 1.f});
+    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, light.getManagedDescriptorSet().set,
+                           nullptr);
+    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 2, resolver.getManagedDescriptorSet().set,
+                           nullptr);
     storage.assets.get().bindForGraphics(cmd, pipelineLayout);
-    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1,
-                           resolver.getFrameData().objectDescriptor, nullptr);
     cmd.pushConstants<gpu_object::VertexPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0,
                                                       vertexCamere);
     cmd.pushConstants<gpu_object::FragmentPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eFragment,
@@ -90,7 +93,8 @@ bool GraphicsRenderer::onDraw(const RenderingContext &context, const CameraData 
     return true;
 }
 
-void GraphicsRenderer::createPipelineLayout(vk::Device &device, const vk::DescriptorSetLayout &resolverLayout)
+void GraphicsRenderer::createPipelineLayout(vk::Device &device, const vk::DescriptorSetLayout &resolverLayout,
+                                            const vk::DescriptorSetLayout &lightLayout)
 {
     DEBUG_FUNCTION
     std::vector<vk::PushConstantRange> pipelinePushConstant = {
@@ -100,7 +104,11 @@ void GraphicsRenderer::createPipelineLayout(vk::Device &device, const vk::Descri
                                              sizeof(gpu_object::VertexPushConstant)),
     };
 
-    std::vector<vk::DescriptorSetLayout> setLayout = {storage.assets.get().getDescriptorSetLayout(), resolverLayout};
+    std::vector<vk::DescriptorSetLayout> setLayout = {
+        storage.assets.get().getDescriptorSetLayout(),
+        lightLayout,
+        resolverLayout,
+    };
     auto pipelineLayoutCreateInfo = vk_init::populateVkPipelineLayoutCreateInfo(setLayout, pipelinePushConstant);
     pipelineLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
     vk_debug::setObjectName(device, pipelineLayout, "Graphics pipeline Layout");

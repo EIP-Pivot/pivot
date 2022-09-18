@@ -45,12 +45,6 @@ public:
         AllocatedBuffer<vk::DrawIndexedIndirectCommand> indirectBuffer;
         /// Hold the uniform object buffer
         AllocatedBuffer<gpu_object::UniformBufferObject> objectBuffer;
-        /// Hold the omnidirectional light buffer
-        AllocatedBuffer<gpu_object::PointLight> omniLightBuffer;
-        /// Hold the directional light buffer
-        AllocatedBuffer<gpu_object::DirectionalLight> directLightBuffer;
-        /// Hold the spot light buffer
-        AllocatedBuffer<gpu_object::SpotLight> spotLightBuffer;
         /// The descriptor set holding the object buffer
         vk::DescriptorSet objectDescriptor = VK_NULL_HANDLE;
         /// The draw batches
@@ -59,14 +53,6 @@ public:
         std::vector<PipelineBatch> pipelineBatch;
         /// The current size of the buffer
         vk::DeviceSize currentBufferSize = defaultBufferSize;
-        /// The current size of the buffer that is exposed through the descriptor set.
-        vk::DeviceSize currentDescriptorSetSize = defaultBufferSize;
-        /// The number of pointlight in the buffers
-        vk::DeviceSize pointLightCount = 0;
-        /// The number of directional in the buffers
-        vk::DeviceSize directionalLightCount = 0;
-        /// The number of spotlight in the buffers
-        vk::DeviceSize spotLightCount = 0;
     };
 
 private:
@@ -97,34 +83,8 @@ public:
     constexpr const Frame &getFrameData() const { return frame; }
 
 private:
-    template <class T, class G>
-    requires std::is_constructible_v<G, const T &, const Transform &> && BufferValid<G> vk::DeviceSize
-    handleLights(AllocatedBuffer<G> &buffer, const Object<T> &lights, const Object<Transform> &transforms,
-                 const std::string &debug_name = "")
-    {
-        pivot_assert(lights.objects.get().size() == lights.exist.get().size(), "Light ECS data are incorrect");
-        pivot_assert(transforms.objects.get().size() == transforms.exist.get().size(),
-                     "Transform ECS data are incorrect");
-
-        std::vector<G> lightsData;
-        for (unsigned i = 0; i < lights.objects.get().size() && i < transforms.objects.get().size(); i++) {
-            if (!lights.exist.get().at(i) || !lights.exist.get().at(i)) continue;
-            const auto &light = lights.objects.get().at(i);
-            const auto &transform = transforms.objects.get().at(i);
-
-            lightsData.emplace_back(light, transform);
-        }
-        if (buffer.getSize() < lightsData.size()) {
-            if (buffer) base_ref->get().allocator.destroyBuffer(buffer);
-            buffer = base_ref->get().allocator.createMappedBuffer<G>(lightsData.size(), debug_name);
-        }
-        base_ref->get().allocator.copyBuffer(buffer, std::span(lightsData));
-        return lightsData.size();
-    }
-
     void createBuffer(vk::DeviceSize bufferSize);
-    void createLightBuffer();
-    void updateDescriptorSet(const vk::DeviceSize bufferSize);
+    void updateDescriptorSet();
 
 private:
     OptionalRef<VulkanBase> base_ref;

@@ -14,7 +14,7 @@ ImGuiRenderer::ImGuiRenderer(StorageUtils &utils): IGraphicsRenderer(utils) {}
 ImGuiRenderer::~ImGuiRenderer() {}
 
 bool ImGuiRenderer::onInit(const vk::Extent2D &, VulkanBase &base_ref, const vk::DescriptorSetLayout &,
-                           vk::RenderPass &pass)
+                           const vk::DescriptorSetLayout &, vk::RenderPass &pass)
 {
     DEBUG_FUNCTION;
     IMGUI_CHECKVERSION();
@@ -41,13 +41,15 @@ void ImGuiRenderer::onStop(VulkanBase &base_ref)
 }
 
 bool ImGuiRenderer::onRecreate(const vk::Extent2D &size, VulkanBase &base,
-                               const vk::DescriptorSetLayout &descriptorSetLayout, vk::RenderPass &pass)
+                               const vk::DescriptorSetLayout &descriptorSetLayout,
+                               const vk::DescriptorSetLayout &lightLayout, vk::RenderPass &pass)
 {
     onStop(base);
-    return onInit(size, base, descriptorSetLayout, pass);
+    return onInit(size, base, descriptorSetLayout, lightLayout, pass);
 }
 
-bool ImGuiRenderer::onDraw(const RenderingContext &, const CameraData &, DrawCallResolver &, vk::CommandBuffer &cmd)
+bool ImGuiRenderer::onDraw(const RenderingContext &, const CameraData &, DrawCallResolver &, LightDataResolver &,
+                           vk::CommandBuffer &cmd)
 {
     vk_debug::beginRegion(cmd, "Imgui Commands", {1.f, 0.f, 0.f, 1.f});
     if (auto imguiData = ImGui::GetDrawData(); imguiData != nullptr) {

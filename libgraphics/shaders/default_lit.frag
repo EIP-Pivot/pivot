@@ -69,23 +69,23 @@ objectMaterials;
 
 layout(set = 0, binding = 2) uniform sampler2D texSampler[NUMBER_OF_TEXTURES];
 
-layout(std140, set = 1, binding = 2) readonly buffer LightBuffer
-{
-    PointLight pointLightArray[];
-}
-omniLight;
-
-layout(std140, set = 1, binding = 3) readonly buffer DirectLight
+layout(std140, set = 1, binding = 0) readonly buffer DirectLight
 {
     DirectionalLight directionalLightArray[];
 }
 directLight;
 
-layout(std140, set = 1, binding = 4) readonly buffer SpoLight
+layout(std140, set = 1, binding = 1) readonly buffer SpoLight
 {
     SpotLight spotLightArray[];
 }
 spotLight;
+
+layout(std140, set = 1, binding = 2) readonly buffer LightBuffer
+{
+    PointLight pointLightArray[];
+}
+omniLight;
 
 vec3 calculateLight(vec3 lightDir, vec3 lightColor, float intensity)
 {

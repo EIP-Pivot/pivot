@@ -15,15 +15,16 @@ public:
 
     std::string getName() const noexcept override { return "Graphics"; }
     bool onInit(const vk::Extent2D &size, VulkanBase &base_ref, const vk::DescriptorSetLayout &resolverLayout,
-                vk::RenderPass &pass) override;
+                const vk::DescriptorSetLayout &lightLayout, vk::RenderPass &pass) override;
     void onStop(VulkanBase &base_ref) override;
     bool onRecreate(const vk::Extent2D &size, VulkanBase &base_ref, const vk::DescriptorSetLayout &resolverLayout,
-                    vk::RenderPass &pass) override;
+                    const vk::DescriptorSetLayout &lightLayout, vk::RenderPass &pass) override;
     bool onDraw(const RenderingContext &context, const CameraData &cameraData, DrawCallResolver &resolver,
-                vk::CommandBuffer &cmd) override;
+                LightDataResolver &light, vk::CommandBuffer &cmd) override;
 
 private:
-    void createPipelineLayout(vk::Device &device, const vk::DescriptorSetLayout &resolverLayout);
+    void createPipelineLayout(vk::Device &device, const vk::DescriptorSetLayout &resolverLayout,
+                              const vk::DescriptorSetLayout &lightLayout);
     void createPipeline(VulkanBase &base_ref, vk::RenderPass &pass);
 
 private:

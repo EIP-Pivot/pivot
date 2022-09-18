@@ -3,6 +3,7 @@
 #include "pivot/graphics/AssetStorage/AssetStorage.hxx"
 #include "pivot/graphics/DescriptorAllocator/DescriptorBuilder.hxx"
 #include "pivot/graphics/DrawCallResolver.hxx"
+#include "pivot/graphics/LightDataResolver.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 
@@ -25,6 +26,7 @@ public:
 public:
     /// Hold the DrawCallResolver for this frame
     DrawCallResolver drawResolver;
+    LightDataResolver lightResolver;
     /// Main command buffer
     vk::CommandBuffer cmdBuffer;
     /// Indicate if the image can be recover from the swapchain

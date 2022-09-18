@@ -205,6 +205,7 @@ add_library(
     source/VulkanImmediateCommand.cxx
     source/culling.cxx
     source/DrawCallResolver.cxx
+    source/LightDataResolver.cxx
     source/PipelineStorage.cxx
 )
 

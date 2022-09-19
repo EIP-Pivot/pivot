@@ -31,8 +31,8 @@ void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
 {
     DEBUG_FUNCTION
     // check for incorrect combination of flags
-    pivot_assert(std::popcount(static_cast<std::underlying_type_t<AssetStorage::BuildFlagBits>>(flags)) == 1,
-                 "More than one BuildFlag is set !");
+    pivotAssertMsg(std::popcount(static_cast<std::underlying_type_t<AssetStorage::BuildFlagBits>>(flags)) == 1,
+                   "More than one BuildFlag is set !");
 
     // TODO: better separation of loading ressources
     modelStorage.clear();
@@ -131,7 +131,7 @@ void AssetStorage::pushModelsOnGPU()
                             gpu_object::AABB(std::span(cpuStorage.vertexStagingBuffer.begin() + model.mesh.vertexOffset,
                                                        model.mesh.vertexSize)));
     }
-    pivot_assert(modelStorage.size() == meshAABBStorage.size(), "The Model Storage is bigger than the AABB Storage.");
+    pivotAssertMsg(modelStorage.size() == meshAABBStorage.size(), "The Model Storage is bigger than the AABB Storage.");
 
     copy_with_staging_buffer(base_ref->get(), vk::BufferUsageFlagBits::eVertexBuffer, cpuStorage.vertexStagingBuffer,
                              vertexBuffer);

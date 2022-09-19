@@ -22,7 +22,7 @@ void draw(pivot::ecs::data::Asset &asset, const std::string &name)
     CustomWidget::CustomInputText(name, asset.name);
     if (ImGui::BeginDragDropTarget()) {
         if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET")) {
-            pivot_assert(payload->Data, "Empty drag and drop payload");
+            pivotAssertMsg(payload->Data, "Empty drag and drop payload");
             auto *assetWrapper = reinterpret_cast<AssetBrowser::wrapper *>(payload->Data);
             asset.name = std::string(assetWrapper->name);
         }

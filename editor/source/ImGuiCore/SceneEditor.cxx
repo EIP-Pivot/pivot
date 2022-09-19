@@ -88,7 +88,7 @@ void SceneEditor::viewport()
     }
     if (ImGui::BeginDragDropTarget()) {
         if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET")) {
-            pivot_assert(payload->Data, "Empty drag and drop payload");
+            pivotAssertMsg(payload->Data, "Empty drag and drop payload");
             auto *assetWrapper = reinterpret_cast<AssetBrowser::wrapper *>(payload->Data);
             assetWrapper->assetBrowser.createEntity(assetWrapper->name);
         }

@@ -43,9 +43,9 @@ void VulkanImmediateCommand::destroy()
 void VulkanImmediateCommand::immediateCommand(std::function<void(vk::CommandBuffer &)> function,
                                               vk::QueueFlagBits requiredQueue, const std::source_location &location)
 {
-    pivot_assert(queues.size() == 3 && queues.contains(requiredQueue) && queues.at(requiredQueue).pool &&
-                     queues.at(requiredQueue).queue,
-                 "Immediate context is not initialised");
+    pivotAssertMsg(queues.size() == 3 && queues.contains(requiredQueue) && queues.at(requiredQueue).pool &&
+                       queues.at(requiredQueue).queue,
+                   "Immediate context is not initialised");
 
     const auto &[queue, pool] = queues.at(requiredQueue);
 

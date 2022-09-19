@@ -5,7 +5,7 @@ namespace pivot::graphics::vk_debug
 
 void beginRegion(vk::CommandBuffer &cmdbuffer, const char *pMarkerName, const std::array<float, 4> color)
 {
-    pivot_assert(pMarkerName, "Command region's name is NULL");
+    pivotAssertMsg(pMarkerName, "Command region's name is NULL");
 #ifndef NDEBUG
     vk::DebugUtilsLabelEXT markerInfo{
         .pLabelName = pMarkerName,

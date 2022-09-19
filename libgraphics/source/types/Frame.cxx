@@ -22,19 +22,12 @@ void Frame::initFrame(VulkanBase &base, DescriptorBuilder build, const AssetStor
     };
     cmdBuffer = base.device.allocateCommandBuffers(allocInfo).front();
 
-    {
-        DescriptorBuilder copy = build;
-        drawResolver.initialize(base, stor, copy);
-    }
-    {
-        lightResolver.initialize(base, stor, build);
-    }
+    dispatcher.initialize(base, stor, build);
 }
 
 void Frame::destroy(VulkanBase &base, vk::CommandPool &pool)
 {
-    lightResolver.destroy(base);
-    drawResolver.destroy(base);
+    dispatcher.destroy(base);
     base.device.freeCommandBuffers(pool, cmdBuffer);
     base.device.destroyFence(inFlightFences);
     base.device.destroySemaphore(renderFinishedSemaphore);

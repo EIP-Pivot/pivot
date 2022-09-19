@@ -62,13 +62,13 @@ layout(push_constant) uniform readonly constants
 }
 cameraData;
 
-layout(std140, set = 0, binding = 1) readonly buffer ObjectMaterials
+layout(std140, set = 2, binding = 1) readonly buffer ObjectMaterials
 {
     Material materials[];
 }
 objectMaterials;
 
-layout(set = 0, binding = 2) uniform sampler2D texSampler[NUMBER_OF_TEXTURES];
+layout(set = 2, binding = 2) uniform sampler2D texSampler[NUMBER_OF_TEXTURES];
 
 layout(std140, set = 1, binding = 0) readonly buffer DirectLight
 {

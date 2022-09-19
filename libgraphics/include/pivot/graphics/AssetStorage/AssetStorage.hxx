@@ -140,7 +140,7 @@ public:
     /// layout to avoid validation layers erros
     /// @arg The index of the descriptor set to be bind on
     bool bindForGraphics(vk::CommandBuffer &cmd, const vk::PipelineLayout &pipelineLayout,
-                         std::uint32_t descriptorSet = 0);
+                         std::uint32_t descriptorSet = 2);
     /// @brief Bind the asset descriptor set on the provided command buffer
     ///
     /// Every ressource will be bind on vk::PipelineBindPoint::eCulling

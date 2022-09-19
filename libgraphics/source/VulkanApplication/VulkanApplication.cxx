@@ -90,12 +90,9 @@ void VulkanApplication::initVulkanRessources()
     createFramebuffers();
 
     std::ranges::for_each(graphicsRenderer, [this](auto &rendy) {
-        rendy->onInit(swapchain.getSwapchainExtent(), *this, DrawCallResolver::getDescriptorSetLayout(),
-                      LightDataResolver::getDescriptorSetLayout(), renderPass.getRenderPass());
+        rendy->onInit(swapchain.getSwapchainExtent(), *this, frames.at(0).dispatcher, renderPass.getRenderPass());
     });
-    std::ranges::for_each(computeRenderer, [this](auto &rendy) {
-        rendy->onInit(*this, DrawCallResolver::getDescriptorSetLayout(), LightDataResolver::getDescriptorSetLayout());
-    });
+    std::ranges::for_each(computeRenderer, [this](auto &rendy) { rendy->onInit(*this, frames.at(0).dispatcher); });
 
     logger.info("Vulkan Application") << "Initialisation complete !";
 }
@@ -106,12 +103,12 @@ void VulkanApplication::buildAssetStorage(AssetStorage::BuildFlags flags)
 
     assetStorage.build(DescriptorBuilder(layoutCache, descriptorAllocator), flags);
     std::ranges::for_each(computeRenderer, [this](auto &rendy) {
-        rendy->onRecreate(swapchain.getSwapchainExtent(), *this, DrawCallResolver::getDescriptorSetLayout(),
-                          LightDataResolver::getDescriptorSetLayout(), renderPass.getRenderPass());
+        rendy->onStop(*this);
+        rendy->onInit(*this, frames.at(0).dispatcher);
     });
     std::ranges::for_each(graphicsRenderer, [this](auto &rendy) {
-        rendy->onRecreate(swapchain.getSwapchainExtent(), *this, DrawCallResolver::getDescriptorSetLayout(),
-                          LightDataResolver::getDescriptorSetLayout(), renderPass.getRenderPass());
+        rendy->onStop(*this);
+        rendy->onInit(swapchain.getSwapchainExtent(), *this, frames.at(0).dispatcher, renderPass.getRenderPass());
     });
     logger.info("Vulkan Application") << "Asset Storage rebuild !";
 }
@@ -136,9 +133,13 @@ void VulkanApplication::recreateSwapchain()
     createDepthResources();
     createRenderPass();
 
-    std::ranges::for_each(graphicsRenderer, [&](auto &rendy) {
-        rendy->onRecreate(swapchain.getSwapchainExtent(), *this, DrawCallResolver::getDescriptorSetLayout(),
-                          LightDataResolver::getDescriptorSetLayout(), renderPass.getRenderPass());
+    std::ranges::for_each(computeRenderer, [this](auto &rendy) {
+        rendy->onStop(*this);
+        rendy->onInit(*this, frames.at(0).dispatcher);
+    });
+    std::ranges::for_each(graphicsRenderer, [this](auto &rendy) {
+        rendy->onStop(*this);
+        rendy->onInit(swapchain.getSwapchainExtent(), *this, frames.at(0).dispatcher, renderPass.getRenderPass());
     });
 
     createFramebuffers();
@@ -167,8 +168,7 @@ try {
 
     std::vector<vk::CommandBuffer> computeBuffer;
 
-    frame.drawResolver.prepareForDraw(sceneInformation);
-    frame.lightResolver.prepareForDraw(sceneInformation);
+    frame.dispatcher.prepareForDraw(sceneInformation);
 
     const std::array<float, 4> vClearColor = {0.0f, 0.0f, 0.0f, 1.0f};
     std::array<vk::ClearValue, 2> clearValues{};
@@ -204,13 +204,9 @@ try {
     };
     vk_utils::vk_try(cmd.begin(&beginInfo));
     vk_debug::beginRegion(cmd, "Main command", {1.f, 1.f, 1.f, 1.f});
-    for (auto &rendy: computeRenderer) {
-        rendy->onDraw(context, cameraData, frame.drawResolver, frame.lightResolver, cmd);
-    }
+    for (auto &rendy: computeRenderer) { rendy->onDraw(context, cameraData, frame.dispatcher, cmd); }
     cmd.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
-    for (auto &rendy: graphicsRenderer) {
-        rendy->onDraw(context, cameraData, frame.drawResolver, frame.lightResolver, cmd);
-    }
+    for (auto &rendy: graphicsRenderer) { rendy->onDraw(context, cameraData, frame.dispatcher, cmd); }
     cmd.endRenderPass();
     vk_debug::endRegion(cmd);
     cmd.end();

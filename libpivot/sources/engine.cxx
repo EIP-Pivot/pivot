@@ -53,6 +53,8 @@ Engine::Engine()
     m_vulkan_application.addRenderer<pivot::graphics::CullingRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::GraphicsRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::ImGuiRenderer>();
+    m_vulkan_application.addResolver<pivot::graphics::DrawCallResolver>(0);
+    m_vulkan_application.addResolver<pivot::graphics::LightDataResolver>(1);
     m_vulkan_application.init();
 
     m_vulkan_application.window.addGlobalKeyPressCallback(std::bind_front(&Engine::onKeyPressed, this));

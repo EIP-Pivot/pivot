@@ -206,6 +206,7 @@ add_library(
     source/culling.cxx
     source/DrawCallResolver.cxx
     source/LightDataResolver.cxx
+    source/ResolverDispatcher.cxx
     source/PipelineStorage.cxx
 )
 

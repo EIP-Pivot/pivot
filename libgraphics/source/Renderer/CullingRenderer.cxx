@@ -9,12 +9,11 @@ namespace pivot::graphics
 CullingRenderer::CullingRenderer(StorageUtils &utils): IComputeRenderer(utils) {}
 CullingRenderer::~CullingRenderer() {}
 
-bool CullingRenderer::onInit(VulkanBase &base_ref, const vk::DescriptorSetLayout &resolverLayout,
-                             const vk::DescriptorSetLayout &lightLayout)
+bool CullingRenderer::onInit(VulkanBase &base_ref, const ResolverDispatcher &dispatcher)
 {
     DEBUG_FUNCTION;
     indices = base_ref.queueIndices;
-    createPipelineLayout(base_ref.device, resolverLayout, lightLayout);
+    createPipelineLayout(base_ref.device, dispatcher);
     createPipeline();
     return true;
 }
@@ -22,22 +21,14 @@ bool CullingRenderer::onInit(VulkanBase &base_ref, const vk::DescriptorSetLayout
 void CullingRenderer::onStop(VulkanBase &base_ref)
 {
     DEBUG_FUNCTION;
+    storage.pipeline.get().removePipeline("culling");
     if (cullingLayout) base_ref.device.destroyPipelineLayout(cullingLayout);
 }
 
-bool CullingRenderer::onRecreate(const vk::Extent2D &, VulkanBase &base_ref,
-                                 const vk::DescriptorSetLayout &resolverLayout,
-                                 const vk::DescriptorSetLayout &lightLayout, vk::RenderPass &)
+bool CullingRenderer::onDraw(const RenderingContext &, const CameraData &cameraData, ResolverDispatcher &dispatcher,
+                             vk::CommandBuffer &cmd)
 {
-    onStop(base_ref);
-    storage.pipeline.get().removePipeline("culling");
-    onInit(base_ref, resolverLayout, lightLayout);
-    return true;
-}
-
-bool CullingRenderer::onDraw(const RenderingContext &, const CameraData &cameraData, DrawCallResolver &resolver,
-                             LightDataResolver &light, vk::CommandBuffer &cmd)
-{
+    const DrawCallResolver &resolver = dispatcher.get<DrawCallResolver>();
     const gpu_object::CullingPushConstant cullingCamera{
         .viewProjection = cameraData.viewProjection,
         .drawCount = static_cast<uint32_t>(resolver.getFrameData().packedDraws.size()),
@@ -53,11 +44,8 @@ bool CullingRenderer::onDraw(const RenderingContext &, const CameraData &cameraD
     };
 
     vk_debug::beginRegion(cmd, "Culling pass", {1.f, 0.f, 1.f, 1.f});
-    storage.assets.get().bindForCompute(cmd, cullingLayout);
-    cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, cullingLayout, 1, light.getManagedDescriptorSet().set,
-                           nullptr);
-    cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, cullingLayout, 2, resolver.getManagedDescriptorSet().set,
-                           nullptr);
+    storage.assets.get().bindForCompute(cmd, cullingLayout, 2);
+    dispatcher.bind(cmd, cullingLayout, vk::PipelineBindPoint::eCompute);
     cmd.pushConstants<gpu_object::CullingPushConstant>(cullingLayout, vk::ShaderStageFlagBits::eCompute, 0,
                                                        cullingCamera);
     cmd.bindPipeline(vk::PipelineBindPoint::eCompute, storage.pipeline.get().getCompute("culling"));
@@ -73,17 +61,15 @@ bool CullingRenderer::onDraw(const RenderingContext &, const CameraData &cameraD
     return true;
 }
 
-void CullingRenderer::createPipelineLayout(vk::Device &device, const vk::DescriptorSetLayout &resolverLayout,
-                                           const vk::DescriptorSetLayout &lightLayout)
+void CullingRenderer::createPipelineLayout(vk::Device &device, const ResolverDispatcher &dispatcher)
 {
     DEBUG_FUNCTION
     std::vector<vk::PushConstantRange> pipelinePushConstant = {vk_init::populateVkPushConstantRange(
         vk::ShaderStageFlagBits::eCompute, sizeof(gpu_object::CullingPushConstant))};
-    std::vector<vk::DescriptorSetLayout> setLayout = {
-        storage.assets.get().getDescriptorSetLayout(),
-        lightLayout,
-        resolverLayout,
-    };
+
+    std::vector<vk::DescriptorSetLayout> setLayout(dispatcher.getDescriptorPair());
+    setLayout.push_back(storage.assets.get().getDescriptorSetLayout());
+
     auto pipelineLayoutCreateInfo = vk_init::populateVkPipelineLayoutCreateInfo(setLayout, pipelinePushConstant);
     cullingLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
     vk_debug::setObjectName(device, cullingLayout, "Culling pipeline Layout");

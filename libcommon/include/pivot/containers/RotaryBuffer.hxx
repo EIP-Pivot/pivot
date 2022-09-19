@@ -32,8 +32,10 @@ public:
         return currentIndex;
     }
 
-    constexpr T &get() { return m_InternalArray.at(currentIndex); }
-    constexpr const T &get() const { return m_InternalArray.at(currentIndex); }
+    constexpr T &get() { return m_InternalArray[currentIndex]; }
+    constexpr const T &get() const { return m_InternalArray[currentIndex]; }
+    constexpr T &at(unsigned idx) { return m_InternalArray.at(idx); }
+    constexpr const T &at(unsigned idx) const { return m_InternalArray.at(idx); }
 
     constexpr std::size_t getIndex() const noexcept { return currentIndex; }
 

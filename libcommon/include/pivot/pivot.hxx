@@ -27,9 +27,14 @@
         logger.err(::file_position()) << "Assertion failed: " #expr " :: " << msg; \
         logger.stop();
 
-    #define pivot_check(expr, msg) \
-        ((LIKELY(!!(expr))) || __pivot_check_failed(#expr, msg)) || ([]() { using Platform = pivot::Platform; if (Platform::isDebuggerPresent()) { Platform::breakpoint(); }}(), false)
-    #define __pivot_check_failed(expr, msg) (logger.warn(::file_position()) << #expr ": " << msg, false)
+    #define pivot_check(expr, msg)                                              \
+        ((LIKELY(!!(expr))) || ([]() {                                          \
+                                   __pivot_check_failed(#expr, msg);            \
+                                   return pivot::Platform::isDebuggerPresent(); \
+                               }()) &&                                          \
+                                   ([]() { Platform::breakpoint(); }(), false))
+
+    #define __pivot_check_failed(expr, msg) logger.err(::file_position()) << #expr ": " << msg;
 
 #else
     #define pivot_assert(expr, msg) void(0);

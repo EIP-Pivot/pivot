@@ -24,4 +24,4 @@ target_include_directories(${PROJECT_NAME} PUBLIC include/)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC pivot-graphics pivot-ecs)
 
-build_tests(${PROJECT_NAME} tests/test_parser.cxx tests/test_interpreter.cxx tests/test_builtins.cxx)
+build_tests(${PROJECT_NAME} tests/test_parser.cxx tests/test_interpreter.cxx tests/test_builtins.cxx tests/test_escaped.cxx)

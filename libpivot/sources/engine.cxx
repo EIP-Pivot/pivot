@@ -81,9 +81,7 @@ void Engine::run()
         auto startTime = std::chrono::high_resolution_clock::now();
         m_vulkan_application.window.pollEvent();
 
-        ImGui_ImplVulkan_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
+        this->onFrameStart();
 
         m_scene_manager.getCurrentScene().getEventManager().sendEvent(
             {pivot::builtins::events::editor_tick, {}, data::Value(dt)});
@@ -95,7 +93,7 @@ void Engine::run()
                 ? (static_cast<float>(renderArea->extent.width) / static_cast<float>(renderArea->extent.height))
                 : (m_vulkan_application.getAspectRatio());
 
-        ImGui::Render();
+        this->onFrameEnd();
 
         if (m_current_scene_draw_command) {
             auto result = m_vulkan_application.draw(

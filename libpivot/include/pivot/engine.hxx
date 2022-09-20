@@ -6,7 +6,9 @@
 #include <pivot/ecs/Core/SceneManager.hxx>
 #include <pivot/ecs/Core/Systems/index.hxx>
 
-#include <pivot/graphics/DrawCallResolver.hxx>
+#include <pivot/graphics/Resolver/DrawCallResolver.hxx>
+#include <pivot/graphics/Resolver/LightDataResolver.hxx>
+
 #include <pivot/graphics/VulkanApplication.hxx>
 #include <pivot/graphics/types/AllocatedImage.hxx>
 

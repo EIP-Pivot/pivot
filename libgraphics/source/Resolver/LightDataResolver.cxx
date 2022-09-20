@@ -1,4 +1,4 @@
-#include "pivot/graphics/LightDataResolver.hxx"
+#include "pivot/graphics/Resolver/LightDataResolver.hxx"
 
 #include "pivot/graphics/types/UniformBufferObject.hxx"
 #include "pivot/graphics/vk_debug.hxx"

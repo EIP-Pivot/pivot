@@ -204,8 +204,8 @@ add_library(
     source/DescriptorAllocator/DescriptorLayoutCache.cxx
     source/VulkanImmediateCommand.cxx
     source/culling.cxx
-    source/DrawCallResolver.cxx
-    source/LightDataResolver.cxx
+    source/Resolver/DrawCallResolver.cxx
+    source/Resolver/LightDataResolver.cxx
     source/ResolverDispatcher.cxx
     source/PipelineStorage.cxx
 )

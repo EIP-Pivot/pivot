@@ -1,4 +1,4 @@
-#include "pivot/graphics/DrawCallResolver.hxx"
+#include "pivot/graphics/Resolver/DrawCallResolver.hxx"
 
 #include "pivot/graphics/types/UniformBufferObject.hxx"
 #include "pivot/graphics/vk_debug.hxx"

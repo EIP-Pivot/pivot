@@ -1,8 +1,6 @@
 #pragma once
 
 #include "pivot/graphics/AssetStorage/AssetStorage.hxx"
-#include "pivot/graphics/DrawCallResolver.hxx"
-#include "pivot/graphics/LightDataResolver.hxx"
 #include "pivot/graphics/PipelineStorage.hxx"
 #include "pivot/graphics/ResolverDispatcher.hxx"
 #include "pivot/graphics/VulkanBase.hxx"

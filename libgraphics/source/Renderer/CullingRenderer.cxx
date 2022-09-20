@@ -3,6 +3,8 @@
 #include "pivot/graphics/PipelineBuilders/ComputePipelineBuilder.hxx"
 #include "pivot/graphics/vk_debug.hxx"
 
+#include "pivot/graphics/Resolver/DrawCallResolver.hxx"
+
 namespace pivot::graphics
 {
 

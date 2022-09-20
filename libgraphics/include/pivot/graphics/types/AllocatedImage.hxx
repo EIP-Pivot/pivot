@@ -4,6 +4,7 @@
 #include <vulkan/vulkan.hpp>
 
 #include "pivot/graphics/vk_init.hxx"
+#include "pivot/pivot.hxx"
 
 namespace pivot::graphics
 {

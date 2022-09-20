@@ -1,8 +1,7 @@
 
 #include "pivot/graphics/Window.hxx"
-#include "pivot/graphics/DebugMacros.hxx"
+#include "pivot/pivot.hxx"
 
-#include <Logger.hpp>
 #include <magic_enum.hpp>
 #include <stb_image.h>
 #include <stdexcept>
@@ -18,7 +17,7 @@ static int translate_key(int key, int scancode)
                                  GLFW_KEY_RIGHT_BRACKET, GLFW_KEY_BACKSLASH, GLFW_KEY_COMMA, GLFW_KEY_SEMICOLON,
                                  GLFW_KEY_APOSTROPHE,    GLFW_KEY_PERIOD,    GLFW_KEY_SLASH, 0};
 
-        assert(std::size(char_names) == std::size(char_keys));
+        pivot_assert(std::size(char_names) == std::size(char_keys), "Special caracters are not of the same size.");
         if (key_name[0] >= '0' && key_name[0] <= '9') {
             key = GLFW_KEY_0 + (key_name[0] - '0');
         } else if (key_name[0] >= 'A' && key_name[0] <= 'Z') {
@@ -163,13 +162,14 @@ void Window::cursor_callback(GLFWwindow *win, double xpos, double ypos)
     for (auto &&fn: window->mouseCallback) fn(*window, glm::dvec2(xpos, ypos));
 }
 
-void Window::keyboard_callback(GLFWwindow *win, int key, int scancode, int action, int)
+void Window::keyboard_callback(GLFWwindow *win, int key, int scancode, int action, int modifier)
 {
 #define FOR_EACH(vec) \
-    for (auto &&fn: vec) fn(*window, _key);
+    for (auto &&fn: vec) fn(*window, _key, _modifier);
 
     auto window = static_cast<Window *>(glfwGetWindowUserPointer(win));
     auto _key = static_cast<Window::Key>(translate_key(key, scancode));
+    auto _modifier = static_cast<Window::Modifier>(modifier);
 
     switch (action) {
         case GLFW_PRESS:

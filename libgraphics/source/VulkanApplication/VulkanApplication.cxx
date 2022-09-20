@@ -1,9 +1,7 @@
 #include "pivot/graphics/VulkanApplication.hxx"
-#include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_utils.hxx"
-
-#include <Logger.hpp>
+#include "pivot/pivot.hxx"
 
 #ifndef PIVOT_WINDOW_ICON_PATH
 const std::vector<std::string> iconFilepath;
@@ -31,16 +29,20 @@ VulkanApplication::VulkanApplication()
         bEnableValidationLayers = false;
     }
     window.setIcon(iconFilepath);
-    window.addKeyPressCallback(Window::Key::ESCAPE,
-                               [](Window &window, const Window::Key) { window.shouldClose(true); });
+    window.addKeyPressCallback(Window::Key::ESCAPE, [](Window &window, const Window::Key, const Window::Modifier) {
+        window.shouldClose(true);
+    });
+    window.addKeyPressCallback(Window::Key::G, [this](Window &, const Window::Key, const Window::Modifier modifier) {
+        if (modifier & Window::ModifierBits::Ctrl) { allocator.dumpStats(); }
+    });
 }
 
 VulkanApplication::~VulkanApplication()
 {
     DEBUG_FUNCTION
-    if (device)
+    if (device) {
         device.waitIdle();
-    else {
+    } else {
         /// if the device is not initialized, there is no need to continue further as no other ressources would have
         /// been created
         return;
@@ -95,11 +97,8 @@ void VulkanApplication::initVulkanRessources()
         rendy->onInit(*this, frames[0].drawResolver.getDescriptorSetLayout());
     });
 
-    postInitialization();
     logger.info("Vulkan Application") << "Initialisation complete !";
 }
-
-void VulkanApplication::postInitialization() {}
 
 void VulkanApplication::buildAssetStorage(AssetStorage::BuildFlags flags)
 {
@@ -146,14 +145,18 @@ void VulkanApplication::recreateSwapchain()
     logger.info("Swapchain recreation") << "New height = " << swapchain.getSwapchainExtent().height
                                         << ", New width =" << swapchain.getSwapchainExtent().width
                                         << ", numberOfImage = " << swapchain.nbOfImage();
-
-    postInitialization();
 }
 
-void VulkanApplication::draw(DrawCallResolver::DrawSceneInformation sceneInformation, const CameraData &cameraData)
+VulkanApplication::DrawResult VulkanApplication::draw(DrawCallResolver::DrawSceneInformation sceneInformation,
+                                                      const CameraData &cameraData,
+                                                      std::optional<vk::Rect2D> renderArea)
 try {
-    assert(!graphicsRenderer.empty() && !computeRenderer.empty());
-    assert(currentFrame < MaxFrameInFlight);
+    pivot_assert(currentFrame < PIVOT_MAX_FRAMES_IN_FLIGHT,
+                 "The current frame is bigger than the max amount of concurrent frame");
+    if (!pivot_check(!graphicsRenderer.empty() && !computeRenderer.empty(), "No Renderers are setup")) {
+        // This is technically a success, even thought nothing was drawn.
+        return DrawResult::Success;
+    }
     auto &frame = frames[currentFrame];
     vk_utils::vk_try(device.waitForFences(frame.inFlightFences, VK_TRUE, UINT64_MAX));
 
@@ -172,6 +175,19 @@ try {
     std::array<vk::ClearValue, 2> clearValues{};
     clearValues.at(0).color = vk::ClearColorValue{vClearColor};
     clearValues.at(1).depthStencil = vk::ClearDepthStencilValue{1.0f, 0};
+
+    RenderingContext context{
+        .renderArea = renderArea.value_or(vk::Rect2D{
+            .offset = {0, 0},
+            .extent = swapchain.getSwapchainExtent(),
+        }),
+        .viewport = swapchain.getSwapchainExtent(),
+    };
+    context.renderArea.extent.height = std::max(context.renderArea.extent.height, 1u);
+    context.renderArea.extent.width = std::max(context.renderArea.extent.width, 1u);
+    context.renderArea.offset.x = std::max(context.renderArea.offset.x, 0);
+    context.renderArea.offset.y = std::max(context.renderArea.offset.y, 0);
+
     vk::RenderPassBeginInfo renderPassInfo{
         .renderPass = renderPass.getRenderPass(),
         .framebuffer = swapChainFramebuffers.at(imageIndex),
@@ -189,9 +205,9 @@ try {
     };
     vk_utils::vk_try(cmd.begin(&beginInfo));
     vk_debug::beginRegion(cmd, "main command", {1.f, 1.f, 1.f, 1.f});
-    for (auto &rendy: computeRenderer) rendy->onDraw(cameraData, frame.drawResolver, cmd);
+    for (auto &rendy: computeRenderer) rendy->onDraw(context, cameraData, frame.drawResolver, cmd);
     cmd.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
-    for (auto &rendy: graphicsRenderer) rendy->onDraw(cameraData, frame.drawResolver, cmd);
+    for (auto &rendy: graphicsRenderer) rendy->onDraw(context, cameraData, frame.drawResolver, cmd);
     cmd.endRenderPass();
     vk_debug::endRegion(cmd);
     cmd.end();
@@ -208,7 +224,6 @@ try {
     std::array<vk::CommandBuffer, 1> submitCmd{
         cmd,
     };
-    assert(signalSemaphores.size() == waitStages.size());
     vk::SubmitInfo submitInfo{
         .waitSemaphoreCount = waitSemaphores.size(),
         .pWaitSemaphores = waitSemaphores.data(),
@@ -227,9 +242,15 @@ try {
         .pImageIndices = &imageIndex,
     };
     vk_utils::vk_try(presentQueue.presentKHR(presentInfo));
-    currentFrame = (currentFrame + 1) % MaxFrameInFlight;
-} catch (const vk::OutOfDateKHRError &) {
-    return recreateSwapchain();
+    currentFrame = (currentFrame + 1) % PIVOT_MAX_FRAMES_IN_FLIGHT;
+    return DrawResult::Success;
+} catch (const vk::OutOfDateKHRError &e) {
+    logger.debug("VulkanApplication/OutOfDateKHRError") << e.what();
+    recreateSwapchain();
+    return DrawResult::FrameSkipped;
+} catch (const vk::Error &e) {
+    logger.debug("VulkanApplication/Vulkan Error") << e.what();
+    return DrawResult::Error;
 }
 
 }    // namespace pivot::graphics

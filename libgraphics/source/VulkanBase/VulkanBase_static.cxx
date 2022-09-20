@@ -1,10 +1,9 @@
-#include "pivot/graphics/DebugMacros.hxx"
-#include "pivot/graphics/QueueFamilyIndices.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/VulkanSwapchain.hxx"
+#include "pivot/graphics/types/QueueFamilyIndices.hxx"
 #include "pivot/graphics/types/vk_types.hxx"
+#include "pivot/pivot.hxx"
 
-#include <Logger.hpp>
 #include <ostream>
 #include <set>
 #include <stdint.h>
@@ -33,7 +32,7 @@ std::uint32_t VulkanBase::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT m
                                         VkDebugUtilsMessageTypeFlagsEXT messageType,
                                         const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *)
 {
-    using Level = cpplogger::Logger::Level;
+    using Level = cpplogger::Level;
 
     auto type = to_string_message_type(messageType);
     auto level = Level::Trace;

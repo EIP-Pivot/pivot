@@ -1,14 +1,13 @@
 #include "pivot/graphics/VulkanSwapchain.hxx"
 
-#include <assert.h>
 #include <optional>
 #include <stddef.h>
 
-#include "pivot/graphics/DebugMacros.hxx"
-#include "pivot/graphics/QueueFamilyIndices.hxx"
+#include "pivot/graphics/types/QueueFamilyIndices.hxx"
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"
+#include "pivot/pivot.hxx"
 
 namespace pivot::graphics
 {
@@ -42,7 +41,8 @@ void VulkanSwapchain::recreate(const vk::Extent2D &size, vk::PhysicalDevice &gpu
 
 std::uint32_t VulkanSwapchain::nbOfImage() const
 {
-    assert(swapChainImages.size() == swapChainImageViews.size());
+    pivot_assert(swapChainImages.size() == swapChainImageViews.size(),
+                 "Swapchain images view are not of the same size");
     return swapChainImages.size();
 }
 
@@ -59,7 +59,7 @@ std::uint32_t VulkanSwapchain::getNextImageIndex(const uint64_t maxDelay, vk::Se
 void VulkanSwapchain::createSwapchain(const vk::Extent2D &size, vk::PhysicalDevice &gpu, vk::SurfaceKHR &surface)
 {
     DEBUG_FUNCTION
-    assert(device);
+    pivot_assert(device, "Vulkan Device not created");
 
     auto indices = QueueFamilyIndices::findQueueFamilies(gpu, surface);
 
@@ -114,7 +114,7 @@ void VulkanSwapchain::createSwapchain(const vk::Extent2D &size, vk::PhysicalDevi
 void VulkanSwapchain::getImages()
 {
     DEBUG_FUNCTION;
-    assert(swapChain);
+    pivot_assert(swapChain, "Swapchain not created");
     swapChainImages = device->getSwapchainImagesKHR(swapChain);
 
     for (unsigned i = 0; i < swapChainImages.size(); i++) {

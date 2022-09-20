@@ -9,21 +9,12 @@ namespace pivot::graphics
 GraphicsRenderer::GraphicsRenderer(StorageUtils &utils): IGraphicsRenderer(utils) {}
 GraphicsRenderer::~GraphicsRenderer() {}
 
-bool GraphicsRenderer::onInit(const vk::Extent2D &size, VulkanBase &base_ref,
-                              const vk::DescriptorSetLayout &resolverLayout, vk::RenderPass &pass)
+bool GraphicsRenderer::onInit(const vk::Extent2D &, VulkanBase &base_ref, const vk::DescriptorSetLayout &resolverLayout,
+                              vk::RenderPass &pass)
 {
+    DEBUG_FUNCTION;
     bIsMultiDraw = base_ref.deviceFeature.multiDrawIndirect;
-    viewport = vk::Viewport{
-        .x = 0.0f,
-        .y = 0.0f,
-        .width = static_cast<float>(size.width),
-        .height = static_cast<float>(size.height),
-        .minDepth = 0.0f,
-        .maxDepth = 1.0f,
-    };
-    scissor = vk::Rect2D{
-        .extent = size,
-    };
+
     createPipelineLayout(base_ref.device, resolverLayout);
     createPipeline(base_ref, pass);
     return true;
@@ -31,6 +22,7 @@ bool GraphicsRenderer::onInit(const vk::Extent2D &size, VulkanBase &base_ref,
 
 void GraphicsRenderer::onStop(VulkanBase &base_ref)
 {
+    DEBUG_FUNCTION;
     if (pipelineLayout) base_ref.device.destroyPipelineLayout(pipelineLayout);
 }
 
@@ -46,7 +38,8 @@ bool GraphicsRenderer::onRecreate(const vk::Extent2D &size, VulkanBase &base_ref
     return onInit(size, base_ref, resolverLayout, pass);
 }
 
-bool GraphicsRenderer::onDraw(const CameraData &cameraData, DrawCallResolver &resolver, vk::CommandBuffer &cmd)
+bool GraphicsRenderer::onDraw(const RenderingContext &context, const CameraData &cameraData, DrawCallResolver &resolver,
+                              vk::CommandBuffer &cmd)
 {
     const gpu_object::VertexPushConstant vertexCamere{
         .viewProjection = cameraData.viewProjection,
@@ -56,6 +49,14 @@ bool GraphicsRenderer::onDraw(const CameraData &cameraData, DrawCallResolver &re
         .directLightCount = static_cast<uint32_t>(resolver.getFrameData().directionalLightCount),
         .spotLightCount = static_cast<uint32_t>(resolver.getFrameData().spotLightCount),
         .position = cameraData.position,
+    };
+    const vk::Viewport viewport{
+        .x = static_cast<float>(context.renderArea.offset.x),
+        .y = static_cast<float>(context.renderArea.offset.y),
+        .width = static_cast<float>(context.renderArea.extent.width),
+        .height = static_cast<float>(context.renderArea.extent.height),
+        .minDepth = 0.0f,
+        .maxDepth = 1.0f,
     };
 
     vk_debug::beginRegion(cmd, "Draw Commands", {0.f, 1.f, 0.f, 1.f});
@@ -70,7 +71,7 @@ bool GraphicsRenderer::onDraw(const CameraData &cameraData, DrawCallResolver &re
         cmd.bindPipeline(vk::PipelineBindPoint::eGraphics,
                          storage.pipeline.get().getGraphics(packedPipeline.pipelineID));
         cmd.setViewport(0, viewport);
-        cmd.setScissor(0, scissor);
+        cmd.setScissor(0, context.renderArea);
 
         if (bIsMultiDraw) {
             cmd.drawIndexedIndirect(resolver.getFrameData().indirectBuffer.buffer,
@@ -151,7 +152,7 @@ void GraphicsRenderer::createPipeline(VulkanBase &base_ref, vk::RenderPass &pass
     builder.setFaceCulling(vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise)
         .setVertexAttributes(Vertex::getInputAttributeDescriptions(
             0, VertexComponentFlagBits::Position | VertexComponentFlagBits::Normal | VertexComponentFlagBits::UV |
-                   VertexComponentFlagBits::Tangent))
+                   VertexComponentFlagBits::Color | VertexComponentFlagBits::Tangent))
         .setVertexShaderPath("shaders/default_pbr.vert.spv")
         .setFragmentShaderPath("shaders/default_pbr.frag.spv");
     storage.pipeline.get().newGraphicsPipeline(

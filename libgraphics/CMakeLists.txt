@@ -120,7 +120,7 @@ endif()
 fetchcontent_declare(
     imgui
     GIT_REPOSITORY https://github.com/ocornut/imgui.git
-    GIT_TAG 377b864bb4a9ed9a25674b04f64f63baf221060d
+    GIT_TAG e9f50fb87c1037e06a9b0e93484fd794a32cb835
 )
 fetchcontent_getproperties(imgui)
 if(NOT imgui_POPULATED)
@@ -144,7 +144,7 @@ endif()
 fetchcontent_declare(
     imguizmo
     GIT_REPOSITORY https://github.com/CedricGuillemet/ImGuizmo.git
-    GIT_TAG 1.83
+    GIT_TAG e3174578bdc99c715e51c5ad88e7d50b4eeb19b0
 )
 fetchcontent_getproperties(imguizmo)
 if(NOT imguizmo_POPULATED)
@@ -169,6 +169,7 @@ add_library(
     source/types/Frame.cxx
     source/types/Light.cxx
     source/types/UniformBufferObject.cxx
+    source/types/QueueFamilyIndices.cxx
     source/Window.cxx
     source/vk_utils.cxx
     source/vk_init.cxx
@@ -180,8 +181,10 @@ add_library(
     source/VulkanAllocator.cxx
     source/VulkanLoader.cxx
     source/VulkanSwapchain.cxx
+    source/ThreadPool.cxx
     source/AssetsStorage/AssetStorage.cxx
     source/AssetsStorage/AssetStorage_init.cxx
+    source/AssetsStorage/AssetStorage_CPUStorage.cxx
     source/AssetsStorage/AssetStorage_build.cxx
     source/AssetsStorage/Loaders/AssetStorage_obj.cxx
     source/AssetsStorage/Loaders/AssetStorage_png.cxx
@@ -199,7 +202,7 @@ add_library(
     source/DescriptorAllocator/DescriptorAllocator.cxx
     source/DescriptorAllocator/DescriptorBuilder.cxx
     source/DescriptorAllocator/DescriptorLayoutCache.cxx
-    source/abstract/AImmediateCommand.cxx
+    source/VulkanImmediateCommand.cxx
     source/culling.cxx
     source/DrawCallResolver.cxx
     source/PipelineStorage.cxx
@@ -214,10 +217,12 @@ target_compile_options(
             /W4
             /wd4267
             /wd4201
-            /wd4244>
+            /wd4244
+            /wd4324>
 )
 
-target_precompile_headers(${PROJECT_NAME} PRIVATE <vulkan/vulkan.hpp> <vk_mem_alloc.hpp>)
+target_precompile_headers(${PROJECT_NAME} REUSE_FROM pivot-common)
+#target_precompile_headers(${PROJECT_NAME} PRIVATE <vulkan/vulkan.hpp> <vk_mem_alloc.hpp>)
 
 set(PIVOT_ASSET_DEFAULT_DIRECTORY
     "${CMAKE_SOURCE_DIR}/editor/assets/"
@@ -229,8 +234,10 @@ target_compile_definitions(
     PUBLIC VULKAN_HPP_NO_CONSTRUCTORS
            VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
            VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1
+           PIVOT_SOURCE_DIRECTORY="${CMAKE_SOURCE_DIR}"
            PIVOT_ASSET_DEFAULT_DIRECTORY="${PIVOT_ASSET_DEFAULT_DIRECTORY}"
            PIVOT_WINDOW_ICON_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../assets"
+           PIVOT_MAX_FRAMES_IN_FLIGHT=3
 )
 
 add_shader(${PROJECT_NAME} default.vert)
@@ -244,17 +251,15 @@ target_include_directories(${PROJECT_NAME} PUBLIC include/)
 
 target_link_libraries(
     ${PROJECT_NAME}
-    PUBLIC logger
+    PUBLIC pivot-common
     PUBLIC VulkanMemoryAllocator
     PUBLIC imgui
     PUBLIC imguizmo
     PUBLIC glfw
-    PUBLIC glm
     PUBLIC tinyobjloader
     PUBLIC ktx
     PUBLIC tinygltf
     PUBLIC stb
-    PUBLIC magic_enum
     PUBLIC Vulkan::Vulkan
 )
 
@@ -262,6 +267,7 @@ build_tests(
     ${PROJECT_NAME}
     tests/culling.cxx
     tests/bounding_box.cxx
-    tests/indexed_storage.cxx
-    tests/flags.cxx
+    tests/asset_storage_cpu_storage.cxx
+    tests/asset_loading_gltf.cxx
+    tests/asset_loading_obj.cxx
 )

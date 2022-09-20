@@ -1,5 +1,7 @@
 #include "pivot/graphics/types/Vertex.hxx"
 
+#include "pivot/Compiler.hxx"
+
 namespace pivot::graphics
 {
 
@@ -46,7 +48,7 @@ vk::VertexInputAttributeDescription Vertex::inputAttributeDescription(uint32_t b
             return {
                 location,
                 binding,
-                vk::Format::eR32G32B32A32Sfloat,
+                vk::Format::eR32G32B32Sfloat,
                 offsetof(Vertex, color),
             };
         case VertexComponentFlagBits::Tangent:
@@ -57,7 +59,7 @@ vk::VertexInputAttributeDescription Vertex::inputAttributeDescription(uint32_t b
                 offsetof(Vertex, tangent),
             };
     }
-    return {};
+    Compiler::unreachable();
 }
 
 std::vector<vk::VertexInputAttributeDescription>

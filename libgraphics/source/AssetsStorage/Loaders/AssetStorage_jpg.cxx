@@ -1,13 +1,13 @@
 #include "pivot/graphics/AssetStorage.hxx"
-#include "pivot/graphics/DebugMacros.hxx"
+#include "pivot/pivot.hxx"
 
 namespace pivot::graphics::loaders
 {
 
-bool loadJpgTexture(const std::filesystem::path &path, AssetStorage::CPUStorage &storage)
+std::optional<AssetStorage::CPUStorage> loadJpgTexture(const std::filesystem::path &path)
 {
     DEBUG_FUNCTION
-    return loadPngTexture(path, storage);
+    return loadPngTexture(path);
 }
 
 }    // namespace pivot::graphics::loaders

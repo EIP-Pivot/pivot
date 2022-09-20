@@ -8,10 +8,15 @@
 #include <pivot/ecs/Components/Gravity.hxx>
 #include <pivot/ecs/Components/RigidBody.hxx>
 
+#include <pivot/builtins/events/collision.hxx>
 #include <pivot/builtins/events/key_press.hxx>
 #include <pivot/builtins/events/tick.hxx>
+#include <pivot/builtins/systems/CollisionSystem.hxx>
+#include <pivot/builtins/systems/CollisionTestSystem.hxx>
 #include <pivot/builtins/systems/PhysicSystem.hxx>
+#include <pivot/builtins/systems/TestTickSystem.hxx>
 
+#include <pivot/builtins/components/Collidable.hxx>
 #include <pivot/builtins/components/RenderObject.hxx>
 #include <pivot/builtins/components/Transform.hxx>
 
@@ -26,7 +31,7 @@ Engine::Engine()
     : m_scripting_engine(
           m_system_index, m_component_index,
           pivot::ecs::script::interpreter::builtins::BuiltinContext{std::bind_front(&Engine::isKeyPressed, this)}),
-      m_camera(builtins::Camera(glm::vec3(0, 200, 500)))
+      m_camera(builtins::Camera(glm::vec3(0, 5, 0)))
 {
     m_component_index.registerComponent(builtins::components::Gravity::description);
     m_component_index.registerComponent(builtins::components::RigidBody::description);
@@ -35,10 +40,15 @@ Engine::Engine()
     m_component_index.registerComponent(builtins::components::PointLight::description);
     m_component_index.registerComponent(builtins::components::DirectionalLight::description);
     m_component_index.registerComponent(builtins::components::SpotLight::description);
+    m_component_index.registerComponent(builtins::components::Collidable::description);
 
     m_event_index.registerEvent(builtins::events::tick);
     m_event_index.registerEvent(builtins::events::keyPress);
+    m_event_index.registerEvent(builtins::events::collision);
     m_system_index.registerSystem(builtins::systems::physicSystem);
+    m_system_index.registerSystem(builtins::systems::makeCollisionSystem(m_vulkan_application.assetStorage));
+    m_system_index.registerSystem(builtins::systems::collisionTestSystem);
+    m_system_index.registerSystem(builtins::systems::testTickSystem);
 
     m_vulkan_application.addRenderer<pivot::graphics::CullingRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::GraphicsRenderer>();
@@ -59,11 +69,21 @@ void Engine::run()
 
         this->onTick(dt);
 
-        auto aspectRatio = m_vulkan_application.getAspectRatio();
+        float aspectRatio =
+            (renderArea.has_value())
+                ? (static_cast<float>(renderArea->extent.width) / static_cast<float>(renderArea->extent.height))
+                : (m_vulkan_application.getAspectRatio());
 
-        if (m_current_scene_draw_command)
-            m_vulkan_application.draw(m_current_scene_draw_command.value(),
-                                      pivot::internals::getGPUCameraData(m_camera, Engine::fov, aspectRatio));
+        if (m_current_scene_draw_command) {
+            auto result = m_vulkan_application.draw(
+                m_current_scene_draw_command.value(),
+                pivot::internals::getGPUCameraData(m_camera, Engine::fov, aspectRatio), renderArea);
+            if (result == pivot::graphics::VulkanApplication::DrawResult::Error) {
+                std::terminate();
+            } else if (result == pivot::graphics::VulkanApplication::DrawResult::FrameSkipped) {
+                this->onReset();
+            }
+        }
 
         if (!m_paused) {
             m_scene_manager.getCurrentScene().getEventManager().sendEvent(
@@ -199,7 +219,7 @@ void Engine::saveScene(ecs::SceneManager::SceneId id, const std::filesystem::pat
 
 ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
 {
-
+    logger.info("Scene Manager") << "Loading scene at " << path;
     std::ifstream scene_file{path};
     if (!scene_file.is_open()) {
         logger.err() << "Could not open scene file: " << std::strerror(errno);
@@ -212,20 +232,18 @@ ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
         m_scripting_engine.loadFile(scriptPath.string(), false, true);
     }
     m_vulkan_application.assetStorage.setAssetDirectory(scene_base_path);
-    for (auto &asset: scene_json["assets"]) m_vulkan_application.assetStorage.addAsset(asset.get<std::string>());
+    for (auto &asset: scene_json["assets"]) loadAsset(asset.get<std::string>(), false);
+    m_vulkan_application.buildAssetStorage(graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
     auto scene = Scene::load(scene_json, m_component_index, m_system_index);
-    m_vulkan_application.buildAssetStorage(scene_json["assets"].empty()
-                                               ? (graphics::AssetStorage::BuildFlagBits::eReloadOldAssets)
-                                               : (graphics::AssetStorage::BuildFlagBits::eClear));
     return this->registerScene(std::move(scene));
 }
 
 void Engine::loadScript(const std::filesystem::path &path) { m_scripting_engine.loadFile(path.string(), false, true); }
 
-void Engine::loadAsset(const std::filesystem::path &path)
+void Engine::loadAsset(const std::filesystem::path &path, bool reload)
 {
     m_vulkan_application.assetStorage.addAsset(path);
-    m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
+    if (reload) m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
 }
 
 bool Engine::isKeyPressed(const std::string &key) const
@@ -238,7 +256,7 @@ bool Engine::isKeyPressed(const std::string &key) const
     }
 }
 
-void Engine::onKeyPressed(graphics::Window &, const graphics::Window::Key key)
+void Engine::onKeyPressed(graphics::Window &, const graphics::Window::Key key, const graphics::Window::Modifier)
 {
     if (!m_paused) {
         m_scene_manager.getCurrentScene().getEventManager().sendEvent(

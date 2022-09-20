@@ -26,6 +26,8 @@ void from_json(const nlohmann::json &json, Value &value)
             value = json.get<Asset>();
         else
             value = json.get<Record>();
+    } else if (json.is_null()) {
+        value = Void{};
     } else {
         throw nlohmann::json::type_error::create(399, "Invalid data::Value", json);
     }
@@ -39,6 +41,12 @@ void to_json(nlohmann::json &json, const Asset &value) { json["asset"]["name"] =
 
 /// Deserialize an Asset from json
 void from_json(const nlohmann::json &json, Asset &value) { value.name = json["asset"]["name"].get<std::string>(); }
+
+/// Serialize Void to json
+void to_json([[maybe_unused]] nlohmann::json &json, [[maybe_unused]] const Void &value) {}
+
+/// Deserialize Void from json
+void from_json([[maybe_unused]] const nlohmann::json &json, [[maybe_unused]] Void &value) {}
 }    // namespace pivot::ecs::data
 
 namespace nlohmann

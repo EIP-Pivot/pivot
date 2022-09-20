@@ -1,7 +1,6 @@
 #include "pivot/graphics/DescriptorAllocator/DescriptorAllocator.hxx"
 
-#include "pivot/graphics/DebugMacros.hxx"
-#include <Logger.hpp>
+#include "pivot/pivot.hxx"
 
 namespace pivot::graphics
 {

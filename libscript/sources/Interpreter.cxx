@@ -1,8 +1,8 @@
 #include "pivot/script/Interpreter.hxx"
-#include "Logger.hpp"
 #include "magic_enum.hpp"
 #include "pivot/script/Builtins.hxx"
 #include "pivot/script/Exceptions.hxx"
+#include <cpplogger/Logger.hpp>
 #include <limits>
 #include <unordered_map>
 
@@ -136,7 +136,7 @@ void Interpreter::executeSystem(const Node &systemEntry, const systems::Descript
     }
 
     // Push stack data to the component array
-    const data::Record &newInputEntity = std::get<data::Record>(stack.find(desc.entityName));
+    const data::Record newInputEntity = std::get<data::Record>(stack.find(desc.entityName));
     componentIndex = 0;
     for (const std::string &componentString: desc.systemComponents) {
         entity[componentIndex].set(newInputEntity.at(componentString));

@@ -1,7 +1,8 @@
 #include "pivot/graphics/AssetStorage.hxx"
 
-#include "pivot/graphics/DebugMacros.hxx"
+#include "pivot/pivot.hxx"
 
+#include <glm/gtc/type_ptr.hpp>
 #include <tiny_obj_loader.h>
 
 namespace pivot::graphics::loaders
@@ -10,26 +11,53 @@ namespace pivot::graphics::loaders
 static std::pair<std::string, AssetStorage::CPUMaterial> loadMaterial(const tinyobj::material_t &material)
 {
     std::filesystem::path diffuse = material.diffuse_texname;
-    AssetStorage::CPUMaterial materia{
-        .metallic = material.metallic,
-        .roughness = material.roughness,
-        .baseColor =
-            {
-                material.diffuse[0],
-                material.diffuse[1],
-                material.diffuse[2],
-                0.0f,
-            },
-        .baseColorTexture = diffuse.stem().string(),
+    std::filesystem::path normal = material.normal_texname;
+    std::filesystem::path emissive = material.emissive_texname;
+    std::filesystem::path specular = material.specular_texname;
+    std::filesystem::path specular_highlight = material.specular_highlight_texname;
+
+    return {
+        material.name,
+        AssetStorage::CPUMaterial{
+            .alphaCutOff = 1.0f,
+            .metallicFactor = material.metallic,
+            .roughnessFactor = material.roughness,
+            .baseColor =
+                {
+                    material.diffuse[0],
+                    material.diffuse[1],
+                    material.diffuse[2],
+                    1.0f,
+                },
+            .baseColorFactor =
+                {
+                    material.diffuse_texopt.scale[0],
+                    material.diffuse_texopt.scale[1],
+                    material.diffuse_texopt.scale[2],
+                    1.0f,
+                },
+            .emissiveFactor =
+                {
+                    material.emissive_texopt.scale[0],
+                    material.emissive_texopt.scale[1],
+                    material.emissive_texopt.scale[2],
+                    1.0f,
+                },
+            .baseColorTexture = diffuse.stem().string(),
+            .normalTexture = normal.stem().string(),
+            .emissiveTexture = emissive.stem().string(),
+            .specularGlossinessTexture = specular_highlight.stem().string(),
+            .diffuseTexture = diffuse.stem().string(),
+        },
     };
-    return std::make_pair(material.name, std::move(materia));
 }
 
-bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &storage)
+std::optional<AssetStorage::CPUStorage> loadObjModel(const std::filesystem::path &path)
 {
     DEBUG_FUNCTION
     auto base_dir = path.parent_path();
 
+    AssetStorage::CPUStorage storage;
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
@@ -39,12 +67,17 @@ bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &s
                                         base_dir.string().c_str(), false, false);
     if (!warn.empty()) logger.warn("Asset Storage/OBJ") << warn;
     if (!err.empty()) logger.err("Asset Storage/OBJ") << err;
-    if (!loadSuccess) return false;
+    if (!loadSuccess) return std::nullopt;
+
+    if (shapes.empty()) {
+        logger.warn("Asset Storage/OBJ") << "No shapes was loaded, this is considered as a failure.";
+        return std::nullopt;
+    }
 
     for (const auto &m: materials) {
         if (!m.diffuse_texname.empty() && storage.textureStaging.getIndex(m.diffuse_texname) == -1) {
             const auto filepath = base_dir / m.diffuse_texname;
-            supportedTexture.at(filepath.extension().string())(filepath, std::ref(storage));
+            storage.texturePaths.emplace(filepath.stem().string(), filepath);
         }
         storage.materialStaging.add(loadMaterial(m));
     }
@@ -65,7 +98,7 @@ bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &s
                                      : ("white")),
         };
         for (const auto &index: shape.mesh.indices) {
-            assert(index.vertex_index >= 0);
+            pivot_assert(index.vertex_index != -1, "No vertices in the obj file");
             Vertex vertex{
                 .pos =
                     {
@@ -73,8 +106,14 @@ bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &s
                         attrib.vertices[3 * index.vertex_index + 1],
                         attrib.vertices[3 * index.vertex_index + 2],
                     },
-                .color = {1.0f, 1.0f, 1.0f, 1.0f},
             };
+            if (!attrib.colors.empty()) {
+                vertex.color = {
+                    attrib.colors[3 * index.vertex_index + 0],
+                    attrib.colors[3 * index.vertex_index + 1],
+                    attrib.colors[3 * index.vertex_index + 2],
+                };
+            }
             if (!attrib.normals.empty() && index.normal_index >= 0) {
                 vertex.normal = {
                     attrib.normals[3 * index.normal_index + 0],
@@ -88,29 +127,20 @@ bool loadObjModel(const std::filesystem::path &path, AssetStorage::CPUStorage &s
                     attrib.texcoords[2 * index.texcoord_index + 1],
                 };
             }
-            if (!attrib.colors.empty()) {
-                vertex.color = {
-                    attrib.colors[3 * index.vertex_index + 0],
-                    attrib.colors[3 * index.vertex_index + 1],
-                    attrib.colors[3 * index.vertex_index + 2],
-                    1.0f,
-                };
-            }
 
             if (!uniqueVertices.contains(vertex)) {
-                uniqueVertices.insert(
-                    std::make_pair(vertex, storage.vertexStagingBuffer.size() - model.mesh.vertexOffset));
+                uniqueVertices.emplace(vertex, storage.vertexStagingBuffer.size() - model.mesh.vertexOffset);
                 storage.vertexStagingBuffer.push_back(vertex);
             }
             storage.indexStagingBuffer.push_back(uniqueVertices.at(vertex));
         }
         model.mesh.indicesSize = storage.indexStagingBuffer.size() - model.mesh.indicesOffset;
         model.mesh.vertexSize = storage.vertexStagingBuffer.size() - model.mesh.vertexOffset;
-        prefab.modelIds.push_back(shape.name);
-        storage.modelStorage.insert({shape.name, model});
+        prefab.modelIds.push_back(shape.name + std::to_string(model.mesh.vertexOffset));
+        storage.modelStorage.emplace(shape.name + std::to_string(model.mesh.vertexOffset), model);
     }
-    storage.prefabStorage.insert({path.stem().string(), prefab});
-    return true;
+    storage.prefabStorage.emplace(path.stem().string(), prefab);
+    return storage;
 }
 
 }    // namespace pivot::graphics::loaders

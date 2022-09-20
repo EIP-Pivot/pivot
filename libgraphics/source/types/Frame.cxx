@@ -1,5 +1,5 @@
 #include "pivot/graphics/types/Frame.hxx"
-#include "pivot/graphics/DebugMacros.hxx"
+#include "pivot/pivot.hxx"
 
 namespace pivot::graphics
 {

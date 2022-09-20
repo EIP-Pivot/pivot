@@ -16,13 +16,14 @@ std::vector<event::Event> test_description(const systems::Description &, compone
     return {};
 }
 
+const event::Description testEvent{
+    .name = "Colid",
+    .entities = {"entity"},
+    .payload = pivot::ecs::data::BasicType::Number,
+};
+
 TEST_CASE("valid system description", "[description]")
 {
-    event::Description event{
-        .name = "Colid",
-        .entities = {},
-        .payload = pivot::ecs::data::BasicType::Number,
-    };
     systems::Description description{
         .name = "Test Description",
         .systemComponents =
@@ -30,7 +31,8 @@ TEST_CASE("valid system description", "[description]")
                 "RigidBody",
                 "Tag",
             },
-        .eventListener = event,
+        .eventListener = testEvent,
+        .eventComponents = {{"Tag"}},
         .system = &test_description,
     };
     REQUIRE_NOTHROW(description.validate());
@@ -38,14 +40,24 @@ TEST_CASE("valid system description", "[description]")
 
 TEST_CASE("Empty system description", "[description]")
 {
-    systems::Description description;
-    REQUIRE_THROWS_WITH(description.validate(), "Empty system name");
+    systems::Description description{
+        .name = "Test Description",
+        .systemComponents = {},
+        .eventListener = testEvent,
+        .eventComponents = {{"Tag"}},
+        .system = &test_description,
+    };
+    REQUIRE_NOTHROW(description.validate());
 }
 
 TEST_CASE("Empty args system description", "[description]")
 {
     systems::Description description{
         .name = "Invalid",
+        .systemComponents = {},
+        .eventListener = testEvent,
+        .eventComponents = {},
+        .system = &test_description,
     };
-    REQUIRE_THROWS_WITH(description.validate(), "Empty system argument");
+    REQUIRE_THROWS_WITH(description.validate(), "Event require 1 entities given 0");
 }

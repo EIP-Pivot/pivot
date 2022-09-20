@@ -1,4 +1,4 @@
-#include <Logger.hpp>
+
 
 #include <pivot/ecs/Core/Component/index.hxx>
 

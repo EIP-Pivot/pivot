@@ -1,7 +1,5 @@
 project(pivot-ecs)
 
-include(FetchContent)
-
 function(fetch_boost_library library)
     fetchcontent_declare(
         boost_${library}
@@ -69,28 +67,13 @@ add_library(
     source/Components/Tag.cxx
     source/Components/RigidBody.cxx
     source/Components/Gravity.cxx
+    source/Core/Component/FlagComponentStorage.cxx
 )
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
 
-target_compile_options(
-    ${PROJECT_NAME}
-    PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-            -Wall -Wextra>
-            $<$<CXX_COMPILER_ID:MSVC>:
-            /W4
-            /wd4267
-            /wd4201
-            /wd4244>
-)
+target_link_libraries(${PROJECT_NAME} PUBLIC pivot-common boost_fusion nlohmann_json::nlohmann_json)
 
-target_link_libraries(
-    ${PROJECT_NAME}
-    PUBLIC glm
-           magic_enum
-           boost_fusion
-           nlohmann_json::nlohmann_json
-           logger
-)
+target_precompile_headers(${PROJECT_NAME} REUSE_FROM pivot-common)
 
 build_tests(
     ${PROJECT_NAME}
@@ -108,4 +91,5 @@ build_tests(
     tests/Core/Event/test_child_event.cxx
     tests/Core/Scene/test_load.cxx
     tests/Core/Scene/test_save.cxx
+    tests/Core/Component/test_flag_component_storage.cxx
 )

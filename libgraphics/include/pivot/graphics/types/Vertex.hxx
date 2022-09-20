@@ -6,7 +6,7 @@
 #include <vector>
 #include <vulkan/vulkan.hpp>
 
-#include "pivot/graphics/PivotFlags.hxx"
+#include "pivot/utility/flags.hxx"
 
 namespace pivot::graphics
 {
@@ -32,7 +32,7 @@ struct Vertex {
     /// UV coordinate of the vertex
     glm::vec2 texCoord = glm::vec2(0.0f);
     /// Color of the vertex, ignored if a texture is provided
-    glm::vec4 color = glm::vec4(1.0f);
+    glm::vec3 color = glm::vec3(1.0f);
     /// Tangent of the vertex
     glm::vec4 tangent = glm::vec4(0.0f);
 
@@ -62,10 +62,11 @@ namespace std
 template <>
 struct hash<pivot::graphics::Vertex> {
     /// @cond
-    size_t operator()(pivot::graphics::Vertex const &vertex) const
+    size_t operator()(const pivot::graphics::Vertex &vertex) const
     {
         return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^
-               (hash<glm::vec3>()(vertex.color) ^ (hash<glm::vec2>()(vertex.texCoord) << 1));
+               ((hash<glm::vec2>()(vertex.texCoord) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
+               (hash<glm::vec4>()(vertex.tangent));
     }
     /// @endcond
 };

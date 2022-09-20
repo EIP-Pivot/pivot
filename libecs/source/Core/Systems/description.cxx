@@ -11,8 +11,6 @@ void Description::validate() const
 {
     if (this->name.empty()) { throw ValidationError("Empty system name"); }
 
-    if (this->systemComponents.empty()) { throw ValidationError("Empty system argument"); }
-
     this->eventListener.validate();
 
     if (this->eventComponents.size() != this->eventListener.entities.size())

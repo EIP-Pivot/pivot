@@ -20,7 +20,8 @@ const std::string &Scene::getName() const { return name; }
 Entity Scene::CreateEntity()
 {
     Entity newEntity = mEntityManager.CreateEntity();
-    mComponentManager.AddComponent(newEntity, "Entity " + std::to_string(newEntity), mTagId);
+    mComponentManager.AddComponent(newEntity,
+                                   data::Value{data::Record{{"name", "Entity " + std::to_string(newEntity)}}}, mTagId);
     return newEntity;
 }
 
@@ -72,8 +73,6 @@ pivot::ecs::component::Manager &Scene::getComponentManager() { return mComponent
 /// Get the component manager (const)
 const pivot::ecs::component::Manager &Scene::getComponentManager() const { return mComponentManager; }
 
-pivot::ecs::systems::Manager &Scene::getSystemManager() { return mSystemManager; }
-
 const pivot::ecs::systems::Manager &Scene::getSystemManager() const { return mSystemManager; }
 
 pivot::ecs::event::Manager &Scene::getEventManager() { return mEventManager; }
@@ -90,7 +89,7 @@ std::unique_ptr<Scene> Scene::load(const nlohmann::json &obj, const pivot::ecs::
     auto scene = std::make_unique<Scene>(obj["name"].get<std::string>());
     auto &componentManager = scene->getComponentManager();
     auto &entityManager = scene->getEntityManager();
-    auto &systemManager = scene->getSystemManager();
+    auto &systemManager = scene->mSystemManager;
 
     for (auto entities: obj["components"]) {
         auto entity = entityManager.CreateEntity();
@@ -171,4 +170,17 @@ void Scene::save(const std::filesystem::path &path, std::optional<AssetTranslato
     std::ofstream out(path);
     out << std::setw(4) << output << std::endl;
     out.close();
+}
+
+void Scene::registerSystem(const systems::Description &description, pivot::OptionalRef<const component::Index> cIndex)
+{
+    if (cIndex.has_value()) {
+        for (auto &component: description.systemComponents) {
+            if (!mComponentManager.GetComponentId(component).has_value()) {
+                auto cDesc = cIndex->get().getDescription(component);
+                if (cDesc.has_value()) { mComponentManager.RegisterComponent(*cDesc); }
+            }
+        }
+    }
+    mSystemManager.useSystem(description);
 }

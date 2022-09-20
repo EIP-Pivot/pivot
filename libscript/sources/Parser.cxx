@@ -5,10 +5,10 @@
 #include <stack>
 #include <unordered_map>
 
-#include "Logger.hpp"
 #include "magic_enum.hpp"
 #include "pivot/script/Exceptions.hxx"
 #include "pivot/script/Parser.hxx"
+#include <cpplogger/Logger.hpp>
 
 namespace pivot::ecs::script::parser
 {
@@ -165,17 +165,19 @@ void Parser::tokens_from_file(const std::string &file, bool isContent, bool verb
                     rcursor = line.find('"', lcursor + 1);    // find the end to the double quote string
                     if (rcursor ==
                         std::string::npos) {    // no more '"' on the line, multi-line quoted strings unsupported yet.
-                        // pretend the string ends at the end of the line
+                                                // pretend the string ends at the end of the line
+                        std::string literalString = unescapeChars(line.substr(lcursor));
                         _tokens.push(Token{.type = TokenType::DoubleQuotedString,
-                                           .value = line.substr(lcursor),
+                                           .value = literalString,
                                            .line_nb = lineNb,
                                            .char_nb = lcursor + 1});
                         lcursor = line.size();    // end of line
                         continue;    // no more tokens on the line, and rcursor == std::string::npos, go to next line
                     } else {         // the quote ends on the same line
                         // save raw value without the '"'
+                        std::string literalString = unescapeChars(line.substr(lcursor + 1, rcursor - lcursor - 1));
                         _tokens.push(Token{.type = TokenType::DoubleQuotedString,
-                                           .value = line.substr(lcursor + 1, rcursor - lcursor - 1),
+                                           .value = literalString,
                                            .line_nb = lineNb,
                                            .char_nb = lcursor + 1});
                         lcursor = rcursor + 1;
@@ -960,6 +962,24 @@ std::string remove_comments(const std::string &line)
 bool line_is_empty(const std::string &line)
 {    // Is line empty
     return line.find_first_not_of(" \t") == std::string::npos;
+}
+
+std::string replaceAll(std::string str, const std::string &from, const std::string &to)
+{    // Replace all occurences of string 'from' by string 'to' in string 'str'
+    size_t start_pos = 0;
+    while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length();    // Handles case where 'to' is a substring of 'from'
+    }
+    return str;
+}
+
+std::string unescapeChars(std::string str)
+{    // This isn't very clean, but easier to read than regex
+    std::string r = replaceAll(str, "\\t", "\t");
+    r = replaceAll(r, "\\n", "\n");
+    r = replaceAll(r, "\\r", "\r");
+    return r;
 }
 
 }    // end of namespace pivot::ecs::script::parser

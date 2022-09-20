@@ -2,8 +2,6 @@
 
 #include "pivot/pivot.hxx"
 
-#include <Logger.hpp>
-
 namespace pivot
 {
 

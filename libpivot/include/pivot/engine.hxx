@@ -8,6 +8,7 @@
 
 #include <pivot/graphics/DrawCallResolver.hxx>
 #include <pivot/graphics/VulkanApplication.hxx>
+#include <pivot/graphics/types/AllocatedImage.hxx>
 
 #include <pivot/script/Engine.hxx>
 
@@ -30,7 +31,12 @@ public:
     ecs::SceneManager::SceneId loadScene(const std::filesystem::path &path);
 
     void loadScript(const std::filesystem::path &path);
-    void loadAsset(const std::filesystem::path &path);
+    void loadAsset(const std::filesystem::path &path, bool reload = true);
+    const graphics::AllocatedImage &getTexture(const std::string &name) const
+    {
+        return m_vulkan_application.assetStorage.get<graphics::AssetStorage::Texture>(name);
+    }
+    vk::Sampler getSampler() const { return m_vulkan_application.assetStorage.getSampler(); }
 
     static constexpr float fov = 80;
 
@@ -42,8 +48,11 @@ protected:
     ecs::script::Engine m_scripting_engine;
     builtins::Camera m_camera;
     bool m_paused = true;
+    std::optional<vk::Rect2D> renderArea = std::nullopt;
 
-    virtual void onTick([[maybe_unused]] float delta){};
+    virtual void onTick([[maybe_unused]] float delta) {}
+    virtual void onReset() {}
+    void setRenderArea(vk::Rect2D renderArea) { this->renderArea = renderArea; }
     ecs::CurrentScene getCurrentScene() { return m_scene_manager; };
     const ecs::SceneManager &getSceneManager() { return m_scene_manager; };
 

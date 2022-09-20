@@ -3,7 +3,7 @@ project(pivot-common)
 fetchcontent_declare(
     logger
     GIT_REPOSITORY https://github.com/zcorniere/logger-cpp.git
-    GIT_TAG v0.9.0
+    GIT_TAG v1.0.0
 )
 fetchcontent_getproperties(logger)
 if(NOT logger_POPULATED)
@@ -56,18 +56,27 @@ if(NOT magic_enum_POPULATED)
     add_subdirectory(${magic_enum_SOURCE_DIR} ${magic_enum_BINARY_DIR})
 endif()
 
-add_library(${PROJECT_NAME} STATIC sources/lib.cxx)
+add_library(
+    ${PROJECT_NAME} STATIC
+    sources/lib.cxx
+
+    # Select the correct platform to compile
+    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
+    sources/Platforms/UnixPlatform.cxx>
+    $<$<CXX_COMPILER_ID:MSVC>:
+    sources/Platforms/WindowsPlatform.cxx>
+)
 
 target_compile_options(
     ${PROJECT_NAME}
     PUBLIC $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-            -Wall
-            -Wextra>
-            $<$<CXX_COMPILER_ID:MSVC>:
-            /W4
-            /wd4267
-            /wd4201
-            /wd4244>
+           -Wall
+           -Wextra>
+           $<$<CXX_COMPILER_ID:MSVC>:
+           /W4
+           /wd4267
+           /wd4201
+           /wd4244>
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC include/)
@@ -77,7 +86,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC logger glm magic_enum)
 target_precompile_headers(
     ${PROJECT_NAME}
     PUBLIC
-    <Logger.hpp>
+    <pivot/pivot.hxx>
+    <cpplogger/Logger.hpp>
     <glm/glm.hpp>
     <optional>
     <variant>

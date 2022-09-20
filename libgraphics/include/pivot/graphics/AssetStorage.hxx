@@ -5,7 +5,7 @@
 #include "pivot/graphics/DescriptorAllocator/DescriptorBuilder.hxx"
 #include "pivot/graphics/ThreadPool.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
-#include "pivot/graphics/abstract/AImmediateCommand.hxx"
+#include "pivot/graphics/VulkanImmediateCommand.hxx"
 #include "pivot/graphics/types/AABB.hxx"
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 #include "pivot/graphics/types/AllocatedImage.hxx"
@@ -283,16 +283,22 @@ public:
         return {it->second};
     }
 
-    /// Return the path of all the texture currently loaded in the Storage
+    /// Return the name of all the texture currently loaded in the Storage
     auto getTextures() const
     {
         return this->textureStorage | std::views::transform([](const auto &i) { return i.first; });
     }
 
-    /// Return the path of all the models currently loaded in the Storage
+    /// Return the name of all the models currently loaded in the Storage
     auto getModels() const
     {
         return this->modelStorage | std::views::transform([](const auto &i) { return i.first; });
+    }
+
+    /// Return the path of all the prefabs currently loaded in the Storage
+    auto getPrefabs() const
+    {
+        return this->prefabStorage | std::views::transform([](const auto &i) { return i.first; });
     }
 
     /// Return the path of all the models currently loaded in the Storage
@@ -300,6 +306,9 @@ public:
     {
         return this->materialStorage | std::views::transform([](const auto &i) { return i.first; });
     }
+
+    /// Return the vulkan sampler
+    vk::Sampler getSampler() const noexcept { return textureSampler; }
 
     template <typename T>
     /// Get an asset of type T named name
@@ -407,6 +416,14 @@ inline const AssetStorage::Prefab &AssetStorage::get(const std::string &p) const
 {
     PIVOT_TEST_CONTAINS(prefabStorage, p);
     return prefabStorage.at(p);
+}
+
+template <>
+/// @copydoc AssetStorage::get
+inline const AssetStorage::Texture &AssetStorage::get(const std::string &p) const
+{
+    PIVOT_TEST_CONTAINS(textureStorage, p);
+    return textureStorage.get(p);
 }
 
 template <>

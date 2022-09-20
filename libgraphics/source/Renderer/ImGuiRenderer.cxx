@@ -31,6 +31,7 @@ bool ImGuiRenderer::onInit(const vk::Extent2D &, VulkanBase &base_ref, const vk:
 
 void ImGuiRenderer::onStop(VulkanBase &base_ref)
 {
+    DEBUG_FUNCTION;
     if (ImGui::GetCurrentContext() != nullptr) {
         ImGui_ImplVulkan_Shutdown();
         ImGui_ImplGlfw_Shutdown();
@@ -39,12 +40,14 @@ void ImGuiRenderer::onStop(VulkanBase &base_ref)
     if (pool) base_ref.device.destroyDescriptorPool(pool);
 }
 
-bool ImGuiRenderer::onRecreate(const vk::Extent2D &, VulkanBase &, const vk::DescriptorSetLayout &, vk::RenderPass &)
+bool ImGuiRenderer::onRecreate(const vk::Extent2D &size, VulkanBase &base,
+                               const vk::DescriptorSetLayout &descriptorSetLayout, vk::RenderPass &pass)
 {
-    return true;
+    onStop(base);
+    return onInit(size, base, descriptorSetLayout, pass);
 }
 
-bool ImGuiRenderer::onDraw(const CameraData &, DrawCallResolver &, vk::CommandBuffer &cmd)
+bool ImGuiRenderer::onDraw(const RenderingContext &, const CameraData &, DrawCallResolver &, vk::CommandBuffer &cmd)
 {
     vk_debug::beginRegion(cmd, "Imgui Commands", {1.f, 0.f, 0.f, 1.f});
     if (auto imguiData = ImGui::GetDrawData(); imguiData != nullptr) {
@@ -84,8 +87,20 @@ void ImGuiRenderer::createDescriptorPool(vk::Device &device)
 
 void ImGuiRenderer::createImGuiContext(VulkanBase &base_ref, vk::RenderPass &pass)
 {
+    IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+    ImGuiIO &io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+    // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
+    ImGui::StyleColorsDark();
+
+    ImGuiStyle &style = ImGui::GetStyle();
+    style.WindowRounding = 0.0f;
+    style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+
     ImGui_ImplGlfw_InitForVulkan(base_ref.window.getWindow(), true);
 
     ImGui_ImplVulkan_InitInfo init_info{};
@@ -102,7 +117,8 @@ void ImGuiRenderer::createImGuiContext(VulkanBase &base_ref, vk::RenderPass &pas
 
     ImGui_ImplVulkan_Init(&init_info, pass);
 
-    base_ref.immediateCommand([&](vk::CommandBuffer cmd) { ImGui_ImplVulkan_CreateFontsTexture(cmd); });
+    base_ref.immediateCommand([&](vk::CommandBuffer cmd) { ImGui_ImplVulkan_CreateFontsTexture(cmd); },
+                              vk::QueueFlagBits::eGraphics);
     ImGui_ImplVulkan_DestroyFontUploadObjects();
 }
 

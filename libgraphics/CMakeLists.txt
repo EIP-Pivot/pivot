@@ -120,7 +120,7 @@ endif()
 fetchcontent_declare(
     imgui
     GIT_REPOSITORY https://github.com/ocornut/imgui.git
-    GIT_TAG 377b864bb4a9ed9a25674b04f64f63baf221060d
+    GIT_TAG e9f50fb87c1037e06a9b0e93484fd794a32cb835
 )
 fetchcontent_getproperties(imgui)
 if(NOT imgui_POPULATED)
@@ -144,7 +144,7 @@ endif()
 fetchcontent_declare(
     imguizmo
     GIT_REPOSITORY https://github.com/CedricGuillemet/ImGuizmo.git
-    GIT_TAG 1.83
+    GIT_TAG e3174578bdc99c715e51c5ad88e7d50b4eeb19b0
 )
 fetchcontent_getproperties(imguizmo)
 if(NOT imguizmo_POPULATED)
@@ -169,6 +169,7 @@ add_library(
     source/types/Frame.cxx
     source/types/Light.cxx
     source/types/UniformBufferObject.cxx
+    source/types/QueueFamilyIndices.cxx
     source/Window.cxx
     source/vk_utils.cxx
     source/vk_init.cxx
@@ -201,7 +202,7 @@ add_library(
     source/DescriptorAllocator/DescriptorAllocator.cxx
     source/DescriptorAllocator/DescriptorBuilder.cxx
     source/DescriptorAllocator/DescriptorLayoutCache.cxx
-    source/abstract/AImmediateCommand.cxx
+    source/VulkanImmediateCommand.cxx
     source/culling.cxx
     source/DrawCallResolver.cxx
     source/PipelineStorage.cxx

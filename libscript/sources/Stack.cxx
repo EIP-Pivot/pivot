@@ -1,6 +1,6 @@
 #include "pivot/script/Stack.hxx"
-#include "Logger.hpp"
 #include "pivot/script/Exceptions.hxx"
+#include <cpplogger/Logger.hpp>
 
 namespace pivot::ecs::script::interpreter
 {

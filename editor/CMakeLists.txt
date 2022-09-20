@@ -38,7 +38,18 @@ add_executable(
     source/ImGuiCore/EntityModule.cxx
     source/ImGuiCore/ComponentEditor.cxx
     source/ImGuiCore/SystemsEditor.cxx
+    source/ImGuiCore/AssetBrowser.cxx
+    source/ImGuiCore/MenuBar.cxx
+    source/ImGuiCore/SceneEditor.cxx
+    source/ImGuiCore/CustomWidget.cxx
+    source/ImGuiCore/ImGuiTheme.cxx
 )
+
+target_compile_definitions(
+        ${PROJECT_NAME}
+        PRIVATE PIVOT_EDITOR_ICON_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../editor/assets/Editor"
+)
+
 target_compile_options(
     ${PROJECT_NAME}
     PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:

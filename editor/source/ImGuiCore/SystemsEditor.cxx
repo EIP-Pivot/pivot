@@ -1,13 +1,17 @@
-#include <Logger.hpp>
-
 #include "ImGuiCore/SystemsEditor.hxx"
+#include "ImGuiCore/CustomWidget.hxx"
+#include "ImGuiCore/ImGuiTheme.hxx"
+
+#include <imgui.h>
 
 void SystemsEditor::create()
 {
-    ImGui::Begin("Systems");
+    ImGui::Begin(" Systems ");
+    ImGuiTheme::setDefaultFramePadding();
     displaySystem();
-    if (ImGui::Button("Add System")) { ImGui::OpenPopup("AddSystem"); }
+    if (CustomWidget::ButtonCenteredOnLine("Add System")) { ImGui::OpenPopup("AddSystem"); }
     createPopUp();
+    ImGuiTheme::unsetDefaultFramePadding();
     ImGui::End();
 }
 
@@ -15,9 +19,10 @@ void SystemsEditor::createPopUp()
 {
     auto &sm = m_scene->getSystemManager();
     if (ImGui::BeginPopup("AddSystem")) {
-        for (const auto &[name, description]: m_index) {
+        for (const auto &[name, description]: m_systemIndex) {
             if (!sm.hasSystem(name))
-                if (ImGui::MenuItem(name.c_str())) sm.useSystem(description);
+                if (ImGui::MenuItem(name.c_str()))
+                    m_scene->registerSystem(description, std::optional(std::ref(m_componentIndex)));
         }
         ImGui::EndPopup();
     }

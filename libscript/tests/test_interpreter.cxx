@@ -121,8 +121,9 @@ TEST_CASE("Scripting-Refacto-Interpreter_One")
 
     Sdescription.system(Sdescription, combinations, evt);
 
-    std::cout << "Returned " << std::get<bool>(std::get<data::Record>(array1->getValueForEntity(0).value()).at("b"))
-              << std::endl;
+    bool result = std::get<bool>(std::get<data::Record>(array1->getValueForEntity(0).value()).at("b"));
+    REQUIRE(result == true);
+    std::cout << "Returned " << result << std::endl;
 
     std::cout << "------Interpreter------end" << std::endl;
 }

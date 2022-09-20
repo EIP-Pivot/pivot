@@ -6,6 +6,7 @@
 namespace pivot::graphics
 {
 
+/// Managed the Light in the scene
 class LightDataResolver : public IResolver
 {
 private:
@@ -47,6 +48,7 @@ public:
         };
     }
 
+    /// Return the internal frame data
     constexpr const Frame &getFrameData() const noexcept { return frame; }
 
 private:

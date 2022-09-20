@@ -45,14 +45,21 @@ struct DescriptorPair {
     vk::DescriptorSet set;
 };
 
+/// @brief Interface for Resolver
+///
+/// A Resolver is tasked with managing a descriptor set on Vulkan ressources.
 class IResolver
 {
 public:
+    /// Initialiaze the resolver ressources
     virtual bool initialize(VulkanBase &base, const AssetStorage &assetStorage, DescriptorBuilder &builder) = 0;
+    /// Destroy the resolver
     virtual bool destroy(VulkanBase &base) = 0;
 
+    /// Return the descriptor set managed by the resolver
     virtual DescriptorPair getManagedDescriptorSet() const = 0;
 
+    /// Called one before starting rendering the current frame
     virtual bool prepareForDraw(const DrawSceneInformation &information) = 0;
 };
 

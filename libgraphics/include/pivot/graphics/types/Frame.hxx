@@ -22,6 +22,7 @@ public:
     void destroy(VulkanBase &base, vk::CommandPool &pool);
 
     template <typename T>
+    /// Add a resolver to the frame
     FORCEINLINE void addResolver(unsigned setID)
     {
         dispatcher.addResolver<T>(setID);

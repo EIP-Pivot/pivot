@@ -18,11 +18,11 @@
 #include <pivot/builtins/events/key_press.hxx>
 #include <pivot/builtins/events/tick.hxx>
 
+#include <pivot/builtins/systems/CollisionSystem.hxx>
+#include <pivot/builtins/systems/CollisionTestSystem.hxx>
 #include <pivot/builtins/systems/DrawTextSystem.hxx>
 #include <pivot/builtins/systems/PhysicSystem.hxx>
 #include <pivot/builtins/systems/TestTickSystem.hxx>
-#include <pivot/builtins/systems/CollisionSystem.hxx>
-#include <pivot/builtins/systems/CollisionTestSystem.hxx>
 
 #include <pivot/builtins/components/Collidable.hxx>
 #include <pivot/builtins/components/RenderObject.hxx>

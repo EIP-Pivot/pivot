@@ -13,8 +13,23 @@ using namespace pivot::builtins::components;
 
 namespace
 {
+void drawText(const Text &text, const Transform2D &transform)
+{
+    auto color = text.color.rgba;
+
+    ImGui::SetNextWindowPos(ImVec2(transform.position.x, transform.position.y), 0, ImVec2(0.5, 0.5));
+    ImGui::SetNextWindowSize(ImVec2(0, 0));
+    ImGui::Begin("text", NULL,
+                 ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove |
+                     ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(color[0], color[1], color[2], color[3]));
+    ImGui::Text("%s", text.content.c_str());
+    ImGui::PopStyleColor();
+    ImGui::End();
+}
+
 std::vector<event::Event> drawTextSystemImpl(const systems::Description &, component::ArrayCombination &cmb,
-                                             const event::EventWithComponent &event)
+                                             [[maybe_unused]] const event::EventWithComponent &event)
 {
     auto textArray = dynamic_cast<component::DenseTypedComponentArray<Text> &>(cmb.arrays()[0].get());
     auto transformArray = dynamic_cast<component::DenseTypedComponentArray<Transform2D> &>(cmb.arrays()[1].get());
@@ -24,18 +39,9 @@ std::vector<event::Event> drawTextSystemImpl(const systems::Description &, compo
         if (!textArray.entityHasValue(entity) || !transformArray.entityHasValue(entity)) continue;
 
         auto &text = textArray.getData()[entity];
-        auto color = text.color.rgba;
         auto &transform = transformArray.getData()[entity];
 
-        ImGui::SetNextWindowPos(ImVec2(transform.position.x, transform.position.y), 0, ImVec2(0.5, 0.5));
-        ImGui::SetNextWindowSize(ImVec2(0, 0));
-        ImGui::Begin("text", NULL,
-                     ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove |
-                         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(color[0], color[1], color[2], color[3]));
-        ImGui::Text("%s", text.content.c_str());
-        ImGui::PopStyleColor();
-        ImGui::End();
+        drawText(text, transform);
     }
     return {};
 }

@@ -13,13 +13,14 @@ using namespace pivot::builtins::components;
 
 namespace
 {
-void drawText(const Text &text, const Transform2D &transform)
+void drawText(Entity entity, const Text &text, const Transform2D &transform)
 {
     auto color = text.color.rgba;
 
     ImGui::SetNextWindowPos(ImVec2(transform.position.x, transform.position.y), 0, ImVec2(0.5, 0.5));
     ImGui::SetNextWindowSize(ImVec2(0, 0));
-    ImGui::Begin("text", NULL,
+    auto window_title = "text " + std::to_string(entity);
+    ImGui::Begin(window_title.c_str(), NULL,
                  ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove |
                      ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(color[0], color[1], color[2], color[3]));
@@ -41,7 +42,7 @@ std::vector<event::Event> drawTextSystemImpl(const systems::Description &, compo
         auto &text = textArray.getData()[entity];
         auto &transform = transformArray.getData()[entity];
 
-        drawText(text, transform);
+        drawText(entity, text, transform);
     }
     return {};
 }

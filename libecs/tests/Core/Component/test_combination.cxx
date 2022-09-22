@@ -80,6 +80,17 @@ TEST_CASE("Array intersections work", "[component]")
     REQUIRE(it != combination.end());
     REQUIRE(it->entity == 3);
 
+    auto allComponents = it->getAllComponents();
+    REQUIRE(allComponents.size() == 3);
+
+    REQUIRE(allComponents[0].description() == components[0]);
+    REQUIRE(allComponents[1].description() == components[1]);
+    REQUIRE(allComponents[2].description() == components[2]);
+
+    REQUIRE(allComponents[0].entity() == 3);
+    REQUIRE(allComponents[1].entity() == 3);
+    REQUIRE(allComponents[2].entity() == 3);
+
     it++;
 
     REQUIRE(it == combination.end());

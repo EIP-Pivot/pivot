@@ -53,7 +53,10 @@ const std::unordered_map<std::string, std::pair<BuiltinFunctionCallback, Paramet
     {"randint", {interpreter::builtins::builtin_randint, {1, {{data::BasicType::Number}}}}},
     {"pow", {interpreter::builtins::builtin_power, {2, {{data::BasicType::Number}, {data::BasicType::Number}}}}},
     {"sqrt", {interpreter::builtins::builtin_sqrt, {1, {{data::BasicType::Number}}}}},
-    {"abs", {interpreter::builtins::builtin_abs, {1, {{data::BasicType::Number}}}}}};
+    {"abs", {interpreter::builtins::builtin_abs, {1, {{data::BasicType::Number}}}}},
+    {"vec3",
+     {interpreter::builtins::builtin_vec3,
+      {3, {{data::BasicType::Number}, {data::BasicType::Number}, {data::BasicType::Number}}}}}};
 
 // Public functions ( can be called anywhere )
 
@@ -113,34 +116,31 @@ std::vector<systems::Description> registerDeclarations(const Node &file, compone
 
 // This will execute a SystemEntryPoint node by executing all of its statements
 void Interpreter::executeSystem(const Node &systemEntry, const systems::Description &desc,
-                                component::ArrayCombination::ComponentCombination &entity,
-                                const event::EventWithComponent &trigger, Stack &stack)
+                                component::ArrayCombination::ComponentCombination &entityComponentCombination,
+                                event::EventWithComponent &trigger, Stack &stack)
 {
     // systemComponents : [ "Position", "Velocity" ]
     // entity : [ PositionRecord, VelocityRecord ]
-    std::cout << "Executing block " << systemEntry.value << std::endl;
+    logger.trace() << "Executing block " << systemEntry.value;
+    auto entityComponents = entityComponentCombination.getAllComponents();
     // Push input entity to stack
-    data::Record inputEntity;
-    size_t componentIndex = 0;
-
-    for (const std::string &componentString: desc.systemComponents) {
-        inputEntity.insert_or_assign(componentString, std::get<data::Record>(entity[componentIndex].get()));
-        componentIndex++;    // go to next component
+    stack.pushEntity(desc.entityName, entityComponents);
+    // Push event entities to the stack
+    for (std::size_t i = 0; i < desc.eventListener.entities.size(); i++) {
+        stack.pushEntity(desc.eventListener.entities[i], trigger.components[i]);
     }
-    stack.push(desc.entityName, inputEntity);
     // Push payload to stack
-    stack.push(trigger.event.description.payloadName, trigger.event.payload);
+    if (!trigger.event.description.payloadName.empty()) {
+        stack.push(trigger.event.description.payloadName, trigger.event.payload);
+    }
 
     for (const Node &statement: systemEntry.children) {    // execute all statements
         executeStatement(statement, stack);
     }
 
-    // Push stack data to the component array
-    const data::Record newInputEntity = std::get<data::Record>(stack.find(desc.entityName));
-    componentIndex = 0;
-    for (const std::string &componentString: desc.systemComponents) {
-        entity[componentIndex].set(newInputEntity.at(componentString));
-        componentIndex++;
+    stack.updateEntity(desc.entityName, entityComponents);
+    for (std::size_t i = 0; i < desc.eventListener.entities.size(); i++) {
+        stack.updateEntity(desc.eventListener.entities[i], trigger.components[i]);
     }
 }
 

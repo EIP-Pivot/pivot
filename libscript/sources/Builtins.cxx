@@ -322,6 +322,11 @@ data::Value builtin_operator<Operator::Modulo>(const data::Value &left, const da
     }
 }
 
+data::Value builtin_vec3(const std::vector<data::Value> &params, const BuiltinContext &)
+{
+    return {glm::vec3{std::get<double>(params.at(0)), std::get<double>(params.at(1)), std::get<double>(params.at(2))}};
+}
+
 // Mathematical/Arithmetic operators -- end
 
 }    // end of namespace pivot::ecs::script::interpreter::builtins

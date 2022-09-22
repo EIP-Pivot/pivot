@@ -31,6 +31,9 @@ public:
     /// Same as set()
     void operator=(const data::Value &value);
 
+    /// Retrieve the entity number of this component ref
+    Entity entity() const { return m_entity; }
+
     /// Error thrown when a component ref not refering to an existing compoent is dereference
     struct MissingComponent : std::logic_error {
         /// Creates a MissingComponent error

@@ -1,9 +1,11 @@
 #pragma once
 
-#include "pivot/ecs/Core/Data/value.hxx"
-
 #include <functional>
+#include <span>
 #include <unordered_map>
+
+#include <pivot/ecs/Core/Component/ref.hxx>
+#include <pivot/ecs/Core/Data/value.hxx>
 
 namespace pivot::ecs::script::interpreter
 {
@@ -22,6 +24,10 @@ public:
 
     /// Add a variable to the stack, name is pure (no '.')
     void push(const std::string &name, const data::Value &var);
+    /// Add an entity and all its components to the stack
+    void pushEntity(const std::string &entityName, std::span<const component::ComponentRef>);
+    /// Update an entity components from its value on the stack
+    void updateEntity(const std::string &entityName, std::span<component::ComponentRef>);
     /// Find a variable in the stack (read-only), name can contain access ('.')
     const data::Value find(const std::string &name) const;
     /// Modify the value of a variable in the stack, by name, name can contain access ('.')

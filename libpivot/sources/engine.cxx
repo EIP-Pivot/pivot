@@ -24,6 +24,7 @@
 #include <pivot/builtins/systems/PhysicSystem.hxx>
 #include <pivot/builtins/systems/TestTickSystem.hxx>
 
+#include <pivot/builtins/components/Camera.hxx>
 #include <pivot/builtins/components/Collidable.hxx>
 #include <pivot/builtins/components/RenderObject.hxx>
 #include <pivot/builtins/components/Transform.hxx>
@@ -53,6 +54,7 @@ Engine::Engine()
     m_component_index.registerComponent(builtins::components::Collidable::description);
     m_component_index.registerComponent(builtins::components::Text::description);
     m_component_index.registerComponent(builtins::components::Transform2D::description);
+    m_component_index.registerComponent(builtins::components::Camera::description);
 
     m_event_index.registerEvent(builtins::events::tick);
     m_event_index.registerEvent(builtins::events::editor_tick);

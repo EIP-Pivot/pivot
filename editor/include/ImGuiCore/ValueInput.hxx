@@ -12,14 +12,18 @@
 #include <pivot/ecs/Core/Data/value.hxx>
 #include <pivot/ecs/Core/SceneManager.hxx>
 
+#include <ImGuiCore/CustomWidget.hxx>
+
 class ValueInput
 {
 public:
     ValueInput(pivot::ecs::CurrentScene scene): m_scene(scene) {}
 
-    void drawInput(glm::vec3 &value, const std::string &name)
+    void drawInput(glm::vec3 &value, const std::string &name) { CustomWidget::CustomVec3(name, value); }
+
+    void drawInput(glm::vec2 &value, const std::string &name)
     {
-        ImGui::InputFloat3(name.c_str(), glm::value_ptr(value));
+        ImGui::InputFloat2(name.c_str(), glm::value_ptr(value));
     }
 
     void drawInput(std::string &value, const std::string &name) { ImGui::InputText(name.c_str(), &value); }
@@ -53,6 +57,11 @@ public:
             if (id.has_value()) { value.ref = id.value(); }
         }
         // logger.info() << "new ref " << value;
+    }
+
+    void drawInput(pivot::ecs::data::Color &color, const std::string &name)
+    {
+        ImGui::ColorEdit4(name.c_str(), color.rgba.data());
     }
 
     void drawInput(pivot::ecs::data::Record &values, const std::string &)

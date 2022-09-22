@@ -35,7 +35,8 @@ struct Record : public std::map<std::string, Value> {
  * - Void (no value)
  * - Entity (entity reference)
  */
-struct Value : public std::variant<std::string, double, int, bool, glm::vec3, Record, Asset, Void, EntityRef> {
+struct Value
+    : public std::variant<std::string, double, int, bool, glm::vec3, glm::vec2, Record, Asset, Color, Void, EntityRef> {
     using variant::variant;
 
     /// Returns the Type corresponding to this Value

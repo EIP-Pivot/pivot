@@ -19,7 +19,8 @@ public:
     void onStop(VulkanBase &base_ref) override;
     bool onRecreate(const vk::Extent2D &size, VulkanBase &base_ref, const vk::DescriptorSetLayout &resolverLayout,
                     vk::RenderPass &pass) override;
-    bool onDraw(const CameraData &cameraData, DrawCallResolver &resolver, vk::CommandBuffer &cmd) override;
+    bool onDraw(const RenderingContext &context, const CameraData &cameraData, DrawCallResolver &resolver,
+                vk::CommandBuffer &cmd) override;
 
 private:
     void createPipelineLayout(vk::Device &device, const vk::DescriptorSetLayout &resolverLayout);
@@ -27,8 +28,6 @@ private:
 
 private:
     bool bIsMultiDraw = false;
-    vk::Viewport viewport;
-    vk::Rect2D scissor;
     vk::PipelineLayout pipelineLayout = VK_NULL_HANDLE;
 };
 }    // namespace pivot::graphics

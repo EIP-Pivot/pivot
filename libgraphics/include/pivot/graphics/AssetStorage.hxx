@@ -307,6 +307,9 @@ public:
         return this->materialStorage | std::views::transform([](const auto &i) { return i.first; });
     }
 
+    /// Return the vulkan sampler
+    vk::Sampler getSampler() const noexcept { return textureSampler; }
+
     template <typename T>
     /// Get an asset of type T named name
     inline const T &get(const std::string &name) const;
@@ -413,6 +416,14 @@ inline const AssetStorage::Prefab &AssetStorage::get(const std::string &p) const
 {
     PIVOT_TEST_CONTAINS(prefabStorage, p);
     return prefabStorage.at(p);
+}
+
+template <>
+/// @copydoc AssetStorage::get
+inline const AssetStorage::Texture &AssetStorage::get(const std::string &p) const
+{
+    PIVOT_TEST_CONTAINS(textureStorage, p);
+    return textureStorage.get(p);
 }
 
 template <>

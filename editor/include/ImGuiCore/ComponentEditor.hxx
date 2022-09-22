@@ -1,10 +1,5 @@
 #pragma once
 
-#include <imgui.h>
-
-// Must be after imgui
-#include <ImGuizmo.h>
-
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
@@ -31,6 +26,8 @@ public:
 private:
     void addComponent(const pivot::ecs::component::Description &description);
     void displayComponent();
+    void displayName();
+    void deleteComponent(pivot::ecs::component::ComponentRef ref);
     void createPopUp();
 
 private:

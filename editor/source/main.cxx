@@ -155,7 +155,6 @@ public:
     void onTick(float dt) override
     {
         imGuiTheme.setStyle();
-        imGuiManager.newFrame();
         if (!menuBar.render()) {
             imGuiManager.reset();
             return onTick(dt);
@@ -173,7 +172,6 @@ public:
             if (entity.hasSelected()) { sceneEditor.DisplayGuizmo(entity.getEntitySelected(), m_camera); }
         }
         UpdateCamera(dt);
-        ImGuiManager::render();
         this->setRenderArea(vk::Rect2D{
             .offset =
                 {
@@ -187,6 +185,10 @@ public:
                 },
         });
     }
+
+    void onFrameStart() { imGuiManager.newFrame(); }
+
+    void onFrameEnd() { ImGuiManager::render(); }
 
     void onReset() override { imGuiManager.reset(); }
 

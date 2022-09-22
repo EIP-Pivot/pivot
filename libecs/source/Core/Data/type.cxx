@@ -51,7 +51,9 @@ data::Value Type::defaultValue() const
                     case BasicType::Integer: return Value{0};
                     case BasicType::Boolean: return Value{false};
                     case BasicType::Vec3: return Value{glm::vec3{0, 0, 0}};
+                    case BasicType::Vec2: return Value{glm::vec2{0, 0}};
                     case BasicType::Void: return Value{Void{}};
+                    case BasicType::Color: return Value{Color{1, 1, 1, 1}};
                     default: throw std::runtime_error("Unknown basic type");
                 }
             } else {

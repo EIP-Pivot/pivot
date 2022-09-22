@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <map>
 #include <optional>
@@ -8,6 +9,7 @@
 #include <variant>
 
 #include <pivot/ecs/Core/Data/asset.hxx>
+#include <pivot/ecs/Core/Data/color.hxx>
 #include <pivot/ecs/Core/Data/void.hxx>
 
 namespace pivot::ecs::data
@@ -30,11 +32,17 @@ enum class BasicType {
     /// The property is of type glm::vec3
     Vec3,
 
+    /// The property is of type glm::vec2
+    Vec2,
+
     /// The property is of type Asset
     Asset,
 
     /// The property has no value
     Void,
+
+    /// The property is of type Color
+    Color,
 };
 
 struct Type;
@@ -72,7 +80,11 @@ constexpr std::optional<BasicType> basic_type_representation<bool> = BasicType::
 template <>
 constexpr std::optional<BasicType> basic_type_representation<glm::vec3> = BasicType::Vec3;
 template <>
+constexpr std::optional<BasicType> basic_type_representation<glm::vec2> = BasicType::Vec2;
+template <>
 constexpr std::optional<BasicType> basic_type_representation<Asset> = BasicType::Asset;
+template <>
+constexpr std::optional<BasicType> basic_type_representation<Color> = BasicType::Color;
 template <>
 constexpr std::optional<BasicType> basic_type_representation<Void> = BasicType::Void;
 

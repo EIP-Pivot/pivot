@@ -1,3 +1,5 @@
+#pragma once
+
 #include <pivot/Platform.hxx>
 
 #define STR(X) #X
@@ -49,6 +51,7 @@
         }
 
 #else
+    #define DEBUG_FUNCTION
 
     #define verify(Expression) (LIKELY(!!(Expression)))
     #define verifyMsg(Expression, ...) (LIKELY(!!(Expression)))

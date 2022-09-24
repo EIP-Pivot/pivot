@@ -50,18 +50,6 @@ target_compile_definitions(
         PRIVATE PIVOT_EDITOR_ICON_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../editor/assets/Editor"
 )
 
-target_compile_options(
-    ${PROJECT_NAME}
-    PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-            -Wall
-            -Wextra>
-            $<$<CXX_COMPILER_ID:MSVC>:
-            /W4
-            /wd4267
-            /wd4201
-            /wd4244>
-)
-
-target_include_directories(${PROJECT_NAME} PRIVATE include/)
+target_pivot_compile_option(${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE pivot nfd argparse)

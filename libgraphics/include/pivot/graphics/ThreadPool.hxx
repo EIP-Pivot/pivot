@@ -46,7 +46,7 @@ public:
     requires std::is_invocable_v<F, unsigned, Args...>
     [[nodiscard]] auto push(F &&f, Args &&...args) -> std::future<decltype(f(0, args...))>
     {
-        if (!pivot_check(!thread_p.empty(), "Pushing task when no thread are started !")) { start(1); }
+        if (!verifyAlwaysMsg(!thread_p.empty(), "Pushing task when no thread are started !")) { start(1); }
         auto packagedFunction = std::make_shared<std::packaged_task<decltype(f(0, args...))(unsigned)>>(
             std::bind(std::forward<F>(f), std::placeholders::_1, std::forward<Args>(args)...));
 

@@ -16,16 +16,13 @@ add_library(
     sources/builtins/components/Transform2D.cxx
 )
 
-
-target_include_directories(${PROJECT_NAME} PUBLIC include/)
+target_pivot_compile_option(${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME} PUBLIC pivot-graphics pivot-ecs pivot-script)
 
 target_precompile_headers(${PROJECT_NAME} REUSE_FROM pivot-common)
 
 build_tests(
-    ${PROJECT_NAME}
-    tests/components/test_render_object_component.cxx
-    tests/components/test_transform_component.cxx
+    ${PROJECT_NAME} tests/components/test_render_object_component.cxx tests/components/test_transform_component.cxx
     tests/systems/test_collision_system.cxx
 )

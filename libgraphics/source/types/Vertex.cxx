@@ -1,6 +1,6 @@
 #include "pivot/graphics/types/Vertex.hxx"
 
-#include "pivot/Compiler.hxx"
+#include "pivot/pivot.hxx"
 
 namespace pivot::graphics
 {
@@ -59,7 +59,7 @@ vk::VertexInputAttributeDescription Vertex::inputAttributeDescription(uint32_t b
                 offsetof(Vertex, tangent),
             };
     }
-    Compiler::unreachable();
+    pivotAssertNoEntry();
 }
 
 std::vector<vk::VertexInputAttributeDescription>

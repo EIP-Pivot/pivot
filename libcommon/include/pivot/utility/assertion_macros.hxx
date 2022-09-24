@@ -1,6 +1,9 @@
 #pragma once
 
-#include <pivot/Platform.hxx>
+#include "pivot/Compiler.hxx"
+#include "pivot/Platform.hxx"
+
+#include <atomic>
 
 #define STR(X) #X
 
@@ -9,7 +12,7 @@
 
     #define PIVOT_VERIFY_IMPL(Always, Expression, ...)                                                              \
         ((LIKELY(!!(Expression))) || ([]() {                                                                        \
-                                         static bool bExecuted = false;                                             \
+                                         static std::atomic_bool bExecuted = false;                                 \
                                          if (!bExecuted && Always) {                                                \
                                              bExecuted = true;                                                      \
                                              logger.err(::file_position()) << "Assertion failed: " STR(#Expression) \
@@ -45,7 +48,7 @@
         }
     #define pivotAssertNoReentry()                                                            \
         {                                                                                     \
-            static bool beenHere##__LINE__ = false;                                           \
+            static std::atomic_bool beenHere##__LINE__ = false;                               \
             pivotAssertMsg(!beenHere##__LINE__, "Enclosing block was called more than once"); \
             beenHere##__LINE__ = true;                                                        \
         }

@@ -60,7 +60,7 @@ std::string Engine::loadFile(const std::string &file, bool isContent, bool verbo
 
 std::vector<ecs::event::Event> Engine::systemCallback(const systems::Description &system,
                                                       component::ArrayCombination &entities,
-                                                      const event::EventWithComponent &trigger)
+                                                      event::EventWithComponent &trigger)
 {
     if (!_systems.contains(system.name)) {
         // std::cerr << std::format("Unregistered system '{}'", system.name) << std::endl; // format not available in

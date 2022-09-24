@@ -59,7 +59,7 @@ endif()
 add_library(
     ${PROJECT_NAME} STATIC
     sources/lib.cxx
-    
+
     # Select the correct platform to compile
     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
     sources/Platforms/UnixPlatform.cxx>
@@ -67,19 +67,7 @@ add_library(
     sources/Platforms/WindowsPlatform.cxx>
 )
 
-target_compile_options(
-    ${PROJECT_NAME}
-    PUBLIC $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-           -Wall
-           -Wextra>
-           $<$<CXX_COMPILER_ID:MSVC>:
-           /W4
-           /wd4267
-           /wd4201
-           /wd4244>
-)
-
-target_include_directories(${PROJECT_NAME} PUBLIC include/)
+target_pivot_compile_option(${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME} PUBLIC logger glm magic_enum)
 

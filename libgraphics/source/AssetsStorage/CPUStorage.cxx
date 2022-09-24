@@ -44,12 +44,12 @@ std::unordered_map<K, V> merge_map_ignore_dup(const std::unordered_map<K, V> &fi
     for (const auto &[key, value]: first) { result.emplace(key, value); }
     for (const auto &[key, value]: second) {
         if (result.contains(key)) {
-            pivot_assert(first.contains(key), key << " is not the deduplicated buffer.");
+            pivotAssertMsg(first.contains(key), key << " is not the deduplicated buffer.");
             continue;
         }
         result.emplace(key, value);
     }
-    pivot_assert(result.size() <= first.size() + second.size(), "The merged CPUStorage is bigger than its sources.");
+    pivotAssertMsg(result.size() <= first.size() + second.size(), "The merged CPUStorage is bigger than its sources.");
     return result;
 }
 

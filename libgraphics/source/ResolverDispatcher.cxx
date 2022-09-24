@@ -8,13 +8,13 @@ namespace pivot::graphics
 void ResolverDispatcher::removeResolver(unsigned setId)
 {
     if (resolverStorage.size() <= setId) { throw std::runtime_error("Set Id is too big"); }
-    if (!pivot_check(resolverStorage[setId] != nullptr, "Set id is not in use !")) { return; }
+    if (!verifyMsg(resolverStorage[setId] != nullptr, "Set id is not in use !")) { return; }
 
     if (base_ref.has_value()) { resolverStorage[setId]->destroy(base_ref->get()); }
     resolverStorage[setId] = nullptr;
 
     unsigned result = std::erase_if(resolverTypes, [setId](const auto &item) { return item.second == setId; });
-    pivot_assert(result == 1, "Erased more than one object, that is not possible");
+    verifyMsg(result == 1, "Erased more than one object, that is not possible");
 }
 
 std::vector<vk::DescriptorSetLayout> ResolverDispatcher::getDescriptorPair() const
@@ -39,9 +39,9 @@ unsigned ResolverDispatcher::initialize(VulkanBase &base, const AssetStorage &as
     }
 
     // Make sure no other resolver is left in the end of the array
-    pivot_check(std::find_if(resolverStorage.begin() + counter, resolverStorage.end(),
-                             [](const auto &i) { return i != nullptr; }) == resolverStorage.end(),
-                "The resolver storage is not contiguous ! Left over resolver will be ignored during rendering");
+    verifyMsg(std::find_if(resolverStorage.begin() + counter, resolverStorage.end(),
+                           [](const auto &i) { return i != nullptr; }) == resolverStorage.end(),
+              "The resolver storage is not contiguous ! Left over resolver will be ignored during rendering");
     return counter;
 }
 

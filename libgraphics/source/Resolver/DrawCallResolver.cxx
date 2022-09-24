@@ -25,7 +25,7 @@ bool DrawCallResolver::initialize(VulkanBase &base, const AssetStorage &stor, De
                                    vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute)
                        .build(base_ref->get().device, frame.objectDescriptor, descriptorSetLayout);
 
-    if (!pivot_check(success, "Descriptor set failed to build.")) { return success; }
+    if (!verifyAlwaysMsg(success, "Descriptor set failed to build.")) { return success; }
 
     vk_debug::setObjectName(base_ref->get().device, frame.objectDescriptor,
                             "Object Descriptor Set " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
@@ -51,11 +51,11 @@ bool DrawCallResolver::prepareForDraw(const DrawSceneInformation &sceneInformati
     frame.packedDraws.clear();
     frame.pipelineBatch.clear();
 
-    pivot_assert(sceneInformation.renderObjects.objects.get().size() ==
-                     sceneInformation.renderObjects.exist.get().size(),
-                 "ECS Render Object arrays are invalid.");
-    pivot_assert(sceneInformation.transform.objects.get().size() == sceneInformation.transform.exist.get().size(),
-                 "ECS Transform arrays are invalid.");
+    pivotAssertMsg(sceneInformation.renderObjects.objects.get().size() ==
+                       sceneInformation.renderObjects.exist.get().size(),
+                   "ECS Render Object arrays are invalid.");
+    pivotAssertMsg(sceneInformation.transform.objects.get().size() == sceneInformation.transform.exist.get().size(),
+                   "ECS Transform arrays are invalid.");
 
     for (unsigned i = 0;
          i < sceneInformation.renderObjects.objects.get().size() && i < sceneInformation.transform.objects.get().size();
@@ -88,16 +88,15 @@ bool DrawCallResolver::prepareForDraw(const DrawSceneInformation &sceneInformati
             }
         }
     }
-    pivot_assert(frame.packedDraws.size() == objectGPUData.size(), "Incorrect size between draw call and buffer data");
-
-    // Nothing to draw, exist early.
+    pivotAssertMsg(frame.packedDraws.size() == objectGPUData.size(),
+                   "Incorrect size between draw call and buffer data");
     if (objectGPUData.empty()) return true;
     if (objectGPUData.size() > frame.currentBufferSize || objectGPUData.size() < frame.currentBufferSize / 2) {
         createBuffer(objectGPUData.size());
     }
     updateDescriptorSet();
 
-    pivot_assert(frame.currentBufferSize > 0, "Buffer size is 0");
+    pivotAssertMsg(frame.currentBufferSize > 0, "Buffer size is 0");
 
     base_ref->get().allocator.copyBuffer(frame.objectBuffer, std::span(objectGPUData));
 
@@ -135,8 +134,8 @@ void DrawCallResolver::updateDescriptorSet()
     auto bufferInfo = frame.objectBuffer.getBufferInfo();
     auto indirectInfo = frame.indirectBuffer.getBufferInfo();
 
-    pivot_check(bufferInfo.range != 0, "The bufferInfo is empty ! This will trigger validation warnings");
-    pivot_check(indirectInfo.range != 0, "The indirectInfo is empty ! This will trigger validation warnings");
+    verifyMsg(bufferInfo.range != 0, "The bufferInfo is empty ! This will trigger validation warnings");
+    verifyMsg(indirectInfo.range != 0, "The indirectInfo is empty ! This will trigger validation warnings");
 
     std::vector<vk::WriteDescriptorSet> descriptorWrites{
         {

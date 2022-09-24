@@ -1,4 +1,4 @@
-
+#include <csignal>
 
 #include <pivot/graphics/types/RenderObject.hxx>
 
@@ -13,6 +13,7 @@ using namespace pivot::ecs;
 using namespace pivot::builtins::components;
 using namespace pivot::builtins::systems::details;
 using AABB = pivot::graphics::gpu_object::AABB;
+using Prefab = pivot::graphics::asset::Prefab;
 
 namespace
 {
@@ -20,6 +21,7 @@ std::vector<event::Event> collisionSystemImpl(std::reference_wrapper<const pivot
                                               const systems::Description &, component::ArrayCombination &cmb,
                                               const event::EventWithComponent &)
 {
+    logger.trace() << "Collision system run";
     auto collidableStorage = dynamic_cast<const component::FlagComponentStorage &>(cmb.arrays()[0].get());
     auto transformArray =
         dynamic_cast<component::DenseTypedComponentArray<pivot::graphics::Transform> &>(cmb.arrays()[1].get())
@@ -31,13 +33,18 @@ std::vector<event::Event> collisionSystemImpl(std::reference_wrapper<const pivot
     std::vector<EntityAABB> entityAABB;
 
     for (Entity entity: collidableStorage.getData()) {
+        logger.trace() << "Retrieving AABB for entity " << entity;
         glm::vec3 position = transformArray[entity].position;
-        auto &mesh = renderObjectArray[entity].meshID;
-        auto bounding_box = assetStorage.get().get_optional<AABB>(mesh);
+        auto &prefab_name = renderObjectArray[entity].meshID;
+        auto prefab = assetStorage.get().get_optional<Prefab>(prefab_name);
+        if (!prefab.has_value()) continue;
+        auto bounding_box = assetStorage.get().get_optional<AABB>(prefab.value().get().modelIds.at(0));
         if (bounding_box.has_value()) {
             entityAABB.emplace_back(bounding_box->get().low + position, bounding_box->get().high + position, entity);
         }
     }
+
+    logger.trace() << "Collisions between " << entityAABB.size() << " entities with AABB";
 
     auto collisions = getEntityCollisions(entityAABB);
     std::vector<event::Event> collision_events{};
@@ -46,6 +53,8 @@ std::vector<event::Event> collisionSystemImpl(std::reference_wrapper<const pivot
         logger.debug() << "Collision between entity " << entity1 << " and entity " << entity2;
         collision_events.push_back(
             event::Event{pivot::builtins::events::collision, {entity1, entity2}, data::Value{data::Void{}}});
+        collision_events.push_back(
+            event::Event{pivot::builtins::events::collision, {entity2, entity1}, data::Value{data::Void{}}});
     }
 
     return collision_events;

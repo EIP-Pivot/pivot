@@ -109,7 +109,7 @@ MenuBar::FileResult MenuBar::FileInteraction::open() const
     } else if (action == FileAction::Open) {
         result = NFD::OpenDialog(path, acceptedFiles.data(), acceptedFiles.size());
     } else {
-        pivot_assert(false, "Unsupported file action !");
+        pivotAssertMsg(false, "Unsupported file action !");
     }
 
     switch (result) {

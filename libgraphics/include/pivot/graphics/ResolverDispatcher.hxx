@@ -23,8 +23,10 @@ public:
     requires std::is_base_of_v<IResolver, T>
     void addResolver(unsigned setId)
     {
-        if (!pivot_check(setId <= resolverStorage.size(), "")) { throw std::runtime_error("Set Id is too big"); }
-        if (!pivot_check(resolverStorage[setId] == nullptr, "Set id is already in use !")) { removeResolver(setId); }
+        if (!verify(setId <= resolverStorage.size())) { throw std::runtime_error("Set Id is too big"); }
+        if (!verifyAlwaysMsg(resolverStorage[setId] == nullptr, "Set id is already in use !")) {
+            removeResolver(setId);
+        }
 
         resolverStorage[setId] = std::make_unique<T>();
         resolverTypes.emplace(std::type_index(typeid(T)), setId);
@@ -36,10 +38,10 @@ public:
     {
         const std::type_index info(typeid(T));
         auto item = resolverTypes.find(info);
-        pivot_assert(item != resolverTypes.end(), "Resolver type " << info.name() << " is unknowned.");
+        verifyMsg(item != resolverTypes.end(), "Resolver type " << info.name() << " is unknowned.");
 
         T *resolver = dynamic_cast<T *>(resolverStorage[item->second].get());
-        pivot_assert(resolver, "Resolver type " << info.name() << " failed to be downcasted.");
+        verifyMsg(resolver, "Resolver type " << info.name() << " failed to be downcasted.");
         return *resolver;
     }
 

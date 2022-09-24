@@ -27,7 +27,7 @@ bool LightDataResolver::initialize(VulkanBase &base, const AssetStorage &stor, D
                                    vk::ShaderStageFlagBits::eFragment)
                        .build(base_ref->get().device, descriptorSet, descriptorSetLayout);
 
-    if (!pivot_check(success, "Descriptor set failed to build.")) { return success; }
+    if (!verifyAlwaysMsg(success, "Descriptor set failed to build.")) { return success; }
 
     vk_debug::setObjectName(base_ref->get().device, descriptorSet,
                             "Light Descriptor Set " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
@@ -51,8 +51,8 @@ requires std::is_constructible_v<G, const T &, const Transform &> && BufferValid
 static vk::DeviceSize handleLights(VulkanBase &base_ref, AllocatedBuffer<G> &buffer, const Object<T> &lights,
                                    const Object<Transform> &transforms, const std::string &debug_name = "")
 {
-    pivot_assert(lights.objects.get().size() == lights.exist.get().size(), "Light ECS data are incorrect");
-    pivot_assert(transforms.objects.get().size() == transforms.exist.get().size(), "Transform ECS data are incorrect");
+    verifyMsg(lights.objects.get().size() == lights.exist.get().size(), "Light ECS data are incorrect");
+    verifyMsg(transforms.objects.get().size() == transforms.exist.get().size(), "Transform ECS data are incorrect");
 
     std::vector<G> lightsData;
     for (unsigned i = 0; i < lights.objects.get().size() && i < transforms.objects.get().size(); i++) {
@@ -72,13 +72,13 @@ static vk::DeviceSize handleLights(VulkanBase &base_ref, AllocatedBuffer<G> &buf
 
 bool LightDataResolver::prepareForDraw(const DrawSceneInformation &sceneInformation)
 {
-    pivot_assert(sceneInformation.pointLight.objects.get().size() == sceneInformation.pointLight.exist.get().size(),
-                 "ECS Point tights arrays are invalid.");
-    pivot_assert(sceneInformation.directionalLight.objects.get().size() ==
-                     sceneInformation.directionalLight.exist.get().size(),
-                 "ECS Directional lights arrays are invalid.");
-    pivot_assert(sceneInformation.spotLight.objects.get().size() == sceneInformation.spotLight.exist.get().size(),
-                 "ECS Spot light arrays are invalid.");
+    verifyMsg(sceneInformation.pointLight.objects.get().size() == sceneInformation.pointLight.exist.get().size(),
+              "ECS Point tights arrays are invalid.");
+    verifyMsg(sceneInformation.directionalLight.objects.get().size() ==
+                  sceneInformation.directionalLight.exist.get().size(),
+              "ECS Directional lights arrays are invalid.");
+    verifyMsg(sceneInformation.spotLight.objects.get().size() == sceneInformation.spotLight.exist.get().size(),
+              "ECS Spot light arrays are invalid.");
 
     frame.pointLightCount =
         handleLights(base_ref.value(), frame.omniLightBuffer, sceneInformation.pointLight, sceneInformation.transform,

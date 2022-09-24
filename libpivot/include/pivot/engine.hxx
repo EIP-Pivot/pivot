@@ -52,7 +52,9 @@ protected:
     bool m_paused = true;
     std::optional<vk::Rect2D> renderArea = std::nullopt;
 
+    virtual void onFrameStart() {}
     virtual void onTick([[maybe_unused]] float delta) {}
+    virtual void onFrameEnd() {}
     virtual void onReset() {}
     void setRenderArea(vk::Rect2D renderArea) { this->renderArea = renderArea; }
     ecs::CurrentScene getCurrentScene() { return m_scene_manager; };

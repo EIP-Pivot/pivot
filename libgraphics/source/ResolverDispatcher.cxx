@@ -66,6 +66,7 @@ void ResolverDispatcher::bind(vk::CommandBuffer &cmd, const vk::PipelineLayout &
         std::unique_ptr<IResolver> &resolver = resolverStorage[i];
         if (!resolver) break;
 
+        resolver->bind(cmd);
         const DescriptorPair &descriptor = resolver->getManagedDescriptorSet();
         cmd.bindDescriptorSets(bindPoint, pipelineLayout, i, descriptor.set, nullptr);
     }

@@ -15,7 +15,7 @@ namespace pivot::graphics
 /// @brief Used to build the per frame draw informations
 class DrawCallResolver : public IResolver
 {
-public:
+private:
     /// The default size of the buffers
     static constexpr const auto defaultBufferSize = 42;
 
@@ -59,10 +59,8 @@ private:
     static vk::DescriptorSetLayout descriptorSetLayout;
 
 public:
-    /// @return Get the descritor set layout
-    static constexpr const vk::DescriptorSetLayout &getDescriptorSetLayout() noexcept { return descriptorSetLayout; }
+    using IResolver::IResolver;
 
-public:
     /// Initialize the ressources
     bool initialize(VulkanBase &, const AssetStorage &, DescriptorBuilder &) override;
     /// Destroy them

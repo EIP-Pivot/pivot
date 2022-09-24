@@ -32,6 +32,10 @@
 #include <pivot/builtins/components/Text.hxx>
 #include <pivot/builtins/components/Transform2D.hxx>
 
+#include <pivot/graphics/Resolver/AssetResolver.hxx>
+#include <pivot/graphics/Resolver/DrawCallResolver.hxx>
+#include <pivot/graphics/Resolver/LightDataResolver.hxx>
+
 using namespace pivot;
 using namespace pivot::ecs;
 
@@ -69,6 +73,7 @@ Engine::Engine()
     m_vulkan_application.addRenderer<pivot::graphics::ImGuiRenderer>();
     m_vulkan_application.addResolver<pivot::graphics::DrawCallResolver>(0);
     m_vulkan_application.addResolver<pivot::graphics::LightDataResolver>(1);
+    m_vulkan_application.addResolver<pivot::graphics::AssetResolver>(2);
     m_vulkan_application.init();
 
     m_vulkan_application.window.addGlobalKeyPressCallback(std::bind_front(&Engine::onKeyPressed, this));

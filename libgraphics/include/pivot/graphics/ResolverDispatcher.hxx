@@ -28,7 +28,7 @@ public:
             removeResolver(setId);
         }
 
-        resolverStorage[setId] = std::make_unique<T>();
+        resolverStorage[setId] = std::make_unique<T>(*this);
         resolverTypes.emplace(std::type_index(typeid(T)), setId);
     }
 

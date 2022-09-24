@@ -46,7 +46,6 @@ bool CullingRenderer::onDraw(const RenderingContext &, const CameraData &cameraD
     };
 
     vk_debug::beginRegion(cmd, "Culling pass", {1.f, 0.f, 1.f, 1.f});
-    storage.assets.get().bindForCompute(cmd, cullingLayout, 2);
     dispatcher.bind(cmd, cullingLayout, vk::PipelineBindPoint::eCompute);
     cmd.pushConstants<gpu_object::CullingPushConstant>(cullingLayout, vk::ShaderStageFlagBits::eCompute, 0,
                                                        cullingCamera);
@@ -70,7 +69,6 @@ void CullingRenderer::createPipelineLayout(vk::Device &device, const ResolverDis
         vk::ShaderStageFlagBits::eCompute, sizeof(gpu_object::CullingPushConstant))};
 
     std::vector<vk::DescriptorSetLayout> setLayout(dispatcher.getDescriptorPair());
-    setLayout.push_back(storage.assets.get().getDescriptorSetLayout());
 
     auto pipelineLayoutCreateInfo = vk_init::populateVkPipelineLayoutCreateInfo(setLayout, pipelinePushConstant);
     cullingLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);

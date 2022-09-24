@@ -13,6 +13,9 @@
 namespace pivot::graphics
 {
 
+// Forward Declaration of the dispatcher
+class ResolverDispatcher;
+
 template <typename T>
 /// Wrapper for the T/bool pair returned from the ECS
 struct Object {
@@ -51,6 +54,11 @@ struct DescriptorPair {
 class IResolver
 {
 public:
+    /// Ctor
+    IResolver(ResolverDispatcher &dispatcher): dispatcher(dispatcher) {}
+    ///
+    virtual ~IResolver() {}
+
     /// Initialiaze the resolver ressources
     virtual bool initialize(VulkanBase &base, const AssetStorage &assetStorage, DescriptorBuilder &builder) = 0;
     /// Destroy the resolver
@@ -61,6 +69,11 @@ public:
 
     /// Called one before starting rendering the current frame
     virtual bool prepareForDraw(const DrawSceneInformation &information) = 0;
+
+    virtual void bind([[maybe_unused]] vk::CommandBuffer &cmd) {}
+
+protected:
+    ResolverDispatcher &dispatcher;
 };
 
 }    // namespace pivot::graphics

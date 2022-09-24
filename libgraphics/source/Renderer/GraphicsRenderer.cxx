@@ -60,7 +60,6 @@ bool GraphicsRenderer::onDraw(const RenderingContext &context, const CameraData 
 
     vk_debug::beginRegion(cmd, "Draw Commands", {0.f, 1.f, 0.f, 1.f});
     dispatcher.bind(cmd, pipelineLayout, vk::PipelineBindPoint::eGraphics);
-    storage.assets.get().bindForGraphics(cmd, pipelineLayout, 2);
     cmd.pushConstants<gpu_object::VertexPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0,
                                                       vertexCamere);
     cmd.pushConstants<gpu_object::FragmentPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eFragment,
@@ -99,7 +98,6 @@ void GraphicsRenderer::createPipelineLayout(vk::Device &device, const ResolverDi
     };
 
     std::vector<vk::DescriptorSetLayout> setLayout = dispatcher.getDescriptorPair();
-    setLayout.push_back(storage.assets.get().getDescriptorSetLayout());
 
     auto pipelineLayoutCreateInfo = vk_init::populateVkPipelineLayoutCreateInfo(setLayout, pipelinePushConstant);
     pipelineLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);

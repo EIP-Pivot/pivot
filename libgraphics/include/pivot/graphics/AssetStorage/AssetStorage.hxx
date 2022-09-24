@@ -103,7 +103,7 @@ public:
     ///     vec3 low;
     ///     vec3 high;
     /// };
-
+    ///
     /// struct Material {
     ///     float alphaCutOff;
     ///     float metallic;
@@ -131,26 +131,10 @@ public:
     /// layout (set = 0, binding = 2) sampler2D texSampler[];
     /// @endcode
     const auto &getDescriptorSetLayout() const noexcept { return descriptorSetLayout; }
-    /// @brief Bind the vertex buffer, indices buffer and asset descriptor set on the provided command buffer
-    ///
-    /// Every ressource will be bind on vk::PipelineBindPoint::eGraphics
-    ///
-    /// @arg The command buffer used to bind the ressources
-    /// @arg The layout of the pipeline to use. Must be created using the Asset Storage descriptor set
-    /// layout to avoid validation layers erros
-    /// @arg The index of the descriptor set to be bind on
-    bool bindForGraphics(vk::CommandBuffer &cmd, const vk::PipelineLayout &pipelineLayout,
-                         std::uint32_t descriptorSet = 2);
-    /// @brief Bind the asset descriptor set on the provided command buffer
-    ///
-    /// Every ressource will be bind on vk::PipelineBindPoint::eCulling
-    ///
-    /// @arg The command buffer used to bind the ressources
-    /// @arg The layout of the pipeline to use. Must be created using the Asset Storage descriptor set
-    /// layout to avoid validation layers erros
-    /// @arg The index of the descriptor set to be bind on
-    bool bindForCompute(vk::CommandBuffer &cmd, const vk::PipelineLayout &pipelineLayout,
-                        std::uint32_t descriptorSet = 0);
+    const auto &getDescriptorSet() const noexcept { return descriptorSet; }
+
+    AllocatedBuffer<std::uint32_t> getIndexBuffer() const noexcept { return indicesBuffer; }
+    AllocatedBuffer<Vertex> getVertexBuffer() const noexcept { return vertexBuffer; }
 
     /// Return the path of all the models currently loaded in the CPU Storage
     auto getModelPaths() const

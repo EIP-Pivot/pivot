@@ -29,8 +29,7 @@ private:
     static vk::DescriptorSetLayout descriptorSetLayout;
 
 public:
-    /// @return Get the descritor set layout
-    static constexpr const vk::DescriptorSetLayout &getDescriptorSetLayout() noexcept { return descriptorSetLayout; }
+    using IResolver::IResolver;
 
     /// Initialize the ressources
     bool initialize(VulkanBase &, const AssetStorage &, DescriptorBuilder &) override;

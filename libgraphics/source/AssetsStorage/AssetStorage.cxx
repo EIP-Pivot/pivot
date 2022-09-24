@@ -10,26 +10,6 @@ AssetStorage::AssetStorage(VulkanBase &base): base_ref(base) {}
 
 AssetStorage::~AssetStorage() {}
 
-bool AssetStorage::bindForGraphics(vk::CommandBuffer &cmd, const vk::PipelineLayout &pipelineLayout,
-                                   std::uint32_t descriptorSetNb)
-{
-    if (!vertexBuffer || !indicesBuffer || !descriptorSet) return false;
-
-    vk::DeviceSize offset = 0;
-    cmd.bindVertexBuffers(0, vertexBuffer.buffer, offset);
-    cmd.bindIndexBuffer(indicesBuffer.buffer, 0, vk::IndexType::eUint32);
-    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, descriptorSetNb, descriptorSet, nullptr);
-    return true;
-}
-
-bool AssetStorage::bindForCompute(vk::CommandBuffer &cmd, const vk::PipelineLayout &pipelineLayout,
-                                  std::uint32_t descriptorSetNb)
-{
-    if (!descriptorSet) return false;
-    cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, pipelineLayout, descriptorSetNb, descriptorSet, nullptr);
-    return true;
-}
-
 bool AssetStorage::addAsset(const std::filesystem::path &path)
 {
     DEBUG_FUNCTION

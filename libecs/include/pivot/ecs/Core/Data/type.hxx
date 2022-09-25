@@ -64,6 +64,13 @@ struct Type : public std::variant<BasicType, RecordType> {
 
     /// Creates a default value corresponding to this type
     data::Value defaultValue() const;
+
+    /// \brief Check that this type is a subset of another type
+    ///
+    /// A type A is a subset of type B, iff every property of A is present in B,
+    /// and the type each property in A is a subset of the corresponding
+    /// property in B
+    bool isSubsetOf(const Type &other) const;
 };
 
 std::ostream &operator<<(std::ostream &stream, const BasicType &type);

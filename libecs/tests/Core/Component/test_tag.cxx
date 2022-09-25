@@ -26,5 +26,5 @@ TEST_CASE("Correct description for tag component", "[component][tag]")
     REQUIRE(value == Value{Record{{"name", new_tag_name}}});
 
     REQUIRE_THROWS(Helpers<Tag>::updateTypeWithValue(tag, Value{3}));
-    REQUIRE_THROWS(Helpers<Tag>::updateTypeWithValue(tag, Value{Record{}}));
+    REQUIRE_NOTHROW(Helpers<Tag>::updateTypeWithValue(tag, Value{Record{}}));
 }

@@ -49,7 +49,7 @@ public:
             if (entity < m_components.size()) m_component_exist.at(entity) = false;
         } else {
             auto value_type = value->type();
-            if (value_type != m_description.type) {
+            if (!value_type.isSubsetOf(m_description.type)) {
                 throw InvalidComponentValue(m_description.name, m_description.type, value_type);
             }
             if (entity >= m_components.size()) {

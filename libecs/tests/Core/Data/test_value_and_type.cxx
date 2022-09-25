@@ -30,3 +30,18 @@ TEST_CASE("Check that values and types work", "[data]")
                    {"void", Value{Void{}}}}};
     REQUIRE(t.defaultValue() == v);
 }
+
+TEST_CASE("Check that a type is a subset of another", "[ecs][data]")
+{
+    REQUIRE(Type{BasicType::Integer}.isSubsetOf(Type{BasicType::Integer}));
+    REQUIRE_FALSE(Type{BasicType::Integer}.isSubsetOf(Type{BasicType::Asset}));
+    REQUIRE_FALSE(Type{BasicType::Integer}.isSubsetOf(Type{RecordType{}}));
+    REQUIRE(Type{RecordType{}}.isSubsetOf(Type{RecordType{}}));
+    REQUIRE_FALSE(Type{RecordType{{"test", Type{BasicType::Integer}}}}.isSubsetOf(Type{RecordType{}}));
+    REQUIRE(Type{RecordType{{"test", Type{BasicType::Integer}}}}.isSubsetOf(
+        Type{RecordType{{"test", Type{BasicType::Integer}}}}));
+    REQUIRE_FALSE(Type{RecordType{{"test", Type{BasicType::Integer}}}}.isSubsetOf(
+        Type{RecordType{{"test", Type{BasicType::Asset}}}}));
+    REQUIRE(Type{RecordType{{"test", Type{BasicType::Integer}}}}.isSubsetOf(
+        Type{RecordType{{"test", Type{BasicType::Integer}}, {"other", Type{BasicType::Asset}}}}));
+}

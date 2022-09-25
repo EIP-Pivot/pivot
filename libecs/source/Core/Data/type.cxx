@@ -64,4 +64,19 @@ data::Value Type::defaultValue() const
         },
         static_cast<const Type::variant &>(*this));
 }
+
+bool Type::isSubsetOf(const Type &other) const
+{
+    if (const RecordType *record = std::get_if<RecordType>(this)) {
+        if (const RecordType *other_record = std::get_if<RecordType>(&other)) {
+            for (auto &[key, subtype]: *record) {
+                auto other_subtype = other_record->find(key);
+                if (other_subtype == other_record->end()) { return false; }
+                if (other_subtype->second != subtype) { return false; }
+            }
+            return true;
+        }
+    }
+    return *this == other;
+}
 }    // namespace pivot::ecs::data

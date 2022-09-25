@@ -1,8 +1,8 @@
-#include <imgui.h>
-#include <magic_enum.hpp>
 #include <boost/dll/runtime_symbol_info.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/range/iterator_range.hpp>
+#include <imgui.h>
+#include <magic_enum.hpp>
 
 // Must be after imgui
 #include <backends/imgui_impl_glfw.h>
@@ -74,9 +74,8 @@ Engine::Engine()
 
     auto current_entry = boost::dll::program_location().parent_path();
     auto find_asset_folder = [](const boost::filesystem::path &entry) -> std::optional<std::filesystem::path> {
-        for(auto& directory_entry : boost::make_iterator_range(boost::filesystem::directory_iterator(entry), {})) {
-            if (!boost::filesystem::is_directory(directory_entry))
-                continue;
+        for (auto &directory_entry: boost::make_iterator_range(boost::filesystem::directory_iterator(entry), {})) {
+            if (!boost::filesystem::is_directory(directory_entry)) continue;
             if (directory_entry.path().filename() == "assets")
                 return std::filesystem::path(directory_entry.path().string());
         }

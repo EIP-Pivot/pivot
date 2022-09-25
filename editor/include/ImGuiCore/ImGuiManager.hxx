@@ -14,7 +14,8 @@ class ImGuiManager
 {
 
 public:
-    ImGuiManager(const pivot::ecs::SceneManager &sceneManager, pivot::Engine &engine, const std::filesystem::path &asset_dir)
+    ImGuiManager(const pivot::ecs::SceneManager &sceneManager, pivot::Engine &engine,
+                 const std::filesystem::path &asset_dir)
         : m_sceneManager(sceneManager), m_engine(engine)
     {
         for (const auto &directoryEntry: std::filesystem::recursive_directory_iterator(asset_dir / "Editor")) {

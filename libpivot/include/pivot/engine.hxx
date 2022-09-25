@@ -57,6 +57,7 @@ protected:
     void setRenderArea(vk::Rect2D renderArea) { this->renderArea = renderArea; }
     ecs::CurrentScene getCurrentScene() { return m_scene_manager; };
     const ecs::SceneManager &getSceneManager() { return m_scene_manager; };
+
 private:
     ecs::SceneManager m_scene_manager;
     std::optional<graphics::DrawSceneInformation> m_current_scene_draw_command;

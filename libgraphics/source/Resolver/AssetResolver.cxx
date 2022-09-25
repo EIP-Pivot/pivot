@@ -8,7 +8,7 @@
 namespace pivot::graphics
 {
 
-bool AssetResolver::initialize(VulkanBase &base, const AssetStorage &stor, DescriptorBuilder &builder)
+bool AssetResolver::initialize(VulkanBase &base, const AssetStorage &stor, DescriptorBuilder &)
 {
 
     DEBUG_FUNCTION
@@ -23,7 +23,7 @@ bool AssetResolver::destroy(VulkanBase &)
     return true;
 }
 
-bool AssetResolver::prepareForDraw(const DrawSceneInformation &sceneInformation) { return true; }
+bool AssetResolver::prepareForDraw(const DrawSceneInformation &) { return true; }
 
 void AssetResolver::bind(vk::CommandBuffer &cmd)
 {

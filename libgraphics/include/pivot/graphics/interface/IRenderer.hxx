@@ -4,6 +4,7 @@
 #include "pivot/graphics/PipelineStorage.hxx"
 #include "pivot/graphics/ResolverDispatcher.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
+#include "pivot/graphics/types/vk_types.hxx"
 
 #include <vulkan/vulkan.hpp>
 

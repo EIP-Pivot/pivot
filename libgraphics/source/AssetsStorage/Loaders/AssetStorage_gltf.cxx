@@ -110,7 +110,7 @@ namespace pivot::graphics::loaders
 
 static std::vector<std::pair<std::string, asset::Model>>
 loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::vector<Vertex> &vertexBuffer,
-             std::vector<std::uint32_t> &indexBuffer, const glm::dmat4 &_matrix)
+             std::vector<Index> &indexBuffer, const glm::dmat4 &_matrix)
 {
     DEBUG_FUNCTION
     logger.debug("Asset Storage/Gltf") << "Loading node: " << node.name;

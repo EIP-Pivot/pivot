@@ -74,6 +74,6 @@ const std::vector<Vertex> quad_mesh_vertices = {
 };
 
 /// Indeices of the default mesh
-const std::vector<std::uint32_t> quad_mesh_indices = {0, 1, 2, 2, 3, 0};
+const std::vector<Index> quad_mesh_indices = {0, 1, 2, 2, 3, 0};
 
 }    // namespace pivot::graphics::asset

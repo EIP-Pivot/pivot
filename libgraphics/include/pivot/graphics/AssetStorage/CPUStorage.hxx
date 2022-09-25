@@ -42,7 +42,7 @@ public:
     /// Store the Vertex
     std::vector<Vertex> vertexStagingBuffer;
     /// Store the index of the buffer
-    std::vector<std::uint32_t> indexStagingBuffer;
+    std::vector<Index> indexStagingBuffer;
     /// Store the textures
     IndexedStorage<std::string, CPUTexture> textureStaging;
     /// Store the Materials

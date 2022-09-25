@@ -6,7 +6,7 @@
 namespace pivot::graphics
 {
 
-/// Managed the assets in the scene
+/// Manage the assets in the scene
 class AssetResolver : public IResolver
 {
 public:

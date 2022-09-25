@@ -131,9 +131,12 @@ public:
     /// layout (set = 0, binding = 2) sampler2D texSampler[];
     /// @endcode
     const auto &getDescriptorSetLayout() const noexcept { return descriptorSetLayout; }
+    /// Return the descriptor set
     const auto &getDescriptorSet() const noexcept { return descriptorSet; }
 
-    AllocatedBuffer<std::uint32_t> getIndexBuffer() const noexcept { return indicesBuffer; }
+    /// Return the index buffer
+    AllocatedBuffer<Index> getIndexBuffer() const noexcept { return indicesBuffer; }
+    /// Return the vertex buffer
     AllocatedBuffer<Vertex> getVertexBuffer() const noexcept { return vertexBuffer; }
 
     /// Return the path of all the models currently loaded in the CPU Storage
@@ -233,7 +236,7 @@ private:
     vk::DescriptorSetLayout descriptorSetLayout;
     vk::DescriptorSet descriptorSet;
     AllocatedBuffer<Vertex> vertexBuffer;
-    AllocatedBuffer<std::uint32_t> indicesBuffer;
+    AllocatedBuffer<Index> indicesBuffer;
     AllocatedBuffer<gpu_object::AABB> AABBBuffer;
     AllocatedBuffer<gpu_object::Material> materialBuffer;
 };

@@ -116,12 +116,9 @@ jobs:
           --target doc
 
       - name: Check no warnings
-        if: ${{github.event_name != 'workflow_dispatch'}}
         run: '! test -s ${{github.workspace}}/build/doxygen-warnings.log'
 
       - uses: actions/upload-artifact@v2
-        if: ${{contains(env.refsDocSaved, github.ref)
-          || github.event_name == 'workflow_dispatch'}}
         with:
           name: doc
           path: |

@@ -33,7 +33,7 @@ void DrawCallResolver::init(VulkanBase &base, AssetStorage &stor, DescriptorBuil
                        .bindBuffer(4, frame.spotLightBuffer.getBufferInfo(), vk::DescriptorType::eStorageBuffer,
                                    vk::ShaderStageFlagBits::eFragment)
                        .build(base_ref->get().device, frame.objectDescriptor, descriptorSetLayout);
-    pivot_assert(success, "Descriptor set failed to build.");
+    pivotAssertMsg(success, "Descriptor set failed to build.");
     vk_debug::setObjectName(base_ref->get().device, frame.objectDescriptor,
                             "Object Descriptor Set " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
     updateDescriptorSet(defaultBufferSize);
@@ -57,18 +57,18 @@ void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sce
     frame.packedDraws.clear();
     frame.pipelineBatch.clear();
 
-    pivot_assert(sceneInformation.renderObjects.objects.get().size() ==
-                     sceneInformation.renderObjects.exist.get().size(),
-                 "ECS Render Object arrays are invalid.");
-    pivot_assert(sceneInformation.transform.objects.get().size() == sceneInformation.transform.exist.get().size(),
-                 "ECS Transform arrays are invalid.");
-    pivot_assert(sceneInformation.pointLight.objects.get().size() == sceneInformation.pointLight.exist.get().size(),
-                 "ECS Point tights arrays are invalid.");
-    pivot_assert(sceneInformation.directionalLight.objects.get().size() ==
-                     sceneInformation.directionalLight.exist.get().size(),
-                 "ECS Directional lights arrays are invalid.");
-    pivot_assert(sceneInformation.spotLight.objects.get().size() == sceneInformation.spotLight.exist.get().size(),
-                 "ECS Spot light arrays are invalid.");
+    pivotAssertMsg(sceneInformation.renderObjects.objects.get().size() ==
+                       sceneInformation.renderObjects.exist.get().size(),
+                   "ECS Render Object arrays are invalid.");
+    pivotAssertMsg(sceneInformation.transform.objects.get().size() == sceneInformation.transform.exist.get().size(),
+                   "ECS Transform arrays are invalid.");
+    pivotAssertMsg(sceneInformation.pointLight.objects.get().size() == sceneInformation.pointLight.exist.get().size(),
+                   "ECS Point tights arrays are invalid.");
+    pivotAssertMsg(sceneInformation.directionalLight.objects.get().size() ==
+                       sceneInformation.directionalLight.exist.get().size(),
+                   "ECS Directional lights arrays are invalid.");
+    pivotAssertMsg(sceneInformation.spotLight.objects.get().size() == sceneInformation.spotLight.exist.get().size(),
+                   "ECS Spot light arrays are invalid.");
 
     for (unsigned i = 0;
          i < sceneInformation.renderObjects.objects.get().size() && i < sceneInformation.transform.objects.get().size();
@@ -114,15 +114,16 @@ void DrawCallResolver::prepareForDraw(DrawCallResolver::DrawSceneInformation sce
             }
         }
     }
-    pivot_assert(frame.packedDraws.size() == objectGPUData.size(), "Incorrect size between draw call and buffer data");
+    pivotAssertMsg(frame.packedDraws.size() == objectGPUData.size(),
+                   "Incorrect size between draw call and buffer data");
     if (objectGPUData.empty()) return;
     if (objectGPUData.size() > frame.currentBufferSize || objectGPUData.size() < frame.currentBufferSize / 2) {
         createBuffer(objectGPUData.size());
     }
     updateDescriptorSet(objectGPUData.size());
 
-    pivot_assert(frame.currentBufferSize > 0, "Buffer size is 0");
-    pivot_assert(frame.currentDescriptorSetSize > 0, "Descriptor set size are 0");
+    pivotAssertMsg(frame.currentBufferSize > 0, "Buffer size is 0");
+    pivotAssertMsg(frame.currentDescriptorSetSize > 0, "Descriptor set size are 0");
 
     base_ref->get().allocator.copyBuffer(frame.objectBuffer, std::span(objectGPUData));
 
@@ -178,7 +179,7 @@ void DrawCallResolver::createLightBuffer()
 
 void DrawCallResolver::updateDescriptorSet(vk::DeviceSize bufferSize)
 {
-    pivot_assert(bufferSize > 0, "Buffer size is 0");
+    pivotAssertMsg(bufferSize > 0, "Buffer size is 0");
     auto bufferInfo = frame.objectBuffer.getBufferInfo();
     auto indirectInfo = frame.indirectBuffer.getBufferInfo();
     auto omniLightInfo = frame.omniLightBuffer.getBufferInfo();

@@ -24,17 +24,19 @@ public:
     /// Default equality operator
     bool operator==(const Transform &) const = default;
 
-    /// Compute transform with root
+    /// Update this transform with an additional root
     Transform with_root(const Transform &root) const
     {
         return Transform::from_matrix(this->getModelMatrix() / root.getModelMatrix());
     }
 
+    /// Remove the root of this transform
     Transform remove_root(const Transform &root) const
     {
         return Transform::from_matrix(this->getModelMatrix() * root.getModelMatrix());
     }
 
+    /// Convert a transform matrix to a Transform object
     static Transform from_matrix(const glm::mat4 mat);
 
 private:
@@ -58,10 +60,13 @@ public:
     pivot::EntityRef root = EntityRef::empty();
 };
 
+/// Ostream overload for glm::vec3
 inline std::ostream &operator<<(std::ostream &os, const glm::vec3 &vec)
 {
     return os << "(" << vec.x << "," << vec.y << "," << vec.z << ")";
 }
+
+/// Ostream overload for Transform
 inline std::ostream &operator<<(std::ostream &os, const Transform &transform)
 {
     return os << "Position: " << transform.position << std::endl

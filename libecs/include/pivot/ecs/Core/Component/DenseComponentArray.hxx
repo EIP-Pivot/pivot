@@ -91,6 +91,7 @@ public:
         return parsed;
     }
 
+    /// Converts a C++ value to a pivot value
     data::Value unparseValue(const T &value) { return helpers::Helpers<T>::createValueFromType(value); }
 
 protected:

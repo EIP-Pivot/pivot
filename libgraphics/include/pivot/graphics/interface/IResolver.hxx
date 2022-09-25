@@ -71,7 +71,7 @@ public:
     virtual bool prepareForDraw(const DrawSceneInformation &information) = 0;
 
     /// Bind extra ressources to the command buffer
-    virtual void bind([[maybe_unused]] vk::CommandBuffer &cmd) {}
+    virtual void bind(vk::CommandBuffer &) {}
 
 protected:
     /// Reference to the dispatcher that uses the current resolver

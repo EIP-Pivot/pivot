@@ -1,6 +1,7 @@
 project(pivot-ecs)
 
 function(fetch_boost_library library)
+    set(BUILD_TESTING OFF)
     fetchcontent_declare(
         boost_${library}
         GIT_REPOSITORY https://github.com/boostorg/${library}.git

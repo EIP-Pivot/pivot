@@ -13,8 +13,7 @@ namespace pivot::graphics
 ImGuiRenderer::ImGuiRenderer(StorageUtils &utils): IGraphicsRenderer(utils) {}
 ImGuiRenderer::~ImGuiRenderer() {}
 
-bool ImGuiRenderer::onInit(const vk::Extent2D &, VulkanBase &base_ref, const vk::DescriptorSetLayout &,
-                           vk::RenderPass &pass)
+bool ImGuiRenderer::onInit(const vk::Extent2D &, VulkanBase &base_ref, const ResolverDispatcher &, vk::RenderPass &pass)
 {
     DEBUG_FUNCTION;
     IMGUI_CHECKVERSION();
@@ -40,14 +39,7 @@ void ImGuiRenderer::onStop(VulkanBase &base_ref)
     if (pool) base_ref.device.destroyDescriptorPool(pool);
 }
 
-bool ImGuiRenderer::onRecreate(const vk::Extent2D &size, VulkanBase &base,
-                               const vk::DescriptorSetLayout &descriptorSetLayout, vk::RenderPass &pass)
-{
-    onStop(base);
-    return onInit(size, base, descriptorSetLayout, pass);
-}
-
-bool ImGuiRenderer::onDraw(const RenderingContext &, const CameraData &, DrawCallResolver &, vk::CommandBuffer &cmd)
+bool ImGuiRenderer::onDraw(const RenderingContext &, const CameraData &, ResolverDispatcher &, vk::CommandBuffer &cmd)
 {
     vk_debug::beginRegion(cmd, "Imgui Commands", {1.f, 0.f, 0.f, 1.f});
     if (auto imguiData = ImGui::GetDrawData(); imguiData != nullptr) {

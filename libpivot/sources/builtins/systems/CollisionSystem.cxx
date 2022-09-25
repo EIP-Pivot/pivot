@@ -13,7 +13,7 @@ using namespace pivot::ecs;
 using namespace pivot::builtins::components;
 using namespace pivot::builtins::systems::details;
 using AABB = pivot::graphics::gpu_object::AABB;
-using Prefab = pivot::graphics::AssetStorage::Prefab;
+using Prefab = pivot::graphics::asset::Prefab;
 
 namespace
 {
@@ -33,7 +33,6 @@ std::vector<event::Event> collisionSystemImpl(std::reference_wrapper<const pivot
     std::vector<EntityAABB> entityAABB;
 
     for (Entity entity: collidableStorage.getData()) {
-        // std::raise(SIGTRAP);
         logger.trace() << "Retrieving AABB for entity " << entity;
         glm::vec3 position = transformArray[entity].position;
         auto &prefab_name = renderObjectArray[entity].meshID;

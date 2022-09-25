@@ -10,8 +10,8 @@
 #ifndef NDEBUG
     #define DEBUG_FUNCTION logger.trace(::function_name()) << "Entered";
 
-    #define PIVOT_VERIFY_IMPL(Always, Expression)                                                                    \
-        ((LIKELY(!!(Expression))) || ([]() {                                                                         \
+    #define PIVOT_VERIFY_IMPL(Capture, Always, Expression)                                                           \
+        ((LIKELY(!!(Expression))) || ([Capture]() {                                                                  \
                                          static std::atomic_bool bExecuted = false;                                  \
                                          if (!bExecuted && Always) {                                                 \
                                              bExecuted = true;                                                       \
@@ -22,8 +22,8 @@
                                      }()) &&                                                                         \
                                          ([]() { pivot::Platform::breakpoint(); }(), false))
 
-    #define PIVOT_VERIFY_FORMAT_IMPL(Always, Expression, ...)                                                    \
-        ((LIKELY(!!(Expression))) || ([]() {                                                                     \
+    #define PIVOT_VERIFY_FORMAT_IMPL(Capture, Always, Expression, ...)                                           \
+        ((LIKELY(!!(Expression))) || ([Capture]() {                                                              \
                                          static std::atomic_bool bExecuted = false;                              \
                                          if (!bExecuted && Always) {                                             \
                                              bExecuted = true;                                                   \
@@ -35,10 +35,10 @@
                                      }()) &&                                                                     \
                                          ([]() { pivot::Platform::breakpoint(); }(), false))
 
-    #define verify(Expression) PIVOT_VERIFY_IMPL(false, Expression)
-    #define verifyMsg(Expression, ...) PIVOT_VERIFY_FORMAT_IMPL(false, Expression, __VA_ARGS__)
-    #define verifyAlways(Expression) PIVOT_VERIFY_IMPL(true, Expression)
-    #define verifyAlwaysMsg(Expression, ...) PIVOT_VERIFY_FORMAT_IMPL(true, Expression, __VA_ARGS__)
+    #define verify(Expression) PIVOT_VERIFY_IMPL(, false, Expression)
+    #define verifyMsg(Expression, ...) PIVOT_VERIFY_FORMAT_IMPL(&, false, Expression, __VA_ARGS__)
+    #define verifyAlways(Expression) PIVOT_VERIFY_IMPL(, true, Expression)
+    #define verifyAlwaysMsg(Expression, ...) PIVOT_VERIFY_FORMAT_IMPL(&, true, Expression, __VA_ARGS__)
 
     #define PIVOT_ASSERT_IMPL(Always, Expression)                                            \
         {                                                                                    \

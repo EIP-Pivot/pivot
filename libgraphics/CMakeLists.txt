@@ -178,7 +178,6 @@ add_library(
     source/Window.cxx
     source/vk_utils.cxx
     source/vk_init.cxx
-    source/vk_debug.cxx
     source/VulkanRenderPass.cxx
     source/SwapchainSupportDetails.cxx
     source/PipelineBuilders/GraphicsPipelineBuilder.cxx
@@ -187,9 +186,9 @@ add_library(
     source/VulkanLoader.cxx
     source/VulkanSwapchain.cxx
     source/ThreadPool.cxx
+    source/AssetsStorage/CPUStorage.cxx
     source/AssetsStorage/AssetStorage.cxx
     source/AssetsStorage/AssetStorage_init.cxx
-    source/AssetsStorage/AssetStorage_CPUStorage.cxx
     source/AssetsStorage/AssetStorage_build.cxx
     source/AssetsStorage/Loaders/AssetStorage_obj.cxx
     source/AssetsStorage/Loaders/AssetStorage_png.cxx
@@ -209,7 +208,10 @@ add_library(
     source/DescriptorAllocator/DescriptorLayoutCache.cxx
     source/VulkanImmediateCommand.cxx
     source/culling.cxx
-    source/DrawCallResolver.cxx
+    source/Resolver/DrawCallResolver.cxx
+    source/Resolver/LightDataResolver.cxx
+    source/Resolver/AssetResolver.cxx
+    source/ResolverDispatcher.cxx
     source/PipelineStorage.cxx
 )
 

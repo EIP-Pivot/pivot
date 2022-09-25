@@ -1,4 +1,4 @@
-#include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/Loaders.hxx"
 
 #include "pivot/pivot.hxx"
 
@@ -108,9 +108,9 @@ static inline void fillIndexBuffer(const tinygltf::Buffer &buffer, const tinyglt
 namespace pivot::graphics::loaders
 {
 
-static std::vector<std::pair<std::string, AssetStorage::Model>>
+static std::vector<std::pair<std::string, asset::Model>>
 loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::vector<Vertex> &vertexBuffer,
-             std::vector<std::uint32_t> &indexBuffer, const glm::dmat4 &_matrix)
+             std::vector<Index> &indexBuffer, const glm::dmat4 &_matrix)
 {
     DEBUG_FUNCTION
     logger.debug("Asset Storage/Gltf") << "Loading node: " << node.name;
@@ -136,7 +136,7 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
             glm::translate(glm::dmat4(1.0f), translation) * glm::dmat4(rotation) * glm::scale(glm::dmat4(1.0f), scale);
     }
 
-    std::vector<std::pair<std::string, AssetStorage::Model>> loaded;
+    std::vector<std::pair<std::string, asset::Model>> loaded;
     for (const auto &i: node.children) {
         auto child = loadGltfNode(gltfModel, gltfModel.nodes.at(i), vertexBuffer, indexBuffer, matrix);
         loaded.insert(loaded.end(), child.begin(), child.end());
@@ -146,10 +146,9 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
     const auto &mesh = gltfModel.meshes.at(node.mesh);
     for (const tinygltf::Primitive &primitive: mesh.primitives) {
         /// TODO: support other primitive mode
-        if (primitive.mode != TINYGLTF_MODE_TRIANGLES)
-            throw AssetStorage::AssetStorageError("Primitive mode not supported !");
+        if (primitive.mode != TINYGLTF_MODE_TRIANGLES) throw LoaderError("Primitive mode not supported !");
 
-        AssetStorage::Model model{
+        asset::Model model{
             .mesh =
                 {
                     .vertexOffset = static_cast<std::uint32_t>(vertexBuffer.size()),
@@ -175,7 +174,7 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
 
             if (positionBuffer.empty()) throw std::logic_error("No verticies found in a mesh node");
             if (!colorBuffer.empty() && colorAccessor.type != TINYGLTF_PARAMETER_TYPE_FLOAT_VEC3)
-                throw AssetStorage::AssetStorageError("Unsupported color type");
+                throw LoaderError("Unsupported color type");
             if ((!normalsBuffer.empty() && positionBuffer.size() != normalsBuffer.size()) ||
                 (!texCoordsBuffer.empty() && positionBuffer.size() != texCoordsBuffer.size()) ||
                 (!colorBuffer.empty() && colorBuffer.size() != texCoordsBuffer.size())) {
@@ -216,7 +215,7 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
                 case TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE:
                     fillIndexBuffer<std::uint8_t>(buffer, accessor, bufferView, indexBuffer);
                     break;
-                default: throw AssetStorage::AssetStorageError("Index component type not supported!"); break;
+                default: throw LoaderError("Index component type not supported!"); break;
             }
         }
         /// End of Indices
@@ -226,13 +225,13 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
     return loaded;
 }
 
-static std::pair<std::string, AssetStorage::CPUMaterial> loadGltfMaterial(const std::vector<std::string> &texture,
-                                                                          const tinygltf::Material &mat)
+static std::pair<std::string, asset::CPUMaterial> loadGltfMaterial(const std::vector<std::string> &texture,
+                                                                   const tinygltf::Material &mat)
 {
-#define GET_MATERIAL_TEXTURE(value, name)                                                                  \
-    if (mat.value.find(#name) != mat.value.end()) {                                                        \
-        std::size_t idx = mat.value.at(#name).TextureIndex();                                              \
-        material.name = (texture.size() > idx) ? (texture.at(idx)) : (AssetStorage::missing_texture_name); \
+#define GET_MATERIAL_TEXTURE(value, name)                                                           \
+    if (mat.value.find(#name) != mat.value.end()) {                                                 \
+        std::size_t idx = mat.value.at(#name).TextureIndex();                                       \
+        material.name = (texture.size() > idx) ? (texture.at(idx)) : (asset::missing_texture_name); \
     }
 #define GET_MATERIAL_COLOR(value, name)                                           \
     if (mat.value.find(#name) != mat.value.end()) {                               \
@@ -243,7 +242,7 @@ static std::pair<std::string, AssetStorage::CPUMaterial> loadGltfMaterial(const 
     if (mat.value.find(#name) != mat.value.end()) { material.name = static_cast<float>(mat.value.at(#name).Factor()); }
 
     DEBUG_FUNCTION
-    AssetStorage::CPUMaterial material;
+    asset::CPUMaterial material;
 
     GET_MATERIAL_FACTOR(additionalValues, alphaCutOff);
 
@@ -265,15 +264,15 @@ static std::pair<std::string, AssetStorage::CPUMaterial> loadGltfMaterial(const 
     return std::make_pair(mat.name, material);
 }
 
-std::optional<AssetStorage::CPUStorage> loadGltfModel(const std::filesystem::path &path)
+std::optional<asset::CPUStorage> loadGltfModel(const std::filesystem::path &path)
 try {
     DEBUG_FUNCTION
 
-    AssetStorage::CPUStorage storage;
+    asset::CPUStorage storage;
     tinygltf::Model gltfModel;
     tinygltf::TinyGLTF gltfContext;
     std::string error, warning;
-    AssetStorage::Prefab prefab;
+    asset::Prefab prefab;
 
     bool isLoaded = gltfContext.LoadASCIIFromFile(&gltfModel, &error, &warning, path.string());
     if (!warning.empty()) logger.warn("Asset Storage/GLTF") << warning;

@@ -6,7 +6,6 @@
 #include <pivot/ecs/Core/SceneManager.hxx>
 #include <pivot/ecs/Core/Systems/index.hxx>
 
-#include <pivot/graphics/DrawCallResolver.hxx>
 #include <pivot/graphics/VulkanApplication.hxx>
 #include <pivot/graphics/types/AllocatedImage.hxx>
 
@@ -60,7 +59,7 @@ protected:
 
 private:
     ecs::SceneManager m_scene_manager;
-    std::optional<graphics::DrawCallResolver::DrawSceneInformation> m_current_scene_draw_command;
+    std::optional<graphics::DrawSceneInformation> m_current_scene_draw_command;
 
     bool isKeyPressed(const std::string &key) const;
     void onKeyPressed(graphics::Window &window, const graphics::Window::Key key, const graphics::Window::Modifier);

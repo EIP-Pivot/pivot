@@ -52,6 +52,10 @@ struct Vertex {
     static std::vector<vk::VertexInputAttributeDescription>
     getInputAttributeDescriptions(std::uint32_t binding, const VertexComponentFlags components);
 };
+
+/// The type of Index
+using Index = std::uint32_t;
+
 }    // namespace pivot::graphics
 
 ENABLE_FLAGS_FOR_ENUM(pivot::graphics::VertexComponentFlagBits);

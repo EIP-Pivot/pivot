@@ -1,4 +1,5 @@
-#include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/Loaders.hxx"
 
 #include "pivot/pivot.hxx"
 
@@ -8,26 +9,6 @@ namespace pivot::graphics
 AssetStorage::AssetStorage(VulkanBase &base): base_ref(base) {}
 
 AssetStorage::~AssetStorage() {}
-
-bool AssetStorage::bindForGraphics(vk::CommandBuffer &cmd, const vk::PipelineLayout &pipelineLayout,
-                                   std::uint32_t descriptorSetNb)
-{
-    if (!vertexBuffer || !indicesBuffer || !descriptorSet) return false;
-
-    vk::DeviceSize offset = 0;
-    cmd.bindVertexBuffers(0, vertexBuffer.buffer, offset);
-    cmd.bindIndexBuffer(indicesBuffer.buffer, 0, vk::IndexType::eUint32);
-    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, descriptorSetNb, descriptorSet, nullptr);
-    return true;
-}
-
-bool AssetStorage::bindForCompute(vk::CommandBuffer &cmd, const vk::PipelineLayout &pipelineLayout,
-                                  std::uint32_t descriptorSetNb)
-{
-    if (!descriptorSet) return false;
-    cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, pipelineLayout, descriptorSetNb, descriptorSet, nullptr);
-    return true;
-}
 
 bool AssetStorage::addAsset(const std::filesystem::path &path)
 {
@@ -89,7 +70,7 @@ bool AssetStorage::addTexture(const std::vector<std::filesystem::path> &path)
     return load == path.size();
 }
 
-std::optional<AssetStorage::CPUStorage> AssetStorage::loadModel(unsigned thread_id, const std::filesystem::path &path)
+std::optional<asset::CPUStorage> AssetStorage::loadModel(unsigned thread_id, const std::filesystem::path &path)
 try {
     auto extension = path.extension().string();
     if (!loaders::supportedObject.contains(extension))
@@ -102,7 +83,7 @@ try {
     return std::nullopt;
 }
 
-std::optional<AssetStorage::CPUStorage> AssetStorage::loadTexture(unsigned thread_id, const std::filesystem::path &path)
+std::optional<asset::CPUStorage> AssetStorage::loadTexture(unsigned thread_id, const std::filesystem::path &path)
 try {
     auto extension = path.extension().string();
     if (!loaders::supportedTexture.contains(extension))

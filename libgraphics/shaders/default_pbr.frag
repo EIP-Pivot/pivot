@@ -62,31 +62,31 @@ layout(push_constant) uniform readonly constants
 }
 cameraData;
 
-layout(std140, set = 0, binding = 1) readonly buffer ObjectMaterials
+layout(std140, set = 2, binding = 1) readonly buffer ObjectMaterials
 {
     Material materials[];
 }
 objectMaterials;
 
-layout(set = 0, binding = 2) uniform sampler2D texSampler[NUMBER_OF_TEXTURES];
+layout(set = 2, binding = 2) uniform sampler2D texSampler[NUMBER_OF_TEXTURES];
+
+layout(std140, set = 1, binding = 0) readonly buffer DirectLight
+{
+    DirectionalLight directionalLightArray[];
+}
+directLight;
+
+layout(std140, set = 1, binding = 1) readonly buffer SpoLight
+{
+    SpotLight spotLightArray[];
+}
+spotLight;
 
 layout(std140, set = 1, binding = 2) readonly buffer LightBuffer
 {
     PointLight pointLightArray[];
 }
 omniLight;
-
-layout(std140, set = 1, binding = 3) readonly buffer DirectLight
-{
-    DirectionalLight directionalLightArray[];
-}
-directLight;
-
-layout(std140, set = 1, binding = 4) readonly buffer SpoLight
-{
-    SpotLight spotLightArray[];
-}
-spotLight;
 
 #define PI 3.1415926535897932384626433832795
 

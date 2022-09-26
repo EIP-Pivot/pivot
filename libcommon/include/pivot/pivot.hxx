@@ -6,6 +6,7 @@
 
 #include "pivot/debug.hxx"
 #include "pivot/utility/assertion_macros.hxx"
+#include "pivot/utility/benchmark.hxx"
 
 #include "pivot/Compiler.hxx"
 #include "pivot/Platform.hxx"

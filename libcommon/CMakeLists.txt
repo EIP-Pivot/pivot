@@ -59,6 +59,7 @@ endif()
 add_library(
     ${PROJECT_NAME} STATIC
     sources/lib.cxx
+    sources/utility/benchmark.cxx
 
     # Select the correct platform to compile
     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:

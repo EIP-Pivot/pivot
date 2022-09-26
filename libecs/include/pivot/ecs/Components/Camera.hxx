@@ -6,6 +6,8 @@
 
 #include <pivot/ecs/Core/Component/description.hxx>
 
+#include <pivot/pivot.hxx>
+
 #ifndef PIVOT_MAX_PROJECTION_LIMIT
     #define PIVOT_MAX_PROJECTION_LIMIT 10000.0f
 #endif
@@ -54,6 +56,7 @@ public:
                                    float fCloseClippingPlane = PIVOT_MIN_PROJECTION_LIMIT,
                                    float fFarClippingPlane = PIVOT_MAX_PROJECTION_LIMIT) const
     {
+        DEBUG_FUNCTION
         return glm::perspective(glm::radians(fFOV), fAspectRatio, fCloseClippingPlane, fFarClippingPlane);
     }
 
@@ -63,6 +66,7 @@ public:
     /// @cond
     void updateCameraVectors()
     {
+        DEBUG_FUNCTION
         glm::vec3 tmpFront;
         tmpFront.x = static_cast<float>(std::cos(glm::radians(yaw)) * std::cos(glm::radians(pitch)));
         tmpFront.y = static_cast<float>(std::sin(glm::radians(pitch)));

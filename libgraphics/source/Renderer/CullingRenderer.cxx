@@ -30,6 +30,7 @@ void CullingRenderer::onStop(VulkanBase &base_ref)
 bool CullingRenderer::onDraw(const RenderingContext &, const CameraData &cameraData, ResolverDispatcher &dispatcher,
                              vk::CommandBuffer &cmd)
 {
+    DEBUG_FUNCTION
     const DrawCallResolver &resolver = dispatcher.get<DrawCallResolver>();
     const gpu_object::CullingPushConstant cullingCamera{
         .viewProjection = cameraData.viewProjection,

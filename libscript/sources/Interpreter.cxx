@@ -1,10 +1,12 @@
 #include "pivot/script/Interpreter.hxx"
-#include "magic_enum.hpp"
 #include "pivot/script/Builtins.hxx"
 #include "pivot/script/Exceptions.hxx"
 #include <cpplogger/Logger.hpp>
 #include <limits>
+#include <magic_enum.hpp>
 #include <unordered_map>
+
+#include "pivot/pivot.hxx"
 
 namespace pivot::ecs::script::interpreter
 {
@@ -63,6 +65,7 @@ const std::unordered_map<std::string, std::pair<BuiltinFunctionCallback, Paramet
 // This will go through a file's tree and register all component/system declarations into the global index
 std::vector<systems::Description> registerDeclarations(const Node &file, component::Index &componentIndex)
 {
+    DEBUG_FUNCTION
     std::vector<systems::Description> result;
     if (file.type != NodeType::File) {
         // std::cerr << std::format("registerDeclarations(const Node &file): can't interpret node {} (not a file)",
@@ -119,6 +122,7 @@ void Interpreter::executeSystem(const Node &systemEntry, const systems::Descript
                                 component::ArrayCombination::ComponentCombination &entityComponentCombination,
                                 event::EventWithComponent &trigger, Stack &stack)
 {
+    DEBUG_FUNCTION
     // systemComponents : [ "Position", "Velocity" ]
     // entity : [ PositionRecord, VelocityRecord ]
     logger.trace() << "Executing block " << systemEntry.value;
@@ -149,6 +153,7 @@ void Interpreter::executeSystem(const Node &systemEntry, const systems::Descript
 // Execute a statement (used for recursion for blocks)
 void Interpreter::executeStatement(const Node &statement, Stack &stack)
 {
+    DEBUG_FUNCTION
     if (statement.value == "functionCall") {
         executeFunction(statement, stack);
     } else if (statement.value == "if") {
@@ -255,6 +260,7 @@ void Interpreter::executeStatement(const Node &statement, Stack &stack)
 // Execute a function
 data::Value Interpreter::executeFunction(const Node &functionCall, const Stack &stack)
 {
+    DEBUG_FUNCTION
     if (functionCall.children.size() != 2) {    // should be [Variable, FunctionParams]
         logger.err("ERROR") << " at node " << functionCall.value;
         throw InvalidException("Invalid Function Statement: Expected callee and params children node.");
@@ -283,6 +289,7 @@ data::Value Interpreter::executeFunction(const Node &functionCall, const Stack &
 void validateParams(const std::vector<data::Value> &toValidate, size_t expectedSize,
                     const std::vector<std::vector<data::Type>> &expectedTypes, const std::string &name)
 {
+    DEBUG_FUNCTION
     if (expectedSize != std::numeric_limits<size_t>::max()) {    // limited number of parameters
         // check expected size
         if (toValidate.size() != expectedSize) {
@@ -317,6 +324,7 @@ void validateParams(const std::vector<data::Value> &toValidate, size_t expectedS
 // Register a component declaration node
 void registerComponentDeclaration(const Node &component, component::Index &componentIndex, const std::string &fileName)
 {
+    DEBUG_FUNCTION
     pivot::ecs::component::Description r = {
         .name = component.value, .type = data::BasicType::Boolean, .createContainer = arrayFunctor};
     // Either it is a one line component
@@ -355,6 +363,7 @@ void registerComponentDeclaration(const Node &component, component::Index &compo
 // Register a system declaration node
 systems::Description registerSystemDeclaration(const Node &system, const std::string &fileName)
 {
+    DEBUG_FUNCTION
     pivot::ecs::systems::Description sysDesc = {.name = system.value};
     size_t nbChildren = system.children.size();
     if (nbChildren < 6) {    // ??minimum system declaration node??
@@ -425,6 +434,7 @@ systems::Description registerSystemDeclaration(const Node &system, const std::st
 void consumeNode(const std::vector<Node> &children, size_t &childIndex, systems::Description &sysDesc,
                  event::Description &evtDesc, NodeType expectedType)
 {
+    DEBUG_FUNCTION
     if (childIndex >= children.size()) {    // TODO : for sure this -1 crashes, fix
         logger.err("ERROR") << " at line " << children.at(childIndex - 1).line_nb << " char "
                             << children.at(childIndex - 1).char_nb << ": '" << children.at(childIndex - 1).value << "'";
@@ -469,6 +479,7 @@ void consumeNode(const std::vector<Node> &children, size_t &childIndex, systems:
 
 data::Value valueOf(const Node &var, const Stack &stack)
 {    // get the data::Value version of a variable
+    DEBUG_FUNCTION
     if (var.type == NodeType::LiteralNumberVariable)
         return data::Value(std::stod(var.value));
     else if (var.type == NodeType::DoubleQuotedStringVariable)
@@ -492,6 +503,7 @@ data::Value valueOf(const Node &var, const Stack &stack)
 // Only binary operators are supported (which take 2 operands exactly)
 data::Value evaluateFactor(const data::Value &left, const data::Value &right, const std::string &op)
 {    // Return the result of the operation op on left and right
+    DEBUG_FUNCTION
     if (!gOperatorCallbacks.contains(op)) {
         logger.err("ERROR") << " with operator " << op;
         throw InvalidException("Unsupported Feature: This type of operator is not supported yet.");
@@ -502,6 +514,7 @@ data::Value evaluateFactor(const data::Value &left, const data::Value &right, co
 data::Value Interpreter::evaluateExpression(const Node &expr, const Stack &stack)
 {    // evaluate a postfix expression
     // assume expr.type is NodeType::Expression
+    DEBUG_FUNCTION
     if (expr.children.size() == 1) {    // only one variable in the expression, no operators
         if (expr.children.at(0).type == NodeType::FunctionCall)
             return executeFunction(expr.children.at(0), stack);
@@ -541,6 +554,7 @@ data::Value Interpreter::evaluateExpression(const Node &expr, const Stack &stack
 void expectNodeTypeValue(const std::vector<Node> &children, size_t &childIndex, NodeType expectedType,
                          const std::string &expectedValue, bool consume)
 {
+    DEBUG_FUNCTION
     if (childIndex == children.size()) {
         logger.err("ERROR") << " at line " << children.at(childIndex - 1).line_nb << " char "
                             << children.at(childIndex - 1).char_nb << ": '" << children.at(childIndex - 1).value << "'";
@@ -563,6 +577,7 @@ void expectNodeTypeValue(const std::vector<Node> &children, size_t &childIndex, 
 // Throw if the type of the targeted node isn't equal to the expected type
 void expectNodeType(const std::vector<Node> &children, size_t &childIndex, NodeType expectedType, bool consume)
 {
+    DEBUG_FUNCTION
     if (childIndex == children.size()) {
         logger.err("ERROR") << " at line " << children.at(childIndex - 1).line_nb << " char "
                             << children.at(childIndex - 1).char_nb << ": '" << children.at(childIndex - 1).value << "'";
@@ -581,6 +596,7 @@ void expectNodeType(const std::vector<Node> &children, size_t &childIndex, NodeT
 void expectNodeValue(const std::vector<Node> &children, size_t &childIndex, const std::string &expectedValue,
                      bool consume)
 {
+    DEBUG_FUNCTION
     if (childIndex == children.size()) {
         logger.err("ERROR") << " at line " << children.at(childIndex - 1).line_nb << " char "
                             << children.at(childIndex - 1).char_nb << ": '" << children.at(childIndex - 1).value << "'";

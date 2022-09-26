@@ -48,6 +48,7 @@ std::uint32_t VulkanSwapchain::nbOfImage() const
 
 std::uint32_t VulkanSwapchain::getNextImageIndex(const uint64_t maxDelay, vk::Semaphore semaphore)
 {
+    DEBUG_FUNCTION
     uint32_t imageIndex;
     vk::Result result;
 

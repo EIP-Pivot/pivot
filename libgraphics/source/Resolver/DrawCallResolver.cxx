@@ -45,6 +45,7 @@ bool DrawCallResolver::destroy(VulkanBase &)
 
 bool DrawCallResolver::prepareForDraw(const DrawSceneInformation &sceneInformation)
 {
+    DEBUG_FUNCTION
     std::vector<gpu_object::UniformBufferObject> objectGPUData;
     std::uint32_t drawCount = 0;
 
@@ -117,6 +118,7 @@ bool DrawCallResolver::prepareForDraw(const DrawSceneInformation &sceneInformati
 
 void DrawCallResolver::createBuffer(vk::DeviceSize bufferSize)
 {
+    DEBUG_FUNCTION
     base_ref->get().allocator.destroyBuffer(frame.indirectBuffer);
     base_ref->get().allocator.destroyBuffer(frame.objectBuffer);
 
@@ -131,6 +133,7 @@ void DrawCallResolver::createBuffer(vk::DeviceSize bufferSize)
 
 void DrawCallResolver::updateDescriptorSet()
 {
+    DEBUG_FUNCTION
     auto bufferInfo = frame.objectBuffer.getBufferInfo();
     auto indirectInfo = frame.indirectBuffer.getBufferInfo();
 

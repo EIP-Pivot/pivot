@@ -10,6 +10,7 @@ UniformBufferObject::UniformBufferObject(const Transform &transform, const Rende
     : modelMatrix(transform.getModelMatrix())
 
 {
+    DEBUG_FUNCTION
     const auto &model = assetStorage.get<asset::Model>(obj.meshID);
 
     if (!obj.materialIndex.empty()) {

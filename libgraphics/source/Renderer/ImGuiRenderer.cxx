@@ -41,6 +41,7 @@ void ImGuiRenderer::onStop(VulkanBase &base_ref)
 
 bool ImGuiRenderer::onDraw(const RenderingContext &, const CameraData &, ResolverDispatcher &, vk::CommandBuffer &cmd)
 {
+    DEBUG_FUNCTION;
     vk_debug::beginRegion(cmd, "Imgui Commands", {1.f, 0.f, 0.f, 1.f});
     if (auto imguiData = ImGui::GetDrawData(); imguiData != nullptr) {
         ImGui_ImplVulkan_RenderDrawData(imguiData, cmd);
@@ -79,6 +80,7 @@ void ImGuiRenderer::createDescriptorPool(vk::Device &device)
 
 void ImGuiRenderer::createImGuiContext(VulkanBase &base_ref, vk::RenderPass &pass)
 {
+    DEBUG_FUNCTION;
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
 

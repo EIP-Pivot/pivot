@@ -37,6 +37,7 @@ void GraphicsRenderer::onStop(VulkanBase &base_ref)
 bool GraphicsRenderer::onDraw(const RenderingContext &context, const CameraData &cameraData,
                               ResolverDispatcher &dispatcher, vk::CommandBuffer &cmd)
 {
+    DEBUG_FUNCTION;
     const LightDataResolver &light = dispatcher.get<LightDataResolver>();
     const DrawCallResolver &resolver = dispatcher.get<DrawCallResolver>();
 

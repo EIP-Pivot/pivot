@@ -23,10 +23,15 @@ bool AssetResolver::destroy(VulkanBase &)
     return true;
 }
 
-bool AssetResolver::prepareForDraw(const DrawSceneInformation &) { return true; }
+bool AssetResolver::prepareForDraw(const DrawSceneInformation &)
+{
+    DEBUG_FUNCTION;
+    return true;
+}
 
 void AssetResolver::bind(vk::CommandBuffer &cmd)
 {
+    DEBUG_FUNCTION
     vk::DeviceSize offset = 0;
     cmd.bindVertexBuffers(0, storage_ref->get().getVertexBuffer().buffer, offset);
     cmd.bindIndexBuffer(storage_ref->get().getIndexBuffer().buffer, 0, vk::IndexType::eUint32);

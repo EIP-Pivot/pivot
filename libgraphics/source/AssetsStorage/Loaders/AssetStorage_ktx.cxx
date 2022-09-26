@@ -7,6 +7,7 @@ namespace pivot::graphics::loaders
 
 std::optional<asset::CPUStorage> loadKtxImage(const std::filesystem::path &path)
 try {
+    DEBUG_FUNCTION
     asset::CPUStorage storage;
     asset::CPUTexture texture;
     ktxTexture *ktxTexture = nullptr;

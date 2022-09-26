@@ -64,6 +64,7 @@ VulkanApplication::~VulkanApplication()
 
 void VulkanApplication::init()
 {
+    DEBUG_FUNCTION
     VulkanBase::init({}, deviceExtensions, validationLayers);
     assetStorage.build(DescriptorBuilder(layoutCache, descriptorAllocator));
     initVulkanRessources();
@@ -99,6 +100,7 @@ void VulkanApplication::initVulkanRessources()
 
 void VulkanApplication::buildAssetStorage(AssetStorage::BuildFlags flags)
 {
+    DEBUG_FUNCTION
     device.waitIdle();
 
     assetStorage.build(DescriptorBuilder(layoutCache, descriptorAllocator), flags);
@@ -152,6 +154,7 @@ VulkanApplication::DrawResult VulkanApplication::draw(DrawSceneInformation scene
                                                       const CameraData &cameraData,
                                                       std::optional<vk::Rect2D> renderArea)
 try {
+    DEBUG_FUNCTION
     if (!verifyMsg(!graphicsRenderer.empty() && !computeRenderer.empty(), "No Renderers are setup")) {
         // This is technically a success, even thought nothing was drawn.
         return DrawResult::Success;

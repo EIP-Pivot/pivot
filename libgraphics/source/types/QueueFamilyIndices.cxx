@@ -5,6 +5,7 @@
 std::unordered_map<vk::QueueFlagBits, std::vector<std::uint32_t>>
 getAllAvailableQueues(const vk::PhysicalDevice &device)
 {
+    DEBUG_FUNCTION
     std::unordered_map<vk::QueueFlagBits, std::vector<std::uint32_t>> availableQueues;
     auto family_property_list = device.getQueueFamilyProperties();
     for (std::uint32_t i = 0; i < family_property_list.size(); ++i) {

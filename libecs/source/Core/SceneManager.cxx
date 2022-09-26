@@ -4,6 +4,7 @@ namespace pivot::ecs
 {
 SceneManager::SceneId SceneManager::registerScene(std::unique_ptr<Scene> scene)
 {
+    DEBUG_FUNCTION
     auto name = scene->getName();
     m_scenes.push_back(std::move(scene));
     SceneId id = SceneId(m_scenes.size() - 1);
@@ -23,6 +24,7 @@ SceneManager::SceneId SceneManager::registerScene()
 
 void SceneManager::unregisterScene(SceneId toDelete)
 {
+    DEBUG_FUNCTION
     if (toDelete >= m_scenes.size() || !m_scenes[toDelete].has_value())
         throw EcsException("Scene with id _" + std::to_string(toDelete) +
                            "_ doesn't exist. Register it before trying to delete it.");

@@ -6,6 +6,8 @@
 #include <pivot/ecs/Components/Gravity.hxx>
 #include <pivot/ecs/Components/RigidBody.hxx>
 
+#include <pivot/pivot.hxx>
+
 using namespace pivot::ecs;
 using namespace pivot::builtins::components;
 
@@ -14,6 +16,7 @@ namespace
 std::vector<event::Event> physicsSystemImpl(const systems::Description &, component::ArrayCombination &cmb,
                                             const event::EventWithComponent &event)
 {
+    DEBUG_FUNCTION
     auto dt = (float)std::get<double>(event.event.payload);
 
     auto gravityArray = dynamic_cast<component::DenseTypedComponentArray<Gravity> &>(cmb.arrays()[0].get()).getData();

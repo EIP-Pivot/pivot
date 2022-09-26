@@ -4,6 +4,8 @@
 #include <pivot/ecs/Core/Data/type.hxx>
 #include <pivot/ecs/Core/Data/value.hxx>
 
+#include "pivot/pivot.hxx"
+
 namespace pivot::ecs::data
 {
 
@@ -41,6 +43,7 @@ std::string Type::toString() const
 
 data::Value Type::defaultValue() const
 {
+    DEBUG_FUNCTION
     return std::visit(
         [](const auto &type) {
             using type_type = std::decay_t<decltype(type)>;
@@ -67,6 +70,7 @@ data::Value Type::defaultValue() const
 
 bool Type::isSubsetOf(const Type &other) const
 {
+    DEBUG_FUNCTION
     if (const RecordType *record = std::get_if<RecordType>(this)) {
         if (const RecordType *other_record = std::get_if<RecordType>(&other)) {
             for (auto &[key, subtype]: *record) {

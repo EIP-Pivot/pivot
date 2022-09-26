@@ -27,6 +27,7 @@ void Frame::initFrame(VulkanBase &base, DescriptorBuilder build, const AssetStor
 
 void Frame::destroy(VulkanBase &base, vk::CommandPool &pool)
 {
+    DEBUG_FUNCTION
     dispatcher.destroy(base);
     base.device.freeCommandBuffers(pool, cmdBuffer);
     base.device.destroyFence(inFlightFences);

@@ -8,10 +8,11 @@ namespace pivot::graphics
 VulkanBase::VulkanBase(const std::string &windowName, const bool bForceValidation)
     : VulkanLoader(), VulkanImmediateCommand(), window(windowName, 800, 600)
 {
+    DEBUG_FUNCTION
     bEnableValidationLayers |= bForceValidation;
 }
 
-VulkanBase::~VulkanBase() {}
+VulkanBase::~VulkanBase() { DEBUG_FUNCTION }
 
 void VulkanBase::init(const std::vector<const char *> &instanceExtensions,
                       const std::vector<const char *> &deviceExtensions,

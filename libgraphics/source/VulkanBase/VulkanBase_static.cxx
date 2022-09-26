@@ -58,6 +58,7 @@ std::uint32_t VulkanBase::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT m
 
 bool VulkanBase::checkValidationLayerSupport(const std::vector<const char *> &validationLayers)
 {
+    DEBUG_FUNCTION
     auto availableLayers = vk::enumerateInstanceLayerProperties();
 
     for (const char *layerName: validationLayers) {
@@ -109,6 +110,7 @@ bool VulkanBase::isDeviceSuitable(const vk::PhysicalDevice &gpu, const vk::Surfa
 
 std::uint32_t VulkanBase::rateDeviceSuitability(const vk::PhysicalDevice &gpu)
 {
+    DEBUG_FUNCTION
     vk::PhysicalDeviceProperties deviceProperties = gpu.getProperties();
     vk::PhysicalDeviceFeatures deviceFeatures = gpu.getFeatures();
     int32_t score = 0;

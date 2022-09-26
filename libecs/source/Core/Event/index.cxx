@@ -1,5 +1,7 @@
 #include "pivot/ecs/Core/Event/index.hxx"
 
+#include "pivot/pivot.hxx"
+
 namespace pivot::ecs::event
 {
 
@@ -10,6 +12,7 @@ Index::DuplicateError::DuplicateError(const std::string &eventName)
 
 void Index::registerEvent(const Description &description)
 {
+    DEBUG_FUNCTION
     description.validate();
     if (m_events.contains(description.name)) { throw DuplicateError(description.name); }
     m_events.insert({description.name, description});
@@ -17,6 +20,7 @@ void Index::registerEvent(const Description &description)
 
 std::optional<Description> Index::getDescription(const std::string &eventName) const
 {
+    DEBUG_FUNCTION
     auto it = m_events.find(eventName);
     if (it == m_events.end()) {
         return std::nullopt;
@@ -31,6 +35,7 @@ Index::const_iterator Index::end() const { return m_events.end(); }
 
 std::vector<std::string> Index::getAllEventsNames() const
 {
+    DEBUG_FUNCTION
     std::vector<std::string> names;
     names.reserve(m_events.size());
     for (auto &[key, value]: m_events) { names.push_back(key); }

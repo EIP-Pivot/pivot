@@ -11,6 +11,7 @@ batch_load(const std::unordered_map<std::string, std::filesystem::path> &storage
            const std::function<std::optional<asset::CPUStorage>(unsigned, const std::filesystem::path &)> load,
            const std::string &debug_name, ThreadPool &threadPool)
 {
+    DEBUG_FUNCTION
     asset::CPUStorage cpuStorage;
     std::vector<std::pair<std::filesystem::path, std::future<std::optional<asset::CPUStorage>>>> futures;
     futures.reserve(storage_map.size());
@@ -99,6 +100,7 @@ template <typename T>
 static void copy_with_staging_buffer(VulkanBase &base_ref, vk::BufferUsageFlags flag, std::vector<T> &data,
                                      AllocatedBuffer<T> &buffer)
 {
+    DEBUG_FUNCTION
     auto true_size = data.size();
     auto staging = base_ref.allocator.createBuffer<T>(
         true_size, vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst,

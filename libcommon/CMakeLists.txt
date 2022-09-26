@@ -3,7 +3,7 @@ project(pivot-common)
 fetchcontent_declare(
     logger
     GIT_REPOSITORY https://github.com/zcorniere/logger-cpp.git
-    GIT_TAG v1.0.0
+    GIT_TAG v1.0.1
 )
 fetchcontent_getproperties(logger)
 if(NOT logger_POPULATED)

@@ -26,6 +26,7 @@
 #include "ImGuiCore/SystemsEditor.hxx"
 
 #include <pivot/engine.hxx>
+#include <pivot/utility/benchmark.hxx>
 
 using namespace pivot::ecs;
 using Window = pivot::graphics::Window;
@@ -50,6 +51,7 @@ public:
 
     void init()
     {
+        PROFILE_FUNCTION();
         auto &window = m_vulkan_application.window;
 
         Scene &scene = *getCurrentScene();
@@ -104,6 +106,7 @@ public:
 
     void processKeyboard(const pivot::builtins::Camera::Movement direction, float dt) noexcept
     {
+        PROFILE_FUNCTION();
         using Camera = pivot::builtins::Camera;
         switch (direction) {
             case Camera::Movement::FORWARD: {
@@ -131,6 +134,7 @@ public:
 
     void UpdateCamera(float dt)
     {
+        PROFILE_FUNCTION();
         using Camera = pivot::builtins::Camera;
         try {
             if (button.test(static_cast<std::size_t>(Window::Key::Z)))
@@ -154,6 +158,7 @@ public:
 
     void onTick(float dt) override
     {
+        PROFILE_FUNCTION();
         imGuiTheme.setStyle();
         if (!menuBar.render()) {
             imGuiManager.reset();
@@ -186,11 +191,23 @@ public:
         });
     }
 
-    void onFrameStart() { imGuiManager.newFrame(); }
+    void onFrameStart()
+    {
+        PROFILE_FUNCTION();
+        imGuiManager.newFrame();
+    }
 
-    void onFrameEnd() { ImGuiManager::render(); }
+    void onFrameEnd()
+    {
+        PROFILE_FUNCTION();
+        ImGuiManager::render();
+    }
 
-    void onReset() override { imGuiManager.reset(); }
+    void onReset() override
+    {
+        PROFILE_FUNCTION();
+        imGuiManager.reset();
+    }
 
 public:
     ImGuiManager imGuiManager;
@@ -210,6 +227,8 @@ public:
 
 int main(int argc, const char *argv[])
 {
+    pivot::benchmark::Instrumentor::get().beginSession("Pivot_Startup.json");
+
     auto cmdLineArg = getCmdLineArg(argc, argv);
     logger.start(cmdLineArg.verbosity);
     Application app;
@@ -221,6 +240,13 @@ int main(int argc, const char *argv[])
     app.changeCurrentScene(sceneId);
 
     app.init();
+    pivot::benchmark::Instrumentor::get().endSession();
+
+    pivot::benchmark::Instrumentor::get().beginSession("Pivot_Runtime.json");
+
     app.run();
+
+    pivot::benchmark::Instrumentor::get().endSession();
+
     return 0;
 }

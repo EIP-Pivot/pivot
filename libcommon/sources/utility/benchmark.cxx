@@ -24,12 +24,15 @@ void Instrumentor::endSession()
 
 void Instrumentor::writeResult(TimerResult result)
 {
+    if (!verifyMsg(outputStream.is_open(), "No session are started !")) return;
+
     std::unique_lock<std::mutex> lock(mutex);
     if (profileCount++ > 0) outputStream << ",";
 
     std::string name = result.name;
     std::replace(name.begin(), name.end(), '"', '\'');
 
+    // No need to do fancy json serialization, we want to be as fast as possible
     outputStream << "{\"cat\":\"function\",\"dur\":" << (result.end_timestamp - result.start_timestamp)
                  << ",\"name\":\"" << name << "\",\"ph\":\"X\",\"pid\":0,\"tid\":" << result.threadId
                  << ",\"ts\":" << result.start_timestamp << "}";

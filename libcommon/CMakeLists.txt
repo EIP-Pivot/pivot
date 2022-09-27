@@ -70,6 +70,11 @@ add_library(
 
 target_pivot_compile_option(${PROJECT_NAME})
 
+if(DEFINED ENV{CI})
+    message(STATUS "Benchmark macros - disabled")
+    target_compile_definitions(${PROJECT_NAME} PUBLIC NO_BENCHMARK)
+endif()
+
 target_link_libraries(${PROJECT_NAME} PUBLIC logger glm magic_enum)
 
 target_precompile_headers(

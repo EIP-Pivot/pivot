@@ -3,6 +3,7 @@ on: push
 
 jobs:
   build:
+    needs: [format, documentation]
     env:
       VULKAN_SDK: C:/VulkanSDK
 
@@ -75,7 +76,6 @@ jobs:
         run: ctest -C ${{ matrix.build_type }} -T test --output-on-failure
 
   format:
-    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -84,7 +84,6 @@ jobs:
         uses: jidicula/clang-format-action@v4.6.0
 
   documentation:
-    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Install dependencies
@@ -119,6 +118,7 @@ jobs:
         run: '! test -s ${{github.workspace}}/build/doxygen-warnings.log'
 
       - uses: actions/upload-artifact@v2
+        if: ${{ github.ref == 'refs/heads/dev' }}
         with:
           name: doc
           path: |
@@ -129,6 +129,7 @@ jobs:
   coverage:
     needs: build
     runs-on: ubuntu-20.04
+    if: ${{github.event_name == 'workflow_dispatch'}}
     steps:
       - name: Install dependencies - Linux
         run: |
@@ -164,4 +165,4 @@ jobs:
           name: coverage
           path: |
             ${{github.workspace}}/build/coverage
-          retention-days: 4
+          retention-days: 1

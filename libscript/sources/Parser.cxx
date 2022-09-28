@@ -815,7 +815,7 @@ void Parser::expectSystemTokenValue(const std::string &expectedValue, Token &las
 }
 
 bool Parser::isDeclarationOver()
-{                           // Is there no more tokens, or is the first the end of the declaration
+{    // Is there no more tokens, or is the first the end of the declaration
     DEBUG_FUNCTION
     if (_tokens.empty())    // No more tokens
         return true;

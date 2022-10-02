@@ -4,6 +4,7 @@
 
 MenuBar::MenuBar(const pivot::ecs::SceneManager &sceneManager, pivot::Engine &engine)
 {
+    PROFILE_FUNCTION();
     fileSubMenu = std::unordered_map<std::string, std::vector<FileInteraction>>{
         {
             "File",
@@ -63,6 +64,7 @@ MenuBar::MenuBar(const pivot::ecs::SceneManager &sceneManager, pivot::Engine &en
 
 bool MenuBar::render()
 {
+    PROFILE_FUNCTION();
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{10.0f, 10.0f});
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5.0f, 5.0f));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
@@ -100,6 +102,7 @@ bool MenuBar::render()
 
 MenuBar::FileResult MenuBar::FileInteraction::open() const
 {
+    PROFILE_FUNCTION();
     NFD::Guard nfd_guard;
     NFD::UniquePath path;
     nfdresult_t result = nfdresult_t::NFD_ERROR;

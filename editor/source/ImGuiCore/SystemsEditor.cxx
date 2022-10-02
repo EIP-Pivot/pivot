@@ -6,6 +6,7 @@
 
 void SystemsEditor::create()
 {
+    PROFILE_FUNCTION();
     ImGui::Begin(" Systems ");
     ImGuiTheme::setDefaultFramePadding();
     displaySystem();
@@ -17,6 +18,7 @@ void SystemsEditor::create()
 
 void SystemsEditor::createPopUp()
 {
+    PROFILE_FUNCTION();
     auto &sm = m_scene->getSystemManager();
     if (ImGui::BeginPopup("AddSystem")) {
         for (const auto &[name, description]: m_systemIndex) {
@@ -30,6 +32,7 @@ void SystemsEditor::createPopUp()
 
 void SystemsEditor::displaySystem()
 {
+    PROFILE_FUNCTION();
     auto &sm = m_scene->getSystemManager();
     for (const auto &[name, description]: sm) {
         if (ImGui::TreeNode(name.c_str())) ImGui::TreePop();

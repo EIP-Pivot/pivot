@@ -133,27 +133,26 @@ public:
     }
 
     void UpdateCamera(float dt)
-    {
+    try {
         PROFILE_FUNCTION();
         using Camera = pivot::builtins::Camera;
-        try {
-            if (button.test(static_cast<std::size_t>(Window::Key::Z)))
-                processKeyboard(Camera::FORWARD, dt);
-            else if (button.test(static_cast<std::size_t>(Window::Key::S)))
-                processKeyboard(Camera::BACKWARD, dt);
 
-            if (button.test(static_cast<std::size_t>(Window::Key::Q)))
-                processKeyboard(Camera::LEFT, dt);
-            else if (button.test(static_cast<std::size_t>(Window::Key::D)))
-                processKeyboard(Camera::RIGHT, dt);
+        if (button.test(static_cast<std::size_t>(Window::Key::Z)))
+            processKeyboard(Camera::FORWARD, dt);
+        else if (button.test(static_cast<std::size_t>(Window::Key::S)))
+            processKeyboard(Camera::BACKWARD, dt);
 
-            if (button.test(static_cast<std::size_t>(Window::Key::SPACE)))
-                processKeyboard(Camera::UP, dt);
-            else if (button.test(static_cast<std::size_t>(Window::Key::LEFT_SHIFT)))
-                processKeyboard(Camera::DOWN, dt);
-        } catch (const std::exception &e) {
-            std::cerr << e.what() << std::endl;
-        }
+        if (button.test(static_cast<std::size_t>(Window::Key::Q)))
+            processKeyboard(Camera::LEFT, dt);
+        else if (button.test(static_cast<std::size_t>(Window::Key::D)))
+            processKeyboard(Camera::RIGHT, dt);
+
+        if (button.test(static_cast<std::size_t>(Window::Key::SPACE)))
+            processKeyboard(Camera::UP, dt);
+        else if (button.test(static_cast<std::size_t>(Window::Key::LEFT_SHIFT)))
+            processKeyboard(Camera::DOWN, dt);
+    } catch (const std::exception &e) {
+        logger.err(pivot::utils::function_name()) << e.what();
     }
 
     void onTick(float dt) override
@@ -191,13 +190,13 @@ public:
         });
     }
 
-    void onFrameStart()
+    void onFrameStart() override
     {
         PROFILE_FUNCTION();
         imGuiManager.newFrame();
     }
 
-    void onFrameEnd()
+    void onFrameEnd() override
     {
         PROFILE_FUNCTION();
         ImGuiManager::render();
@@ -227,6 +226,7 @@ public:
 
 int main(int argc, const char *argv[])
 {
+    pivot::benchmark::Instrumentor::get().setThreadName("Editor thread");
     pivot::benchmark::Instrumentor::get().beginSession("Pivot_Startup.json");
 
     auto cmdLineArg = getCmdLineArg(argc, argv);

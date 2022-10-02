@@ -36,14 +36,19 @@ public:
     void endSession();
     void writeResult(TimerResult result);
 
+    std::string getThreadName(const std::thread::id &id = std::this_thread::get_id()) const;
+    void setThreadName(const std::string &name, const std::thread::id &id = std::this_thread::get_id());
+    void clearThreadName(const std::thread::id &id = std::this_thread::get_id());
+
 private:
     void writeHeader();
     void writeFooter();
 
 private:
-    std::mutex mutex;
-    std::ofstream outputStream;
     int profileCount = 0;
+    mutable std::recursive_mutex mutex;
+    std::ofstream outputStream;
+    std::unordered_map<std::thread::id, std::string> thread_names;
 };
 
 class Timer

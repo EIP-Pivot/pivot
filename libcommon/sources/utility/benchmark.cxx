@@ -26,7 +26,7 @@ void Instrumentor::writeResult(TimerResult result)
 {
     if (!verifyMsg(outputStream.is_open(), "No session are started !")) return;
 
-    std::unique_lock<std::mutex> lock(mutex);
+    std::unique_lock lock(mutex);
     if (profileCount++ > 0) outputStream << ",";
 
     std::string name = result.name;
@@ -34,10 +34,26 @@ void Instrumentor::writeResult(TimerResult result)
 
     // No need to do fancy json serialization, we want to be as fast as possible
     outputStream << "{\"cat\":\"function\",\"dur\":" << (result.end_timestamp - result.start_timestamp)
-                 << ",\"name\":\"" << name << "\",\"ph\":\"X\",\"pid\":0,\"tid\":" << result.threadId
-                 << ",\"ts\":" << result.start_timestamp << "}";
+                 << ",\"name\":\"" << name << "\",\"ph\":\"X\",\"pid\":0,\"tid\": \"" << getThreadName(result.threadId)
+                 << "\",\"ts\":" << result.start_timestamp << "}";
 
     outputStream.flush();
+}
+
+std::string Instrumentor::getThreadName(const std::thread::id &id) const
+{
+    std::unique_lock lock(mutex);
+    return (thread_names.contains(id)) ? (thread_names.at(id)) : (std::to_string(std::hash<std::thread::id>()(id)));
+}
+void Instrumentor::setThreadName(const std::string &name, const std::thread::id &id)
+{
+    std::unique_lock lock(mutex);
+    thread_names[id] = name;
+}
+void Instrumentor::clearThreadName(const std::thread::id &id)
+{
+    std::unique_lock lock(mutex);
+    thread_names.erase(id);
 }
 
 void Instrumentor::writeHeader()

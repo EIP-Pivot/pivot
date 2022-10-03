@@ -34,7 +34,7 @@ static int translate_key(int key, int scancode)
 namespace pivot::graphics
 {
 
-Window::Window(std::string n, unsigned w, unsigned h): windowName(std::move(n)) { initWindow(w, h); }
+Window::Window(std::string n, unsigned w, unsigned h) { initWindow(n, w, h); }
 
 Window::~Window()
 {
@@ -43,15 +43,36 @@ Window::~Window()
     glfwTerminate();
 }
 
+void Window::initWindow(const std::string &name, unsigned width, unsigned height)
+{
+    DEBUG_FUNCTION();
+    windowName = name;
+    glfwInit();
+    this->setErrorCallback(error_callback);
+
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    window = glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);
+    if (!window) throw WindowError("Failed to create a GLFW window !");
+
+    this->setUserPointer(this);
+    this->setKeyCallback(keyboard_callback);
+    this->setCursorPosCallback(cursor_callback);
+    this->setResizeCallback(resize_callback);
+}
+
 vk::SurfaceKHR Window::createSurface(const vk::Instance &instance)
 {
     DEBUG_FUNCTION();
-    VkSurfaceKHR surface{};
+    pivotAssert(window);
+
+    VkSurfaceKHR surface;
     if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
         throw std::runtime_error("failed to create surface");
     }
     return surface;
 }
+
+void Window::addResizeCallback(ResizeEvent event) { resizeEventCallback.push_back(event); }
 
 void Window::addKeyPressCallback(Window::Key key, Window::KeyEvent event) { keyPressMap[key].push_back(event); }
 void Window::addGlobalKeyPressCallback(Window::KeyEvent event) { globalKeyPressMap.push_back(event); }
@@ -63,18 +84,23 @@ void Window::addMouseMovementCallback(Window::MouseEvent event) { mouseCallback.
 
 void Window::setTitle(const std::string &t) noexcept
 {
+    pivotAssert(window);
+
     windowName = t;
     glfwSetWindowTitle(window, windowName.c_str());
 }
 
 void Window::setIcon(const std::span<const GLFWimage> &images) noexcept
 {
+    pivotAssert(window);
     glfwSetWindowIcon(window, images.size(), images.data());
 }
 
 void Window::setIcon(const std::span<const std::string> &windowIcons)
 {
     DEBUG_FUNCTION();
+    pivotAssert(window);
+
     std::vector<GLFWimage> images;
     for (const auto &icon: windowIcons) {
         int texWidth, texHeight, texChannels;
@@ -101,6 +127,8 @@ vk::Extent2D Window::getSize() const noexcept
 
 void Window::captureCursor(bool capture) noexcept
 {
+    pivotAssert(window);
+
     if (capture) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     } else {
@@ -118,27 +146,28 @@ std::vector<const char *> Window::getRequiredExtensions()
     return {glfwExtentsions, glfwExtentsions + glfwExtensionCount};
 }
 
-void Window::setKeyCallback(GLFWkeyfun &&f) noexcept { glfwSetKeyCallback(window, f); }
-void Window::setCursorPosCallback(GLFWcursorposfun &&f) noexcept { glfwSetCursorPosCallback(window, f); }
-void Window::setResizeCallback(GLFWwindowsizefun &&f) noexcept { glfwSetFramebufferSizeCallback(window, f); }
+void Window::setKeyCallback(GLFWkeyfun &&f) noexcept
+{
+    pivotAssert(window);
+    glfwSetKeyCallback(window, f);
+}
+void Window::setCursorPosCallback(GLFWcursorposfun &&f) noexcept
+{
+    pivotAssert(window);
+    glfwSetCursorPosCallback(window, f);
+}
+void Window::setResizeCallback(GLFWwindowsizefun &&f) noexcept
+{
+    pivotAssert(window);
+    glfwSetFramebufferSizeCallback(window, f);
+}
 
 void Window::setErrorCallback(GLFWerrorfun &&f) noexcept { glfwSetErrorCallback(f); }
 
-void Window::setUserPointer(void *ptr) noexcept { glfwSetWindowUserPointer(window, ptr); }
-
-void Window::initWindow(const unsigned width, const unsigned height)
+void Window::setUserPointer(void *ptr) noexcept
 {
-    DEBUG_FUNCTION();
-    glfwInit();
-    this->setErrorCallback(error_callback);
-
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    window = glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);
-    if (!window) throw WindowError("Failed to create a GLFW window !");
-
-    this->setUserPointer(this);
-    this->setKeyCallback(keyboard_callback);
-    this->setCursorPosCallback(cursor_callback);
+    pivotAssert(window);
+    glfwSetWindowUserPointer(window, ptr);
 }
 
 glm::ivec2 Window::updateSize() const noexcept
@@ -189,4 +218,11 @@ void Window::keyboard_callback(GLFWwindow *win, int key, int scancode, int actio
     }
 #undef FOR_EACH
 }
+
+void Window::resize_callback(GLFWwindow *win, int width, int height)
+{
+    auto window = static_cast<Window *>(glfwGetWindowUserPointer(win));
+    for (auto &&fn: window->resizeEventCallback) fn(*window, glm::i32vec2(width, height));
+}
+
 }    // namespace pivot::graphics

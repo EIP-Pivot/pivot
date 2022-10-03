@@ -20,6 +20,10 @@ using Ref = std::reference_wrapper<T>;
 template <typename T>
 using OptionalRef = std::optional<Ref<T>>;
 
+template <class...>
+/// Used to error out in constexpr if
+constexpr std::false_type always_false{};
+
 }    // namespace pivot
 
 #ifndef NDEBUG

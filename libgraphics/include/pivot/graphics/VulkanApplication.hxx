@@ -105,7 +105,7 @@ public:
         } else if constexpr (std::is_base_of_v<IComputeRenderer, T>) {
             computeRenderer.emplace_back(std::move(rendy));
         } else {
-            throw std::logic_error("Unsuported Renderer : " + rendy->getType());
+            static_assert(always_false<T>, "Unsupported Renderer !");
         }
         return ret;
     }

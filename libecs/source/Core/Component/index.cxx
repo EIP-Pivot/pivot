@@ -33,7 +33,7 @@ Index::const_iterator Index::end() const { return m_components.end(); }
 
 std::vector<std::string> Index::getAllComponentsNames() const
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     std::vector<std::string> names;
     names.reserve(m_components.size());
     for (auto &[key, value]: m_components) { names.push_back(key); }

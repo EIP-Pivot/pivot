@@ -22,7 +22,7 @@ VulkanSwapchain::~VulkanSwapchain()
 void VulkanSwapchain::create(const vk::Extent2D &size, vk::PhysicalDevice &gpu, vk::Device &device,
                              vk::SurfaceKHR &surface)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     this->device = device;
     createSwapchain(size, gpu, surface);
     getImages();
@@ -34,7 +34,7 @@ void VulkanSwapchain::destroy() { chainDeletionQueue.flush(); }
 void VulkanSwapchain::recreate(const vk::Extent2D &size, vk::PhysicalDevice &gpu, vk::Device &device,
                                vk::SurfaceKHR &surface)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     destroy();
     create(size, gpu, device, surface);
 }
@@ -48,7 +48,7 @@ std::uint32_t VulkanSwapchain::nbOfImage() const
 
 std::uint32_t VulkanSwapchain::getNextImageIndex(const uint64_t maxDelay, vk::Semaphore semaphore)
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     uint32_t imageIndex;
     vk::Result result;
 
@@ -59,7 +59,7 @@ std::uint32_t VulkanSwapchain::getNextImageIndex(const uint64_t maxDelay, vk::Se
 
 void VulkanSwapchain::createSwapchain(const vk::Extent2D &size, vk::PhysicalDevice &gpu, vk::SurfaceKHR &surface)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     pivotAssertMsg(device, "Vulkan Device not created");
 
     auto indices = QueueFamilyIndices::findQueueFamilies(gpu, surface);
@@ -114,7 +114,7 @@ void VulkanSwapchain::createSwapchain(const vk::Extent2D &size, vk::PhysicalDevi
 
 void VulkanSwapchain::getImages()
 {
-    DEBUG_FUNCTION;
+    PROFILE_FUNCTION();
     pivotAssertMsg(swapChain, "Swapchain not created");
     swapChainImages = device->getSwapchainImagesKHR(swapChain);
 
@@ -125,7 +125,7 @@ void VulkanSwapchain::getImages()
 
 void VulkanSwapchain::createImageViews()
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     swapChainImageViews.resize(swapChainImages.size());
 
     for (unsigned i = 0; i < swapChainImages.size(); i++) {

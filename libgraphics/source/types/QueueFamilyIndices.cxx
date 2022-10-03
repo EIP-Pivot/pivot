@@ -5,7 +5,7 @@
 std::unordered_map<vk::QueueFlagBits, std::vector<std::uint32_t>>
 getAllAvailableQueues(const vk::PhysicalDevice &device)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     std::unordered_map<vk::QueueFlagBits, std::vector<std::uint32_t>> availableQueues;
     auto family_property_list = device.getQueueFamilyProperties();
     for (std::uint32_t i = 0; i < family_property_list.size(); ++i) {
@@ -31,7 +31,7 @@ constexpr bool isSelected(const QueueFamilyIndices &indices, std::uint32_t index
 QueueFamilyIndices QueueFamilyIndices::findQueueFamilies(const vk::PhysicalDevice &device,
                                                          const vk::SurfaceKHR &surface)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     QueueFamilyIndices indices;
     auto availableQueues = getAllAvailableQueues(device);
 

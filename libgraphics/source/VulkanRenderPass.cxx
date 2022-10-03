@@ -12,7 +12,7 @@ VulkanRenderPass::~VulkanRenderPass() {}
 unsigned VulkanRenderPass::addAttachement(const Attachment &att, const vk::Format &format,
                                           const vk::SampleCountFlagBits &sample, const vk::ImageLayout &finalLayout)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     return addAttachement(att, vk::AttachmentDescription{
                                    .format = format,
                                    .samples = sample,
@@ -27,27 +27,27 @@ unsigned VulkanRenderPass::addAttachement(const Attachment &att, const vk::Forma
 
 unsigned VulkanRenderPass::addAttachement(const Attachment &att, const vk::AttachmentDescription &description)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     renderPassAttachment.push_back(std::pair(att, description));
     return renderPassAttachment.size();
 }
 
 void VulkanRenderPass::build(vk::Device &device)
 {
-    DEBUG_FUNCTION;
+    DEBUG_FUNCTION();
     createRenderPass(device);
 }
 
 void VulkanRenderPass::destroy(vk::Device &device)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     renderPassAttachment.clear();
     device.destroyRenderPass(renderPass);
 }
 
 void VulkanRenderPass::createRenderPass(vk::Device &device)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     std::vector<vk::AttachmentDescription> attachment;
     std::unordered_map<Attachment, vk::AttachmentReference> attachement_refs;
 

@@ -24,8 +24,8 @@ using OptionalRef = std::optional<Ref<T>>;
 
 #ifndef NDEBUG
 
-    #define DEBUG_FUNCTION  \
-        PROFILE_FUNCTION(); \
+    #define DEBUG_FUNCTION() \
+        PROFILE_FUNCTION();  \
         logger.trace(::pivot::utils::function_name()) << "Entered";
 
 #else

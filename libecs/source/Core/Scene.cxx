@@ -19,7 +19,7 @@ const std::string &Scene::getName() const { return name; }
 
 Entity Scene::CreateEntity()
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     Entity newEntity = mEntityManager.CreateEntity();
     mComponentManager.AddComponent(newEntity,
                                    data::Value{data::Record{{"name", "Entity " + std::to_string(newEntity)}}}, mTagId);
@@ -28,7 +28,7 @@ Entity Scene::CreateEntity()
 
 Entity Scene::CreateEntity(std::string newName)
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     Entity newEntity = mEntityManager.CreateEntity();
     mComponentManager.AddComponent(newEntity, data::Value{data::Record{{"name", newName}}}, mTagId);
     return newEntity;
@@ -38,7 +38,7 @@ std::unordered_map<Entity, Signature> Scene::getEntities() const { return mEntit
 
 void Scene::DestroyEntity(Entity entity)
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     mEntityManager.DestroyEntity(entity);
     mComponentManager.EntityDestroyed(entity);
 }
@@ -47,7 +47,7 @@ Signature Scene::getSignature(Entity entity) { return mEntityManager.GetSignatur
 
 std::string Scene::getEntityName(Entity entity)
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     return std::get<std::string>(
         std::get<data::Record>(mComponentManager.GetComponent(entity, mTagId).value()).at("name"));
 }
@@ -90,7 +90,7 @@ const EntityManager &Scene::getEntityManager() const { return mEntityManager; }
 std::unique_ptr<Scene> Scene::load(const nlohmann::json &obj, const pivot::ecs::component::Index &cIndex,
                                    const pivot::ecs::systems::Index &sIndex)
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     auto scene = std::make_unique<Scene>(obj["name"].get<std::string>());
     auto &componentManager = scene->getComponentManager();
     auto &entityManager = scene->getEntityManager();
@@ -122,7 +122,7 @@ namespace
 void extract_assets(const data::Value &value, std::set<std::string> &assets,
                     std::optional<Scene::AssetTranslator> &assetTranslator)
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     value.visit_data([&](const auto &data) {
         using type = std::decay_t<decltype(data)>;
         if constexpr (std::is_same_v<type, data::Asset>) {
@@ -140,7 +140,7 @@ void extract_assets(const data::Value &value, std::set<std::string> &assets,
 void Scene::save(const std::filesystem::path &path, std::optional<AssetTranslator> assetTranslator,
                  std::optional<ScriptTranslator> scriptTranslator) const
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     // serialize scene
     nlohmann::json output;
     std::set<std::string> scriptUsed;
@@ -181,7 +181,7 @@ void Scene::save(const std::filesystem::path &path, std::optional<AssetTranslato
 
 void Scene::registerSystem(const systems::Description &description, pivot::OptionalRef<const component::Index> cIndex)
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     if (cIndex.has_value()) {
         for (auto &component: description.systemComponents) {
             if (!mComponentManager.GetComponentId(component).has_value()) {

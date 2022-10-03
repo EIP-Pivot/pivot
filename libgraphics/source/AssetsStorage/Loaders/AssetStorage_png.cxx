@@ -9,7 +9,7 @@ namespace pivot::graphics::loaders
 
 std::optional<asset::CPUStorage> loadPngTexture(const std::filesystem::path &path)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     asset::CPUStorage storage;
     int texWidth, texHeight, texChannels;
     stbi_uc *pixels = stbi_load(path.string().c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);

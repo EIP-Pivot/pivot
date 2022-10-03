@@ -9,7 +9,7 @@ VulkanAllocator::~VulkanAllocator() {}
 
 void VulkanAllocator::init(const vma::AllocatorCreateInfo &info)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     allocator = vma::createAllocator(info);
     device = info.device;
     properties = info.physicalDevice.getMemoryProperties();
@@ -17,7 +17,7 @@ void VulkanAllocator::init(const vma::AllocatorCreateInfo &info)
 
 AllocatedImage VulkanAllocator::createImage(const vk::ImageCreateInfo &info, const vma::AllocationCreateInfo &allocInfo)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     pivotAssertMsg(info.extent.depth != 0 && info.extent.height != 0 && info.extent.width != 0,
                    "Image can't have a size of 0");
     AllocatedImage image{

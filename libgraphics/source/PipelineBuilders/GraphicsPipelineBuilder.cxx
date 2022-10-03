@@ -35,7 +35,7 @@ static void loadShader(const std::string &path, const vk::ShaderStageFlagBits &s
 
 vk::Pipeline GraphicsPipelineBuilder::build(vk::Device &device, vk::PipelineCache pipelineCache) const
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     auto shaderStages = build_shader(device);
     return build_impl(device, shaderStages, pipelineCache);
 }

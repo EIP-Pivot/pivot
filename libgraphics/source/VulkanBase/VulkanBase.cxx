@@ -8,17 +8,17 @@ namespace pivot::graphics
 VulkanBase::VulkanBase(const std::string &windowName, const bool bForceValidation)
     : VulkanLoader(), VulkanImmediateCommand(), window(windowName, 800, 600)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     bEnableValidationLayers |= bForceValidation;
 }
 
-VulkanBase::~VulkanBase() { DEBUG_FUNCTION }
+VulkanBase::~VulkanBase() { DEBUG_FUNCTION(); }
 
 void VulkanBase::init(const std::vector<const char *> &instanceExtensions,
                       const std::vector<const char *> &deviceExtensions,
                       const std::vector<const char *> &validationLayers)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     createInstance(instanceExtensions, validationLayers);
     createDebugMessenger();
     createSurface();
@@ -30,7 +30,8 @@ void VulkanBase::init(const std::vector<const char *> &instanceExtensions,
 
 void VulkanBase::destroy()
 {
-    DEBUG_FUNCTION;
+    DEBUG_FUNCTION();
+
     VulkanImmediateCommand ::destroy();
     baseDeletionQueue.flush();
 }

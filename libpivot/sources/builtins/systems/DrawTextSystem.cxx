@@ -17,7 +17,7 @@ namespace
 {
 void drawText(Entity entity, const Text &text, const Transform2D &transform)
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     auto color = text.color.rgba;
 
     ImGui::SetNextWindowPos(ImVec2(transform.position.x, transform.position.y), 0, ImVec2(0.5, 0.5));
@@ -35,7 +35,7 @@ void drawText(Entity entity, const Text &text, const Transform2D &transform)
 std::vector<event::Event> drawTextSystemImpl(const systems::Description &, component::ArrayCombination &cmb,
                                              [[maybe_unused]] const event::EventWithComponent &event)
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     auto textArray = dynamic_cast<component::DenseTypedComponentArray<Text> &>(cmb.arrays()[0].get());
     auto transformArray = dynamic_cast<component::DenseTypedComponentArray<Transform2D> &>(cmb.arrays()[1].get());
 

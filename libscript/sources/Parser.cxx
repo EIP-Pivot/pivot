@@ -39,7 +39,7 @@ const std::unordered_map<std::string, data::BasicType> gVariableTypes{{"Vector3"
                 System Declaration:		A node containing the declaration of a System		*/
 Node Parser::ast_from_file(const std::string &file, bool isContent, bool verbose)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     Node result = {.type = NodeType::File, .value = file};
     // Fill _tokens with the tokens from the file
     tokens_from_file(file, isContent, verbose);
@@ -74,7 +74,7 @@ Node Parser::ast_from_file(const std::string &file, bool isContent, bool verbose
                 Neither of the two above		*/
 void Parser::tokens_from_file(const std::string &file, bool isContent, bool verbose)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     std::string text = "";
     if (isContent) {
         text = file;
@@ -295,7 +295,7 @@ void Parser::tokens_from_file(const std::string &file, bool isContent, bool verb
 
 Node Parser::consumeComponent()
 {    // Consume a component token and all following to build a component declaration node
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     Node result = {.type = NodeType::ComponentDeclaration};
     if (_tokens.size() <= 1) {    // Tokens only contains ["component"]
         logger.err("ERROR") << " at line " << _tokens.front().line_nb << " char " << _tokens.front().char_nb << ": '"
@@ -338,7 +338,7 @@ Node Parser::consumeComponent()
 }
 void Parser::consumeComponentToken(Node &result, TokenType expectedType, NodeType fillType, Token &lastToken)
 {    // consume one token
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     if (_tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
@@ -364,7 +364,7 @@ void Parser::consumeComponentToken(Node &result, TokenType expectedType, NodeTyp
 }
 Node Parser::consumeSystem()
 {    // Consume a system token and all following to build a system declaration node
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     Node result = {.type = NodeType::SystemDeclaration};
     if (_tokens.size() <= 1) {    // Tokens only contains ["system"]
         logger.err("ERROR") << " at line " << _tokens.front().line_nb << " char " << _tokens.front().char_nb << ": '"
@@ -464,7 +464,7 @@ Node Parser::consumeSystem()
 }
 void Parser::consumeSystemDescriptionToken(Node &result, TokenType expectedType, NodeType fillType, Token &lastToken)
 {    // consume one token for declaration (front of queue)
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     if (_tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
@@ -491,7 +491,7 @@ void Parser::consumeSystemDescriptionToken(Node &result, TokenType expectedType,
 void Parser::consumeSystemDescriptionToken(const Token &token, Node &result, TokenType expectedType, NodeType fillType,
                                            Token &lastToken)
 {    // consume one token for declaration (parameter)
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     if (token.type != expectedType) {
         logger.err("ERROR") << " at line " << token.line_nb << " char " << token.char_nb << ": '" << token.value << "'";
         logger.err("Expected ") << magic_enum::enum_name(expectedType) << "token";
@@ -507,7 +507,7 @@ void Parser::consumeSystemDescriptionToken(const Token &token, Node &result, Tok
 }
 void Parser::consumeSystemStatement(Node &result, Token &lastToken)
 {    // consume an entire statement and append it to children node
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     if (_tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
@@ -547,7 +547,7 @@ void Parser::consumeSystemStatement(Node &result, Token &lastToken)
 }
 void Parser::consumeSystemBlock(Node &result, Token &lastToken)
 {    // consume entire block and append it to children node
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     Node blockCondition = {.type = NodeType::Expression,
                            .value = "condition",
                            .line_nb = _tokens.front().line_nb,
@@ -564,7 +564,7 @@ void Parser::consumeSystemBlock(Node &result, Token &lastToken)
 }
 void Parser::consumeSystemVariable(Node &result, Token &lastToken)
 {    // consume a variable and append it to children node
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     if (_tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
@@ -629,7 +629,7 @@ void Parser::consumeSystemVariable(Node &result, Token &lastToken)
 }
 void Parser::consumeSystemExpression(Node &result, Token &lastToken)
 {    // consume an expression and append it to children node
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     if (_tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
@@ -723,7 +723,7 @@ void Parser::consumeSystemExpression(Node &result, Token &lastToken)
 }
 void Parser::consumeSystemFuncParams(Node &result, Token &lastToken)
 {    // consume function parameters and append them to children node
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     if (_tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
@@ -755,7 +755,7 @@ void Parser::consumeSystemFuncParams(Node &result, Token &lastToken)
 
 void Parser::consumeSystemVarOrFunc(Node &result, Token &lastToken)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     if (_tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
@@ -775,7 +775,7 @@ void Parser::consumeSystemVarOrFunc(Node &result, Token &lastToken)
 
 void Parser::expectSystemToken(TokenType expectedType, Token &lastToken, bool consume)
 {    // check that token exists, and is of correct type (and potentially consume it from tokens)
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     if (_tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
@@ -795,7 +795,7 @@ void Parser::expectSystemToken(TokenType expectedType, Token &lastToken, bool co
 }
 void Parser::expectSystemTokenValue(const std::string &expectedValue, Token &lastToken, bool consume)
 {    // check that token exists, and is of correct value (and potentially consume it from tokens)
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     if (_tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
@@ -816,7 +816,7 @@ void Parser::expectSystemTokenValue(const std::string &expectedValue, Token &las
 
 bool Parser::isDeclarationOver()
 {    // Is there no more tokens, or is the first the end of the declaration
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     if (_tokens.empty())    // No more tokens
         return true;
     if (_tokens.front().value == "component" ||

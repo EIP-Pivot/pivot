@@ -17,7 +17,7 @@ namespace pivot::graphics
 
 void VulkanApplication::createRenderPass()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     vk::AttachmentDescription colorAttachmentResolve{
         .format = swapchain.getSwapchainFormat(),
         .samples = vk::SampleCountFlagBits::e1,
@@ -42,7 +42,7 @@ void VulkanApplication::createRenderPass()
 
 void VulkanApplication::createFramebuffers()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     swapChainFramebuffers.resize(swapchain.nbOfImage());
     for (size_t i = 0; i < swapchain.nbOfImage(); i++) {
         std::array<vk::ImageView, 3> attachments = {colorImage.imageView, depthResources.imageView,
@@ -66,7 +66,7 @@ void VulkanApplication::createFramebuffers()
 
 void VulkanApplication::createCommandPool()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     vk::CommandPoolCreateInfo poolInfo{
         .flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
         .queueFamilyIndex = queueIndices.graphicsFamily.value(),
@@ -78,7 +78,7 @@ void VulkanApplication::createCommandPool()
 
 void VulkanApplication::createDepthResources()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     vk::ImageCreateInfo imageInfo{
         .imageType = vk::ImageType::e2D,
         .format = depthFormat,
@@ -110,7 +110,7 @@ void VulkanApplication::createDepthResources()
 
 void VulkanApplication::createColorResources()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     vk::ImageCreateInfo imageInfo{
         .imageType = vk::ImageType::e2D,
         .format = swapchain.getSwapchainFormat(),

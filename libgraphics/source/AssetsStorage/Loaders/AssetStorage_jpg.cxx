@@ -5,7 +5,7 @@ namespace pivot::graphics::loaders
 
 std::optional<asset::CPUStorage> loadJpgTexture(const std::filesystem::path &path)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     return loadPngTexture(path);
 }
 

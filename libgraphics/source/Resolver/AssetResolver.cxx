@@ -11,7 +11,7 @@ namespace pivot::graphics
 bool AssetResolver::initialize(VulkanBase &base, const AssetStorage &stor, DescriptorBuilder &)
 {
 
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     base_ref = base;
     storage_ref = stor;
     return true;
@@ -19,19 +19,20 @@ bool AssetResolver::initialize(VulkanBase &base, const AssetStorage &stor, Descr
 
 bool AssetResolver::destroy(VulkanBase &)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     return true;
 }
 
 bool AssetResolver::prepareForDraw(const DrawSceneInformation &)
 {
-    DEBUG_FUNCTION;
+    PROFILE_FUNCTION();
+
     return true;
 }
 
 void AssetResolver::bind(vk::CommandBuffer &cmd)
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     vk::DeviceSize offset = 0;
     cmd.bindVertexBuffers(0, storage_ref->get().getVertexBuffer().buffer, offset);
     cmd.bindIndexBuffer(storage_ref->get().getIndexBuffer().buffer, 0, vk::IndexType::eUint32);

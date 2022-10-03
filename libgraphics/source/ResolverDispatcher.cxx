@@ -7,7 +7,7 @@ namespace pivot::graphics
 
 void ResolverDispatcher::removeResolver(unsigned setId)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     if (resolverStorage.size() <= setId) { throw std::runtime_error("Set Id is too big"); }
     if (!verifyMsg(resolverStorage[setId] != nullptr, "Set id is not in use !")) { return; }
 
@@ -20,7 +20,7 @@ void ResolverDispatcher::removeResolver(unsigned setId)
 
 std::vector<vk::DescriptorSetLayout> ResolverDispatcher::getDescriptorPair() const
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     std::vector<vk::DescriptorSetLayout> resolver;
     for (auto &item: resolverStorage) {
         if (!item) break;
@@ -31,7 +31,7 @@ std::vector<vk::DescriptorSetLayout> ResolverDispatcher::getDescriptorPair() con
 
 unsigned ResolverDispatcher::initialize(VulkanBase &base, const AssetStorage &assetStorage, DescriptorBuilder builder)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     unsigned counter = 0;
     base_ref = base;
     for (auto &item: resolverStorage) {

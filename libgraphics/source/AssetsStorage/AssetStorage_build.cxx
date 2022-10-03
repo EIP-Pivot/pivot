@@ -11,7 +11,7 @@ batch_load(const std::unordered_map<std::string, std::filesystem::path> &storage
            const std::function<std::optional<asset::CPUStorage>(unsigned, const std::filesystem::path &)> load,
            const std::string &debug_name, ThreadPool &threadPool)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     asset::CPUStorage cpuStorage;
     std::vector<std::pair<std::filesystem::path, std::future<std::optional<asset::CPUStorage>>>> futures;
     futures.reserve(storage_map.size());
@@ -30,7 +30,7 @@ batch_load(const std::unordered_map<std::string, std::filesystem::path> &storage
 
 void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     // check for incorrect combination of flags
     pivotAssertMsg(std::popcount(static_cast<std::underlying_type_t<AssetStorage::BuildFlagBits>>(flags)) == 1,
                    "More than one BuildFlag is set !");
@@ -82,7 +82,7 @@ void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
 
 void AssetStorage::destroy()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     base_ref->get().allocator.destroyBuffer(vertexBuffer);
     base_ref->get().allocator.destroyBuffer(indicesBuffer);
     base_ref->get().allocator.destroyBuffer(materialBuffer);
@@ -100,7 +100,7 @@ template <typename T>
 static void copy_with_staging_buffer(VulkanBase &base_ref, vk::BufferUsageFlags flag, std::vector<T> &data,
                                      AllocatedBuffer<T> &buffer)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     auto true_size = data.size();
     auto staging = base_ref.allocator.createBuffer<T>(
         true_size, vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst,
@@ -119,7 +119,7 @@ static void copy_with_staging_buffer(VulkanBase &base_ref, vk::BufferUsageFlags 
 
 void AssetStorage::pushModelsOnGPU()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     meshAABBStorage.clear();
     meshAABBStorage.reserve(modelStorage.size());
 
@@ -150,7 +150,7 @@ void AssetStorage::pushModelsOnGPU()
 
 void AssetStorage::pushTexturesOnGPU()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     if (cpuStorage.textureStaging.size() == 0) {
         logger.warn("Asset Storage") << "No textures to push";
         return;
@@ -193,7 +193,7 @@ void AssetStorage::pushTexturesOnGPU()
 
 void AssetStorage::pushMaterialOnGPU()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     if (cpuStorage.materialStaging.empty()) {
         logger.warn("Asset Storage") << "No material to push";
         return;

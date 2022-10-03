@@ -54,7 +54,7 @@ static std::pair<std::string, asset::CPUMaterial> loadMaterial(const tinyobj::ma
 
 std::optional<asset::CPUStorage> loadObjModel(const std::filesystem::path &path)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     auto base_dir = path.parent_path();
 
     asset::CPUStorage storage;

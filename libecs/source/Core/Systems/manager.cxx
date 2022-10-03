@@ -15,7 +15,7 @@ Manager::MissingSystem::MissingSystem(const std::string &systemName)
 
 void Manager::useSystem(const Description &description)
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     if (m_systems.contains(description.name)) throw EcsException("System already use.");
     m_systems.insert({description.name, description});
 
@@ -27,7 +27,7 @@ void Manager::useSystem(const Description &description)
 
 std::vector<event::Event> Manager::execute(const event::Event &event)
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     std::vector<event::Event> childEvent;
 
     for (const auto &[name, description]: m_systems) {
@@ -45,7 +45,7 @@ Manager::const_iterator Manager::end() const { return m_systems.end(); }
 
 std::vector<component::Manager::ComponentId> Manager::getComponentsId(const std::vector<std::string> &components)
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     std::vector<component::Manager::ComponentId> componentsId;
 
     for (const auto &component: components) {
@@ -58,7 +58,7 @@ std::vector<component::Manager::ComponentId> Manager::getComponentsId(const std:
 
 std::vector<event::Event> Manager::executeOne(const Description &description, const event::Event &event)
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     if (event.entities.size() != description.eventComponents.size())
         throw std::logic_error("This system expect " + std::to_string(description.eventComponents.size()) + " entity.");
 

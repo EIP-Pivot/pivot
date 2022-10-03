@@ -9,7 +9,7 @@ EntityManager::EntityManager()
 
 Entity EntityManager::CreateEntity()
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     if (mLivingEntityCount >= MAX_ENTITIES) throw EcsException("Too many entities in existence.");
 
     Entity id = mAvailableEntities.front();
@@ -22,7 +22,7 @@ Entity EntityManager::CreateEntity()
 
 void EntityManager::DestroyEntity(Entity entity)
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     if (entity >= MAX_ENTITIES) throw EcsException("Entity out of range.");
 
     mAvailableEntities.push(entity);
@@ -32,14 +32,14 @@ void EntityManager::DestroyEntity(Entity entity)
 
 void EntityManager::SetSignature(Entity entity, Signature signature)
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     if (entity >= MAX_ENTITIES) throw EcsException("Entity out of range.");
     mEntities[entity] = signature;
 }
 
 Signature EntityManager::GetSignature(Entity entity)
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     if (entity >= MAX_ENTITIES) throw EcsException("Entity out of range.");
     return mEntities[entity];
 }

@@ -13,7 +13,8 @@ CullingRenderer::~CullingRenderer() {}
 
 bool CullingRenderer::onInit(VulkanBase &base_ref, const ResolverDispatcher &dispatcher)
 {
-    DEBUG_FUNCTION;
+    DEBUG_FUNCTION();
+
     indices = base_ref.queueIndices;
     createPipelineLayout(base_ref.device, dispatcher);
     createPipeline();
@@ -22,7 +23,8 @@ bool CullingRenderer::onInit(VulkanBase &base_ref, const ResolverDispatcher &dis
 
 void CullingRenderer::onStop(VulkanBase &base_ref)
 {
-    DEBUG_FUNCTION;
+    DEBUG_FUNCTION();
+
     storage.pipeline.get().removePipeline("culling");
     if (cullingLayout) base_ref.device.destroyPipelineLayout(cullingLayout);
 }
@@ -30,7 +32,7 @@ void CullingRenderer::onStop(VulkanBase &base_ref)
 bool CullingRenderer::onDraw(const RenderingContext &, const CameraData &cameraData, ResolverDispatcher &dispatcher,
                              vk::CommandBuffer &cmd)
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     const DrawCallResolver &resolver = dispatcher.get<DrawCallResolver>();
     const gpu_object::CullingPushConstant cullingCamera{
         .viewProjection = cameraData.viewProjection,
@@ -65,7 +67,7 @@ bool CullingRenderer::onDraw(const RenderingContext &, const CameraData &cameraD
 
 void CullingRenderer::createPipelineLayout(vk::Device &device, const ResolverDispatcher &dispatcher)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     std::vector<vk::PushConstantRange> pipelinePushConstant = {vk_init::populateVkPushConstantRange(
         vk::ShaderStageFlagBits::eCompute, sizeof(gpu_object::CullingPushConstant))};
 
@@ -78,7 +80,7 @@ void CullingRenderer::createPipelineLayout(vk::Device &device, const ResolverDis
 
 void CullingRenderer::createPipeline()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     ComputePipelineBuilder builder;
     builder.setPipelineLayout(cullingLayout).setComputeShaderPath("shaders/culling.comp.spv");
     storage.pipeline.get().newComputePipeline("culling", builder);

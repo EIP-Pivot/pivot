@@ -38,14 +38,14 @@ Window::Window(std::string n, unsigned w, unsigned h): windowName(std::move(n)) 
 
 Window::~Window()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     if (window != nullptr) glfwDestroyWindow(window);
     glfwTerminate();
 }
 
 vk::SurfaceKHR Window::createSurface(const vk::Instance &instance)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     VkSurfaceKHR surface{};
     if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
         throw std::runtime_error("failed to create surface");
@@ -74,7 +74,7 @@ void Window::setIcon(const std::span<const GLFWimage> &images) noexcept
 
 void Window::setIcon(const std::span<const std::string> &windowIcons)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     std::vector<GLFWimage> images;
     for (const auto &icon: windowIcons) {
         int texWidth, texHeight, texChannels;
@@ -128,7 +128,7 @@ void Window::setUserPointer(void *ptr) noexcept { glfwSetWindowUserPointer(windo
 
 void Window::initWindow(const unsigned width, const unsigned height)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     glfwInit();
     this->setErrorCallback(error_callback);
 
@@ -150,7 +150,7 @@ glm::ivec2 Window::updateSize() const noexcept
 
 Window::Key Window::getTrueKey(const Window::Key &ex) const noexcept
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     auto key = magic_enum::enum_integer(ex);
     auto translate = translate_key(key, 0);
     auto true_key = magic_enum::enum_cast<Window::Key>(translate);

@@ -12,7 +12,7 @@ AssetStorage::~AssetStorage() {}
 
 bool AssetStorage::addAsset(const std::filesystem::path &path)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     auto iterModel = loaders::supportedObject.find(path.extension().string());
     if (iterModel != loaders::supportedObject.end()) { return addModel(path); }
 
@@ -25,7 +25,7 @@ bool AssetStorage::addAsset(const std::filesystem::path &path)
 
 bool AssetStorage::addAsset(const std::vector<std::filesystem::path> &path)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     unsigned load = 0;
     for (const auto &i: path) load += addAsset(i);
     return load == path.size();
@@ -33,7 +33,7 @@ bool AssetStorage::addAsset(const std::vector<std::filesystem::path> &path)
 
 bool AssetStorage::addModel(const std::filesystem::path &path)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     auto iter = loaders::supportedObject.find(path.extension().string());
     if (iter == loaders::supportedObject.end()) {
         logger.err("AssetStorage/addModel") << "Not supported model extension: " << path.extension();
@@ -45,7 +45,7 @@ bool AssetStorage::addModel(const std::filesystem::path &path)
 
 bool AssetStorage::addModel(const std::vector<std::filesystem::path> &path)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     unsigned load = 0;
     for (const auto &i: path) load += addModel(i);
     return load == path.size();
@@ -53,7 +53,7 @@ bool AssetStorage::addModel(const std::vector<std::filesystem::path> &path)
 
 bool AssetStorage::addTexture(const std::filesystem::path &path)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     const auto iter = loaders::supportedTexture.find(path.extension().string());
     if (iter == loaders::supportedTexture.end()) {
         logger.err("Load Texture") << "Not supported texture extension: " << path.extension();
@@ -64,7 +64,7 @@ bool AssetStorage::addTexture(const std::filesystem::path &path)
 }
 bool AssetStorage::addTexture(const std::vector<std::filesystem::path> &path)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     unsigned load = 0;
     for (const auto &i: path) load += addTexture(i);
     return load == path.size();

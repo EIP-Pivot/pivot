@@ -23,7 +23,7 @@ VulkanApplication::VulkanApplication()
       descriptorAllocator(device),
       layoutCache(device)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     if (bEnableValidationLayers && !VulkanBase::checkValidationLayerSupport(validationLayers)) {
         logger.warn("Vulkan Instance") << "Validation layers requested, but not available!";
         bEnableValidationLayers = false;
@@ -39,7 +39,7 @@ VulkanApplication::VulkanApplication()
 
 VulkanApplication::~VulkanApplication()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     if (device) {
         device.waitIdle();
     } else {
@@ -64,7 +64,7 @@ VulkanApplication::~VulkanApplication()
 
 void VulkanApplication::init()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     VulkanBase::init({}, deviceExtensions, validationLayers);
     assetStorage.build(DescriptorBuilder(layoutCache, descriptorAllocator));
     initVulkanRessources();
@@ -72,7 +72,7 @@ void VulkanApplication::init()
 
 void VulkanApplication::initVulkanRessources()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     if (graphicsRenderer.empty() || computeRenderer.empty()) {
         logger.err("Vulkan Application") << "No renderer found !";
         throw std::logic_error("No renderer present in the Vulkan Application.");
@@ -100,7 +100,7 @@ void VulkanApplication::initVulkanRessources()
 
 void VulkanApplication::buildAssetStorage(AssetStorage::BuildFlags flags)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     device.waitIdle();
 
     assetStorage.build(DescriptorBuilder(layoutCache, descriptorAllocator), flags);
@@ -117,7 +117,7 @@ void VulkanApplication::buildAssetStorage(AssetStorage::BuildFlags flags)
 
 void VulkanApplication::recreateSwapchain()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
 
     /// do not recreate the swapchain if the window size is 0
     vk::Extent2D size = window.getSize();
@@ -154,7 +154,7 @@ VulkanApplication::DrawResult VulkanApplication::draw(DrawSceneInformation scene
                                                       const CameraData &cameraData,
                                                       std::optional<vk::Rect2D> renderArea)
 try {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     if (!verifyMsg(!graphicsRenderer.empty() && !computeRenderer.empty(), "No Renderers are setup")) {
         // This is technically a success, even thought nothing was drawn.
         return DrawResult::Success;

@@ -6,13 +6,13 @@ namespace pivot::ecs::data
 {
 void to_json(nlohmann::json &json, const Value &value)
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     std::visit([&](auto &data) { json = data; }, static_cast<const Value::variant &>(value));
 }
 
 void from_json(const nlohmann::json &json, Value &value)
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     if (json.is_string()) {
         value = json.get<std::string>();
     } else if (json.is_number_float()) {

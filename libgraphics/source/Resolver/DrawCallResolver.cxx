@@ -13,7 +13,7 @@ vk::DescriptorSetLayout DrawCallResolver::descriptorSetLayout = VK_NULL_HANDLE;
 bool DrawCallResolver::initialize(VulkanBase &base, const AssetStorage &stor, DescriptorBuilder &builder)
 {
 
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     base_ref = base;
     storage_ref = stor;
     createBuffer(defaultBufferSize);
@@ -37,7 +37,7 @@ bool DrawCallResolver::initialize(VulkanBase &base, const AssetStorage &stor, De
 
 bool DrawCallResolver::destroy(VulkanBase &)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     base_ref->get().allocator.destroyBuffer(frame.indirectBuffer);
     base_ref->get().allocator.destroyBuffer(frame.objectBuffer);
     return true;
@@ -45,7 +45,7 @@ bool DrawCallResolver::destroy(VulkanBase &)
 
 bool DrawCallResolver::prepareForDraw(const DrawSceneInformation &sceneInformation)
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     std::vector<gpu_object::UniformBufferObject> objectGPUData;
     std::uint32_t drawCount = 0;
 
@@ -118,7 +118,7 @@ bool DrawCallResolver::prepareForDraw(const DrawSceneInformation &sceneInformati
 
 void DrawCallResolver::createBuffer(vk::DeviceSize bufferSize)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     base_ref->get().allocator.destroyBuffer(frame.indirectBuffer);
     base_ref->get().allocator.destroyBuffer(frame.objectBuffer);
 
@@ -133,7 +133,7 @@ void DrawCallResolver::createBuffer(vk::DeviceSize bufferSize)
 
 void DrawCallResolver::updateDescriptorSet()
 {
-    DEBUG_FUNCTION
+    PROFILE_FUNCTION();
     auto bufferInfo = frame.objectBuffer.getBufferInfo();
     auto indirectInfo = frame.indirectBuffer.getBufferInfo();
 

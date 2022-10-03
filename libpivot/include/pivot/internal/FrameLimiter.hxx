@@ -14,7 +14,8 @@ public:
 
     void sleep()
     {
-        DEBUG_FUNCTION;
+        PROFILE_FUNCTION();
+
         tp += time_frame;
         std::this_thread::sleep_until(tp);
     };

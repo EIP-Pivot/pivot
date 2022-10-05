@@ -29,6 +29,6 @@ using OptionalRef = std::optional<Ref<T>>;
         logger.trace(::pivot::utils::function_name()) << "Entered";
 
 #else
-    #define DEBUG_FUNCTION PROFILE_FUNCTION();
+    #define DEBUG_FUNCTION() PROFILE_FUNCTION();
 
 #endif

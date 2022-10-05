@@ -2,12 +2,17 @@
 
 #include <iomanip>
 
+#if !defined(NO_BENCHMARK)
+
 namespace pivot::benchmark
 {
 
 Instrumentor::Instrumentor() {}
 
-Instrumentor::~Instrumentor() {}
+Instrumentor::~Instrumentor()
+{
+    if (isSessionStarted()) endSession();
+}
 
 void Instrumentor::beginSession(const std::string &filename)
 {
@@ -17,14 +22,17 @@ void Instrumentor::beginSession(const std::string &filename)
 
 void Instrumentor::endSession()
 {
+    if (!verify(isSessionStarted())) return;
     writeFooter();
     outputStream.close();
     profileCount = 0;
 }
 
+bool Instrumentor::isSessionStarted() const { return outputStream.is_open(); }
+
 void Instrumentor::writeResult(TimerResult result)
 {
-    if (!verifyMsg(outputStream.is_open(), "No session are started !")) return;
+    if (!verifyMsg(isSessionStarted(), "No session are started !")) return;
 
     std::unique_lock lock(mutex);
     if (profileCount++ > 0) outputStream << ",";
@@ -69,3 +77,5 @@ void Instrumentor::writeFooter()
 }
 
 }    // namespace pivot::benchmark
+
+#endif

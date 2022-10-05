@@ -1,5 +1,7 @@
 #include "ImGuiCore/MenuBar.hxx"
 
+#include "pivot/utility/benchmark.hxx"
+
 #include <imgui.h>
 
 MenuBar::MenuBar(const pivot::ecs::SceneManager &sceneManager, pivot::Engine &engine)
@@ -91,6 +93,20 @@ bool MenuBar::render()
             if (ImGui::MenuItem("Color Window", "", displayColors)) { displayColors = !displayColors; }
             ImGui::EndMenu();
         }
+
+#if !defined(NO_BENCHMARK)
+        if (ImGui::BeginMenu("Tracing")) {
+            if (!pivot::benchmark::Instrumentor::get().isSessionStarted()) {
+                if (ImGui::MenuItem("Start Tracing")) {
+                    pivot::benchmark::Instrumentor::get().beginSession("Pivot_Runtime.json");
+                }
+            } else {
+                if (ImGui::MenuItem("End Tracing")) { pivot::benchmark::Instrumentor::get().endSession(); }
+            }
+            ImGui::EndMenu();
+        }
+#endif
+
         ImGui::EndMainMenuBar();
     }
 

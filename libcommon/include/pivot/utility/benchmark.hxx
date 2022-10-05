@@ -7,6 +7,8 @@
 #include <pivot/pivot.hxx>
 #include <pivot/utility/source_location.hxx>
 
+#if !defined(NO_BENCHMARK)
+
 namespace pivot::benchmark
 {
 
@@ -34,6 +36,7 @@ public:
 
     void beginSession(const std::string &filepath = "result.json");
     void endSession();
+    bool isSessionStarted() const;
     void writeResult(TimerResult result);
 
     std::string getThreadName(const std::thread::id &id = std::this_thread::get_id()) const;
@@ -88,8 +91,6 @@ private:
 };
 
 }    // namespace pivot::benchmark
-
-#if !defined(NO_BENCHMARK)
 
     #define PROFILE_SCOPE(name) ::pivot::benchmark::Timer timer##__LINE__(name)
     #define PROFILE_FUNCTION() PROFILE_SCOPE(::pivot::utils::function_name())

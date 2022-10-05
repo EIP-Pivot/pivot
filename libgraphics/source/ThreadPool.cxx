@@ -35,7 +35,10 @@ void ThreadPool::new_thread(State &state, unsigned id) noexcept
     DEBUG_FUNCTION();
     WorkUnits work;
 
+#if !defined(NO_BENCHMARK)
     benchmark::Instrumentor::get().setThreadName("Thread pool nb: " + std::to_string(id));
+#endif
+
     logger.trace(pivot::utils::function_name()) << "New thread: " << id;
     while (!state.bExit) {
         try {

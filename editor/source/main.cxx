@@ -226,8 +226,12 @@ public:
 
 int main(int argc, const char *argv[])
 {
+#if !defined(NO_BENCHMARK)
+
     pivot::benchmark::Instrumentor::get().setThreadName("Editor thread");
     pivot::benchmark::Instrumentor::get().beginSession("Pivot_Startup.json");
+
+#endif
 
     auto cmdLineArg = getCmdLineArg(argc, argv);
     logger.start(cmdLineArg.verbosity);
@@ -240,13 +244,12 @@ int main(int argc, const char *argv[])
     app.changeCurrentScene(sceneId);
 
     app.init();
-    pivot::benchmark::Instrumentor::get().endSession();
 
-    pivot::benchmark::Instrumentor::get().beginSession("Pivot_Runtime.json");
+#if !defined(NO_BENCHMARK)
+    pivot::benchmark::Instrumentor::get().endSession();
+#endif
 
     app.run();
-
-    pivot::benchmark::Instrumentor::get().endSession();
 
     return 0;
 }

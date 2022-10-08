@@ -62,6 +62,7 @@ protected:
 private:
     ecs::SceneManager m_scene_manager;
     std::optional<graphics::DrawCallResolver::DrawSceneInformation> m_current_scene_draw_command;
+    pivot::OptionalRef<internals::CameraArray> m_camera_array;
 
     bool isKeyPressed(const std::string &key) const;
     void onKeyPressed(graphics::Window &window, const graphics::Window::Key key, const graphics::Window::Modifier);

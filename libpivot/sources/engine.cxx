@@ -119,59 +119,73 @@ void Engine::run()
     }
 }
 
-template <typename T>
-using Array = pivot::ecs::component::DenseTypedComponentArray<T>;
+namespace
+{
+    template <typename T>
+    using Array = pivot::ecs::component::DenseTypedComponentArray<T>;
+
+    std::optional<graphics::DrawCallResolver::DrawSceneInformation> getDrawCommand(component::Manager &cm)
+    {
+        using namespace pivot::builtins::components;
+
+        auto renderobject_id = cm.GetComponentId(RenderObject::description.name);
+        auto transform_id = cm.GetComponentId(Transform::description.name);
+        auto pointlight_id = cm.GetComponentId(PointLight::description.name);
+        auto directional_id = cm.GetComponentId(DirectionalLight::description.name);
+        auto spotlight_id = cm.GetComponentId(SpotLight::description.name);
+        if (renderobject_id && transform_id && pointlight_id && directional_id && spotlight_id) {
+            auto &ro_array =
+                dynamic_cast<Array<pivot::graphics::RenderObject> &>(cm.GetComponentArray(*renderobject_id));
+            auto &transform_array =
+                dynamic_cast<Array<pivot::graphics::Transform> &>(cm.GetComponentArray(*transform_id));
+            auto &point_array =
+                dynamic_cast<Array<pivot::graphics::PointLight> &>(cm.GetComponentArray(*pointlight_id));
+            auto &directional_array =
+                dynamic_cast<Array<pivot::graphics::DirectionalLight> &>(cm.GetComponentArray(*directional_id));
+            auto &spotlight_array =
+                dynamic_cast<Array<pivot::graphics::SpotLight> &>(cm.GetComponentArray(*spotlight_id));
+
+            return {{
+                .renderObjects =
+                    {
+                        .objects = ro_array.getComponents(),
+                        .exist = ro_array.getExistence(),
+                    },
+                .pointLight =
+                    {
+                        .objects = point_array.getComponents(),
+                        .exist = point_array.getExistence(),
+                    },
+                .directionalLight =
+                    {
+                        .objects = directional_array.getComponents(),
+                        .exist = directional_array.getExistence(),
+                    },
+                .spotLight =
+                    {
+                        .objects = spotlight_array.getComponents(),
+                        .exist = spotlight_array.getExistence(),
+                    },
+                .transform =
+                    {
+                        .objects = transform_array.getComponents(),
+                        .exist = transform_array.getExistence(),
+                    },
+            }};
+        } else {
+            return std::nullopt;
+        }
+    }
+}    // namespace
 
 void Engine::changeCurrentScene(ecs::SceneManager::SceneId sceneId)
 {
     m_scene_manager.setCurrentSceneId(sceneId);
 
-    using namespace pivot::builtins::components;
-
     auto &cm = m_scene_manager.getCurrentScene().getComponentManager();
-    auto renderobject_id = cm.GetComponentId(RenderObject::description.name);
-    auto transform_id = cm.GetComponentId(Transform::description.name);
-    auto pointlight_id = cm.GetComponentId(PointLight::description.name);
-    auto directional_id = cm.GetComponentId(DirectionalLight::description.name);
-    auto spotlight_id = cm.GetComponentId(SpotLight::description.name);
-    if (renderobject_id && transform_id && pointlight_id && directional_id && spotlight_id) {
-        auto &ro_array = dynamic_cast<Array<pivot::graphics::RenderObject> &>(cm.GetComponentArray(*renderobject_id));
-        auto &transform_array = dynamic_cast<Array<pivot::graphics::Transform> &>(cm.GetComponentArray(*transform_id));
-        auto &point_array = dynamic_cast<Array<pivot::graphics::PointLight> &>(cm.GetComponentArray(*pointlight_id));
-        auto &directional_array =
-            dynamic_cast<Array<pivot::graphics::DirectionalLight> &>(cm.GetComponentArray(*directional_id));
-        auto &spotlight_array = dynamic_cast<Array<pivot::graphics::SpotLight> &>(cm.GetComponentArray(*spotlight_id));
-
-        m_current_scene_draw_command = {
-            .renderObjects =
-                {
-                    .objects = ro_array.getComponents(),
-                    .exist = ro_array.getExistence(),
-                },
-            .pointLight =
-                {
-                    .objects = point_array.getComponents(),
-                    .exist = point_array.getExistence(),
-                },
-            .directionalLight =
-                {
-                    .objects = directional_array.getComponents(),
-                    .exist = directional_array.getExistence(),
-                },
-            .spotLight =
-                {
-                    .objects = spotlight_array.getComponents(),
-                    .exist = spotlight_array.getExistence(),
-                },
-            .transform =
-                {
-                    .objects = transform_array.getComponents(),
-                    .exist = transform_array.getExistence(),
-                },
-        };
-    } else {
-        m_current_scene_draw_command = std::nullopt;
-    }
+    m_current_scene_draw_command = getDrawCommand(cm);
+    auto camera_id = cm.GetComponentId(builtins::components::Camera::description.name);
+    m_camera_array = dynamic_cast<internals::CameraArray &>(cm.GetComponentArray(*camera_id));
 }
 
 namespace
@@ -193,6 +207,9 @@ namespace
         }
         if (!cm.GetComponentId(builtins::components::SpotLight::description.name).has_value()) {
             cm.RegisterComponent(builtins::components::SpotLight::description);
+        }
+        if (!cm.GetComponentId(builtins::components::Camera::description.name).has_value()) {
+            cm.RegisterComponent(builtins::components::Camera::description);
         }
     }
 }    // namespace

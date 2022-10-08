@@ -1,5 +1,6 @@
 #pragma once
 
+#include <pivot/ecs/Components/Camera.hxx>
 #include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
 #include <pivot/ecs/Core/Event/index.hxx>

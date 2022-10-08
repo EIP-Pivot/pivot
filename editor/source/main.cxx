@@ -52,16 +52,12 @@ public:
     {
         auto &window = m_vulkan_application.window;
 
-        Scene &scene = *getCurrentScene();
-
         window.addKeyReleaseCallback(Window::Key::LEFT_ALT,
                                      [&](Window &window, const Window::Key, const Window::Modifier) {
                                          window.captureCursor(!window.captureCursor());
                                          bFirstMouse = window.captureCursor();
                                          button.reset();
                                      });
-        window.addKeyReleaseCallback(
-            Window::Key::V, [&](Window &, const Window::Key, const Window::Modifier) { scene.switchCamera(); });
 
         auto key_lambda_press = [&](Window &window, const Window::Key key, const Window::Modifier) {
             if (window.captureCursor()) button.set(static_cast<std::size_t>(key));

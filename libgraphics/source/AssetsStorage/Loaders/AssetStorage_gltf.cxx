@@ -84,7 +84,7 @@ template <typename T>
 static std::pair<std::vector<T>, tinygltf::Accessor>
 getPrimitiveAttribute(const tinygltf::Model &model, const tinygltf::Primitive &primitive, const std::string &name)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
 
     auto iter = primitive.attributes.find(name);
     if (iter != primitive.attributes.end()) {
@@ -112,7 +112,7 @@ static std::vector<std::pair<std::string, asset::Model>>
 loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::vector<Vertex> &vertexBuffer,
              std::vector<Index> &indexBuffer, const glm::dmat4 &_matrix)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     logger.debug("Asset Storage/Gltf") << "Loading node: " << node.name;
 
     // Can't pass as copy, trigger note about GCC ABI
@@ -241,7 +241,7 @@ static std::pair<std::string, asset::CPUMaterial> loadGltfMaterial(const std::ve
 #define GET_MATERIAL_FACTOR(value, name) \
     if (mat.value.find(#name) != mat.value.end()) { material.name = static_cast<float>(mat.value.at(#name).Factor()); }
 
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     asset::CPUMaterial material;
 
     GET_MATERIAL_FACTOR(additionalValues, alphaCutOff);
@@ -266,7 +266,7 @@ static std::pair<std::string, asset::CPUMaterial> loadGltfMaterial(const std::ve
 
 std::optional<asset::CPUStorage> loadGltfModel(const std::filesystem::path &path)
 try {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
 
     asset::CPUStorage storage;
     tinygltf::Model gltfModel;

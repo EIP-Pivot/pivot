@@ -13,7 +13,7 @@ vk::DescriptorSetLayout LightDataResolver::descriptorSetLayout = VK_NULL_HANDLE;
 bool LightDataResolver::initialize(VulkanBase &base, const AssetStorage &stor, DescriptorBuilder &builder)
 {
 
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     base_ref = base;
     storage_ref = stor;
     createLightBuffer();
@@ -39,7 +39,7 @@ bool LightDataResolver::initialize(VulkanBase &base, const AssetStorage &stor, D
 
 bool LightDataResolver::destroy(VulkanBase &)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     base_ref->get().allocator.destroyBuffer(frame.omniLightBuffer);
     base_ref->get().allocator.destroyBuffer(frame.directLightBuffer);
     base_ref->get().allocator.destroyBuffer(frame.spotLightBuffer);
@@ -51,6 +51,7 @@ requires std::is_constructible_v<G, const T &, const Transform &> && BufferValid
 static vk::DeviceSize handleLights(VulkanBase &base_ref, AllocatedBuffer<G> &buffer, const Object<T> &lights,
                                    const Object<Transform> &transforms, const std::string &debug_name = "")
 {
+    PROFILE_FUNCTION();
     verifyMsg(lights.objects.get().size() == lights.exist.get().size(), "Light ECS data are incorrect");
     verifyMsg(transforms.objects.get().size() == transforms.exist.get().size(), "Transform ECS data are incorrect");
 
@@ -72,6 +73,7 @@ static vk::DeviceSize handleLights(VulkanBase &base_ref, AllocatedBuffer<G> &buf
 
 bool LightDataResolver::prepareForDraw(const DrawSceneInformation &sceneInformation)
 {
+    PROFILE_FUNCTION();
     verifyMsg(sceneInformation.pointLight.objects.get().size() == sceneInformation.pointLight.exist.get().size(),
               "ECS Point tights arrays are invalid.");
     verifyMsg(sceneInformation.directionalLight.objects.get().size() ==
@@ -95,6 +97,7 @@ bool LightDataResolver::prepareForDraw(const DrawSceneInformation &sceneInformat
 
 void LightDataResolver::createLightBuffer(std::size_t size)
 {
+    DEBUG_FUNCTION();
     base_ref->get().allocator.destroyBuffer(frame.omniLightBuffer);
     base_ref->get().allocator.destroyBuffer(frame.directLightBuffer);
     base_ref->get().allocator.destroyBuffer(frame.spotLightBuffer);
@@ -109,6 +112,7 @@ void LightDataResolver::createLightBuffer(std::size_t size)
 
 void LightDataResolver::updateDescriptorSet()
 {
+    DEBUG_FUNCTION();
     auto omniLightInfo = frame.omniLightBuffer.getBufferInfo();
     auto directLightInfo = frame.directLightBuffer.getBufferInfo();
     auto spotLightInfo = frame.spotLightBuffer.getBufferInfo();

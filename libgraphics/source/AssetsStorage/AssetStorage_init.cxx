@@ -11,7 +11,7 @@ namespace pivot::graphics
 
 void AssetStorage::createTextureSampler()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     const auto &properties = base_ref->get().physical_device.getProperties();
 
     vk::SamplerCreateInfo samplerInfo{
@@ -38,7 +38,7 @@ void AssetStorage::createTextureSampler()
 
 void AssetStorage::createDescriptorSet(DescriptorBuilder &builder)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     std::vector<vk::DescriptorImageInfo> imagesInfos;
     imagesInfos.reserve(textureStorage.size());
     std::ranges::transform(textureStorage.getStorage(), std::back_inserter(imagesInfos),

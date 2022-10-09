@@ -93,7 +93,7 @@ public:
     /// Add a Renderer to the frame
     T &addRenderer()
     {
-        DEBUG_FUNCTION
+        DEBUG_FUNCTION();
         StorageUtils utils{
             .pipeline = pipelineStorage,
             .assets = assetStorage,
@@ -114,7 +114,7 @@ public:
     /// Add a Resolver to the frame
     requires std::is_base_of_v<IResolver, T> FORCEINLINE void addResolver(unsigned setID)
     {
-        DEBUG_FUNCTION
+        DEBUG_FUNCTION();
         for (auto &frame: frames) frame.addResolver<T>(setID);
     }
 

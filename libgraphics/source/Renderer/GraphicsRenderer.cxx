@@ -15,7 +15,8 @@ GraphicsRenderer::~GraphicsRenderer() {}
 bool GraphicsRenderer::onInit(const vk::Extent2D &, VulkanBase &base_ref, const ResolverDispatcher &dispatcher,
                               vk::RenderPass &pass)
 {
-    DEBUG_FUNCTION;
+    DEBUG_FUNCTION();
+
     bIsMultiDraw = base_ref.deviceFeature.multiDrawIndirect;
 
     createPipelineLayout(base_ref.device, dispatcher);
@@ -25,7 +26,8 @@ bool GraphicsRenderer::onInit(const vk::Extent2D &, VulkanBase &base_ref, const 
 
 void GraphicsRenderer::onStop(VulkanBase &base_ref)
 {
-    DEBUG_FUNCTION;
+    DEBUG_FUNCTION();
+
     storage.pipeline.get().removePipeline("pbr");
     storage.pipeline.get().removePipeline("lit");
     storage.pipeline.get().removePipeline("unlit");
@@ -37,6 +39,8 @@ void GraphicsRenderer::onStop(VulkanBase &base_ref)
 bool GraphicsRenderer::onDraw(const RenderingContext &context, const CameraData &cameraData,
                               ResolverDispatcher &dispatcher, vk::CommandBuffer &cmd)
 {
+    PROFILE_FUNCTION();
+
     const LightDataResolver &light = dispatcher.get<LightDataResolver>();
     const DrawCallResolver &resolver = dispatcher.get<DrawCallResolver>();
 
@@ -89,7 +93,7 @@ bool GraphicsRenderer::onDraw(const RenderingContext &context, const CameraData 
 
 void GraphicsRenderer::createPipelineLayout(vk::Device &device, const ResolverDispatcher &dispatcher)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     std::vector<vk::PushConstantRange> pipelinePushConstant = {
         vk_init::populateVkPushConstantRange(vk::ShaderStageFlagBits::eVertex, sizeof(gpu_object::VertexPushConstant)),
         vk_init::populateVkPushConstantRange(vk::ShaderStageFlagBits::eFragment,
@@ -106,7 +110,7 @@ void GraphicsRenderer::createPipelineLayout(vk::Device &device, const ResolverDi
 
 void GraphicsRenderer::createPipeline(VulkanBase &base_ref, vk::RenderPass &pass)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
 
     GraphicsPipelineBuilder builder;
     const std::uint32_t count = storage.assets.get().getSize<AssetStorage::Texture>();

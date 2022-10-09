@@ -10,6 +10,7 @@
 
 void ImGuiManager::newFrame()
 {
+    PROFILE_FUNCTION();
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
@@ -20,6 +21,7 @@ void ImGuiManager::newFrame()
 
 void ImGuiManager::dockSpace()
 {
+    PROFILE_FUNCTION();
     ImGuiIO &io = ImGui::GetIO();
     if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
         const ImGuiViewport *viewport = ImGui::GetMainViewport();
@@ -64,6 +66,7 @@ void ImGuiManager::dockSpace()
 
 void ImGuiManager::render()
 {
+    PROFILE_FUNCTION();
     ImGui::EndFrame();
     ImGui::Render();
     // ImGui::UpdatePlatformWindows();

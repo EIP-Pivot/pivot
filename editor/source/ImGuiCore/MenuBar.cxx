@@ -103,6 +103,9 @@ bool MenuBar::render()
             } else {
                 if (ImGui::MenuItem("End Tracing")) { pivot::benchmark::Instrumentor::get().endSession(); }
             }
+            if (ImGui::MenuItem("Capture One Frame")) {
+                captureNextFrame = true;
+            }
             ImGui::EndMenu();
         }
 #endif

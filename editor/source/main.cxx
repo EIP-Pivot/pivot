@@ -192,6 +192,17 @@ public:
 
     void onFrameStart() override
     {
+#if !defined(NO_BENCHMARK)
+        static bool shouldCaptureFrame = menuBar.shouldCaptureFrame();
+        if (shouldCaptureFrame) {
+            shouldCaptureFrame = false;
+            if (pivot::benchmark::Instrumentor::get().isSessionStarted()) {
+                pivot::benchmark::Instrumentor::get().endSession();
+            } else {
+                pivot::benchmark::Instrumentor::get().beginSession("Pivot_Frame.json");
+            }
+        }
+#endif
         PROFILE_FUNCTION();
         imGuiManager.newFrame();
     }

@@ -43,9 +43,16 @@ public:
 
     bool shouldDisplayColorwindow() const { return displayColors; }
 
+    bool shouldCaptureFrame()  noexcept { 
+        bool temp = captureNextFrame;
+        captureNextFrame = false;
+        return temp;
+    }
+
 private:
     std::unordered_map<std::string, std::vector<FileInteraction>> fileSubMenu;
 
     bool showMetricsWindow = false;
     bool displayColors = false;
+    bool captureNextFrame = false;
 };

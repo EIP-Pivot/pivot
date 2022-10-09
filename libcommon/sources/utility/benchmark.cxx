@@ -2,8 +2,6 @@
 
 #include <iomanip>
 
-#if !defined(NO_BENCHMARK)
-
 namespace pivot::benchmark
 {
 
@@ -77,5 +75,3 @@ void Instrumentor::writeFooter()
 }
 
 }    // namespace pivot::benchmark
-
-#endif

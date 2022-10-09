@@ -43,7 +43,8 @@ public:
 
     bool shouldDisplayColorwindow() const { return displayColors; }
 
-    bool shouldCaptureFrame()  noexcept { 
+    bool shouldCaptureFrame() noexcept
+    {
         bool temp = captureNextFrame;
         captureNextFrame = false;
         return temp;

@@ -7,8 +7,6 @@
 #include <pivot/pivot.hxx>
 #include <pivot/utility/source_location.hxx>
 
-#if !defined(NO_BENCHMARK)
-
 namespace pivot::benchmark
 {
 
@@ -91,6 +89,8 @@ private:
 };
 
 }    // namespace pivot::benchmark
+
+#if !defined(NO_BENCHMARK)
 
     #define PROFILE_SCOPE(name) ::pivot::benchmark::Timer timer##__LINE__(name)
     #define PROFILE_FUNCTION() PROFILE_SCOPE(::pivot::utils::function_name())

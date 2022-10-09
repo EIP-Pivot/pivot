@@ -159,6 +159,11 @@ vec3 specularReflection(float dotVH, vec3 reflectance0, vec3 reflectance90)
 
 vec3 specularContribution(vec3 L, PBRInfo info)
 {
+    // black metallic fix (temp) proper fix need implementation of IRB
+    if (info.reflectance0 == vec3(0)) {
+        info.reflectance0 = vec3(10);
+    }
+
     vec3 H = normalize(info.V + L);
     float dotNH = clamp(dot(info.N, H), 0.0, 1.0);                // cos angle between normal and half vector
     float dotNV = clamp(abs(dot(info.N, info.V)), 0.001, 1.0);    // cos angle between normal and view direction
@@ -202,13 +207,13 @@ void main()
     vec3 diffuseColor = baseColor.rgb * (vec3(1.0) - F0);
     diffuseColor *= 1.0 - metallic;
 
-    F0 = mix(F0, diffuseColor.rgb, metallic);
+    vec3 specularColor = mix(F0, diffuseColor.rgb, metallic);
 
-    float reflectance = max(max(F0.r, F0.g), F0.b);
+    float reflectance = max(max(specularColor.r, specularColor.g), specularColor.b);
     float reflectance90 = clamp(reflectance * 25.0, 0.0, 1.0);
 
-    PBRInfo pbrInfo =
-        PBRInfo(N, V, roughness, metallic, F0, vec3(reflectance90), roughness * roughness, diffuseColor.rgb, F0);
+    PBRInfo pbrInfo = PBRInfo(N, V, roughness, metallic, vec3(specularColor), vec3(reflectance90),
+                              roughness * roughness, diffuseColor.rgb, F0);
 
     // reflectance equation
     vec3 Lo = vec3(0.0);

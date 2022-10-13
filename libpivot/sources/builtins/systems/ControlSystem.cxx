@@ -84,7 +84,8 @@
 
 namespace pivot::builtins::systems
 {
-std::vector<pivot::ecs::event::Event> ControlSystem::processMouseMovement(Camera &cam, const glm::dvec2 &offset)
+std::vector<pivot::ecs::event::Event> ControlSystem::processMouseMovement(components::Camera &cam,
+                                                                          const glm::dvec2 &offset)
 {
     cam.yaw += offset.x * SENSITIVITY;
     cam.pitch += offset.y * SENSITIVITY;
@@ -93,7 +94,6 @@ std::vector<pivot::ecs::event::Event> ControlSystem::processMouseMovement(Camera
         if (cam.pitch > 89.0f) cam.pitch = 89.0f;
         if (cam.pitch < -89.0f) cam.pitch = -89.0f;
     }
-    cam.updateCameraVectors();
     return {};
 }
 

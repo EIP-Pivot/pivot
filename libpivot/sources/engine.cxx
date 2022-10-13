@@ -8,7 +8,6 @@
 #include <pivot/engine.hxx>
 
 #include <pivot/internal/FrameLimiter.hxx>
-#include <pivot/internal/camera.hxx>
 
 #include <pivot/ecs/Components/Gravity.hxx>
 #include <pivot/ecs/Components/RigidBody.hxx>
@@ -42,7 +41,7 @@ Engine::Engine()
     : m_scripting_engine(
           m_system_index, m_component_index,
           pivot::ecs::script::interpreter::builtins::BuiltinContext{std::bind_front(&Engine::isKeyPressed, this)}),
-      m_camera(builtins::Camera(glm::vec3(0, 5, 0)))
+      m_default_camera(internals::LocationCamera{{}, graphics::Transform{.position = glm::vec3(0, 5, 0)}})
 {
     m_component_index.registerComponent(builtins::components::Gravity::description);
     m_component_index.registerComponent(builtins::components::RigidBody::description);
@@ -98,9 +97,9 @@ void Engine::run()
         this->onFrameEnd();
 
         if (m_current_scene_draw_command) {
-            auto result = m_vulkan_application.draw(
-                m_current_scene_draw_command.value(),
-                pivot::internals::getGPUCameraData(m_camera, Engine::fov, aspectRatio), renderArea);
+            auto result =
+                m_vulkan_application.draw(m_current_scene_draw_command.value(),
+                                          m_default_camera.getGPUCameraData(Engine::fov, aspectRatio), renderArea);
             if (result == pivot::graphics::VulkanApplication::DrawResult::Error) {
                 std::terminate();
             } else if (result == pivot::graphics::VulkanApplication::DrawResult::FrameSkipped) {
@@ -303,5 +302,7 @@ void Engine::onKeyPressed(graphics::Window &, const graphics::Window::Key key, c
             {pivot::builtins::events::keyPress, {}, data::Value(std::string(magic_enum::enum_name(key)))});
     }
 }
+
+void Engine::setCurrentCamera(Entity camera) { m_camera_array.value().get().setCurrentCamera(camera); }
 
 }    // namespace pivot

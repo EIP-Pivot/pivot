@@ -4,12 +4,14 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
-#include <pivot/ecs/Core/Component/description.hxx>
+#include <pivot/builtins/components/Camera.hxx>
+#include <pivot/graphics/types/Transform.hxx>
+#include <pivot/graphics/types/vk_types.hxx>
 
-namespace pivot::builtins::components
+namespace pivot::internals
 {
 /// Component added to entity that generate collision events
-struct Camera {
+struct LocationCamera {
     /// Movements available on the camera
     enum Movement { FORWARD, BACKWARD, LEFT, RIGHT, UP, DOWN };
     /// Maximum projection distance
@@ -28,15 +30,10 @@ struct Camera {
         glm::vec3 right;
     };
 
-    /// Focal point
-    double fov;
-    /// Camera
-    double yaw = YAW;
-    /// Camera pitch
-    double pitch = PITCH;
-
-    /// Component description
-    static const pivot::ecs::component::Description description;
+    /// Camera part
+    builtins::components::Camera camera;
+    /// Transform part
+    graphics::Transform transform;
 
     /// Get camera projection
     inline glm::mat4 getProjection(float fFOV, float fAspectRatio, float fCloseClippingPlane = MIN_PROJECTION_LIMIT,
@@ -50,9 +47,9 @@ struct Camera {
         const glm::vec3 WORLD_UP = {0.0f, 1.0f, 0.0f};
 
         glm::vec3 tmpFront;
-        tmpFront.x = static_cast<float>(std::cos(glm::radians(yaw)) * std::cos(glm::radians(pitch)));
-        tmpFront.y = static_cast<float>(std::sin(glm::radians(pitch)));
-        tmpFront.z = static_cast<float>(std::sin(glm::radians(yaw)) * std::cos(glm::radians(pitch)));
+        tmpFront.x = static_cast<float>(std::cos(glm::radians(camera.yaw)) * std::cos(glm::radians(camera.pitch)));
+        tmpFront.y = static_cast<float>(std::sin(glm::radians(camera.pitch)));
+        tmpFront.z = static_cast<float>(std::sin(glm::radians(camera.yaw)) * std::cos(glm::radians(camera.pitch)));
 
         glm::vec3 front = glm::normalize(tmpFront);
         glm::vec3 right = glm::normalize(glm::cross(tmpFront, WORLD_UP));
@@ -62,10 +59,16 @@ struct Camera {
     }
 
     /// Get camera view
-    inline glm::mat4 getView(glm::vec3 position) const
+    inline glm::mat4 getView() const
     {
         auto directions = this->getDirections();
-        return glm::lookAt(position, position + directions.front, directions.up);
+        return glm::lookAt(this->transform.position, this->transform.position + directions.front, directions.up);
     }
+
+    /// Get CameraData of the camera
+    graphics::CameraData
+    getGPUCameraData(float fFOV, float fAspectRatio,
+                     float fCloseClippingPlane = builtins::components::Camera::MIN_PROJECTION_LIMIT,
+                     float fFarClippingPlane = builtins::components::Camera::MAX_PROJECTION_LIMIT);
 };
-}    // namespace pivot::builtins::components
+}    // namespace pivot::internals

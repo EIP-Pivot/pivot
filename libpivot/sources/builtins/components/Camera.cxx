@@ -6,5 +6,5 @@
 
 using namespace pivot::builtins::components;
 
-BOOST_FUSION_ADAPT_STRUCT(Camera, fov);
+BOOST_FUSION_ADAPT_STRUCT(Camera, fov, yaw, pitch);
 PIVOT_REGISTER_COMPONENT(Camera, internals::CameraArray);

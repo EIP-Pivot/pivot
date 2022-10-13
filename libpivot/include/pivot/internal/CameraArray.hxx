@@ -24,19 +24,24 @@ public:
 
     std::optional<std::pair<Entity, builtins::components::Camera>> getCurrentCamera() const
     {
-        if (m_current_camera < m_components.size() && m_component_exist.at(m_current_camera)) {
-            return {{m_current_camera, m_components[m_current_camera]}};
+        if (m_current_camera.has_value() && *m_current_camera < m_components.size() &&
+            m_component_exist.at(*m_current_camera)) {
+            return {{*m_current_camera, m_components[*m_current_camera]}};
         }
 
         return std::nullopt;
     }
 
-    void setCurrentCamera(Entity camera)
+    void setCurrentCamera(std::optional<Entity> camera)
     {
-        if (camera < m_components.size() && m_component_exist.at(camera)) { m_current_camera = camera; }
+        if (camera.has_value()) {
+            if (*camera < m_components.size() && m_component_exist.at(*camera)) { m_current_camera = camera; }
+        } else {
+            m_current_camera = std::nullopt;
+        }
     }
 
 private:
-    Entity m_current_camera;
+    std::optional<Entity> m_current_camera;
 };
 }    // namespace pivot::internals

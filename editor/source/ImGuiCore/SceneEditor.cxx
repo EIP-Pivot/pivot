@@ -98,12 +98,12 @@ void SceneEditor::viewport()
 
 void SceneEditor::setAspectRatio(float aspect) { aspectRatio = aspect; }
 
-void SceneEditor::DisplayGuizmo(Entity entity, const pivot::builtins::Camera &camera)
+void SceneEditor::DisplayGuizmo(Entity entity, const pivot::internals::LocationCamera &camera)
 {
     using Transform = pivot::builtins::components::Transform;
 
-    const auto view = camera.getView();
-    const auto projection = camera.getProjection(pivot::Engine::fov, aspectRatio);
+    const auto view = camera.camera.getView(camera.transform.position);
+    const auto projection = camera.camera.getProjection(pivot::Engine::fov, aspectRatio);
 
     const float *view_ptr = glm::value_ptr(view);
     const float *projection_ptr = glm::value_ptr(projection);

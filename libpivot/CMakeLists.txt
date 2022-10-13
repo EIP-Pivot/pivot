@@ -3,7 +3,7 @@ project(pivot)
 add_library(
     ${PROJECT_NAME} STATIC
     sources/engine.cxx
-    sources/internal/camera.cxx
+    sources/internal/LocationCamera.cxx
     sources/builtins/systems/ControlSystem.cxx
     sources/builtins/systems/PhysicSystem.cxx
     sources/builtins/systems/CollisionSystem.cxx

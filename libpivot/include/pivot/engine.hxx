@@ -1,6 +1,5 @@
 #pragma once
 
-#include <pivot/ecs/Components/Camera.hxx>
 #include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
 #include <pivot/ecs/Core/Event/index.hxx>
@@ -14,6 +13,8 @@
 #include <pivot/script/Engine.hxx>
 
 #include <pivot/builtins/components/RenderObject.hxx>
+#include <pivot/internal/CameraArray.hxx>
+#include <pivot/internal/LocationCamera.hxx>
 
 namespace pivot
 {
@@ -39,6 +40,8 @@ public:
     }
     vk::Sampler getSampler() const { return m_vulkan_application.assetStorage.getSampler(); }
 
+    void setCurrentCamera(Entity camera);
+
     static constexpr float fov = 80;
 
 protected:
@@ -47,7 +50,7 @@ protected:
     ecs::systems::Index m_system_index;
     graphics::VulkanApplication m_vulkan_application;
     ecs::script::Engine m_scripting_engine;
-    builtins::Camera m_camera;
+    internals::LocationCamera m_default_camera;
     bool m_paused = true;
     std::optional<vk::Rect2D> renderArea = std::nullopt;
 

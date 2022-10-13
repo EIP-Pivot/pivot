@@ -4,7 +4,6 @@
 #include <pivot/graphics/vk_utils.hxx>
 
 #include <pivot/builtins/systems/ControlSystem.hxx>
-#include <pivot/internal/camera.hxx>
 
 #include <pivot/ecs/Core/Event/description.hxx>
 
@@ -91,58 +90,63 @@ public:
             auto yoffset = last.y - pos.y;
 
             last = pos;
-            pivot::builtins::systems::ControlSystem::processMouseMovement(m_camera, glm::dvec2(xoffset, yoffset));
+            pivot::builtins::systems::ControlSystem::processMouseMovement(m_default_camera.camera,
+                                                                          glm::dvec2(xoffset, yoffset));
         });
         m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
         // resize or loading asset reset imgui -> style reset
         //        ImGuiTheme::setStyle();
     }
 
-    void processKeyboard(const pivot::builtins::Camera::Movement direction, float dt) noexcept
+    void processKeyboard(pivot::internals::LocationCamera &camera,
+                         const pivot::builtins::components::Camera::Movement direction, float dt) noexcept
     {
-        using Camera = pivot::builtins::Camera;
+        using Camera = pivot::builtins::components::Camera;
+        using Movement = Camera::Movement;
+        glm::vec3 &camera_position = camera.transform.position;
+        Camera::Directions camera_directions = camera.camera.getDirections();
         switch (direction) {
-            case Camera::Movement::FORWARD: {
-                m_camera.position.x += m_camera.front.x * 10.f * dt;
-                m_camera.position.z += m_camera.front.z * 10.f * dt;
+            case Movement::FORWARD: {
+                camera_position.x += camera_directions.front.x * 10.f * dt;
+                camera_position.z += camera_directions.front.z * 10.f * dt;
             } break;
-            case Camera::Movement::BACKWARD: {
-                m_camera.position.x -= m_camera.front.x * 10.f * dt;
-                m_camera.position.z -= m_camera.front.z * 10.f * dt;
+            case Movement::BACKWARD: {
+                camera_position.x -= camera_directions.front.x * 10.f * dt;
+                camera_position.z -= camera_directions.front.z * 10.f * dt;
             } break;
-            case Camera::Movement::RIGHT: {
-                m_camera.position.x += m_camera.right.x * 10.f * dt;
-                m_camera.position.z += m_camera.right.z * 10.f * dt;
+            case Movement::RIGHT: {
+                camera_position.x += camera_directions.right.x * 10.f * dt;
+                camera_position.z += camera_directions.right.z * 10.f * dt;
             } break;
-            case Camera::Movement::LEFT: {
-                m_camera.position.x -= m_camera.right.x * 10.f * dt;
-                m_camera.position.z -= m_camera.right.z * 10.f * dt;
+            case Movement::LEFT: {
+                camera_position.x -= camera_directions.right.x * 10.f * dt;
+                camera_position.z -= camera_directions.right.z * 10.f * dt;
             } break;
-            case Camera::Movement::UP: {
-                m_camera.position.y += 10.f * dt;
+            case Movement::UP: {
+                camera_position.y += 10.f * dt;
             } break;
-            case Camera::Movement::DOWN: m_camera.position.y -= 10.f * dt; break;
+            case Movement::DOWN: camera_position.y -= 10.f * dt; break;
         }
     }
 
-    void UpdateCamera(float dt)
+    void UpdateCamera(pivot::internals::LocationCamera &camera, float dt)
     {
-        using Camera = pivot::builtins::Camera;
+        using Camera = pivot::builtins::components::Camera;
         try {
             if (button.test(static_cast<std::size_t>(Window::Key::Z)))
-                processKeyboard(Camera::FORWARD, dt);
+                processKeyboard(camera, Camera::FORWARD, dt);
             else if (button.test(static_cast<std::size_t>(Window::Key::S)))
-                processKeyboard(Camera::BACKWARD, dt);
+                processKeyboard(camera, Camera::BACKWARD, dt);
 
             if (button.test(static_cast<std::size_t>(Window::Key::Q)))
-                processKeyboard(Camera::LEFT, dt);
+                processKeyboard(camera, Camera::LEFT, dt);
             else if (button.test(static_cast<std::size_t>(Window::Key::D)))
-                processKeyboard(Camera::RIGHT, dt);
+                processKeyboard(camera, Camera::RIGHT, dt);
 
             if (button.test(static_cast<std::size_t>(Window::Key::SPACE)))
-                processKeyboard(Camera::UP, dt);
+                processKeyboard(camera, Camera::UP, dt);
             else if (button.test(static_cast<std::size_t>(Window::Key::LEFT_SHIFT)))
-                processKeyboard(Camera::DOWN, dt);
+                processKeyboard(camera, Camera::DOWN, dt);
         } catch (const std::exception &e) {
             std::cerr << e.what() << std::endl;
         }
@@ -165,9 +169,9 @@ public:
             entity.hasSelected() ? componentEditor.create(entity.getEntitySelected()) : componentEditor.create();
             systemsEditor.create();
             assetBrowser.create();
-            if (entity.hasSelected()) { sceneEditor.DisplayGuizmo(entity.getEntitySelected(), m_camera); }
+            if (entity.hasSelected()) { sceneEditor.DisplayGuizmo(entity.getEntitySelected(), m_default_camera); }
         }
-        UpdateCamera(dt);
+        UpdateCamera(m_default_camera, dt);
         this->setRenderArea(vk::Rect2D{
             .offset =
                 {

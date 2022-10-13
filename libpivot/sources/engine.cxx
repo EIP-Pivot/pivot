@@ -41,7 +41,9 @@ Engine::Engine()
     : m_scripting_engine(
           m_system_index, m_component_index,
           pivot::ecs::script::interpreter::builtins::BuiltinContext{std::bind_front(&Engine::isKeyPressed, this)}),
-      m_default_camera(internals::LocationCamera{{}, graphics::Transform{.position = glm::vec3(0, 5, 0)}})
+      m_default_camera_data(),
+      m_default_camera_transform{.position = glm::vec3(0, 5, 0)},
+      m_default_camera{m_default_camera_data, m_default_camera_transform}
 {
     m_component_index.registerComponent(builtins::components::Gravity::description);
     m_component_index.registerComponent(builtins::components::RigidBody::description);
@@ -97,9 +99,9 @@ void Engine::run()
         this->onFrameEnd();
 
         if (m_current_scene_draw_command) {
-            auto result =
-                m_vulkan_application.draw(m_current_scene_draw_command.value(),
-                                          m_default_camera.getGPUCameraData(Engine::fov, aspectRatio), renderArea);
+            auto result = m_vulkan_application.draw(m_current_scene_draw_command.value(),
+                                                    this->getCurrentCamera().getGPUCameraData(Engine::fov, aspectRatio),
+                                                    renderArea);
             if (result == pivot::graphics::VulkanApplication::DrawResult::Error) {
                 std::terminate();
             } else if (result == pivot::graphics::VulkanApplication::DrawResult::FrameSkipped) {
@@ -185,6 +187,9 @@ void Engine::changeCurrentScene(ecs::SceneManager::SceneId sceneId)
     m_current_scene_draw_command = getDrawCommand(cm);
     auto camera_id = cm.GetComponentId(builtins::components::Camera::description.name);
     m_camera_array = dynamic_cast<internals::CameraArray &>(cm.GetComponentArray(*camera_id));
+    auto transform_id = cm.GetComponentId(builtins::components::Transform::description.name);
+    m_transform_array = dynamic_cast<ecs::component::DenseTypedComponentArray<graphics::Transform> &>(
+        cm.GetComponentArray(*transform_id));
 }
 
 namespace
@@ -303,6 +308,20 @@ void Engine::onKeyPressed(graphics::Window &, const graphics::Window::Key key, c
     }
 }
 
-void Engine::setCurrentCamera(Entity camera) { m_camera_array.value().get().setCurrentCamera(camera); }
+void Engine::setCurrentCamera(std::optional<Entity> camera) { m_camera_array.value().get().setCurrentCamera(camera); }
+
+internals::LocationCamera Engine::getCurrentCamera()
+{
+    auto current_camera = m_camera_array.value().get().getCurrentCamera();
+    if (current_camera.has_value()) {
+        auto [camera_entity, camera] = current_camera.value();
+        auto &transform_array = m_transform_array.value().get();
+        if (transform_array.entityHasValue(camera_entity)) {
+            return internals::LocationCamera{.camera = camera.get(),
+                                             .transform = transform_array.getData()[camera_entity]};
+        }
+    }
+    return m_default_camera;
+}
 
 }    // namespace pivot

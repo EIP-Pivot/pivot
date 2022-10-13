@@ -102,8 +102,8 @@ void SceneEditor::DisplayGuizmo(Entity entity, const pivot::internals::LocationC
 {
     using Transform = pivot::builtins::components::Transform;
 
-    const auto view = camera.camera.getView(camera.transform.position);
-    const auto projection = camera.camera.getProjection(pivot::Engine::fov, aspectRatio);
+    const auto view = camera.getView();
+    const auto projection = camera.getProjection(pivot::Engine::fov, aspectRatio);
 
     const float *view_ptr = glm::value_ptr(view);
     const float *projection_ptr = glm::value_ptr(projection);

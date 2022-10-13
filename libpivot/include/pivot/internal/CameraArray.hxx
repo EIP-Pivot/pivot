@@ -19,14 +19,27 @@ public:
     {
         m_component_exist.push_back(true);
         m_components.push_back(builtins::components::Camera{});
-        m_current_camera = 0;
     }
 
-    std::optional<std::pair<Entity, builtins::components::Camera>> getCurrentCamera() const
+    std::optional<std::pair<Entity, std::reference_wrapper<const builtins::components::Camera>>>
+    getCurrentCamera() const
     {
         if (m_current_camera.has_value() && *m_current_camera < m_components.size() &&
             m_component_exist.at(*m_current_camera)) {
-            return {{*m_current_camera, m_components[*m_current_camera]}};
+            Entity current_camera = *m_current_camera;
+            std::reference_wrapper<const builtins::components::Camera> camera = std::ref(m_components[current_camera]);
+            return {{current_camera, camera}};
+        }
+
+        return std::nullopt;
+    }
+    std::optional<std::pair<Entity, std::reference_wrapper<builtins::components::Camera>>> getCurrentCamera()
+    {
+        if (m_current_camera.has_value() && *m_current_camera < m_components.size() &&
+            m_component_exist.at(*m_current_camera)) {
+            Entity current_camera = *m_current_camera;
+            std::reference_wrapper<builtins::components::Camera> camera = std::ref(m_components[current_camera]);
+            return {{current_camera, camera}};
         }
 
         return std::nullopt;

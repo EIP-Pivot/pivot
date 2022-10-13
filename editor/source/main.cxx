@@ -90,7 +90,7 @@ public:
             auto yoffset = last.y - pos.y;
 
             last = pos;
-            pivot::builtins::systems::ControlSystem::processMouseMovement(m_default_camera.camera,
+            pivot::builtins::systems::ControlSystem::processMouseMovement(this->getCurrentCamera().camera,
                                                                           glm::dvec2(xoffset, yoffset));
         });
         m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
@@ -98,13 +98,12 @@ public:
         //        ImGuiTheme::setStyle();
     }
 
-    void processKeyboard(pivot::internals::LocationCamera &camera,
-                         const pivot::builtins::components::Camera::Movement direction, float dt) noexcept
+    void processKeyboard(pivot::internals::LocationCamera camera, pivot::internals::LocationCamera::Movement direction,
+                         float dt) noexcept
     {
-        using Camera = pivot::builtins::components::Camera;
-        using Movement = Camera::Movement;
+        using Movement = pivot::internals::LocationCamera::Movement;
         glm::vec3 &camera_position = camera.transform.position;
-        Camera::Directions camera_directions = camera.camera.getDirections();
+        pivot::internals::LocationCamera::Directions camera_directions = camera.getDirections();
         switch (direction) {
             case Movement::FORWARD: {
                 camera_position.x += camera_directions.front.x * 10.f * dt;
@@ -129,24 +128,24 @@ public:
         }
     }
 
-    void UpdateCamera(pivot::internals::LocationCamera &camera, float dt)
+    void UpdateCamera(pivot::internals::LocationCamera camera, float dt)
     {
-        using Camera = pivot::builtins::components::Camera;
+        using LocationCamera = pivot::internals::LocationCamera;
         try {
             if (button.test(static_cast<std::size_t>(Window::Key::Z)))
-                processKeyboard(camera, Camera::FORWARD, dt);
+                processKeyboard(camera, LocationCamera::FORWARD, dt);
             else if (button.test(static_cast<std::size_t>(Window::Key::S)))
-                processKeyboard(camera, Camera::BACKWARD, dt);
+                processKeyboard(camera, LocationCamera::BACKWARD, dt);
 
             if (button.test(static_cast<std::size_t>(Window::Key::Q)))
-                processKeyboard(camera, Camera::LEFT, dt);
+                processKeyboard(camera, LocationCamera::LEFT, dt);
             else if (button.test(static_cast<std::size_t>(Window::Key::D)))
-                processKeyboard(camera, Camera::RIGHT, dt);
+                processKeyboard(camera, LocationCamera::RIGHT, dt);
 
             if (button.test(static_cast<std::size_t>(Window::Key::SPACE)))
-                processKeyboard(camera, Camera::UP, dt);
+                processKeyboard(camera, LocationCamera::UP, dt);
             else if (button.test(static_cast<std::size_t>(Window::Key::LEFT_SHIFT)))
-                processKeyboard(camera, Camera::DOWN, dt);
+                processKeyboard(camera, LocationCamera::DOWN, dt);
         } catch (const std::exception &e) {
             std::cerr << e.what() << std::endl;
         }
@@ -169,9 +168,11 @@ public:
             entity.hasSelected() ? componentEditor.create(entity.getEntitySelected()) : componentEditor.create();
             systemsEditor.create();
             assetBrowser.create();
-            if (entity.hasSelected()) { sceneEditor.DisplayGuizmo(entity.getEntitySelected(), m_default_camera); }
+            if (entity.hasSelected()) {
+                sceneEditor.DisplayGuizmo(entity.getEntitySelected(), this->getCurrentCamera());
+            }
         }
-        UpdateCamera(m_default_camera, dt);
+        UpdateCamera(this->getCurrentCamera(), dt);
         this->setRenderArea(vk::Rect2D{
             .offset =
                 {

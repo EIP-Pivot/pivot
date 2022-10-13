@@ -40,7 +40,8 @@ public:
     }
     vk::Sampler getSampler() const { return m_vulkan_application.assetStorage.getSampler(); }
 
-    void setCurrentCamera(Entity camera);
+    void setCurrentCamera(std::optional<Entity> camera);
+    internals::LocationCamera getCurrentCamera();
 
     static constexpr float fov = 80;
 
@@ -50,7 +51,6 @@ protected:
     ecs::systems::Index m_system_index;
     graphics::VulkanApplication m_vulkan_application;
     ecs::script::Engine m_scripting_engine;
-    internals::LocationCamera m_default_camera;
     bool m_paused = true;
     std::optional<vk::Rect2D> renderArea = std::nullopt;
 
@@ -66,8 +66,14 @@ private:
     ecs::SceneManager m_scene_manager;
     std::optional<graphics::DrawCallResolver::DrawSceneInformation> m_current_scene_draw_command;
     pivot::OptionalRef<internals::CameraArray> m_camera_array;
+    pivot::OptionalRef<ecs::component::DenseTypedComponentArray<graphics::Transform>> m_transform_array;
+    builtins::components::Camera m_default_camera_data;
+    graphics::Transform m_default_camera_transform;
 
     bool isKeyPressed(const std::string &key) const;
     void onKeyPressed(graphics::Window &window, const graphics::Window::Key key, const graphics::Window::Modifier);
+
+protected:
+    internals::LocationCamera m_default_camera;
 };
 }    // namespace pivot

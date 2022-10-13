@@ -6,9 +6,9 @@ namespace pivot::internals
 graphics::CameraData LocationCamera::getGPUCameraData(float fFOV, float fAspectRatio, float fCloseClippingPlane,
                                                       float fFarClippingPlane)
 {
-    auto projection = this->camera.getProjection(fFOV, fAspectRatio, fCloseClippingPlane, fFarClippingPlane);
+    auto projection = this->getProjection(fFOV, fAspectRatio, fCloseClippingPlane, fFarClippingPlane);
     projection[1][1] *= -1;
-    auto view = this->camera.getView(this->transform.position);
+    auto view = this->getView();
     return {
         .position = this->transform.position,
         .view = view,

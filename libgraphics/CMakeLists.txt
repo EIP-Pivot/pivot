@@ -5,7 +5,7 @@ find_package(Vulkan REQUIRED)
 fetchcontent_declare(
     glfw
     GIT_REPOSITORY https://github.com/glfw/glfw.git
-    GIT_TAG 3.3.8
+    GIT_TAG 3.3.7
 )
 fetchcontent_getproperties(glfw)
 if(NOT glfw_POPULATED)
@@ -18,7 +18,7 @@ endif()
 fetchcontent_declare(
     ktx
     GIT_REPOSITORY https://github.com/KhronosGroup/KTX-Software.git
-    GIT_TAG 691e9ca3f1a5d60e6c06a65df894a5042c43abc6
+    GIT_TAG v4.0.0
 )
 fetchcontent_getproperties(ktx)
 if(NOT ktx_POPULATED)
@@ -42,7 +42,7 @@ endif()
 fetchcontent_declare(
     tinygltf
     GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
-    GIT_TAG v2.6.3
+    GIT_TAG 912856823dcb2badf2074055b6d006f7bb3800b8
 )
 fetchcontent_getproperties(tinygltf)
 if(NOT tinygltf_POPULATED)
@@ -75,16 +75,15 @@ endif()
 fetchcontent_declare(
     vma
     GIT_REPOSITORY https://github.com/YaaZ/VulkanMemoryAllocator-Hpp.git
-    GIT_TAG 1d9a829b669a96372d1a09b028c2d7a396a4da36
+    GIT_TAG da6ea76eecf12a1decc76f58a3e096bcc555bd94
 )
 fetchcontent_getproperties(vma)
 if(NOT vma_POPULATED)
     message(STATUS "Populating vma")
     fetchcontent_populate(vma)
-    add_library(VulkanMemoryAllocator STATIC ${vma_SOURCE_DIR}/VulkanMemoryAllocator/include/vk_mem_alloc.h)
-    set_source_files_properties(${vma_SOURCE_DIR}/VulkanMemoryAllocator/include/vk_mem_alloc.h PROPERTIES LANGUAGE CXX)
+    add_library(VulkanMemoryAllocator STATIC ${vma_SOURCE_DIR}/include/vk_mem_alloc.h)
+    set_source_files_properties(${vma_SOURCE_DIR}/include/vk_mem_alloc.h PROPERTIES LANGUAGE CXX)
     target_include_directories(VulkanMemoryAllocator SYSTEM PUBLIC ${vma_SOURCE_DIR}/include/)
-        target_include_directories(VulkanMemoryAllocator SYSTEM PUBLIC ${vma_SOURCE_DIR}/VulkanMemoryAllocator/include/)
     target_compile_definitions(VulkanMemoryAllocator PRIVATE VMA_IMPLEMENTATION)
     set_target_properties(VulkanMemoryAllocator PROPERTIES LINKER_LANGUAGE CXX)
     target_link_libraries(VulkanMemoryAllocator PUBLIC Vulkan::Vulkan)
@@ -93,7 +92,7 @@ endif()
 fetchcontent_declare(
     stb
     GIT_REPOSITORY https://github.com/nothings/stb.git
-    GIT_TAG 8b5f1f37b5b75829fc72d38e7b5d4bcbf8a26d55
+    GIT_TAG af1a5bc352164740c1cc1354942b1c6b72eacb8a
 )
 fetchcontent_getproperties(stb)
 if(NOT stb_POPULATED)
@@ -109,7 +108,7 @@ endif()
 fetchcontent_declare(
     tinyobjloader
     GIT_REPOSITORY https://github.com/tinyobjloader/tinyobjloader.git
-    GIT_TAG 764cf751847b3e569d92ac400de7ec8c62be9ecd
+    GIT_TAG 8322e00ae685ea623ab6ac5a6cebcfa2d22fbf93
 )
 fetchcontent_getproperties(tinyobjloader)
 if(NOT tinyobjloader_POPULATED)
@@ -121,7 +120,7 @@ endif()
 fetchcontent_declare(
     imgui
     GIT_REPOSITORY https://github.com/ocornut/imgui.git
-    GIT_TAG edf522b58a8f74dee3225a0d5bc71565b1b8f6e0
+    GIT_TAG e9f50fb87c1037e06a9b0e93484fd794a32cb835
 )
 fetchcontent_getproperties(imgui)
 if(NOT imgui_POPULATED)
@@ -145,7 +144,7 @@ endif()
 fetchcontent_declare(
     imguizmo
     GIT_REPOSITORY https://github.com/CedricGuillemet/ImGuizmo.git
-    GIT_TAG d038e1a58c70be1d3e3d271301dcecf9a9c90184
+    GIT_TAG e3174578bdc99c715e51c5ad88e7d50b4eeb19b0
 )
 fetchcontent_getproperties(imguizmo)
 if(NOT imguizmo_POPULATED)

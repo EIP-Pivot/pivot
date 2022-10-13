@@ -48,7 +48,7 @@ endif()
 fetchcontent_declare(
     magic_enum
     GIT_REPOSITORY https://github.com/Neargye/magic_enum
-    GIT_TAG v0.8.1
+    GIT_TAG v0.8.0
 )
 if(NOT magic_enum_POPULATED)
     message(STATUS "Populating Magic Enum")

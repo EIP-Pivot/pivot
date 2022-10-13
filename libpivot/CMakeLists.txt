@@ -28,5 +28,6 @@ build_tests(
     ${PROJECT_NAME}
     tests/components/test_render_object_component.cxx
     tests/components/test_transform_component.cxx
+    tests/components/test_camera.cxx
     tests/systems/test_collision_system.cxx
 )

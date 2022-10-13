@@ -160,6 +160,8 @@ void Scene::save(const std::filesystem::path &path, std::optional<AssetTranslato
         for (pivot::ecs::component::ComponentRef ref: mComponentManager.GetAllComponents(entity)) {
             auto &provenance = ref.description().provenance;
             if (provenance.isExternalRessource()) addScript(provenance.getExternalRessource());
+            logger.info("DEBUG Save") << "Entité: " << entity;
+            logger.info("DEBUG Save") << "Nom composant: " << ref.description().name;
             output["components"][entity][ref.description().name] = nlohmann::json(ref.get());
             extract_assets(ref.get(), assets, assetTranslator);
         }

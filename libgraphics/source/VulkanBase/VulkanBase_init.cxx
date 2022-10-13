@@ -56,7 +56,7 @@ void VulkanBase::createDebugMessenger()
 void VulkanBase::createSurface()
 {
     DEBUG_FUNCTION();
-    surface = window.createSurface(instance);
+    surface = window_ref->get().createSurface(instance);
     baseDeletionQueue.push([&] { instance.destroy(surface); });
 }
 

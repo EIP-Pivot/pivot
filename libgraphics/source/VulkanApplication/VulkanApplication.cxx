@@ -45,19 +45,22 @@ VulkanApplication::~VulkanApplication()
     VulkanBase::destroy();
 }
 
-void VulkanApplication::init(const std::filesystem::path &asset_dir)
+void VulkanApplication::init(Window &window, const std::filesystem::path &asset_dir)
 {
     DEBUG_FUNCTION();
+    VulkanBase::init(window, {}, deviceExtensions, validationLayers);
+
     const std::vector<std::string> iconFile = {
         asset_dir.string() + "/icon_large.png",
         asset_dir.string() + "/icon_medium.png",
         asset_dir.string() + "/icon_small.png",
     };
-    window.setIcon(iconFile);
-    window.addKeyPressCallback(Window::Key::G, [this](Window &, const Window::Key, const Window::Modifier modifier) {
-        if (modifier & Window::ModifierBits::Ctrl) { allocator.dumpStats(); }
-    });
-    VulkanBase::init({}, deviceExtensions, validationLayers);
+    window_ref->get().setIcon(iconFile);
+    window_ref->get().addKeyPressCallback(Window::Key::G,
+                                          [this](Window &, const Window::Key, const Window::Modifier modifier) {
+                                              if (modifier & Window::ModifierBits::Ctrl) { allocator.dumpStats(); }
+                                          });
+
     assetStorage.build(DescriptorBuilder(layoutCache, descriptorAllocator));
     initVulkanRessources();
 }
@@ -75,7 +78,7 @@ void VulkanApplication::initVulkanRessources()
         fr.initFrame(*this, DescriptorBuilder(layoutCache, descriptorAllocator), assetStorage, commandPool);
     });
 
-    auto size = window.getSize();
+    auto size = window_ref->get().getSize();
     swapchain.create(size, physical_device, device, surface);
     createDepthResources();
     createColorResources();
@@ -112,10 +115,10 @@ void VulkanApplication::recreateSwapchain()
     DEBUG_FUNCTION();
 
     /// do not recreate the swapchain if the window size is 0
-    vk::Extent2D size = window.getSize();
+    vk::Extent2D size = window_ref->get().getSize();
     while (size.width == 0 || size.height == 0) {
-        window.pollEvent();
-        size = window.getSize();
+        window_ref->get().pollEvent();
+        size = window_ref->get().getSize();
     }
 
     logger.info("VulkanSwapchain") << "Recreating swapchain...";

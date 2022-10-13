@@ -34,21 +34,35 @@ static int translate_key(int key, int scancode)
 namespace pivot::graphics
 {
 
-Window::Window(std::string n, unsigned w, unsigned h) { initWindow(n, w, h); }
+Window::Window()
+{
+    DEBUG_FUNCTION();
+    glfwInit();
+    this->setErrorCallback(error_callback);
+}
 
 Window::~Window()
 {
     DEBUG_FUNCTION();
-    if (window != nullptr) glfwDestroyWindow(window);
+    if (window) glfwDestroyWindow(window);
     glfwTerminate();
+}
+
+void Window::initWindow(const std::string &name)
+{
+    DEBUG_FUNCTION();
+
+    glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
+    initWindow(name, 600, 600);
 }
 
 void Window::initWindow(const std::string &name, unsigned width, unsigned height)
 {
-    DEBUG_FUNCTION();
+    PROFILE_FUNCTION();
+
+    if (!verify(window)) { glfwDestroyWindow(window); }
+
     windowName = name;
-    glfwInit();
-    this->setErrorCallback(error_callback);
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     window = glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);

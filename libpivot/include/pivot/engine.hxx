@@ -43,6 +43,7 @@ protected:
     ecs::component::Index m_component_index;
     ecs::event::Index m_event_index;
     ecs::systems::Index m_system_index;
+    graphics::Window m_window;
     graphics::VulkanApplication m_vulkan_application;
     ecs::script::Engine m_scripting_engine;
     builtins::Camera m_camera;

@@ -108,18 +108,15 @@ public:
 
 public:
     /// Create a new Window
-    ///
-    /// @param windowName
-    /// @param width
-    /// @param height
-    explicit Window(std::string windowName, unsigned width, unsigned height);
-    Window() = default;
+    Window();
     Window(Window &) = delete;
     Window(const Window &) = delete;
     /// Destructor
     ~Window();
 
-    /// Initialize the window
+    /// Initialize the window to the maximum size
+    void initWindow(const std::string &windowName);
+    /// Initialiaze the window to the provided size
     void initWindow(const std::string &windowName, unsigned width, unsigned height);
 
     /// Return wether or not the window should be closed

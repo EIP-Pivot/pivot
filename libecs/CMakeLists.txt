@@ -69,7 +69,8 @@ add_library(
     source/Components/Gravity.cxx
     source/Core/Component/FlagComponentStorage.cxx
 )
-target_include_directories(${PROJECT_NAME} PUBLIC include/)
+
+target_pivot_compile_option(${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME} PUBLIC pivot-common boost_fusion nlohmann_json::nlohmann_json)
 

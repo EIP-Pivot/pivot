@@ -8,6 +8,7 @@ using namespace pivot::ecs;
 
 void Editor::create(pivot::Engine &engine, pivot::graphics::PipelineStorage &pipelineStorage)
 {
+    PROFILE_FUNCTION();
     ImVec2 sceneSize = ImVec2(50, 15);
     ImVec2 newSceneSize = ImVec2(20, 15);
     ImGuiIO &io = ImGui::GetIO();
@@ -23,16 +24,6 @@ void Editor::create(pivot::Engine &engine, pivot::graphics::PipelineStorage &pip
             ImGui::SameLine();
         }
         if (ImGui::Selectable(" +", false, 0, newSceneSize)) { ImGui::OpenPopup("AddScene"); }
-        //        ImGui::Separator();
-        //        ImGui::Checkbox("##", &useSnap);
-        //        ImGui::SameLine();
-        //        switch (currentGizmoOperation) {
-        //            case ImGuizmo::TRANSLATE: ImGui::InputFloat3("Snap", &snap[0]); break;
-        //            case ImGuizmo::ROTATE: ImGui::InputFloat("Angle Snap", &snap[0]); break;
-        //            case ImGuizmo::SCALE: ImGui::InputFloat("Scale Snap", &snap[0]); break;
-        //            default: break;
-        //        }
-        //        ImGui::Separator();
     }
     ImGui::Checkbox("Should force pipeline ?", &shouldForce);
     if (ImGui::BeginCombo("##sample_count", pipelineStorage.getDefaultName().c_str())) {
@@ -54,6 +45,7 @@ void Editor::create(pivot::Engine &engine, pivot::graphics::PipelineStorage &pip
 
 SceneManager::SceneId Editor::addScene(pivot::Engine &engine)
 {
+    PROFILE_FUNCTION();
     SceneManager::SceneId newScene = engine.registerScene();
     engine.changeCurrentScene(newScene);
     // m_sceneManager.getCurrentLevel().Init();
@@ -62,6 +54,7 @@ SceneManager::SceneId Editor::addScene(pivot::Engine &engine)
 
 SceneManager::SceneId Editor::addScene(pivot::Engine &engine, std::string name)
 {
+    PROFILE_FUNCTION();
     SceneManager::SceneId newScene = engine.registerScene(name);
     engine.changeCurrentScene(newScene);
     // m_sceneManager.getCurrentLevel().Init();
@@ -72,6 +65,7 @@ bool Editor::getRun() { return run; }
 
 void Editor::createPopUp(pivot::Engine &engine)
 {
+    PROFILE_FUNCTION();
     if (ImGui::BeginPopup("AddScene")) {
         static std::string sceneName;
         ImGui::SetKeyboardFocusHere();

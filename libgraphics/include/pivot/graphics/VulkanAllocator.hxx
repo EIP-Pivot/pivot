@@ -8,7 +8,7 @@
 
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 #include "pivot/graphics/types/AllocatedImage.hxx"
-#include "pivot/graphics/types/common.hxx"
+
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
@@ -52,7 +52,7 @@ public:
                                     vma::MemoryUsage memoryUsage = vma::MemoryUsage::eAuto,
                                     vma::AllocationCreateFlags flags = {}, const std::string &debug_name = "")
     {
-        pivot_assert(size != 0, "Can't create empty buffer !");
+        pivotAssertMsg(size != 0, "Can't create empty buffer !");
         AllocatedBuffer<T> buffer{
             .size = size,
             .flags = flags,
@@ -93,7 +93,7 @@ public:
     /// Map buffer memory to a pointer
     T *mapMemory(AllocatedBuffer<T> &buffer)
     {
-        pivot_assert(buffer, "Buffer not created !");
+        pivotAssert(buffer);
         return static_cast<T *>(allocator.mapMemory(buffer.memory));
     }
 
@@ -101,7 +101,7 @@ public:
     /// Map buffer memory as a read-only pointer
     const T *mapMemory(AllocatedBuffer<T> &buffer) const
     {
-        pivot_assert(buffer, "Buffer not created !");
+        pivotAssert(buffer);
         return static_cast<const T *const>(allocator.mapMemory(buffer.memory));
     }
 
@@ -112,7 +112,7 @@ public:
     /// It is safe to call even if the buffer has been created with vma::AllocationCreateFlagBits::eMapped.
     void unmapMemory(AllocatedBuffer<T> &buffer)
     {
-        pivot_assert(buffer, "Buffer not created !");
+        pivotAssert(buffer);
         allocator.unmapMemory(buffer.memory);
     }
 
@@ -122,10 +122,10 @@ public:
     void copyBuffer(AllocatedBuffer<T> &buffer, const T *data, std::size_t data_size, std::size_t offset = 0)
     {
         if (data_size == 0) return;
-        pivot_assert(buffer, "Buffer not created !");
-        pivot_assert(buffer.getBytesSize() >= data_size + offset, "Buffer not big enough");
-        pivot_assert(data, "Source data is NULL");
-        pivot_assert((data_size + offset) % sizeof(T) == 0, "Source data is incorrectly aligned");
+        pivotAssert(buffer);
+        pivotAssert(data);
+        pivotAssertMsg(buffer.getBytesSize() >= data_size + offset, "Buffer not big enough");
+        pivotAssertMsg((data_size + offset) % sizeof(T) == 0, "Source data is incorrectly aligned");
 
         auto *mapped = mapMemory<T>(buffer);
         std::memcpy(mapped + offset, data, data_size);

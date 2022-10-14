@@ -17,7 +17,7 @@ static int translate_key(int key, int scancode)
                                  GLFW_KEY_RIGHT_BRACKET, GLFW_KEY_BACKSLASH, GLFW_KEY_COMMA, GLFW_KEY_SEMICOLON,
                                  GLFW_KEY_APOSTROPHE,    GLFW_KEY_PERIOD,    GLFW_KEY_SLASH, 0};
 
-        pivot_assert(std::size(char_names) == std::size(char_keys), "Special caracters are not of the same size.");
+        pivotAssertMsg(std::size(char_names) == std::size(char_keys), "Special caracters are not of the same size.");
         if (key_name[0] >= '0' && key_name[0] <= '9') {
             key = GLFW_KEY_0 + (key_name[0] - '0');
         } else if (key_name[0] >= 'A' && key_name[0] <= 'Z') {
@@ -38,13 +38,14 @@ Window::Window(std::string n, unsigned w, unsigned h): windowName(std::move(n)) 
 
 Window::~Window()
 {
+    DEBUG_FUNCTION();
     if (window != nullptr) glfwDestroyWindow(window);
     glfwTerminate();
 }
 
 vk::SurfaceKHR Window::createSurface(const vk::Instance &instance)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     VkSurfaceKHR surface{};
     if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
         throw std::runtime_error("failed to create surface");
@@ -73,6 +74,7 @@ void Window::setIcon(const std::span<const GLFWimage> &images) noexcept
 
 void Window::setIcon(const std::span<const std::string> &windowIcons)
 {
+    DEBUG_FUNCTION();
     std::vector<GLFWimage> images;
     for (const auto &icon: windowIcons) {
         int texWidth, texHeight, texChannels;
@@ -126,6 +128,7 @@ void Window::setUserPointer(void *ptr) noexcept { glfwSetWindowUserPointer(windo
 
 void Window::initWindow(const unsigned width, const unsigned height)
 {
+    DEBUG_FUNCTION();
     glfwInit();
     this->setErrorCallback(error_callback);
 
@@ -147,6 +150,7 @@ glm::ivec2 Window::updateSize() const noexcept
 
 Window::Key Window::getTrueKey(const Window::Key &ex) const noexcept
 {
+    PROFILE_FUNCTION();
     auto key = magic_enum::enum_integer(ex);
     auto translate = translate_key(key, 0);
     auto true_key = magic_enum::enum_cast<Window::Key>(translate);

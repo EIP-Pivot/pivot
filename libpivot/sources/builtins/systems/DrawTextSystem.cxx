@@ -8,6 +8,8 @@
 #include <pivot/builtins/components/Text.hxx>
 #include <pivot/builtins/components/Transform2D.hxx>
 
+#include <pivot/pivot.hxx>
+
 using namespace pivot::ecs;
 using namespace pivot::builtins::components;
 
@@ -15,6 +17,7 @@ namespace
 {
 void drawText(Entity entity, const Text &text, const Transform2D &transform)
 {
+    PROFILE_FUNCTION();
     auto color = text.color.rgba;
 
     ImGui::SetNextWindowPos(ImVec2(transform.position.x, transform.position.y), 0, ImVec2(0.5, 0.5));
@@ -32,6 +35,7 @@ void drawText(Entity entity, const Text &text, const Transform2D &transform)
 std::vector<event::Event> drawTextSystemImpl(const systems::Description &, component::ArrayCombination &cmb,
                                              [[maybe_unused]] const event::EventWithComponent &event)
 {
+    PROFILE_FUNCTION();
     auto textArray = dynamic_cast<component::DenseTypedComponentArray<Text> &>(cmb.arrays()[0].get());
     auto transformArray = dynamic_cast<component::DenseTypedComponentArray<Transform2D> &>(cmb.arrays()[1].get());
 

@@ -1,70 +1,12 @@
-#include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/CPUStorage.hxx"
+#include "pivot/graphics/AssetStorage/DefaultRessources.hxx"
 
 #include "pivot/pivot.hxx"
 
-namespace pivot::graphics
+namespace pivot::graphics::asset
 {
 
-const AssetStorage::CPUTexture AssetStorage::default_texture_data{
-
-    .image =
-        {
-            std::byte(0x00),
-            std::byte(0x00),
-            std::byte(0x00),
-            std::byte(0xff),
-
-            std::byte(0xff),
-            std::byte(0xff),
-            std::byte(0xff),
-            std::byte(0xff),
-
-            std::byte(0xff),
-            std::byte(0xff),
-            std::byte(0xff),
-            std::byte(0xff),
-
-            std::byte(0x00),
-            std::byte(0x00),
-            std::byte(0x00),
-            std::byte(0xff),
-        },
-    .size = {2, 2, 1},
-};
-
-const std::vector<Vertex> AssetStorage::quad_vertices = {
-    {
-        .pos = {-0.5f, -0.5f, 0.f},
-        .normal = {0.f, 0.f, 0.f},
-        .texCoord = {-0.5f, -0.5f},
-        .color = {1.0f, 0.0f, 0.0f},
-        .tangent = {0.0f, 0.0f, 0.0f, 0.0f},
-    },
-    {
-        .pos = {0.5f, -0.5f, 0.f},
-        .normal = {0.f, 0.f, 0.f},
-        .texCoord = {0.5f, -0.5f},
-        .color = {0.0f, 1.0f, 0.0f},
-        .tangent = {0.0f, 0.0f, 0.0f, 0.0f},
-    },
-    {
-        .pos = {0.5f, 0.5f, 0.f},
-        .normal = {0.f, 0.f, 0.f},
-        .texCoord = {0.5f, 0.5f},
-        .color = {0.0f, 0.0f, 1.0f},
-        .tangent = {0.0f, 0.0f, 0.0f, 0.0f},
-    },
-    {
-        .pos = {-0.5f, 0.5f, 0.f},
-        .normal = {0.f, 0.f, 0.f},
-        .texCoord = {-0.5f, 0.5f},
-        .color = {1.0f, 1.0f, 1.0f},
-        .tangent = {0.0f, 0.0f, 0.0f, 0.0f},
-    },
-};
-const std::vector<std::uint32_t> AssetStorage::quad_indices = {0, 1, 2, 2, 3, 0};
-
-AssetStorage::CPUStorage AssetStorage::CPUStorage::default_assets()
+asset::CPUStorage asset::CPUStorage::default_assets()
 {
     CPUStorage storage;
     storage.textureStaging.add(missing_texture_name, default_texture_data);
@@ -74,15 +16,18 @@ AssetStorage::CPUStorage AssetStorage::CPUStorage::default_assets()
 
     storage.materialStaging.add("white", {});
 
-    storage.vertexStagingBuffer.insert(storage.vertexStagingBuffer.end(), quad_vertices.begin(), quad_vertices.end());
-    storage.indexStagingBuffer.insert(storage.indexStagingBuffer.end(), quad_indices.begin(), quad_indices.end());
-    storage.modelStorage[quad_mesh] = {
+    storage.vertexStagingBuffer.insert(storage.vertexStagingBuffer.end(), quad_mesh_vertices.begin(),
+                                       quad_mesh_vertices.end());
+    storage.indexStagingBuffer.insert(storage.indexStagingBuffer.end(), quad_mesh_indices.begin(),
+                                      quad_mesh_indices.end());
+
+    storage.modelStorage[quad_mesh_id] = {
         .mesh =
             {
                 .vertexOffset = 0,
-                .vertexSize = static_cast<std::uint32_t>(quad_vertices.size()),
+                .vertexSize = static_cast<std::uint32_t>(quad_mesh_vertices.size()),
                 .indicesOffset = 0,
-                .indicesSize = static_cast<std::uint32_t>(quad_indices.size()),
+                .indicesSize = static_cast<std::uint32_t>(quad_mesh_indices.size()),
             },
         .default_material = std::nullopt,
     };
@@ -99,16 +44,16 @@ std::unordered_map<K, V> merge_map_ignore_dup(const std::unordered_map<K, V> &fi
     for (const auto &[key, value]: first) { result.emplace(key, value); }
     for (const auto &[key, value]: second) {
         if (result.contains(key)) {
-            pivot_assert(first.contains(key), key << " is not the deduplicated buffer.");
+            pivotAssertMsg(first.contains(key), key << " is not the deduplicated buffer.");
             continue;
         }
         result.emplace(key, value);
     }
-    pivot_assert(result.size() <= first.size() + second.size(), "The merged CPUStorage is bigger than its sources.");
+    pivotAssertMsg(result.size() <= first.size() + second.size(), "The merged CPUStorage is bigger than its sources.");
     return result;
 }
 
-void AssetStorage::CPUStorage::merge(const AssetStorage::CPUStorage &other)
+void asset::CPUStorage::merge(const asset::CPUStorage &other)
 {
 #define TEST_CONTAINS(field)           \
     for (const auto &[name, _]: field) \
@@ -144,10 +89,10 @@ void AssetStorage::CPUStorage::merge(const AssetStorage::CPUStorage &other)
                               other.indexStagingBuffer.end());
 }
 
-AssetStorage::CPUStorage &AssetStorage::CPUStorage::operator+=(const AssetStorage::CPUStorage &other)
+asset::CPUStorage &asset::CPUStorage::operator+=(const asset::CPUStorage &other)
 {
     merge(other);
     return *this;
 }
 
-}    // namespace pivot::graphics
+}    // namespace pivot::graphics::asset

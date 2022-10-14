@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pivot/graphics/types/vk_types.hxx"
+#include <pivot/debug.hxx>
 
 #include <stdexcept>
 
@@ -17,13 +17,13 @@ class Transform
 {
 public:
     /// Get the model matrix
-    glm::mat4 getModelMatrix() const noexcept { return recomposeMatrix(*this); }
+    FORCEINLINE glm::mat4 getModelMatrix() const noexcept { return recomposeMatrix(*this); }
 
     /// Default equality operator
     bool operator==(const Transform &) const = default;
 
 private:
-    static glm::mat4 recomposeMatrix(const Transform &tran)
+    FORCEINLINE static glm::mat4 recomposeMatrix(const Transform &tran)
     {
         return glm::translate(glm::mat4(1.0f), tran.position) * glm::toMat4(glm::quat(tran.rotation)) *
                glm::scale(glm::mat4(1.0f), tran.scale);

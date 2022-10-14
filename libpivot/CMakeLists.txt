@@ -17,8 +17,7 @@ add_library(
     sources/builtins/components/Camera.cxx
 )
 
-
-target_include_directories(${PROJECT_NAME} PUBLIC include/)
+target_pivot_compile_option(${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME} PUBLIC pivot-graphics pivot-ecs pivot-script)
 

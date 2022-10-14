@@ -10,14 +10,15 @@ UniformBufferObject::UniformBufferObject(const Transform &transform, const Rende
     : modelMatrix(transform.getModelMatrix())
 
 {
-    const auto &model = assetStorage.get<AssetStorage::Model>(obj.meshID);
+    PROFILE_FUNCTION();
+    const auto &model = assetStorage.get<asset::Model>(obj.meshID);
 
     if (!obj.materialIndex.empty()) {
         materialIndex = assetStorage.getIndex<Material>(obj.materialIndex);
     } else if (model.default_material) {
         materialIndex = assetStorage.getIndex<Material>(model.default_material.value());
     } else {
-        materialIndex = assetStorage.getIndex<Material>(AssetStorage::missing_material_name);
+        materialIndex = assetStorage.getIndex<Material>(asset::missing_material_name);
     }
     boundingBoxIndex = assetStorage.getIndex<AABB>(obj.meshID);
 }

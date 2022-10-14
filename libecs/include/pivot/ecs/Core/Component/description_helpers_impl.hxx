@@ -65,6 +65,7 @@ struct Helpers<T> {
 
     static void updateTypeWithValue(T &data, const data::Value &value)
     {
+        data = T{};
         auto &record = std::get<data::Record>(value);
         using Indices = boost::mpl::range_c<unsigned, 0, boost::fusion::result_of::size<T>::value>;
         boost::fusion::for_each(Indices(), [&](auto i) {
@@ -72,8 +73,10 @@ struct Helpers<T> {
             using value_type = typename boost::fusion::result_of::value_at_c<T, decltype(i)::value>::type;
             auto it = boost::fusion::advance_c<decltype(i)::value>(boost::fusion::begin(data));
             value_type &member = *it;
-            const data::Value &member_value = record.at(field_name);
-            Helpers<value_type>::updateTypeWithValue(member, member_value);
+            if (record.contains(field_name)) {
+                const data::Value &member_value = record.at(field_name);
+                Helpers<value_type>::updateTypeWithValue(member, member_value);
+            }
         });
     }
 };

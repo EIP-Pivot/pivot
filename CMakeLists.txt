@@ -5,6 +5,7 @@ include(FetchContent)
 include(CheckIPOSupported)
 include(cmake/find_linker.cmake)
 include(cmake/CompileShaders.cmake)
+include(cmake/PivotCompileOption.cmake)
 include(cmake/tests.cmake)
 
 find_linker()
@@ -135,4 +136,3 @@ option(BUILD_LAUNCHER "Build pivot launcher" ON)
 if(BUILD_LAUNCHER)
     add_subdirectory(launcher/)
 endif()
-

@@ -6,6 +6,7 @@ namespace pivot::internals
 graphics::CameraData LocationCamera::getGPUCameraData(float fFOV, float fAspectRatio, float fCloseClippingPlane,
                                                       float fFarClippingPlane)
 {
+    PROFILE_FUNCTION();
     auto projection = this->getProjection(fFOV, fAspectRatio, fCloseClippingPlane, fFarClippingPlane);
     projection[1][1] *= -1;
     auto view = this->getView();

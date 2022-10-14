@@ -1,10 +1,13 @@
 #include "pivot/graphics/VulkanSwapchain.hxx"
 
+#include "pivot/pivot.hxx"
+
 namespace pivot::graphics
 {
 
 vk::SurfaceFormatKHR VulkanSwapchain::SupportDetails::chooseSwapSurfaceFormat() const noexcept
 {
+    DEBUG_FUNCTION();
     for (const auto &availableFormat: formats)
         if (availableFormat.format == vk::Format::eB8G8R8A8Srgb &&
             availableFormat.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear)
@@ -14,6 +17,7 @@ vk::SurfaceFormatKHR VulkanSwapchain::SupportDetails::chooseSwapSurfaceFormat() 
 
 vk::PresentModeKHR VulkanSwapchain::SupportDetails::chooseSwapPresentMode() const noexcept
 {
+    DEBUG_FUNCTION();
     for (const auto &availablePresentMode: presentModes)
         if (availablePresentMode == vk::PresentModeKHR::eMailbox) return availablePresentMode;
     return vk::PresentModeKHR::eFifo;
@@ -21,6 +25,7 @@ vk::PresentModeKHR VulkanSwapchain::SupportDetails::chooseSwapPresentMode() cons
 
 vk::Extent2D VulkanSwapchain::SupportDetails::chooseSwapExtent(const vk::Extent2D &s) const noexcept
 {
+    DEBUG_FUNCTION();
     if (capabilities.currentExtent.width != UINT32_MAX) {
         return capabilities.currentExtent;
     } else {

@@ -162,6 +162,11 @@ if(NOT imguizmo_POPULATED)
     target_link_libraries(imguizmo PRIVATE imgui)
 endif()
 
+set(PIVOT_ASSET_DEFAULT_DIRECTORY
+    "${CMAKE_SOURCE_DIR}/editor/assets/"
+    CACHE STRING "Path to the default lookup directory for the asset loading"
+)
+
 add_library(
     ${PROJECT_NAME} STATIC
     source/lib.cxx
@@ -173,7 +178,6 @@ add_library(
     source/Window.cxx
     source/vk_utils.cxx
     source/vk_init.cxx
-    source/vk_debug.cxx
     source/VulkanRenderPass.cxx
     source/SwapchainSupportDetails.cxx
     source/PipelineBuilders/GraphicsPipelineBuilder.cxx
@@ -182,9 +186,9 @@ add_library(
     source/VulkanLoader.cxx
     source/VulkanSwapchain.cxx
     source/ThreadPool.cxx
+    source/AssetsStorage/CPUStorage.cxx
     source/AssetsStorage/AssetStorage.cxx
     source/AssetsStorage/AssetStorage_init.cxx
-    source/AssetsStorage/AssetStorage_CPUStorage.cxx
     source/AssetsStorage/AssetStorage_build.cxx
     source/AssetsStorage/Loaders/AssetStorage_obj.cxx
     source/AssetsStorage/Loaders/AssetStorage_png.cxx
@@ -204,30 +208,16 @@ add_library(
     source/DescriptorAllocator/DescriptorLayoutCache.cxx
     source/VulkanImmediateCommand.cxx
     source/culling.cxx
-    source/DrawCallResolver.cxx
+    source/Resolver/DrawCallResolver.cxx
+    source/Resolver/LightDataResolver.cxx
+    source/Resolver/AssetResolver.cxx
+    source/ResolverDispatcher.cxx
     source/PipelineStorage.cxx
 )
 
-target_compile_options(
-    ${PROJECT_NAME}
-    PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-            -Wall
-            -Wextra>
-            $<$<CXX_COMPILER_ID:MSVC>:
-            /W4
-            /wd4267
-            /wd4201
-            /wd4244
-            /wd4324>
-)
+target_pivot_compile_option(${PROJECT_NAME})
 
 target_precompile_headers(${PROJECT_NAME} REUSE_FROM pivot-common)
-#target_precompile_headers(${PROJECT_NAME} PRIVATE <vulkan/vulkan.hpp> <vk_mem_alloc.hpp>)
-
-set(PIVOT_ASSET_DEFAULT_DIRECTORY
-    "${CMAKE_SOURCE_DIR}/editor/assets/"
-    CACHE STRING "Path to the default lookup directory for the asset loading"
-)
 
 target_compile_definitions(
     ${PROJECT_NAME}
@@ -246,8 +236,6 @@ add_shader(${PROJECT_NAME} default_lit.frag)
 add_shader(${PROJECT_NAME} default_unlit.frag)
 add_shader(${PROJECT_NAME} default_pbr.frag)
 add_shader(${PROJECT_NAME} culling.comp)
-
-target_include_directories(${PROJECT_NAME} PUBLIC include/)
 
 target_link_libraries(
     ${PROJECT_NAME}

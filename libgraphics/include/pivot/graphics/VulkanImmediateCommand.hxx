@@ -4,7 +4,7 @@
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 #include "pivot/graphics/types/AllocatedImage.hxx"
 #include "pivot/graphics/types/QueueFamilyIndices.hxx"
-#include "pivot/graphics/types/common.hxx"
+
 #include "pivot/utility/flags.hxx"
 
 #include <source_location>

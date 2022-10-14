@@ -5,6 +5,7 @@
 
 void EntityModule::create()
 {
+    PROFILE_FUNCTION();
     auto &componentManager = m_scene->getComponentManager();
     auto tagId = componentManager.GetComponentId("Tag").value();
     if (m_scene.id() != currentScene) {
@@ -44,6 +45,7 @@ void EntityModule::create()
 
 Entity EntityModule::addEntity()
 {
+    PROFILE_FUNCTION();
     Entity newEntity = m_scene->CreateEntity();
     entitySelected = newEntity;
     _hasSelected = true;
@@ -52,6 +54,7 @@ Entity EntityModule::addEntity()
 
 Entity EntityModule::addEntity(std::string name)
 {
+    PROFILE_FUNCTION();
     Entity newEntity = m_scene->CreateEntity(name);
     entitySelected = newEntity;
     _hasSelected = true;
@@ -60,6 +63,7 @@ Entity EntityModule::addEntity(std::string name)
 
 void EntityModule::removeEntity()
 {
+    PROFILE_FUNCTION();
     m_scene->DestroyEntity(entitySelected);
     entitySelected = 0;
     _hasSelected = false;
@@ -71,6 +75,7 @@ bool EntityModule::hasSelected() { return _hasSelected; }
 
 void EntityModule::createPopUp()
 {
+    PROFILE_FUNCTION();
     if (ImGui::BeginPopup("NewEntity")) {
         static std::string entityName;
         ImGui::SetKeyboardFocusHere();

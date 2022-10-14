@@ -1,18 +1,20 @@
 #include "pivot/graphics/ThreadPool.hxx"
 
-#include "pivot/pivot.hxx"
+#include "pivot/utility/source_location.hxx"
 
 namespace pivot
 {
 
 void ThreadPool::start(unsigned i)
 {
+    DEBUG_FUNCTION();
     state.bExit = false;
     resize(i);
 }
 
 void ThreadPool::stop()
 {
+    DEBUG_FUNCTION();
     state.bExit = true;
     state.q_var.notify_all();
     thread_p.clear();
@@ -20,6 +22,7 @@ void ThreadPool::stop()
 
 void ThreadPool::resize(unsigned size)
 {
+    DEBUG_FUNCTION();
     unsigned old_size = thread_p.size();
     thread_p.resize(size);
     for (; old_size < thread_p.size(); old_size++) {
@@ -29,9 +32,14 @@ void ThreadPool::resize(unsigned size)
 
 void ThreadPool::new_thread(State &state, unsigned id) noexcept
 {
+    DEBUG_FUNCTION();
     WorkUnits work;
 
-    logger.trace(function_name()) << "New thread: " << id;
+#if !defined(NO_BENCHMARK)
+    benchmark::Instrumentor::get().setThreadName("Thread pool nb: " + std::to_string(id));
+#endif
+
+    logger.trace(pivot::utils::function_name()) << "New thread: " << id;
     while (!state.bExit) {
         try {
             {
@@ -51,7 +59,7 @@ void ThreadPool::new_thread(State &state, unsigned id) noexcept
             logger.err("Thread Pool") << "Unkown error on thread " << id;
         }
     }
-    logger.trace(function_name()) << "End thread: " << id;
+    logger.trace(pivot::utils::function_name()) << "End thread: " << id;
 }
 
 }    // namespace pivot

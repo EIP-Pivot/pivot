@@ -13,10 +13,10 @@ namespace pivot::graphics
 ImGuiRenderer::ImGuiRenderer(StorageUtils &utils): IGraphicsRenderer(utils) {}
 ImGuiRenderer::~ImGuiRenderer() {}
 
-bool ImGuiRenderer::onInit(const vk::Extent2D &, VulkanBase &base_ref, const vk::DescriptorSetLayout &,
-                           vk::RenderPass &pass)
+bool ImGuiRenderer::onInit(const vk::Extent2D &, VulkanBase &base_ref, const ResolverDispatcher &, vk::RenderPass &pass)
 {
-    DEBUG_FUNCTION;
+    DEBUG_FUNCTION();
+
     IMGUI_CHECKVERSION();
     ImGui_ImplVulkan_LoadFunctions(
         [](const char *function_name, void *user) {
@@ -31,7 +31,8 @@ bool ImGuiRenderer::onInit(const vk::Extent2D &, VulkanBase &base_ref, const vk:
 
 void ImGuiRenderer::onStop(VulkanBase &base_ref)
 {
-    DEBUG_FUNCTION;
+    DEBUG_FUNCTION();
+
     if (ImGui::GetCurrentContext() != nullptr) {
         ImGui_ImplVulkan_Shutdown();
         ImGui_ImplGlfw_Shutdown();
@@ -40,15 +41,10 @@ void ImGuiRenderer::onStop(VulkanBase &base_ref)
     if (pool) base_ref.device.destroyDescriptorPool(pool);
 }
 
-bool ImGuiRenderer::onRecreate(const vk::Extent2D &size, VulkanBase &base,
-                               const vk::DescriptorSetLayout &descriptorSetLayout, vk::RenderPass &pass)
+bool ImGuiRenderer::onDraw(const RenderingContext &, const CameraData &, ResolverDispatcher &, vk::CommandBuffer &cmd)
 {
-    onStop(base);
-    return onInit(size, base, descriptorSetLayout, pass);
-}
+    PROFILE_FUNCTION();
 
-bool ImGuiRenderer::onDraw(const RenderingContext &, const CameraData &, DrawCallResolver &, vk::CommandBuffer &cmd)
-{
     vk_debug::beginRegion(cmd, "Imgui Commands", {1.f, 0.f, 0.f, 1.f});
     if (auto imguiData = ImGui::GetDrawData(); imguiData != nullptr) {
         ImGui_ImplVulkan_RenderDrawData(imguiData, cmd);
@@ -59,7 +55,8 @@ bool ImGuiRenderer::onDraw(const RenderingContext &, const CameraData &, DrawCal
 
 void ImGuiRenderer::createDescriptorPool(vk::Device &device)
 {
-    DEBUG_FUNCTION;
+    DEBUG_FUNCTION();
+
     const vk::DescriptorPoolSize pool_sizes[]{
         {vk::DescriptorType::eSampler, 1000},
         {vk::DescriptorType::eCombinedImageSampler, 1000},
@@ -87,6 +84,8 @@ void ImGuiRenderer::createDescriptorPool(vk::Device &device)
 
 void ImGuiRenderer::createImGuiContext(VulkanBase &base_ref, vk::RenderPass &pass)
 {
+    DEBUG_FUNCTION();
+
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
 

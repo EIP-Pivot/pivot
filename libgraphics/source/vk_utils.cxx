@@ -9,6 +9,7 @@ namespace pivot::graphics::vk_utils
 {
 std::string readFile(const std::filesystem::path &filename)
 {
+    DEBUG_FUNCTION();
     assert(!std::filesystem::is_symlink(filename));
 
     /// Must be opened in binary mode, so Windows won't mess with the newlines
@@ -28,6 +29,7 @@ std::string readFile(const std::filesystem::path &filename)
 
 std::size_t writeFile(const std::filesystem::path &filename, const std::string_view &content)
 {
+    DEBUG_FUNCTION();
     std::ofstream file(filename);
     file << content;
     file.close();
@@ -36,6 +38,7 @@ std::size_t writeFile(const std::filesystem::path &filename, const std::string_v
 
 vk::ShaderModule createShaderModule(const vk::Device &device, std::span<const std::byte> code)
 {
+    DEBUG_FUNCTION();
     auto createInfo = vk_init::populateVkShaderModuleCreateInfo(code);
     return device.createShaderModule(createInfo);
 }

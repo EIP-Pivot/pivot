@@ -32,6 +32,10 @@
 #include <pivot/builtins/components/Text.hxx>
 #include <pivot/builtins/components/Transform2D.hxx>
 
+#include <pivot/graphics/Resolver/AssetResolver.hxx>
+#include <pivot/graphics/Resolver/DrawCallResolver.hxx>
+#include <pivot/graphics/Resolver/LightDataResolver.hxx>
+
 using namespace pivot;
 using namespace pivot::ecs;
 
@@ -45,6 +49,7 @@ Engine::Engine()
       m_default_camera_transform{.position = glm::vec3(0, 5, 0)},
       m_default_camera{m_default_camera_data, m_default_camera_transform}
 {
+    DEBUG_FUNCTION();
     m_component_index.registerComponent(builtins::components::Gravity::description);
     m_component_index.registerComponent(builtins::components::RigidBody::description);
     m_component_index.registerComponent(builtins::components::RenderObject::description);
@@ -70,6 +75,9 @@ Engine::Engine()
     m_vulkan_application.addRenderer<pivot::graphics::CullingRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::GraphicsRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::ImGuiRenderer>();
+    m_vulkan_application.addResolver<pivot::graphics::DrawCallResolver>(0);
+    m_vulkan_application.addResolver<pivot::graphics::LightDataResolver>(1);
+    m_vulkan_application.addResolver<pivot::graphics::AssetResolver>(2);
     m_vulkan_application.init();
 
     m_vulkan_application.window.addGlobalKeyPressCallback(std::bind_front(&Engine::onKeyPressed, this));
@@ -77,7 +85,7 @@ Engine::Engine()
 
 void Engine::run()
 {
-
+    DEBUG_FUNCTION();
     float dt = 0.0f;
     FrameLimiter<60> fpsLimiter;
     while (!m_vulkan_application.window.shouldClose()) {
@@ -125,7 +133,7 @@ namespace
     template <typename T>
     using Array = pivot::ecs::component::DenseTypedComponentArray<T>;
 
-    std::optional<graphics::DrawCallResolver::DrawSceneInformation> getDrawCommand(component::Manager &cm)
+    std::optional<graphics::DrawSceneInformation> getDrawCommand(component::Manager &cm)
     {
         using namespace pivot::builtins::components;
 
@@ -181,6 +189,7 @@ namespace
 
 void Engine::changeCurrentScene(ecs::SceneManager::SceneId sceneId)
 {
+    DEBUG_FUNCTION();
     m_scene_manager.setCurrentSceneId(sceneId);
 
     auto &cm = m_scene_manager.getCurrentScene().getComponentManager();
@@ -196,6 +205,7 @@ namespace
 {
     void postSceneRegister(Scene &scene)
     {
+        DEBUG_FUNCTION();
         auto &cm = scene.getComponentManager();
         if (!cm.GetComponentId(builtins::components::RenderObject::description.name).has_value()) {
             cm.RegisterComponent(builtins::components::RenderObject::description);
@@ -220,6 +230,7 @@ namespace
 
 ecs::SceneManager::SceneId Engine::registerScene()
 {
+    DEBUG_FUNCTION();
     auto id = m_scene_manager.registerScene();
     postSceneRegister(m_scene_manager.getSceneById(id));
     return id;
@@ -227,7 +238,7 @@ ecs::SceneManager::SceneId Engine::registerScene()
 
 ecs::SceneManager::SceneId Engine::registerScene(std::string name)
 {
-
+    DEBUG_FUNCTION();
     auto id = m_scene_manager.registerScene(name);
     postSceneRegister(m_scene_manager.getSceneById(id));
     return id;
@@ -235,6 +246,7 @@ ecs::SceneManager::SceneId Engine::registerScene(std::string name)
 
 ecs::SceneManager::SceneId Engine::registerScene(std::unique_ptr<ecs::Scene> scene)
 {
+    DEBUG_FUNCTION();
     auto id = m_scene_manager.registerScene(std::move(scene));
     postSceneRegister(m_scene_manager.getSceneById(id));
     return id;
@@ -242,6 +254,7 @@ ecs::SceneManager::SceneId Engine::registerScene(std::unique_ptr<ecs::Scene> sce
 
 void Engine::saveScene(ecs::SceneManager::SceneId id, const std::filesystem::path &path)
 {
+    DEBUG_FUNCTION();
     auto assetTranslator =
         std::make_optional(std::function([this, &path](const std::string &asset) -> std::optional<std::string> {
             auto &assetStorage = m_vulkan_application.assetStorage;
@@ -263,6 +276,7 @@ void Engine::saveScene(ecs::SceneManager::SceneId id, const std::filesystem::pat
 
 ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
 {
+    DEBUG_FUNCTION();
     logger.info("Scene Manager") << "Loading scene at " << path;
     std::ifstream scene_file{path};
     if (!scene_file.is_open()) {
@@ -282,10 +296,15 @@ ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
     return this->registerScene(std::move(scene));
 }
 
-void Engine::loadScript(const std::filesystem::path &path) { m_scripting_engine.loadFile(path.string(), false, true); }
+void Engine::loadScript(const std::filesystem::path &path)
+{
+    DEBUG_FUNCTION();
+    m_scripting_engine.loadFile(path.string(), false, true);
+}
 
 void Engine::loadAsset(const std::filesystem::path &path, bool reload)
 {
+    DEBUG_FUNCTION();
     m_vulkan_application.assetStorage.addAsset(path);
     if (reload) m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
 }

@@ -3,7 +3,7 @@ project(pivot-common)
 fetchcontent_declare(
     logger
     GIT_REPOSITORY https://github.com/zcorniere/logger-cpp.git
-    GIT_TAG v1.0.0
+    GIT_TAG v1.0.2
 )
 fetchcontent_getproperties(logger)
 if(NOT logger_POPULATED)
@@ -59,6 +59,7 @@ endif()
 add_library(
     ${PROJECT_NAME} STATIC
     sources/lib.cxx
+    sources/utility/benchmark.cxx
 
     # Select the correct platform to compile
     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
@@ -67,19 +68,12 @@ add_library(
     sources/Platforms/WindowsPlatform.cxx>
 )
 
-target_compile_options(
-    ${PROJECT_NAME}
-    PUBLIC $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-           -Wall
-           -Wextra>
-           $<$<CXX_COMPILER_ID:MSVC>:
-           /W4
-           /wd4267
-           /wd4201
-           /wd4244>
-)
+target_pivot_compile_option(${PROJECT_NAME})
 
-target_include_directories(${PROJECT_NAME} PUBLIC include/)
+if(DEFINED ENV{CI})
+    message(STATUS "Benchmark macros - disabled")
+    target_compile_definitions(${PROJECT_NAME} PUBLIC NO_BENCHMARK)
+endif()
 
 target_link_libraries(${PROJECT_NAME} PUBLIC logger glm magic_enum)
 

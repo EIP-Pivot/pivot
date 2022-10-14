@@ -6,7 +6,7 @@ namespace pivot::graphics
 {
 vk::DescriptorPool createPool(vk::Device &device, std::uint32_t count, vk::DescriptorPoolCreateFlags flags)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     const std::vector<std::pair<vk::DescriptorType, float>> poolSizes = {
         {vk::DescriptorType::eSampler, 0.5f},
         {vk::DescriptorType::eCombinedImageSampler, 4.f},
@@ -52,7 +52,7 @@ void DescriptorAllocator::resetPools()
 
 bool DescriptorAllocator::allocate(vk::DescriptorSet &set, vk::DescriptorSetLayout &layout)
 try {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     if (!currentPool) {
         currentPool = grabPool();
         usedPools.push_back(currentPool);
@@ -96,7 +96,7 @@ void DescriptorAllocator::cleanup()
 
 vk::DescriptorPool DescriptorAllocator::grabPool()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     if (freePools.size() > 0) {
         vk::DescriptorPool pool = freePools.back();
         freePools.pop_back();

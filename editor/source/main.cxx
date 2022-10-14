@@ -25,6 +25,7 @@
 #include "ImGuiCore/SystemsEditor.hxx"
 
 #include <pivot/engine.hxx>
+#include <pivot/utility/benchmark.hxx>
 
 using namespace pivot::ecs;
 using Window = pivot::graphics::Window;
@@ -49,6 +50,7 @@ public:
 
     void init()
     {
+        PROFILE_FUNCTION();
         auto &window = m_vulkan_application.window;
 
         window.addKeyReleaseCallback(Window::Key::LEFT_ALT,
@@ -101,6 +103,7 @@ public:
     void processKeyboard(pivot::internals::LocationCamera camera, pivot::internals::LocationCamera::Movement direction,
                          float dt) noexcept
     {
+        PROFILE_FUNCTION();
         using Movement = pivot::internals::LocationCamera::Movement;
         glm::vec3 &camera_position = camera.transform.position;
         pivot::internals::LocationCamera::Directions camera_directions = camera.getDirections();
@@ -130,6 +133,7 @@ public:
 
     void UpdateCamera(pivot::internals::LocationCamera camera, float dt)
     {
+        PROFILE_FUNCTION();
         using LocationCamera = pivot::internals::LocationCamera;
         try {
             if (button.test(static_cast<std::size_t>(Window::Key::Z)))
@@ -153,6 +157,7 @@ public:
 
     void onTick(float dt) override
     {
+        PROFILE_FUNCTION();
         imGuiTheme.setStyle();
         if (!menuBar.render()) {
             imGuiManager.reset();
@@ -187,11 +192,34 @@ public:
         });
     }
 
-    void onFrameStart() { imGuiManager.newFrame(); }
+    void onFrameStart() override
+    {
+#if !defined(NO_BENCHMARK)
+        static bool shouldCaptureFrame = menuBar.shouldCaptureFrame();
+        if (shouldCaptureFrame) {
+            shouldCaptureFrame = false;
+            if (pivot::benchmark::Instrumentor::get().isSessionStarted()) {
+                pivot::benchmark::Instrumentor::get().endSession();
+            } else {
+                pivot::benchmark::Instrumentor::get().beginSession("Pivot_Frame.json");
+            }
+        }
+#endif
+        PROFILE_FUNCTION();
+        imGuiManager.newFrame();
+    }
 
-    void onFrameEnd() { ImGuiManager::render(); }
+    void onFrameEnd() override
+    {
+        PROFILE_FUNCTION();
+        ImGuiManager::render();
+    }
 
-    void onReset() override { imGuiManager.reset(); }
+    void onReset() override
+    {
+        PROFILE_FUNCTION();
+        imGuiManager.reset();
+    }
 
 public:
     ImGuiManager imGuiManager;
@@ -211,6 +239,13 @@ public:
 
 int main(int argc, const char *argv[])
 {
+#if !defined(NO_BENCHMARK)
+
+    pivot::benchmark::Instrumentor::get().setThreadName("Editor thread");
+    pivot::benchmark::Instrumentor::get().beginSession("Pivot_Startup.json");
+
+#endif
+
     auto cmdLineArg = getCmdLineArg(argc, argv);
     logger.start(cmdLineArg.verbosity);
     Application app;
@@ -222,6 +257,12 @@ int main(int argc, const char *argv[])
     app.changeCurrentScene(sceneId);
 
     app.init();
+
+#if !defined(NO_BENCHMARK)
+    pivot::benchmark::Instrumentor::get().endSession();
+#endif
+
     app.run();
+
     return 0;
 }

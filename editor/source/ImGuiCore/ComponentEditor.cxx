@@ -11,6 +11,7 @@ using namespace pivot::ecs::data;
 
 void ComponentEditor::create(Entity entity)
 {
+    PROFILE_FUNCTION();
     currentEntity = entity;
     ImGui::Begin(" Component editor ");
     ImGuiTheme::setDefaultFramePadding();
@@ -23,6 +24,7 @@ void ComponentEditor::create(Entity entity)
 
 void ComponentEditor::create()
 {
+    PROFILE_FUNCTION();
     ImGui::Begin(" Component editor ");
     ImGui::Text("No entity selected.");
     ImGui::End();
@@ -30,6 +32,7 @@ void ComponentEditor::create()
 
 void ComponentEditor::createPopUp()
 {
+    PROFILE_FUNCTION();
     auto &cm = m_scene->getComponentManager();
     if (ImGui::BeginPopup("AddComponent")) {
         for (const auto &[name, description]: m_index) {
@@ -47,6 +50,7 @@ void ComponentEditor::createPopUp()
 
 void ComponentEditor::displayComponent()
 {
+    PROFILE_FUNCTION();
     auto &cm = m_scene->getComponentManager();
     displayName();
     for (ComponentRef ref: cm.GetAllComponents(currentEntity)) {
@@ -55,7 +59,9 @@ void ComponentEditor::displayComponent()
         if (ImGui::TreeNode(ref.description().name.c_str())) {
             ImGui::TreePop();
             Value value = ref;
+            ImGui::PushID(ref.description().name.c_str());
             draw(value, "oui");
+            ImGui::PopID();
             ref = value;
             ImGui::Separator();
         }
@@ -64,6 +70,7 @@ void ComponentEditor::displayComponent()
 
 void ComponentEditor::displayName()
 {
+    PROFILE_FUNCTION();
     auto &cm = m_scene->getComponentManager();
     auto tagId = cm.GetComponentId("Tag").value();
     auto &tagArray = cm.GetComponentArray(tagId);
@@ -78,6 +85,7 @@ void ComponentEditor::displayName()
 
 void ComponentEditor::deleteComponent(ComponentRef ref)
 {
+    PROFILE_FUNCTION();
     auto &cm = m_scene->getComponentManager();
     ImGuiIO &io = ImGui::GetIO();
     auto boldFont = io.Fonts->Fonts[0];
@@ -100,6 +108,7 @@ void ComponentEditor::deleteComponent(ComponentRef ref)
 
 void ComponentEditor::addComponent(const Description &description)
 {
+    PROFILE_FUNCTION();
     auto &cm = m_scene->getComponentManager();
     auto id = cm.GetComponentId(description.name).value();
     Value newComponent = description.defaultValue;

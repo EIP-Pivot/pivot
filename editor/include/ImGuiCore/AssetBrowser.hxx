@@ -5,7 +5,7 @@
 #include "ImGuiCore/ImGuiManager.hxx"
 #include <pivot/ecs/Core/Data/value.hxx>
 #include <pivot/ecs/Core/SceneManager.hxx>
-#include <pivot/graphics/AssetStorage.hxx>
+#include <pivot/graphics/AssetStorage/AssetStorage.hxx>
 
 class AssetBrowser
 {

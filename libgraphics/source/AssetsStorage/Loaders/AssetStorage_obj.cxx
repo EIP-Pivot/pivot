@@ -1,4 +1,4 @@
-#include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/Loaders.hxx"
 
 #include "pivot/pivot.hxx"
 
@@ -8,7 +8,7 @@
 namespace pivot::graphics::loaders
 {
 
-static std::pair<std::string, AssetStorage::CPUMaterial> loadMaterial(const tinyobj::material_t &material)
+static std::pair<std::string, asset::CPUMaterial> loadMaterial(const tinyobj::material_t &material)
 {
     std::filesystem::path diffuse = material.diffuse_texname;
     std::filesystem::path normal = material.normal_texname;
@@ -18,7 +18,7 @@ static std::pair<std::string, AssetStorage::CPUMaterial> loadMaterial(const tiny
 
     return {
         material.name,
-        AssetStorage::CPUMaterial{
+        asset::CPUMaterial{
             .alphaCutOff = 1.0f,
             .metallicFactor = material.metallic,
             .roughnessFactor = material.roughness,
@@ -52,12 +52,12 @@ static std::pair<std::string, AssetStorage::CPUMaterial> loadMaterial(const tiny
     };
 }
 
-std::optional<AssetStorage::CPUStorage> loadObjModel(const std::filesystem::path &path)
+std::optional<asset::CPUStorage> loadObjModel(const std::filesystem::path &path)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     auto base_dir = path.parent_path();
 
-    AssetStorage::CPUStorage storage;
+    asset::CPUStorage storage;
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
@@ -83,9 +83,9 @@ std::optional<AssetStorage::CPUStorage> loadObjModel(const std::filesystem::path
     }
 
     std::unordered_map<Vertex, uint32_t> uniqueVertices{};
-    AssetStorage::Prefab prefab;
+    asset::Prefab prefab;
     for (const auto &shape: shapes) {
-        AssetStorage::Model model{
+        asset::Model model{
             .mesh =
                 {
                     .vertexOffset = static_cast<uint32_t>(storage.vertexStagingBuffer.size()),
@@ -98,7 +98,7 @@ std::optional<AssetStorage::CPUStorage> loadObjModel(const std::filesystem::path
                                      : ("white")),
         };
         for (const auto &index: shape.mesh.indices) {
-            pivot_assert(index.vertex_index != -1, "No vertices in the obj file");
+            pivotAssertMsg(index.vertex_index != -1, "No vertices in the obj file");
             Vertex vertex{
                 .pos =
                     {

@@ -8,6 +8,7 @@ using namespace pivot::ecs::data;
 
 void AssetBrowser::create()
 {
+    PROFILE_FUNCTION();
     ImGui::Begin(" Asset ");
     ImGuiTheme::setDefaultFramePadding();
     auto image = m_imGuiManager.getTextureId("Prefab");
@@ -25,6 +26,7 @@ void AssetBrowser::create()
 
 void AssetBrowser::dropSource(const std::string &name)
 {
+    PROFILE_FUNCTION();
     auto image = m_imGuiManager.getTextureId("Prefab");
     if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
         struct wrapper my_wrapper = {*this};
@@ -37,6 +39,7 @@ void AssetBrowser::dropSource(const std::string &name)
 
 void AssetBrowser::createEntity(std::string_view name)
 {
+    PROFILE_FUNCTION();
     Entity newEntity = m_scene->CreateEntity();
     auto &cm = m_scene->getComponentManager();
     auto transformIndex = cm.GetComponentId("Transform").value();

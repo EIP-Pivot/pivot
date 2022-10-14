@@ -74,3 +74,23 @@ jobs:
           path: |
             ${{github.workspace}}${{ matrix.config.working_directory }}*.zip
           retention-days: 1
+
+  release:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create release directory
+        run: mkdir -p ${{ github.workspace }}/release
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: pivot-linux-${{ github.sha }}
+          path: ${{ github.workspace }}/release
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: pivot-windows-${{ github.sha }}
+          path: ${{ github.workspace }}/release
+
+      - name: Display structure of downloaded files
+        run: ls -R ${{ github.workspace }}/release

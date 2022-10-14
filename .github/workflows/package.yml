@@ -1,5 +1,8 @@
 name: Package
-on: push
+on:
+  push:
+    tags:        
+      - '*'
 
 jobs:
   build:
@@ -70,7 +73,7 @@ jobs:
       
       - uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.config.package_name }}-${{ github.sha }}  # ${{ github.ref_name }}
+          name: ${{ matrix.config.package_name }}-${{ github.ref_name }}
           path: |
             ${{github.workspace}}${{ matrix.config.working_directory }}*.zip
           retention-days: 1
@@ -84,18 +87,17 @@ jobs:
 
       - uses: actions/download-artifact@v3
         with:
-          name: pivot-linux-${{ github.sha }}
+          name: pivot-linux-${{ github.ref_name }}
           path: ${{ github.workspace }}/release
 
       - uses: actions/download-artifact@v3
         with:
-          name: pivot-windows-${{ github.sha }}
+          name: pivot-windows-${{ github.ref_name }}
           path: ${{ github.workspace }}/release
 
       - name: Publish
         uses: softprops/action-gh-release@v1
         with:
           generate_release_notes: true
-          draft: true
           files: |
             ${{ github.workspace }}/release/*

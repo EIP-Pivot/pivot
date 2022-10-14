@@ -70,7 +70,7 @@ jobs:
       
       - uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.config.package_name }}-${{ github.ref_name }}
+          name: ${{ matrix.config.package_name }}-${{ github.sha }}  # ${{ github.ref_name }}
           path: |
             ${{github.workspace}}${{ matrix.config.working_directory }}*.zip
           retention-days: 1

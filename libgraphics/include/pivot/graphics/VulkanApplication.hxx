@@ -72,7 +72,7 @@ public:
     /// @brief Initialise the Vulkan ressources
     ///
     /// @throw VulkanException if something went awry
-    void init();
+    void init(const std::filesystem::path &asset_dir);
 
     /// @brief draw the next frame
     ///

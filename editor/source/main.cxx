@@ -36,7 +36,7 @@ class Application : public pivot::Engine
 public:
     Application()
         : Engine(),
-          imGuiManager(getSceneManager(), *this),
+          imGuiManager(getSceneManager(), *this, m_asset_directory),
           editor(getSceneManager(), getCurrentScene()),
           entity(getCurrentScene()),
           componentEditor(m_component_index, getCurrentScene()),

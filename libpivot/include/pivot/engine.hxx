@@ -48,6 +48,7 @@ protected:
     builtins::Camera m_camera;
     bool m_paused = true;
     std::optional<vk::Rect2D> renderArea = std::nullopt;
+    std::filesystem::path m_asset_directory;
 
     virtual void onFrameStart() {}
     virtual void onTick([[maybe_unused]] float delta) {}

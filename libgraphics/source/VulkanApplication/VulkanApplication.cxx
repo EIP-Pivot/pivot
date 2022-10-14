@@ -54,9 +54,6 @@ void VulkanApplication::init(const std::filesystem::path &asset_dir)
         asset_dir.string() + "/icon_small.png",
     };
     window.setIcon(iconFile);
-    window.addKeyPressCallback(Window::Key::ESCAPE, [](Window &window, const Window::Key, const Window::Modifier) {
-        window.shouldClose(true);
-    });
     window.addKeyPressCallback(Window::Key::G, [this](Window &, const Window::Key, const Window::Modifier modifier) {
         if (modifier & Window::ModifierBits::Ctrl) { allocator.dumpStats(); }
     });

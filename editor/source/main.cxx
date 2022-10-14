@@ -99,6 +99,14 @@ public:
             last = pos;
             pivot::builtins::systems::ControlSystem::processMouseMovement(m_camera, glm::dvec2(xoffset, yoffset));
         });
+        window.addKeyPressCallback(Window::Key::ESCAPE, [&](Window &window, const Window::Key, const Window::Modifier) {
+            logger.debug() << "Escape";
+            if (this->m_paused) {
+                window.shouldClose(true);
+            } else {
+                this->editor.setRun(false);
+            }
+        });
         m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
         // resize or loading asset reset imgui -> style reset
         //        ImGuiTheme::setStyle();

@@ -92,5 +92,10 @@ jobs:
           name: pivot-windows-${{ github.sha }}
           path: ${{ github.workspace }}/release
 
-      - name: Display structure of downloaded files
-        run: ls -R ${{ github.workspace }}/release
+      - name: Publish
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+          draft: true
+          files: |
+            ${{ github.workspace }}/release/*

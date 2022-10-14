@@ -3,7 +3,6 @@ on: push
 
 jobs:
   build:
-    needs: [format, documentation]
     env:
       VULKAN_SDK: C:/VulkanSDK
 

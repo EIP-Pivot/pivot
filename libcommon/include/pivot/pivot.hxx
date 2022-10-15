@@ -24,6 +24,15 @@ template <class...>
 /// Used to error out in constexpr if
 constexpr std::false_type always_false{};
 
+template <typename T>
+/// Only accept hashable type
+concept Hashable = requires(T a)
+{
+    {
+        std::hash<T>{}(a)
+        } -> std::convertible_to<std::size_t>;
+};
+
 }    // namespace pivot
 
 #ifndef NDEBUG

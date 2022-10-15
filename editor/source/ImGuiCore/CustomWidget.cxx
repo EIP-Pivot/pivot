@@ -80,8 +80,6 @@ void CustomWidget::CustomVec3(const std::string &label, glm::vec3 &values, const
 void CustomWidget::CustomInputText(const std::string &label, std::string &value, float columnWidth)
 {
     PROFILE_FUNCTION();
-    ImGuiIO &io = ImGui::GetIO();
-    auto boldFont = io.Fonts->Fonts[0];
 
     ImGui::PushID(label.c_str());
 
@@ -102,8 +100,6 @@ void CustomWidget::CustomInputText(const std::string &label, std::string &value,
 void CustomWidget::CustomInputInt(const std::string &label, int &value, float columnWidth)
 {
     PROFILE_FUNCTION();
-    ImGuiIO &io = ImGui::GetIO();
-    auto boldFont = io.Fonts->Fonts[0];
 
     ImGui::PushID(label.c_str());
 
@@ -124,8 +120,6 @@ void CustomWidget::CustomInputInt(const std::string &label, int &value, float co
 void CustomWidget::CustomInputDouble(const std::string &label, double &value, float columnWidth)
 {
     PROFILE_FUNCTION();
-    ImGuiIO &io = ImGui::GetIO();
-    auto boldFont = io.Fonts->Fonts[0];
 
     ImGui::PushID(label.c_str());
 

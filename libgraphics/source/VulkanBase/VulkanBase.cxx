@@ -5,8 +5,7 @@
 
 namespace pivot::graphics
 {
-VulkanBase::VulkanBase(const bool bForceValidation)
-    : VulkanLoader(), VulkanImmediateCommand()
+VulkanBase::VulkanBase(const bool bForceValidation): VulkanLoader(), VulkanImmediateCommand()
 {
     DEBUG_FUNCTION();
     bEnableValidationLayers |= bForceValidation;

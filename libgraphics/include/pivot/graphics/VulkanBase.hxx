@@ -27,8 +27,8 @@ protected:
     ~VulkanBase();
 
     /// Initialize the ressources
-    void init(Window &window, const std::vector<const char *> &instanceExtensions, const std::vector<const char *> &deviceExtensions,
-              const std::vector<const char *> &validationLayers);
+    void init(Window &window, const std::vector<const char *> &instanceExtensions,
+              const std::vector<const char *> &deviceExtensions, const std::vector<const char *> &validationLayers);
 
     /// Flush the deletionQueue
     void destroy();

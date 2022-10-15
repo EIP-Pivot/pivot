@@ -35,6 +35,8 @@
 #include <pivot/builtins/components/Text.hxx>
 #include <pivot/builtins/components/Transform2D.hxx>
 
+#include <pivot/ecs/Core/Component/SynchronizedComponentArray.hxx>
+
 #include <pivot/graphics/Resolver/AssetResolver.hxx>
 #include <pivot/graphics/Resolver/DrawCallResolver.hxx>
 #include <pivot/graphics/Resolver/LightDataResolver.hxx>
@@ -156,7 +158,7 @@ void Engine::run()
 }
 
 template <typename T>
-using Array = pivot::ecs::component::DenseTypedComponentArray<T>;
+using Array = pivot::ecs::component::SynchronizedTypedComponentArray<T>;
 
 void Engine::changeCurrentScene(ecs::SceneManager::SceneId sceneId)
 {
@@ -178,6 +180,9 @@ void Engine::changeCurrentScene(ecs::SceneManager::SceneId sceneId)
         auto &directional_array =
             dynamic_cast<Array<pivot::graphics::DirectionalLight> &>(cm.GetComponentArray(*directional_id));
         auto &spotlight_array = dynamic_cast<Array<pivot::graphics::SpotLight> &>(cm.GetComponentArray(*spotlight_id));
+
+        std::scoped_lock arrays_locks(ro_array.getMutex(), transform_array.getMutex(), point_array.getMutex(),
+                                      directional_array.getMutex(), spotlight_array.getMutex());
 
         m_current_scene_draw_command = {
             .renderObjects =

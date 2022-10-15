@@ -8,6 +8,7 @@
 #include <pivot/builtins/systems/CollisionSystem.hxx>
 #include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
 #include <pivot/ecs/Core/Component/FlagComponentStorage.hxx>
+#include <pivot/ecs/Core/Component/SynchronizedComponentArray.hxx>
 
 using namespace pivot::ecs;
 using namespace pivot::builtins::components;
@@ -23,19 +24,22 @@ std::vector<event::Event> collisionSystemImpl(std::reference_wrapper<const pivot
 {
     logger.trace() << "Collision system run";
     auto collidableStorage = dynamic_cast<const component::FlagComponentStorage &>(cmb.arrays()[0].get());
-    auto transformArray =
-        dynamic_cast<component::DenseTypedComponentArray<pivot::graphics::Transform> &>(cmb.arrays()[1].get())
-            .getData();
-    auto renderObjectArray =
-        dynamic_cast<component::DenseTypedComponentArray<pivot::graphics::RenderObject> &>(cmb.arrays()[2].get())
-            .getData();
+    const auto &transformArray =
+        dynamic_cast<component::SynchronizedTypedComponentArray<pivot::graphics::Transform> &>(cmb.arrays()[1].get());
+    const auto &renderObjectArray =
+        dynamic_cast<component::SynchronizedTypedComponentArray<pivot::graphics::RenderObject> &>(
+            cmb.arrays()[2].get());
+    std::scoped_lock array_lock(transformArray.getMutex(), renderObjectArray.getMutex());
+
+    auto transformData = transformArray.getData();
+    auto renderObjectData = renderObjectArray.getData();
 
     std::vector<EntityAABB> entityAABB;
 
     for (Entity entity: collidableStorage.getData()) {
         logger.trace() << "Retrieving AABB for entity " << entity;
-        glm::vec3 position = transformArray[entity].position;
-        auto &prefab_name = renderObjectArray[entity].meshID;
+        glm::vec3 position = transformData[entity].position;
+        auto &prefab_name = renderObjectData[entity].meshID;
         auto prefab = assetStorage.get().get_optional<Prefab>(prefab_name);
         if (!prefab.has_value()) continue;
         auto bounding_box = assetStorage.get().get_optional<AABB>(prefab.value().get().modelIds.at(0));

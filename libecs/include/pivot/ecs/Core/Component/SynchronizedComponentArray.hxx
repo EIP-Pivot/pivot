@@ -56,11 +56,14 @@ public:
     /// Manually lock the mutex when using the member access function.
     std::unique_lock<Mutex> try_lock() const { return std::unique_lock(accessMutex, std::try_to_lock); }
 
+    /// Return a ref to the mutex for external lock
+    Mutex &getMutex() const noexcept { return accessMutex; }
+
     /// Returns a mutable view into the components values. Some of those values can be nonsensical as the entity can
     /// miss this component.
     std::span<T> getData() override
     {
-        pivotAssert(accessMutex.try_lock());
+        pivotAssert(!accessMutex.try_lock());
         return DenseTypedComponentArray<T>::getData();
     }
 
@@ -68,21 +71,21 @@ public:
     /// miss this component.
     std::span<const T> getData() const override
     {
-        pivotAssert(accessMutex.try_lock());
+        pivotAssert(!accessMutex.try_lock());
         return DenseTypedComponentArray<T>::getData();
     }
 
     /// Returns the booleans specifying whether an an entity has the component
     const std::vector<bool> &getExistence() const override
     {
-        pivotAssert(accessMutex.try_lock());
+        pivotAssert(!accessMutex.try_lock());
         return DenseTypedComponentArray<T>::getExistence();
     }
 
     /// Returns the vector containing the component data
     const std::vector<T> &getComponents() const override
     {
-        pivotAssert(accessMutex.try_lock());
+        pivotAssert(!accessMutex.try_lock());
         return DenseTypedComponentArray<T>::getComponents();
     }
 

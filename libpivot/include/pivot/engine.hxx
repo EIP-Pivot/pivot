@@ -1,6 +1,5 @@
 #pragma once
 
-#include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
 #include <pivot/ecs/Core/Event/index.hxx>
 #include <pivot/ecs/Core/SceneManager.hxx>

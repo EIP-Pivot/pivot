@@ -2,6 +2,7 @@
 #include <imgui_internal.h>
 #include <numbers>
 #include <pivot/builtins/components/Transform.hxx>
+#include <pivot/ecs/Core/Component/SynchronizedComponentArray.hxx>
 
 #include "ImGuiCore/CustomWidget.hxx"
 #include "ImGuiCore/SceneEditor.hxx"
@@ -118,7 +119,8 @@ void SceneEditor::DisplayGuizmo(Entity entity, const pivot::builtins::Camera &ca
     // TODO: Refactor this out, to compute only when the scene changes
     auto &cm = m_currentScene->getComponentManager();
     auto &array = cm.GetComponentArray(cm.GetComponentId(Transform::description.name).value());
-    auto &ro_array = dynamic_cast<pivot::ecs::component::DenseTypedComponentArray<pivot::graphics::Transform> &>(array);
+    auto &ro_array =
+        dynamic_cast<pivot::ecs::component::SynchronizedTypedComponentArray<pivot::graphics::Transform> &>(array);
     if (!ro_array.entityHasValue(entity)) return;
     pivot::graphics::Transform &transform = ro_array.getData()[entity];
     auto matrix = transform.getModelMatrix();

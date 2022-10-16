@@ -14,6 +14,18 @@ if(NOT logger_POPULATED)
 endif()
 
 fetchcontent_declare(
+    mimalloc
+    GIT_REPOSITORY https://github.com/microsoft/mimalloc.git
+    GIT_TAG v2.0.6
+)
+fetchcontent_getproperties(mimalloc)
+if(NOT mimalloc_POPULATED)
+    message(STATUS "Populating mimalloc")
+    fetchcontent_populate(mimalloc)
+    add_subdirectory(${mimalloc_SOURCE_DIR} ${mimalloc_BINARY_DIR})
+endif()
+
+fetchcontent_declare(
     glm
     GIT_REPOSITORY https://github.com/g-truc/glm.git
     GIT_TAG cc98465e3508535ba8c7f6208df934c156a018dc
@@ -75,7 +87,7 @@ if(DEFINED ENV{CI})
     target_compile_definitions(${PROJECT_NAME} PUBLIC NO_BENCHMARK)
 endif()
 
-target_link_libraries(${PROJECT_NAME} PUBLIC logger glm magic_enum)
+target_link_libraries(${PROJECT_NAME} PUBLIC logger glm magic_enum mimalloc-static)
 
 target_precompile_headers(
     ${PROJECT_NAME}

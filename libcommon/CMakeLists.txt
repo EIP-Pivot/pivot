@@ -22,6 +22,10 @@ fetchcontent_getproperties(mimalloc)
 if(NOT mimalloc_POPULATED)
     message(STATUS "Populating mimalloc")
     fetchcontent_populate(mimalloc)
+    set(MI_BUILD_TESTS
+        OFF
+        CACHE INTERNAL "" FORCE
+    )
     add_subdirectory(${mimalloc_SOURCE_DIR} ${mimalloc_BINARY_DIR})
 endif()
 
@@ -72,7 +76,6 @@ add_library(
     ${PROJECT_NAME} STATIC
     sources/lib.cxx
     sources/utility/benchmark.cxx
-
     # Select the correct platform to compile
     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
     sources/Platforms/UnixPlatform.cxx>

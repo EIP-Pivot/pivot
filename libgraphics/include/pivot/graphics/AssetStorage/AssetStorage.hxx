@@ -3,7 +3,6 @@
 #include "pivot/containers/IndexedStorage.hxx"
 #include "pivot/graphics/DeletionQueue.hxx"
 #include "pivot/graphics/DescriptorAllocator/DescriptorBuilder.hxx"
-#include "pivot/graphics/ThreadPool.hxx"
 #include "pivot/graphics/VulkanBase.hxx"
 #include "pivot/graphics/VulkanImmediateCommand.hxx"
 #include "pivot/graphics/types/AABB.hxx"
@@ -11,6 +10,7 @@
 #include "pivot/graphics/types/AllocatedImage.hxx"
 #include "pivot/graphics/types/Material.hxx"
 #include "pivot/graphics/types/Vertex.hxx"
+#include "pivot/utility/ThreadPool.hxx"
 
 #include "pivot/utility/flags.hxx"
 
@@ -66,7 +66,7 @@ public:
 
 public:
     /// Constructor
-    AssetStorage(VulkanBase &device);
+    AssetStorage(ThreadPool &thread_pool, VulkanBase &device);
     AssetStorage(const AssetStorage &) = delete;
     /// Destructor
     ~AssetStorage();
@@ -214,7 +214,7 @@ private:
 private:
     OptionalRef<VulkanBase> base_ref;
     std::filesystem::path asset_dir = PIVOT_ASSET_DEFAULT_DIRECTORY;
-    ThreadPool threadPool;
+    ThreadPool &threadPool_ref;
 
     // Abstract ressouces
     std::unordered_map<std::string, asset::Model> modelStorage;

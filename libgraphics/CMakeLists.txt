@@ -185,7 +185,6 @@ add_library(
     source/VulkanAllocator.cxx
     source/VulkanLoader.cxx
     source/VulkanSwapchain.cxx
-    source/ThreadPool.cxx
     source/AssetsStorage/CPUStorage.cxx
     source/AssetsStorage/AssetStorage.cxx
     source/AssetsStorage/AssetStorage_init.cxx

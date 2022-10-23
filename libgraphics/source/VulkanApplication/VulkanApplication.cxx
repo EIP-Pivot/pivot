@@ -8,7 +8,7 @@ namespace pivot::graphics
 
 VulkanApplication::VulkanApplication()
     : VulkanBase("Pivot Game Engine"),
-      assetStorage(*this),
+      assetStorage(threadPool, *this),
       pipelineStorage(*this),
       descriptorAllocator(device),
       layoutCache(device)
@@ -48,6 +48,7 @@ VulkanApplication::~VulkanApplication()
 void VulkanApplication::init(Window &window, const std::filesystem::path &asset_dir)
 {
     DEBUG_FUNCTION();
+    threadPool.start();
     VulkanBase::init(window, {}, deviceExtensions, validationLayers);
 
     const std::vector<std::string> iconFile = {

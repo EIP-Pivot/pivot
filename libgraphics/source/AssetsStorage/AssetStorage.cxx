@@ -6,7 +6,7 @@
 namespace pivot::graphics
 {
 
-AssetStorage::AssetStorage(VulkanBase &base): base_ref(base) {}
+AssetStorage::AssetStorage(ThreadPool &thread_pool, VulkanBase &base): base_ref(base), threadPool_ref(thread_pool) {}
 
 AssetStorage::~AssetStorage() {}
 

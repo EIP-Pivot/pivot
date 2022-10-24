@@ -76,11 +76,13 @@ namespace details
                 if (box1.entity == box2.entity) continue;
                 float d1x = box2.low.x - box1.high.x;
                 float d1y = box2.low.y - box1.high.y;
+                float d1z = box2.low.z - box1.high.z;
                 float d2x = box1.low.x - box2.high.x;
                 float d2y = box1.low.y - box2.high.y;
+                float d2z = box1.low.z - box2.high.z;
 
-                if (d1x > 0.0f || d1y > 0.0f) continue;
-                if (d2x > 0.0f || d2y > 0.0f) continue;
+                if (d1x > 0.0f || d1y > 0.0f || d1z > 0.0f) continue;
+                if (d2x > 0.0f || d2y > 0.0f || d2z > 0.0f) continue;
 
                 collisions.emplace_back(box1.entity, box2.entity);
             }

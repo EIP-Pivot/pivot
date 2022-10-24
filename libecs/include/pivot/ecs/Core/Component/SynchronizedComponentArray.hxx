@@ -13,18 +13,21 @@ namespace pivot::ecs::component
  * This child class of the DenseTypedComponentArray allow the array to be safely shared between thread.
  */
 template <typename T, typename Mutex = std::mutex>
-class SynchronizedTypedComponentArray : public DenseTypedComponentArray<T>
+class SynchronizedTypedComponentArray : public IComponentArray
 {
 public:
     /// Creates a SynchronizedTypedComponentArray from the Description of its component
-    using DenseTypedComponentArray<T>::DenseTypedComponentArray;
+    SynchronizedTypedComponentArray(Description description): internalComponentArray(std::move(description)) {}
+
+    /// \copydoc pivot::ecs::component::IComponentArray::getDescription()
+    const Description &getDescription() const override { return internalComponentArray.getDescription(); }
 
     /// \copydoc pivot::ecs::component::IComponentArray::getValueForEntity()
     std::optional<data::Value> getValueForEntity(Entity entity) const override
     {
         std::unique_lock lock(accessMutex);
 
-        return DenseTypedComponentArray<T>::getValueForEntity(entity);
+        return internalComponentArray.getValueForEntity(entity);
     }
 
     /// \copydoc pivot::ecs::component::IComponentArray::entityHasValue()
@@ -32,7 +35,7 @@ public:
     {
         std::unique_lock lock(accessMutex);
 
-        return DenseTypedComponentArray<T>::entityHasValue(entity);
+        return internalComponentArray.entityHasValue(entity);
     }
 
     /// \copydoc pivot::ecs::component::IComponentArray::setValueForEntity()
@@ -40,14 +43,14 @@ public:
     {
         std::unique_lock lock(accessMutex);
 
-        return DenseTypedComponentArray<T>::setValueForEntity(entity, std::move(value));
+        return internalComponentArray.setValueForEntity(entity, std::move(value));
     }
 
     /// \copydoc pivot::ecs::component::IComponentArray::maxEntity()
     Entity maxEntity() const override
     {
         std::unique_lock lock(accessMutex);
-        return DenseTypedComponentArray<T>::maxEntity();
+        return internalComponentArray.maxEntity();
     }
 
     /// Manually lock the mutex when using the member access function.
@@ -61,35 +64,36 @@ public:
 
     /// Returns a mutable view into the components values. Some of those values can be nonsensical as the entity can
     /// miss this component.
-    std::span<T> getData() override
+    std::span<T> getData()
     {
         pivotAssert(!accessMutex.try_lock());
-        return DenseTypedComponentArray<T>::getData();
+        return internalComponentArray.getData();
     }
 
     /// Returns a constant view into the components values. Some of those values can be nonsensical as the entity can
     /// miss this component.
-    std::span<const T> getData() const override
+    std::span<const T> getData() const
     {
         pivotAssert(!accessMutex.try_lock());
-        return DenseTypedComponentArray<T>::getData();
+        return internalComponentArray.getData();
     }
 
     /// Returns the booleans specifying whether an an entity has the component
-    const std::vector<bool> &getExistence() const override
+    const std::vector<bool> &getExistence() const
     {
         pivotAssert(!accessMutex.try_lock());
-        return DenseTypedComponentArray<T>::getExistence();
+        return internalComponentArray.getExistence();
     }
 
     /// Returns the vector containing the component data
-    const std::vector<T> &getComponents() const override
+    const std::vector<T> &getComponents() const
     {
         pivotAssert(!accessMutex.try_lock());
-        return DenseTypedComponentArray<T>::getComponents();
+        return internalComponentArray.getComponents();
     }
 
 private:
+    DenseTypedComponentArray<T> internalComponentArray;
     mutable Mutex accessMutex;
 };
 }    // namespace pivot::ecs::component

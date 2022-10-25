@@ -50,7 +50,8 @@ data::Value builtin_print_stream(const std::vector<data::Value> &params, std::os
 
 data::Value builtin_loadScene(const std::vector<data::Value> &params, const BuiltinContext &context)
 {
-    return context.loadScene(std::get<std::string>(params.at(0)));
+    context.loadScene(std::get<std::string>(params.at(0)));
+    return data::Value();
 }
 
 data::Value builtin_cos(const std::vector<data::Value> &params, const BuiltinContext &)

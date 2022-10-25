@@ -47,7 +47,11 @@ namespace pivot
 Engine::Engine()
     : m_scripting_engine(
           m_system_index, m_component_index,
-          pivot::ecs::script::interpreter::builtins::BuiltinContext{std::bind_front(&Engine::isKeyPressed, this)}),
+          pivot::ecs::script::interpreter::builtins::BuiltinContext{std::bind_front(&Engine::isKeyPressed, this),
+                                                                    [this](const std::string &scene) {
+                                                                        std::cout << "lambda" << std::endl;
+                                                                        this->loadScene(scene);
+                                                                    }}),
       m_camera(builtins::Camera(glm::vec3(0, 5, 0)))
 {
     DEBUG_FUNCTION();

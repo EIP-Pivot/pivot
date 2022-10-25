@@ -25,7 +25,7 @@ struct BuiltinContext {
     /// Mock builtin context for unit testing
     static BuiltinContext mock()
     {
-        return BuiltinContext{.isKeyPressed = [](auto) { return false; }};
+        return BuiltinContext{.isKeyPressed = [](auto) { return false; }, .loadScene = [](auto) {}};
     }
 };
 

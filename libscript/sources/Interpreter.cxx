@@ -45,6 +45,7 @@ using ParameterPair = std::pair<size_t, std::vector<std::vector<data::Type>>>;
 /// This map will map the name of a builtin, to its callback paired with its signature
 const std::unordered_map<std::string, std::pair<BuiltinFunctionCallback, ParameterPair>> gBuiltinsCallbacks = {
     {"isPressed", {interpreter::builtins::builtin_isPressed, {1, {{data::BasicType::String}}}}},
+    {"loadScene", {interpreter::builtins::builtin_loadScene, {1, {{data::BasicType::String}}}}},
     {"cos", {interpreter::builtins::builtin_cos, {1, {{data::BasicType::Number}}}}},
     {"sin", {interpreter::builtins::builtin_sin, {1, {{data::BasicType::Number}}}}},
     {"print",
@@ -281,7 +282,7 @@ data::Value Interpreter::executeFunction(const Node &functionCall, const Stack &
     validateParams(parameters, gBuiltinsCallbacks.at(callee.value).second.first,
                    gBuiltinsCallbacks.at(callee.value).second.second,
                    callee.value);    // pair is <size_t numberOfParams, vector<data::Type> types>
-    return gBuiltinsCallbacks.at(callee.value)
+	return gBuiltinsCallbacks.at(callee.value)
         .first(parameters, m_builtinContext);    // return the return value of the built-in
 }
 

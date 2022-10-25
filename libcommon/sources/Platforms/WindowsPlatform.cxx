@@ -10,18 +10,19 @@ bool WindowsPlatform::isDebuggerPresent() { return !!::IsDebuggerPresent(); }
 
 void WindowsPlatform::setThreadName(std::jthread &thread, const std::string &name)
 {
-    HRESULT hr = ::SetThreadDescription(thread.native_handle(), std::wstring(name.begin(), name.end()));
+    std::wstring nameStupidType(name.begin(), name.end());
+    HRESULT hr = ::SetThreadDescription(thread.native_handle(), nameStupidType.c_str());
     if (FAILED(hr)) { logger.err("WindowsPlatform::setThreadName") << "SetThreadDescription('" << name << "') failed"; }
 }
 
 static std::string getThreadName(std::jthread &thread)
 {
-    PWSTR *name = nullptr;
+    PWSTR name;
     HRESULT hr = ::GetThreadDescription(thread.native_handle(), &name);
     if (SUCCEEDED(hr)) {
-        std::string nameNoStupidType(name);
+        std::wstring nameNoStupidType(name, wcslen(name));
         LocalFree(name);
-        return nameNoStupidType;
+        return std::string(nameNoStupidType.begin(), nameNoStupidType.end());
     }
     return "";
 }

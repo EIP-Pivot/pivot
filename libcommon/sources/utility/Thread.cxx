@@ -30,6 +30,7 @@ void Thread::create(const std::string &name, std::unique_ptr<internal::IThreadRu
     m_name = name;
 
     m_managedThread = std::jthread(thread_runtime, this);
+    Platform::setThreadName(m_managedThread, m_name);
 }
 
 void Thread::preRun() {}

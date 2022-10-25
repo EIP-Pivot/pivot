@@ -18,6 +18,9 @@ public:
     static bool isDebuggerPresent();
 
     FORCEINLINE static void breakpoint() { (__nop(), __debugbreak()); }
+
+    static void setThreadName(std::jthread &thread, const std::string &name);
+    static std::string getThreadName(std::jthread &thread);
 };
 
 using Platform = WindowsPlatform;

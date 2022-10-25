@@ -27,7 +27,8 @@ void ThreadPool::resize(unsigned size)
     unsigned old_size = thread_p.size();
     thread_p.resize(size);
     for (; old_size < thread_p.size(); old_size++) {
-        thread_p.at(old_size).create("Worker Thread", std::make_unique<WorkerPoolRuntime>(state));
+        thread_p.at(old_size).create("Worker Thread nb " + std::to_string(old_size),
+                                     std::make_unique<WorkerPoolRuntime>(state));
     }
 }
 

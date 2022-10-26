@@ -5,6 +5,7 @@ function(target_pivot_compile_option TARGET)
                -Wall
                -Wextra>
                $<$<CXX_COMPILER_ID:MSVC>:
+               /Zc:preprocessor
                /W4
                /wd4267
                /wd4201

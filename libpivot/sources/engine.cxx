@@ -49,8 +49,13 @@ Engine::Engine()
           m_system_index, m_component_index,
           pivot::ecs::script::interpreter::builtins::BuiltinContext{std::bind_front(&Engine::isKeyPressed, this),
                                                                     [this](const std::string &scene) {
-                                                                        std::cout << "lambda" << std::endl;
-                                                                        this->loadScene(scene);
+																		// Check that the scene is loaded
+																		if (!this->m_scene_manager.getSceneId(scene).has_value()) {
+																			logger.warn("loadScene") << "The scene " << scene << " doesn't exist.";
+																			return ;
+																		}
+																		// Set the scene as the active one
+																		this->m_scene_manager.setCurrentSceneId(this->m_scene_manager.getSceneId(scene).value());
                                                                     }}),
       m_camera(builtins::Camera(glm::vec3(0, 5, 0)))
 {

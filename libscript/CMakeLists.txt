@@ -20,4 +20,5 @@ build_tests(
     tests/test_interpreter.cxx
     tests/test_builtins.cxx
     tests/test_escaped.cxx
+    tests/test_loadScene.cxx
 )

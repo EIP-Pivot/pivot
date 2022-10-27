@@ -11,11 +11,10 @@
 namespace pivot::ecs::script::interpreter
 {
 
-const std::map<std::string, data::BasicType> gVariableTypes{{"Vector3", data::BasicType::Vec3},
-                                                            {"Number", data::BasicType::Number},
-                                                            {"Boolean", data::BasicType::Boolean},
-                                                            {"Color", data::BasicType::Number},
-                                                            {"String", data::BasicType::String}};
+const std::map<std::string, data::BasicType> gVariableTypes{
+    {"Vector3", data::BasicType::Vec3},  {"Vector2", data::BasicType::Vec2},    {"Asset", data::BasicType::Asset},
+    {"Number", data::BasicType::Number}, {"Boolean", data::BasicType::Boolean}, {"Color", data::BasicType::Color},
+    {"String", data::BasicType::String}};
 // Map builtin binary (two operands) operators, to their operator enum
 const std::map<std::string, std::function<data::Value(const data::Value &, const data::Value &)>> gOperatorCallbacks = {
     {"*", interpreter::builtins::builtin_operator<builtins::Operator::Multiplication>},
@@ -45,9 +44,13 @@ using ParameterPair = std::pair<size_t, std::vector<std::vector<data::Type>>>;
 /// This map will map the name of a builtin, to its callback paired with its signature
 const std::unordered_map<std::string, std::pair<BuiltinFunctionCallback, ParameterPair>> gBuiltinsCallbacks = {
     {"isPressed", {interpreter::builtins::builtin_isPressed, {1, {{data::BasicType::String}}}}},
-    {"loadScene", {interpreter::builtins::builtin_loadScene, {1, {{data::BasicType::String}}}}},
     {"cos", {interpreter::builtins::builtin_cos, {1, {{data::BasicType::Number}}}}},
     {"sin", {interpreter::builtins::builtin_sin, {1, {{data::BasicType::Number}}}}},
+    {"toString",
+     {interpreter::builtins::builtin_toString,
+      {std::numeric_limits<size_t>::max(),
+       {{data::BasicType::String, data::BasicType::Number, data::BasicType::Integer, data::BasicType::Boolean,
+         data::BasicType::Asset, data::BasicType::Vec3, data::BasicType::Vec2, data::BasicType::Color}}}}},
     {"print",
      {interpreter::builtins::builtin_print,
       {std::numeric_limits<size_t>::max(),
@@ -282,7 +285,7 @@ data::Value Interpreter::executeFunction(const Node &functionCall, const Stack &
     validateParams(parameters, gBuiltinsCallbacks.at(callee.value).second.first,
                    gBuiltinsCallbacks.at(callee.value).second.second,
                    callee.value);    // pair is <size_t numberOfParams, vector<data::Type> types>
-	return gBuiltinsCallbacks.at(callee.value)
+    return gBuiltinsCallbacks.at(callee.value)
         .first(parameters, m_builtinContext);    // return the return value of the built-in
 }
 

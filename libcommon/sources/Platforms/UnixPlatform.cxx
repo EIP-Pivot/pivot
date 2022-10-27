@@ -55,10 +55,11 @@ void UnixPlateform::setThreadName(std::jthread &thread, const std::string &name)
         constexpr char sDash[] = "-";
         constexpr size_t uDashLen = std::size(sDash);
         constexpr int numToLeave = (UnixThreadNameLimit - uDashLen) / 2;
+        constexpr int delimiter = UnixThreadNameLimit - (numToLeave + uDashLen);
 
-        sizeLimitedThreadName = name.substr(0, UnixThreadNameLimit - (numToLeave + uDashLen));
+        sizeLimitedThreadName = name.substr(0, delimiter);
         sizeLimitedThreadName += sDash;
-        sizeLimitedThreadName += name.substr(numToLeave + UnixThreadNameLimit - (numToLeave + uDashLen), name.size());
+        sizeLimitedThreadName += name.substr(numToLeave + delimiter, name.size());
 
         pivotAssert(sizeLimitedThreadName.size() <= UnixThreadNameLimit);
     }

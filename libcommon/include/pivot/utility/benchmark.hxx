@@ -5,6 +5,7 @@
 #include <string>
 
 #include <pivot/pivot.hxx>
+#include <pivot/utility/define.hxx>
 #include <pivot/utility/source_location.hxx>
 
 namespace pivot::benchmark
@@ -29,6 +30,7 @@ public:
     }
 
 public:
+    PIVOT_NO_COPY_NO_MOVE(Instrumentor)
     Instrumentor();
     ~Instrumentor();
 
@@ -92,7 +94,7 @@ private:
 
 #if !defined(NO_BENCHMARK)
 
-    #define PROFILE_SCOPE(name) ::pivot::benchmark::Timer timer##__LINE__(name)
+    #define PROFILE_SCOPE(name) ::pivot::benchmark::Timer PIVOT_MACRO_EXPENDER(timer, __LINE__)(name)
     #define PROFILE_FUNCTION() PROFILE_SCOPE(::pivot::utils::function_name())
 
 #else

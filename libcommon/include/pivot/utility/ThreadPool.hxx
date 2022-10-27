@@ -28,9 +28,8 @@ public:
     };
 
 public:
+    PIVOT_NO_COPY_NO_MOVE(ThreadPool)
     ThreadPool();
-    ThreadPool(const ThreadPool &) = delete;
-    ThreadPool(const ThreadPool &&) = delete;
     ~ThreadPool() = default;
 
     /// Create the pool with a given number of thread
@@ -61,8 +60,6 @@ public:
         state->q_var.notify_one();
         return packagedFunction->get_future();
     }
-
-    ThreadPool &operator=(const ThreadPool &other) = delete;
 
 private:
     std::shared_ptr<State> state;

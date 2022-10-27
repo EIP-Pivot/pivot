@@ -35,13 +35,4 @@ concept Hashable = requires(T a)
 
 }    // namespace pivot
 
-#ifndef NDEBUG
-
-    #define DEBUG_FUNCTION() \
-        PROFILE_FUNCTION();  \
-        logger.trace(::pivot::utils::function_name()) << "Entered";
-
-#else
-    #define DEBUG_FUNCTION() PROFILE_FUNCTION();
-
-#endif
+#define DEBUG_FUNCTION() PROFILE_FUNCTION();

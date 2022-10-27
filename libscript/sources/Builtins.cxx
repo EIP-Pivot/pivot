@@ -89,10 +89,13 @@ data::Value builtin_abs(const std::vector<data::Value> &params, const BuiltinCon
 
 data::Value builtin_toString(const std::vector<data::Value> &params, const BuiltinContext &)
 {
+    bool first = true;
     std::string result = "";
     for (const data::Value &param: params) {
+        if (!first) { result += " "; };
+        first = false;
         std::visit(
-            [](auto &value) {
+            [&result](auto &value) {
                 using type = std::decay_t<decltype(value)>;
                 if constexpr (std::is_same_v<type, double> || std::is_same_v<type, std::string> ||
                               std::is_same_v<type, int>) {
@@ -109,7 +112,7 @@ data::Value builtin_toString(const std::vector<data::Value> &params, const Built
                     result +=
                         std::format("Color({},{},{},{})", value.rgba[0], value.rgba[1], value.rgba[2], value.rgba[3]);
                 } else {
-                    logger.warn("toString") << "The toString builtin does not handle this type.";
+                    throw std::runtime_error("Code branch shouldn't execute.");
                 }
             },
             static_cast<const data::Value::variant &>(param));

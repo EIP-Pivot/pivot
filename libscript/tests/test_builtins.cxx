@@ -64,5 +64,6 @@ TEST_CASE("Builtin toString", "[script][builtin]")
     REQUIRE(std::get<std::string>(builtin_toString({data::Asset{"cube"}}, context)) == "Asset(cube)");
     REQUIRE(std::get<std::string>(builtin_toString({glm::vec2(1, 2)}, context)) == "Vector2(1,2)");
     REQUIRE(std::get<std::string>(builtin_toString({glm::vec3(1, 2, 3)}, context)) == "Vector3(1,2,3)");
-    REQUIRE(std::get<std::string>(builtin_toString({data::Color{{255, 255, 255, 1}}}, context)) == "Color(255,255,255,1)");
+    REQUIRE(std::get<std::string>(builtin_toString({data::Color{{255, 255, 255, 1}}}, context)) ==
+            "Color(255,255,255,1)");
 }

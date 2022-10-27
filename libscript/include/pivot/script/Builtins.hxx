@@ -63,6 +63,10 @@ data::Value builtin_sqrt(const std::vector<data::Value> &params, const BuiltinCo
 ///     Returns the absolute value of the given Number
 data::Value builtin_abs(const std::vector<data::Value> &params, const BuiltinContext &context);
 
+/// String	toString(Any val)
+///		Returns a string representation of the given Value
+data::Value builtin_toString(const std::vector<data::Value> &params, const BuiltinContext &);
+
 /// Vec3  vec3(Number x, Number y, Number z)
 ///     Returns the absolute value of the given Number
 data::Value builtin_vec3(const std::vector<data::Value> &params, const BuiltinContext &context);

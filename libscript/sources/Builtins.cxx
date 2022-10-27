@@ -87,6 +87,36 @@ data::Value builtin_abs(const std::vector<data::Value> &params, const BuiltinCon
     return data::Value(absVal);
 }
 
+data::Value builtin_toString(const std::vector<data::Value> &params, const BuiltinContext &)
+{
+    std::string result = "";
+    for (const data::Value &param: params) {
+        std::visit(
+            [](auto &value) {
+                using type = std::decay_t<decltype(value)>;
+                if constexpr (std::is_same_v<type, double> || std::is_same_v<type, std::string> ||
+                              std::is_same_v<type, int>) {
+                    result += std::format("{}", value);
+                } else if constexpr (std::is_same_v<type, bool>) {
+                    result += (value) ? "True" : "False";
+                } else if constexpr (std::is_same_v<type, pivot::ecs::data::Asset>) {
+                    result += std::format("Asset({})", value.name);
+                } else if constexpr (std::is_same_v<type, glm::vec3>) {
+                    result += std::format("Vector3({},{},{})", value.x, value.y, value.z);
+                } else if constexpr (std::is_same_v<type, glm::vec2>) {
+                    result += std::format("Vector2({},{})", value.x, value.y);
+                } else if constexpr (std::is_same_v<type, data::Color>) {
+                    result +=
+                        std::format("Color({},{},{},{})", value.rgba[0], value.rgba[1], value.rgba[2], value.rgba[3]);
+                } else {
+                    logger.warn("toString") << "The toString builtin does not handle this type.";
+                }
+            },
+            static_cast<const data::Value::variant &>(param));
+    }
+    return data::Value(result);
+}
+
 // Builtin binary (which take two operands) operators
 // TOOD: find a better (template?) solution to handle these cases
 

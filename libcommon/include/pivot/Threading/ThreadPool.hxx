@@ -8,9 +8,9 @@
 #include <thread>
 #include <type_traits>
 
+#include "pivot/Threading/Thread.hxx"
 #include "pivot/interface/ThreadRuntime.hxx"
 #include "pivot/pivot.hxx"
-#include "pivot/utility/Thread.hxx"
 
 namespace pivot
 {

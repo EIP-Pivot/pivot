@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pivot/Threading/ThreadPool.hxx"
 #include "pivot/containers/IndexedStorage.hxx"
 #include "pivot/graphics/DeletionQueue.hxx"
 #include "pivot/graphics/DescriptorAllocator/DescriptorBuilder.hxx"
@@ -10,7 +11,6 @@
 #include "pivot/graphics/types/AllocatedImage.hxx"
 #include "pivot/graphics/types/Material.hxx"
 #include "pivot/graphics/types/Vertex.hxx"
-#include "pivot/utility/ThreadPool.hxx"
 
 #include "pivot/utility/flags.hxx"
 

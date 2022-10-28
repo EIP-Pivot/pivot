@@ -1,4 +1,4 @@
-#include "pivot/utility/ThreadPool.hxx"
+#include "pivot/Threading/ThreadPool.hxx"
 
 #include "pivot/utility/source_location.hxx"
 

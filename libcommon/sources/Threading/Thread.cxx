@@ -1,4 +1,4 @@
-#include "pivot/utility/Thread.hxx"
+#include "pivot/Threading/Thread.hxx"
 #include "pivot/pivot.hxx"
 
 #include <mutex>

@@ -4,9 +4,9 @@
 #include <fstream>
 #include <string>
 
-#include <pivot/pivot.hxx>
-#include <pivot/utility/define.hxx>
-#include <pivot/utility/source_location.hxx>
+#include "pivot/pivot.hxx"
+#include "pivot/utility/define.hxx"
+#include "pivot/utility/source_location.hxx"
 
 namespace pivot::benchmark
 {

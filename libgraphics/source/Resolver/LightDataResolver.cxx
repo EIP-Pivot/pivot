@@ -49,7 +49,7 @@ bool LightDataResolver::destroy(VulkanBase &)
 template <class T, class G>
 requires std::is_constructible_v<G, const T &, const Transform &> && BufferValid<G>
 static vk::DeviceSize handleLights(VulkanBase &base_ref, AllocatedBuffer<G> &buffer, const Object<T> &lights,
-                                   const Object<Transform> &transforms, const std::string &debug_name = "")
+                                   const Object<Transform> &transforms)
 {
     PROFILE_FUNCTION();
     verifyMsg(lights.objects.get().size() == lights.exist.get().size(), "Light ECS data are incorrect");
@@ -65,7 +65,7 @@ static vk::DeviceSize handleLights(VulkanBase &base_ref, AllocatedBuffer<G> &buf
     }
     if (buffer.getSize() < lightsData.size()) {
         if (buffer) base_ref.allocator.destroyBuffer(buffer);
-        buffer = base_ref.allocator.createMappedBuffer<G>(lightsData.size(), debug_name);
+        buffer = base_ref.allocator.createMappedBuffer<G>(lightsData.size(), buffer.name);
     }
     base_ref.allocator.copyBuffer(buffer, std::span(lightsData));
     return lightsData.size();
@@ -74,6 +74,8 @@ static vk::DeviceSize handleLights(VulkanBase &base_ref, AllocatedBuffer<G> &buf
 bool LightDataResolver::prepareForDraw(const DrawSceneInformation &sceneInformation)
 {
     PROFILE_FUNCTION();
+
+    std::int32_t iCount = 0;
     verifyMsg(sceneInformation.pointLight.objects.get().size() == sceneInformation.pointLight.exist.get().size(),
               "ECS Point tights arrays are invalid.");
     verifyMsg(sceneInformation.directionalLight.objects.get().size() ==
@@ -82,16 +84,22 @@ bool LightDataResolver::prepareForDraw(const DrawSceneInformation &sceneInformat
     verifyMsg(sceneInformation.spotLight.objects.get().size() == sceneInformation.spotLight.exist.get().size(),
               "ECS Spot light arrays are invalid.");
 
+    iCount += frame.pointLightCount;
     frame.pointLightCount =
-        handleLights(base_ref.value(), frame.omniLightBuffer, sceneInformation.pointLight, sceneInformation.transform,
-                     "Point light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
-    frame.directionalLightCount = handleLights(
-        base_ref.value(), frame.directLightBuffer, sceneInformation.directionalLight, sceneInformation.transform,
-        "Directionnal light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
-    frame.spotLightCount =
-        handleLights(base_ref.value(), frame.spotLightBuffer, sceneInformation.spotLight, sceneInformation.transform,
-                     "Spot light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
+        handleLights(base_ref.value(), frame.omniLightBuffer, sceneInformation.pointLight, sceneInformation.transform);
+    iCount -= frame.pointLightCount;
 
+    iCount += frame.directionalLightCount;
+    frame.directionalLightCount = handleLights(base_ref.value(), frame.directLightBuffer,
+                                               sceneInformation.directionalLight, sceneInformation.transform);
+    iCount += frame.directionalLightCount;
+
+    iCount += frame.spotLightCount;
+    frame.spotLightCount =
+        handleLights(base_ref.value(), frame.spotLightBuffer, sceneInformation.spotLight, sceneInformation.transform);
+    iCount += frame.spotLightCount;
+
+    if (iCount != 0) updateDescriptorSet();
     return true;
 }
 

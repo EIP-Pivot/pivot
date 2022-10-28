@@ -46,6 +46,7 @@ std::uint32_t Thread::run()
         m_internalRuntime->exit();
     }
 
+    logger.info("Thread") << "Thread (\"" << m_name << "\") exited with code " << exitCode;
     return exitCode;
 }
 

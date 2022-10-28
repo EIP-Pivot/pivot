@@ -44,13 +44,9 @@ using ParameterPair = std::pair<size_t, std::vector<std::vector<data::Type>>>;
 /// This map will map the name of a builtin, to its callback paired with its signature
 const std::unordered_map<std::string, std::pair<BuiltinFunctionCallback, ParameterPair>> gBuiltinsCallbacks = {
     {"isPressed", {interpreter::builtins::builtin_isPressed, {1, {{data::BasicType::String}}}}},
+    {"loadScene", {interpreter::builtins::builtin_loadScene, {1, {{data::BasicType::String}}}}},
     {"cos", {interpreter::builtins::builtin_cos, {1, {{data::BasicType::Number}}}}},
     {"sin", {interpreter::builtins::builtin_sin, {1, {{data::BasicType::Number}}}}},
-    {"toString",
-     {interpreter::builtins::builtin_toString,
-      {std::numeric_limits<size_t>::max(),
-       {{data::BasicType::String, data::BasicType::Number, data::BasicType::Integer, data::BasicType::Boolean,
-         data::BasicType::Asset, data::BasicType::Vec3, data::BasicType::Vec2, data::BasicType::Color}}}}},
     {"print",
      {interpreter::builtins::builtin_print,
       {std::numeric_limits<size_t>::max(),

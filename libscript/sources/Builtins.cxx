@@ -327,6 +327,12 @@ data::Value builtin_vec3(const std::vector<data::Value> &params, const BuiltinCo
     return {glm::vec3{std::get<double>(params.at(0)), std::get<double>(params.at(1)), std::get<double>(params.at(2))}};
 }
 
+data::Value builtin_color(const std::vector<data::Value> &params, const BuiltinContext &context)
+{
+    return {data::Color{.rgba = {(float)std::get<double>(params.at(0)), (float)std::get<double>(params.at(1)),
+                                 (float)std::get<double>(params.at(2)), (float)std::get<double>(params.at(3))}}};
+}
+
 // Mathematical/Arithmetic operators -- end
 
 }    // end of namespace pivot::ecs::script::interpreter::builtins

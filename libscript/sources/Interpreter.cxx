@@ -58,7 +58,11 @@ const std::unordered_map<std::string, std::pair<BuiltinFunctionCallback, Paramet
     {"abs", {interpreter::builtins::builtin_abs, {1, {{data::BasicType::Number}}}}},
     {"vec3",
      {interpreter::builtins::builtin_vec3,
-      {3, {{data::BasicType::Number}, {data::BasicType::Number}, {data::BasicType::Number}}}}}};
+      {3, {{data::BasicType::Number}, {data::BasicType::Number}, {data::BasicType::Number}}}}},
+    {"color",
+     {interpreter::builtins::builtin_color,
+      {4,
+       {{data::BasicType::Number}, {data::BasicType::Number}, {data::BasicType::Number}, {data::BasicType::Number}}}}}};
 
 // Public functions ( can be called anywhere )
 

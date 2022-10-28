@@ -87,6 +87,13 @@ data::Value builtin_abs(const std::vector<data::Value> &params, const BuiltinCon
     return data::Value(absVal);
 }
 
+std::string removeTrailingZeroes(std::string str)
+{    // Helper function until std::format is available in gcc
+    str.erase(str.find_last_not_of('0') + 1, std::string::npos);
+    str.erase(str.find_last_not_of('.') + 1, std::string::npos);
+    return str;
+}
+
 data::Value builtin_toString(const std::vector<data::Value> &params, const BuiltinContext &)
 {
     bool first = true;
@@ -97,20 +104,33 @@ data::Value builtin_toString(const std::vector<data::Value> &params, const Built
         std::visit(
             [&result](auto &value) {
                 using type = std::decay_t<decltype(value)>;
-                if constexpr (std::is_same_v<type, double> || std::is_same_v<type, std::string> ||
-                              std::is_same_v<type, int>) {
-                    result += std::format("{}", value);
+                if constexpr (std::is_same_v<type, double> || std::is_same_v<type, int>) {
+                    // result += std::format("{}", value);
+                    result += removeTrailingZeroes(std::to_string(value));
+                } else if constexpr (std::is_same_v<type, std::string>) {
+                    // result += std::format("{}", value);
+                    result += value;
                 } else if constexpr (std::is_same_v<type, bool>) {
                     result += (value) ? "True" : "False";
                 } else if constexpr (std::is_same_v<type, pivot::ecs::data::Asset>) {
-                    result += std::format("Asset({})", value.name);
+                    // result += std::format("Asset({})", value.name);
+                    result += "Asset(" + value.name + ")";
                 } else if constexpr (std::is_same_v<type, glm::vec3>) {
-                    result += std::format("Vector3({},{},{})", value.x, value.y, value.z);
+                    // result += std::format("Vector3({},{},{})", value.x, value.y, value.z);
+                    result += "Vector3(" + removeTrailingZeroes(std::to_string(value.x)) + "," +
+                              removeTrailingZeroes(std::to_string(value.y)) + "," +
+                              removeTrailingZeroes(std::to_string(value.z)) + ")";
                 } else if constexpr (std::is_same_v<type, glm::vec2>) {
-                    result += std::format("Vector2({},{})", value.x, value.y);
+                    // result += std::format("Vector2({},{})", value.x, value.y);
+                    result += "Vector2(" + removeTrailingZeroes(std::to_string(value.x)) + "," +
+                              removeTrailingZeroes(std::to_string(value.y)) + ")";
                 } else if constexpr (std::is_same_v<type, data::Color>) {
-                    result +=
-                        std::format("Color({},{},{},{})", value.rgba[0], value.rgba[1], value.rgba[2], value.rgba[3]);
+                    // result += std::format("Color({},{},{},{})", value.rgba[0], value.rgba[1], value.rgba[2],
+                    // value.rgba[3]);
+                    result += "Color(" + removeTrailingZeroes(std::to_string(value.rgba[0])) + "," +
+                              removeTrailingZeroes(std::to_string(value.rgba[1])) + "," +
+                              removeTrailingZeroes(std::to_string(value.rgba[2])) + "," +
+                              removeTrailingZeroes(std::to_string(value.rgba[3])) + ")";
                 } else {
                     throw std::runtime_error("Code branch shouldn't execute.");
                 }

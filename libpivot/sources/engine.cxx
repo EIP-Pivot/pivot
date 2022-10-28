@@ -117,6 +117,9 @@ void Engine::run()
     DEBUG_FUNCTION();
     float dt = 0.0f;
     FrameLimiter<60> fpsLimiter;
+
+    ImGui::GetIO().WantCaptureMouse = m_window.captureCursor();
+
     while (!m_window.shouldClose()) {
         auto startTime = std::chrono::high_resolution_clock::now();
         m_window.pollEvent();

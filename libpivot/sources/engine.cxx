@@ -177,43 +177,15 @@ void Engine::changeCurrentScene(ecs::SceneManager::SceneId sceneId)
     auto directional_id = cm.GetComponentId(DirectionalLight::description.name);
     auto spotlight_id = cm.GetComponentId(SpotLight::description.name);
     if (renderobject_id && transform_id && pointlight_id && directional_id && spotlight_id) {
-        auto &ro_array = dynamic_cast<Array<pivot::graphics::RenderObject> &>(cm.GetComponentArray(*renderobject_id));
-        auto &transform_array = dynamic_cast<Array<pivot::graphics::Transform> &>(cm.GetComponentArray(*transform_id));
-        auto &point_array = dynamic_cast<Array<pivot::graphics::PointLight> &>(cm.GetComponentArray(*pointlight_id));
-        auto &directional_array =
-            dynamic_cast<Array<pivot::graphics::DirectionalLight> &>(cm.GetComponentArray(*directional_id));
-        auto &spotlight_array = dynamic_cast<Array<pivot::graphics::SpotLight> &>(cm.GetComponentArray(*spotlight_id));
-
-        std::scoped_lock arrays_locks(ro_array.getMutex(), transform_array.getMutex(), point_array.getMutex(),
-                                      directional_array.getMutex(), spotlight_array.getMutex());
-
-        m_current_scene_draw_command = {
+        m_current_scene_draw_command.emplace(graphics::DrawSceneInformation{
             .renderObjects =
-                {
-                    .objects = ro_array.getComponents(),
-                    .exist = ro_array.getExistence(),
-                },
-            .pointLight =
-                {
-                    .objects = point_array.getComponents(),
-                    .exist = point_array.getExistence(),
-                },
+                dynamic_cast<Array<pivot::graphics::RenderObject> &>(cm.GetComponentArray(*renderobject_id)),
+            .pointLight = dynamic_cast<Array<pivot::graphics::PointLight> &>(cm.GetComponentArray(*pointlight_id)),
             .directionalLight =
-                {
-                    .objects = directional_array.getComponents(),
-                    .exist = directional_array.getExistence(),
-                },
-            .spotLight =
-                {
-                    .objects = spotlight_array.getComponents(),
-                    .exist = spotlight_array.getExistence(),
-                },
-            .transform =
-                {
-                    .objects = transform_array.getComponents(),
-                    .exist = transform_array.getExistence(),
-                },
-        };
+                dynamic_cast<Array<pivot::graphics::DirectionalLight> &>(cm.GetComponentArray(*directional_id)),
+            .spotLight = dynamic_cast<Array<pivot::graphics::SpotLight> &>(cm.GetComponentArray(*spotlight_id)),
+            .transform = dynamic_cast<Array<pivot::graphics::Transform> &>(cm.GetComponentArray(*transform_id)),
+        });
     } else {
         m_current_scene_draw_command = std::nullopt;
     }

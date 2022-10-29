@@ -248,6 +248,7 @@ target_link_libraries(
     PUBLIC tinygltf
     PUBLIC stb
     PUBLIC Vulkan::Vulkan
+    PUBLIC pivot::ecs
 )
 
 build_tests(

@@ -2,7 +2,7 @@
 #include <nlohmann/json.hpp>
 
 #include <pivot/builtins/components/Transform.hxx>
-#include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
+#include <pivot/ecs/Core/Component/SynchronizedComponentArray.hxx>
 #include <pivot/ecs/Core/Component/array.hxx>
 #include <pivot/ecs/Core/Component/description_helpers.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
@@ -22,9 +22,11 @@ TEST_CASE("Transform component works", "[graphics][component]")
 
     REQUIRE_NOTHROW(array->setValueForEntity(0, json::parse(data).get<Value>()));
 
+    const auto &transform_array = dynamic_cast<SynchronizedTypedComponentArray<pivot::graphics::Transform> &>(*array);
+    auto transform_array_lock = transform_array.lock();
+
     const pivot::graphics::Transform expected{{5, 5, 5}, {0, 2.7, 0.4}, {1, 2, 3}};
-    const pivot::graphics::Transform &transform =
-        dynamic_cast<DenseTypedComponentArray<pivot::graphics::Transform> &>(*array).getData().front();
+    const pivot::graphics::Transform &transform = transform_array.getData().front();
     REQUIRE(transform == expected);
 
     REQUIRE(description.defaultValue == Value{Record{{"position", Value{glm::vec3{0, 0, 0}}},

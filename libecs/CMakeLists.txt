@@ -105,7 +105,6 @@ add_library(
     source/Core/Event/index.cxx
     source/Core/Event/description.cxx
     source/Core/Event/manager.cxx
-    source/Components/TagArray.cxx
     source/Components/Tag.cxx
     source/Components/RigidBody.cxx
     source/Components/Gravity.cxx

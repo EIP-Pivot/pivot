@@ -17,6 +17,8 @@ add_library(
     sources/builtins/components/Camera.cxx
 )
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE PIVOT_ASSET_SEARCH_DEPTH=4)
+
 target_pivot_compile_option(${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME} PUBLIC pivot-graphics pivot-ecs pivot-script)

@@ -3,16 +3,6 @@
 #include "pivot/graphics/vk_utils.hxx"
 #include "pivot/pivot.hxx"
 
-#ifndef PIVOT_WINDOW_ICON_PATH
-const std::vector<std::string> iconFilepath;
-#else
-const std::vector<std::string> iconFilepath = {
-    PIVOT_WINDOW_ICON_PATH "/icon_large.png",
-    PIVOT_WINDOW_ICON_PATH "/icon_medium.png",
-    PIVOT_WINDOW_ICON_PATH "/icon_small.png",
-};
-#endif
-
 namespace pivot::graphics
 {
 
@@ -28,13 +18,6 @@ VulkanApplication::VulkanApplication()
         logger.warn("Vulkan Instance") << "Validation layers requested, but not available!";
         bEnableValidationLayers = false;
     }
-    window.setIcon(iconFilepath);
-    window.addKeyPressCallback(Window::Key::ESCAPE, [](Window &window, const Window::Key, const Window::Modifier) {
-        window.shouldClose(true);
-    });
-    window.addKeyPressCallback(Window::Key::G, [this](Window &, const Window::Key, const Window::Modifier modifier) {
-        if (modifier & Window::ModifierBits::Ctrl) { allocator.dumpStats(); }
-    });
 }
 
 VulkanApplication::~VulkanApplication()
@@ -62,10 +45,22 @@ VulkanApplication::~VulkanApplication()
     VulkanBase::destroy();
 }
 
-void VulkanApplication::init()
+void VulkanApplication::init(Window &window, const std::filesystem::path &asset_dir)
 {
     DEBUG_FUNCTION();
-    VulkanBase::init({}, deviceExtensions, validationLayers);
+    VulkanBase::init(window, {}, deviceExtensions, validationLayers);
+
+    const std::vector<std::string> iconFile = {
+        asset_dir.string() + "/icon_large.png",
+        asset_dir.string() + "/icon_medium.png",
+        asset_dir.string() + "/icon_small.png",
+    };
+    window_ref->get().setIcon(iconFile);
+    window_ref->get().addKeyPressCallback(Window::Key::G,
+                                          [this](Window &, const Window::Key, const Window::Modifier modifier) {
+                                              if (modifier & Window::ModifierBits::Ctrl) { allocator.dumpStats(); }
+                                          });
+
     assetStorage.build(DescriptorBuilder(layoutCache, descriptorAllocator));
     initVulkanRessources();
 }
@@ -83,7 +78,7 @@ void VulkanApplication::initVulkanRessources()
         fr.initFrame(*this, DescriptorBuilder(layoutCache, descriptorAllocator), assetStorage, commandPool);
     });
 
-    auto size = window.getSize();
+    auto size = window_ref->get().getSize();
     swapchain.create(size, physical_device, device, surface);
     createDepthResources();
     createColorResources();
@@ -120,10 +115,10 @@ void VulkanApplication::recreateSwapchain()
     DEBUG_FUNCTION();
 
     /// do not recreate the swapchain if the window size is 0
-    vk::Extent2D size = window.getSize();
+    vk::Extent2D size = window_ref->get().getSize();
     while (size.width == 0 || size.height == 0) {
-        window.pollEvent();
-        size = window.getSize();
+        window_ref->get().pollEvent();
+        size = window_ref->get().getSize();
     }
 
     logger.info("VulkanSwapchain") << "Recreating swapchain...";

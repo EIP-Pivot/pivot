@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
+#include <pivot/ecs/Core/Component/SynchronizedComponentArray.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
 #include <pivot/ecs/Core/Event/index.hxx>
 #include <pivot/ecs/Core/SceneManager.hxx>
@@ -48,10 +48,12 @@ protected:
     ecs::component::Index m_component_index;
     ecs::event::Index m_event_index;
     ecs::systems::Index m_system_index;
+    graphics::Window m_window;
     graphics::VulkanApplication m_vulkan_application;
     ecs::script::Engine m_scripting_engine;
     bool m_paused = true;
     std::optional<vk::Rect2D> renderArea = std::nullopt;
+    std::filesystem::path m_asset_directory;
 
     virtual void onFrameStart() {}
     virtual void onTick([[maybe_unused]] float delta) {}
@@ -65,7 +67,7 @@ private:
     ecs::SceneManager m_scene_manager;
     std::optional<graphics::DrawSceneInformation> m_current_scene_draw_command;
     pivot::OptionalRef<internals::CameraArray> m_camera_array;
-    pivot::OptionalRef<ecs::component::DenseTypedComponentArray<graphics::Transform>> m_transform_array;
+    pivot::OptionalRef<ecs::component::SynchronizedTypedComponentArray<graphics::Transform>> m_transform_array;
     builtins::components::Camera m_default_camera_data;
     graphics::Transform m_default_camera_transform;
 

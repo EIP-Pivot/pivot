@@ -11,7 +11,7 @@ fetchcontent_getproperties(glfw)
 if(NOT glfw_POPULATED)
     message(STATUS "Populating glfw")
     fetchcontent_populate(glfw)
-    add_subdirectory(${glfw_SOURCE_DIR} ${glfw_BINARY_DIR})
+    add_subdirectory(${glfw_SOURCE_DIR} ${glfw_BINARY_DIR} EXCLUDE_FROM_ALL)
     target_compile_definitions(glfw INTERFACE GLFW_INCLUDE_NONE GLFW_INCLUDE_VULKAN)
 endif()
 
@@ -36,7 +36,7 @@ if(NOT ktx_POPULATED)
         OFF
         CACHE INTERNAL "" FORCE
     )
-    add_subdirectory(${ktx_SOURCE_DIR} ${ktx_BINARY_DIR})
+    add_subdirectory(${ktx_SOURCE_DIR} ${ktx_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
 fetchcontent_declare(
@@ -60,7 +60,7 @@ if(NOT tinygltf_POPULATED)
         OFF
         CACHE INTERNAL "" FORCE
     )
-    add_subdirectory(${tinygltf_SOURCE_DIR} ${tinygltf_BINARY_DIR})
+    add_subdirectory(${tinygltf_SOURCE_DIR} ${tinygltf_BINARY_DIR} EXCLUDE_FROM_ALL)
     target_compile_definitions(
         tinygltf
         PUBLIC TINYGLTF_NO_STB_IMAGE
@@ -114,7 +114,7 @@ fetchcontent_getproperties(tinyobjloader)
 if(NOT tinyobjloader_POPULATED)
     message(STATUS "Populating tinyobjloader")
     fetchcontent_populate(tinyobjloader)
-    add_subdirectory(${tinyobjloader_SOURCE_DIR} ${tinyobjloader_BINARY_DIR})
+    add_subdirectory(${tinyobjloader_SOURCE_DIR} ${tinyobjloader_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
 fetchcontent_declare(

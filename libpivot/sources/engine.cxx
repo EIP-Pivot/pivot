@@ -1,3 +1,6 @@
+#include <boost/dll/runtime_symbol_info.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/range/iterator_range.hpp>
 #include <imgui.h>
 #include <magic_enum.hpp>
 
@@ -39,6 +42,28 @@
 using namespace pivot;
 using namespace pivot::ecs;
 
+static std::filesystem::path getAssetFilePass()
+{
+    auto current_entry = boost::dll::program_location().parent_path();
+    auto find_asset_folder = [](const boost::filesystem::path &entry) -> std::optional<std::filesystem::path> {
+        for (auto &directory_entry: boost::make_iterator_range(boost::filesystem::directory_iterator(entry), {})) {
+            if (!boost::filesystem::is_directory(directory_entry)) continue;
+            if (directory_entry.path().filename() == "assets")
+                return std::filesystem::path(directory_entry.path().string());
+        }
+        return std::nullopt;
+    };
+    for (int i = 0; i < PIVOT_ASSET_SEARCH_DEPTH; i++) {
+        auto path = find_asset_folder(current_entry);
+        if (path.has_value()) {
+            return path.value();
+            break;
+        }
+        current_entry = current_entry.parent_path();
+    }
+    throw std::runtime_error("Can't find the asset folder !");
+}
+
 namespace pivot
 {
 Engine::Engine()
@@ -50,6 +75,8 @@ Engine::Engine()
       m_default_camera{m_default_camera_data, m_default_camera_transform}
 {
     DEBUG_FUNCTION();
+    m_asset_directory = getAssetFilePass();
+
     m_component_index.registerComponent(builtins::components::Gravity::description);
     m_component_index.registerComponent(builtins::components::RigidBody::description);
     m_component_index.registerComponent(builtins::components::RenderObject::description);
@@ -72,15 +99,18 @@ Engine::Engine()
     m_system_index.registerSystem(builtins::systems::testTickSystem);
     m_system_index.registerSystem(builtins::systems::drawTextSystem);
 
+    m_window.initWindow("Pivot Engine");
+    m_window.addGlobalKeyPressCallback(std::bind_front(&Engine::onKeyPressed, this));
+
     m_vulkan_application.addRenderer<pivot::graphics::CullingRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::GraphicsRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::ImGuiRenderer>();
+
     m_vulkan_application.addResolver<pivot::graphics::DrawCallResolver>(0);
     m_vulkan_application.addResolver<pivot::graphics::LightDataResolver>(1);
     m_vulkan_application.addResolver<pivot::graphics::AssetResolver>(2);
-    m_vulkan_application.init();
 
-    m_vulkan_application.window.addGlobalKeyPressCallback(std::bind_front(&Engine::onKeyPressed, this));
+    m_vulkan_application.init(m_window, m_asset_directory);
 }
 
 void Engine::run()
@@ -88,9 +118,9 @@ void Engine::run()
     DEBUG_FUNCTION();
     float dt = 0.0f;
     FrameLimiter<60> fpsLimiter;
-    while (!m_vulkan_application.window.shouldClose()) {
+    while (!m_window.shouldClose()) {
         auto startTime = std::chrono::high_resolution_clock::now();
-        m_vulkan_application.window.pollEvent();
+        m_window.pollEvent();
 
         this->onFrameStart();
 
@@ -131,7 +161,7 @@ void Engine::run()
 namespace
 {
     template <typename T>
-    using Array = pivot::ecs::component::DenseTypedComponentArray<T>;
+    using Array = pivot::ecs::component::SynchronizedTypedComponentArray<T>;
 
     std::optional<graphics::DrawSceneInformation> getDrawCommand(component::Manager &cm)
     {
@@ -197,7 +227,7 @@ void Engine::changeCurrentScene(ecs::SceneManager::SceneId sceneId)
     auto camera_id = cm.GetComponentId(builtins::components::Camera::description.name);
     m_camera_array = dynamic_cast<internals::CameraArray &>(cm.GetComponentArray(*camera_id));
     auto transform_id = cm.GetComponentId(builtins::components::Transform::description.name);
-    m_transform_array = dynamic_cast<ecs::component::DenseTypedComponentArray<graphics::Transform> &>(
+    m_transform_array = dynamic_cast<ecs::component::SynchronizedTypedComponentArray<graphics::Transform> &>(
         cm.GetComponentArray(*transform_id));
 }
 
@@ -313,7 +343,7 @@ bool Engine::isKeyPressed(const std::string &key) const
 {
     auto key_cast = magic_enum::enum_cast<pivot::graphics::Window::Key>(key);
     if (key_cast.has_value()) {
-        return this->m_vulkan_application.window.isKeyPressed(key_cast.value());
+        return m_window.isKeyPressed(key_cast.value());
     } else {
         return false;
     }

@@ -19,6 +19,7 @@ public:
     pivot::ecs::SceneManager::SceneId addScene(pivot::Engine &engine, std::string name);
 
     bool getRun();
+    void setRun(bool run) { this->run = run; }
 
 private:
     void createPopUp(pivot::Engine &engine);

@@ -67,17 +67,17 @@ public:
 
     /// Returns a mutable view into the components values. Some of those values can be nonsensical as the entity can
     /// miss this component.
-    virtual std::span<T> getData() { return this->m_components; }
+    std::span<T> getData() { return this->m_components; }
 
     /// Returns a constant view into the components values. Some of those values can be nonsensical as the entity can
     /// miss this component.
-    virtual std::span<const T> getData() const { return this->m_components; }
+    std::span<const T> getData() const { return this->m_components; }
 
     /// Returns the booleans specifying whether an an entity has the component
-    virtual const std::vector<bool> &getExistence() const { return this->m_component_exist; }
+    const std::vector<bool> &getExistence() const { return this->m_component_exist; }
 
     /// Returns the vector containing the component data
-    virtual const std::vector<T> &getComponents() const { return this->m_components; }
+    const std::vector<T> &getComponents() const { return this->m_components; }
 
 protected:
     /// Description of the component

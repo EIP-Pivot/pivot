@@ -100,7 +100,7 @@ void ImGuiRenderer::createImGuiContext(VulkanBase &base_ref, vk::RenderPass &pas
     style.WindowRounding = 0.0f;
     style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 
-    ImGui_ImplGlfw_InitForVulkan(base_ref.window.getWindow(), true);
+    ImGui_ImplGlfw_InitForVulkan(base_ref.window_ref->get().getWindow(), true);
 
     ImGui_ImplVulkan_InitInfo init_info{};
     init_info.Instance = base_ref.instance;

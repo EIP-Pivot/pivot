@@ -35,12 +35,36 @@
 #include <pivot/builtins/components/Text.hxx>
 #include <pivot/builtins/components/Transform2D.hxx>
 
+#include <pivot/ecs/Core/Component/SynchronizedComponentArray.hxx>
+
 #include <pivot/graphics/Resolver/AssetResolver.hxx>
 #include <pivot/graphics/Resolver/DrawCallResolver.hxx>
 #include <pivot/graphics/Resolver/LightDataResolver.hxx>
 
 using namespace pivot;
 using namespace pivot::ecs;
+
+static std::filesystem::path getAssetFilePass()
+{
+    auto current_entry = boost::dll::program_location().parent_path();
+    auto find_asset_folder = [](const boost::filesystem::path &entry) -> std::optional<std::filesystem::path> {
+        for (auto &directory_entry: boost::make_iterator_range(boost::filesystem::directory_iterator(entry), {})) {
+            if (!boost::filesystem::is_directory(directory_entry)) continue;
+            if (directory_entry.path().filename() == "assets")
+                return std::filesystem::path(directory_entry.path().string());
+        }
+        return std::nullopt;
+    };
+    for (int i = 0; i < PIVOT_ASSET_SEARCH_DEPTH; i++) {
+        auto path = find_asset_folder(current_entry);
+        if (path.has_value()) {
+            return path.value();
+            break;
+        }
+        current_entry = current_entry.parent_path();
+    }
+    throw std::runtime_error("Can't find the asset folder !");
+}
 
 namespace pivot
 {
@@ -51,6 +75,8 @@ Engine::Engine()
       m_camera(builtins::Camera(glm::vec3(0, 5, 0)))
 {
     DEBUG_FUNCTION();
+    m_asset_directory = getAssetFilePass();
+
     m_component_index.registerComponent(builtins::components::Gravity::description);
     m_component_index.registerComponent(builtins::components::RigidBody::description);
     m_component_index.registerComponent(builtins::components::RenderObject::description);
@@ -72,23 +98,8 @@ Engine::Engine()
     m_system_index.registerSystem(builtins::systems::testTickSystem);
     m_system_index.registerSystem(builtins::systems::drawTextSystem);
 
-    auto current_entry = boost::dll::program_location().parent_path();
-    auto find_asset_folder = [](const boost::filesystem::path &entry) -> std::optional<std::filesystem::path> {
-        for (auto &directory_entry: boost::make_iterator_range(boost::filesystem::directory_iterator(entry), {})) {
-            if (!boost::filesystem::is_directory(directory_entry)) continue;
-            if (directory_entry.path().filename() == "assets")
-                return std::filesystem::path(directory_entry.path().string());
-        }
-        return std::nullopt;
-    };
-    for (int i = 0; i < PIVOT_ASSET_SEARCH_DEPTH; i++) {
-        auto path = find_asset_folder(current_entry);
-        if (path.has_value()) {
-            m_asset_directory = path.value();
-            break;
-        }
-        current_entry = current_entry.parent_path();
-    }
+    m_window.initWindow("Pivot Engine");
+    m_window.addGlobalKeyPressCallback(std::bind_front(&Engine::onKeyPressed, this));
 
     m_vulkan_application.addRenderer<pivot::graphics::CullingRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::GraphicsRenderer>();
@@ -98,9 +109,7 @@ Engine::Engine()
     m_vulkan_application.addResolver<pivot::graphics::LightDataResolver>(1);
     m_vulkan_application.addResolver<pivot::graphics::AssetResolver>(2);
 
-    m_vulkan_application.init(m_asset_directory);
-
-    m_vulkan_application.window.addGlobalKeyPressCallback(std::bind_front(&Engine::onKeyPressed, this));
+    m_vulkan_application.init(m_window, m_asset_directory);
 }
 
 void Engine::run()
@@ -108,9 +117,9 @@ void Engine::run()
     DEBUG_FUNCTION();
     float dt = 0.0f;
     FrameLimiter<60> fpsLimiter;
-    while (!m_vulkan_application.window.shouldClose()) {
+    while (!m_window.shouldClose()) {
         auto startTime = std::chrono::high_resolution_clock::now();
-        m_vulkan_application.window.pollEvent();
+        m_window.pollEvent();
 
         this->onFrameStart();
 
@@ -149,7 +158,7 @@ void Engine::run()
 }
 
 template <typename T>
-using Array = pivot::ecs::component::DenseTypedComponentArray<T>;
+using Array = pivot::ecs::component::SynchronizedTypedComponentArray<T>;
 
 void Engine::changeCurrentScene(ecs::SceneManager::SceneId sceneId)
 {
@@ -171,6 +180,9 @@ void Engine::changeCurrentScene(ecs::SceneManager::SceneId sceneId)
         auto &directional_array =
             dynamic_cast<Array<pivot::graphics::DirectionalLight> &>(cm.GetComponentArray(*directional_id));
         auto &spotlight_array = dynamic_cast<Array<pivot::graphics::SpotLight> &>(cm.GetComponentArray(*spotlight_id));
+
+        std::scoped_lock arrays_locks(ro_array.getMutex(), transform_array.getMutex(), point_array.getMutex(),
+                                      directional_array.getMutex(), spotlight_array.getMutex());
 
         m_current_scene_draw_command = {
             .renderObjects =
@@ -313,7 +325,7 @@ bool Engine::isKeyPressed(const std::string &key) const
 {
     auto key_cast = magic_enum::enum_cast<pivot::graphics::Window::Key>(key);
     if (key_cast.has_value()) {
-        return this->m_vulkan_application.window.isKeyPressed(key_cast.value());
+        return m_window.isKeyPressed(key_cast.value());
     } else {
         return false;
     }

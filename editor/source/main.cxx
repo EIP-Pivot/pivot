@@ -52,17 +52,16 @@ public:
     void init()
     {
         PROFILE_FUNCTION();
-        auto &window = m_vulkan_application.window;
 
         Scene &scene = *getCurrentScene();
 
-        window.addKeyReleaseCallback(Window::Key::LEFT_ALT,
-                                     [&](Window &window, const Window::Key, const Window::Modifier) {
-                                         window.captureCursor(!window.captureCursor());
-                                         bFirstMouse = window.captureCursor();
-                                         button.reset();
-                                     });
-        window.addKeyReleaseCallback(
+        m_window.addKeyReleaseCallback(Window::Key::LEFT_ALT,
+                                       [&](Window &window, const Window::Key, const Window::Modifier) {
+                                           window.captureCursor(!window.captureCursor());
+                                           bFirstMouse = window.captureCursor();
+                                           button.reset();
+                                       });
+        m_window.addKeyReleaseCallback(
             Window::Key::V, [&](Window &, const Window::Key, const Window::Modifier) { scene.switchCamera(); });
 
         auto key_lambda_press = [&](Window &window, const Window::Key key, const Window::Modifier) {
@@ -72,21 +71,21 @@ public:
             if (window.captureCursor()) button.reset(static_cast<std::size_t>(key));
         };
         // Press action
-        window.addKeyPressCallback(Window::Key::Z, key_lambda_press);
-        window.addKeyPressCallback(Window::Key::Q, key_lambda_press);
-        window.addKeyPressCallback(Window::Key::S, key_lambda_press);
-        window.addKeyPressCallback(Window::Key::D, key_lambda_press);
-        window.addKeyPressCallback(Window::Key::SPACE, key_lambda_press);
-        window.addKeyPressCallback(Window::Key::LEFT_SHIFT, key_lambda_press);
+        m_window.addKeyPressCallback(Window::Key::Z, key_lambda_press);
+        m_window.addKeyPressCallback(Window::Key::Q, key_lambda_press);
+        m_window.addKeyPressCallback(Window::Key::S, key_lambda_press);
+        m_window.addKeyPressCallback(Window::Key::D, key_lambda_press);
+        m_window.addKeyPressCallback(Window::Key::SPACE, key_lambda_press);
+        m_window.addKeyPressCallback(Window::Key::LEFT_SHIFT, key_lambda_press);
         // Release action
-        window.addKeyReleaseCallback(Window::Key::Z, key_lambda_release);
-        window.addKeyReleaseCallback(Window::Key::Q, key_lambda_release);
-        window.addKeyReleaseCallback(Window::Key::S, key_lambda_release);
-        window.addKeyReleaseCallback(Window::Key::D, key_lambda_release);
-        window.addKeyReleaseCallback(Window::Key::SPACE, key_lambda_release);
-        window.addKeyReleaseCallback(Window::Key::LEFT_SHIFT, key_lambda_release);
+        m_window.addKeyReleaseCallback(Window::Key::Z, key_lambda_release);
+        m_window.addKeyReleaseCallback(Window::Key::Q, key_lambda_release);
+        m_window.addKeyReleaseCallback(Window::Key::S, key_lambda_release);
+        m_window.addKeyReleaseCallback(Window::Key::D, key_lambda_release);
+        m_window.addKeyReleaseCallback(Window::Key::SPACE, key_lambda_release);
+        m_window.addKeyReleaseCallback(Window::Key::LEFT_SHIFT, key_lambda_release);
 
-        window.addMouseMovementCallback([&](Window &window, const glm::dvec2 pos) {
+        m_window.addMouseMovementCallback([&](Window &window, const glm::dvec2 pos) {
             if (!window.captureCursor()) return;
 
             if (bFirstMouse) {
@@ -99,14 +98,15 @@ public:
             last = pos;
             pivot::builtins::systems::ControlSystem::processMouseMovement(m_camera, glm::dvec2(xoffset, yoffset));
         });
-        window.addKeyPressCallback(Window::Key::ESCAPE, [&](Window &window, const Window::Key, const Window::Modifier) {
-            logger.debug() << "Escape";
-            if (this->m_paused) {
-                window.shouldClose(true);
-            } else {
-                this->editor.setRun(false);
-            }
-        });
+        m_window.addKeyPressCallback(Window::Key::ESCAPE,
+                                     [&](Window &window, const Window::Key, const Window::Modifier) {
+                                         logger.debug() << "Escape";
+                                         if (this->m_paused) {
+                                             window.shouldClose(true);
+                                         } else {
+                                             this->editor.setRun(false);
+                                         }
+                                     });
         m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
         // resize or loading asset reset imgui -> style reset
         //        ImGuiTheme::setStyle();

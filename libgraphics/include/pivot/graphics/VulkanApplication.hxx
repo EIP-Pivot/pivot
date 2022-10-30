@@ -72,7 +72,7 @@ public:
     /// @brief Initialise the Vulkan ressources
     ///
     /// @throw VulkanException if something went awry
-    void init(const std::filesystem::path &asset_dir);
+    void init(Window &window, const std::filesystem::path &asset_dir);
 
     /// @brief draw the next frame
     ///
@@ -105,7 +105,7 @@ public:
         } else if constexpr (std::is_base_of_v<IComputeRenderer, T>) {
             computeRenderer.emplace_back(std::move(rendy));
         } else {
-            throw std::logic_error("Unsuported Renderer : " + rendy->getType());
+            static_assert(always_false<T>, "Unsupported Renderer !");
         }
         return ret;
     }

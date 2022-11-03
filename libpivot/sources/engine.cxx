@@ -75,6 +75,7 @@ Engine::Engine()
       m_camera(builtins::Camera(glm::vec3(0, 5, 0)))
 {
     DEBUG_FUNCTION();
+    Platform::setThreadName(logger.getThreadHandle(), "Logger Thread");
     m_asset_directory = getAssetFilePass();
 
     m_component_index.registerComponent(builtins::components::Gravity::description);

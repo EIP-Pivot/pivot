@@ -48,6 +48,7 @@ public:
     static std::string getThreadName(std::jthread &thread);
 };
 
+/// Alias to the current platform
 using Platform = UnixPlateform;
 
 }    // namespace pivot

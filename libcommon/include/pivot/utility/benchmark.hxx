@@ -105,7 +105,7 @@ public:
     /// Send the result to the Instrumentor
     FORCEINLINE void stop()
     {
-        if (!verify(!stopped)) return;
+        if (stopped) return;
 
         auto endTimepoint = std::chrono::high_resolution_clock::now();
 

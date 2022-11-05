@@ -18,7 +18,8 @@ namespace pivot
 /// Manage a set of thread for sheduling work
 class ThreadPool
 {
-public:
+    PIVOT_NO_COPY_NO_MOVE(ThreadPool)
+private:
     using WorkUnits = std::function<void(unsigned id)>;
 
     struct State {
@@ -27,8 +28,26 @@ public:
         std::queue<WorkUnits> qWork;
     };
 
+    class WorkerPoolRuntime : public internal::IThreadRuntime
+    {
+    public:
+        WorkerPoolRuntime(std::shared_ptr<ThreadPool::State> context);
+
+        bool init() override;
+        std::uint32_t run() override;
+        void stop() override;
+        void exit() override;
+
+    private:
+        static std::atomic_int i_threadIDCounter;
+
+    private:
+        int i_threadID;
+        std::atomic_bool b_requestExit;
+        std::shared_ptr<ThreadPool::State> p_state;
+    };
+
 public:
-    PIVOT_NO_COPY_NO_MOVE(ThreadPool)
     ThreadPool();
     ~ThreadPool() = default;
 
@@ -64,25 +83,6 @@ public:
 private:
     std::shared_ptr<State> state;
     std::vector<Thread> thread_p;
-};
-
-class WorkerPoolRuntime : public internal::IThreadRuntime
-{
-public:
-    WorkerPoolRuntime(std::shared_ptr<ThreadPool::State> context);
-
-    bool init() override;
-    std::uint32_t run() override;
-    void stop() override;
-    void exit() override;
-
-private:
-    static std::atomic_int i_threadIDCounter;
-
-private:
-    int i_threadID;
-    std::atomic_bool b_requestExit;
-    std::shared_ptr<ThreadPool::State> p_state;
 };
 
 }    // namespace pivot

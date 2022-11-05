@@ -15,9 +15,11 @@ namespace pivot
 {
 
 template <typename T>
+/// Shorthand for std::reference_wrapper<T>
 using Ref = std::reference_wrapper<T>;
 
 template <typename T>
+/// Shorthand for std::optional<std::reference_wrapper<T>>
 using OptionalRef = std::optional<Ref<T>>;
 
 template <class...>

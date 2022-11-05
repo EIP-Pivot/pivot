@@ -32,14 +32,14 @@ void ThreadPool::resize(unsigned size)
     }
 }
 
-std::atomic_int WorkerPoolRuntime::i_threadIDCounter = 0;
+std::atomic_int ThreadPool::WorkerPoolRuntime::i_threadIDCounter = 0;
 
-WorkerPoolRuntime::WorkerPoolRuntime(std::shared_ptr<ThreadPool::State> context)
+ThreadPool::WorkerPoolRuntime::WorkerPoolRuntime(std::shared_ptr<ThreadPool::State> context)
     : i_threadID(0), b_requestExit(false), p_state(std::move(context))
 {
 }
 
-bool WorkerPoolRuntime::init()
+bool ThreadPool::WorkerPoolRuntime::init()
 {
     i_threadID = i_threadIDCounter++;
 #if !defined(NO_BENCHMARK)
@@ -48,7 +48,7 @@ bool WorkerPoolRuntime::init()
     return true;
 }
 
-std::uint32_t WorkerPoolRuntime::run()
+std::uint32_t ThreadPool::WorkerPoolRuntime::run()
 {
     using namespace std::chrono_literals;
     ThreadPool::WorkUnits work;
@@ -75,8 +75,8 @@ std::uint32_t WorkerPoolRuntime::run()
     return 0;
 }
 
-void WorkerPoolRuntime::stop() { b_requestExit = true; }
+void ThreadPool::WorkerPoolRuntime::stop() { b_requestExit = true; }
 
-void WorkerPoolRuntime::exit() { b_requestExit = true; }
+void ThreadPool::WorkerPoolRuntime::exit() { b_requestExit = true; }
 
 }    // namespace pivot

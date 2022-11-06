@@ -52,8 +52,6 @@ public:
     {
         PROFILE_FUNCTION();
 
-        Scene &scene = *getCurrentScene();
-
         m_window.addKeyReleaseCallback(Window::Key::LEFT_ALT,
                                        [&](Window &window, const Window::Key, const Window::Modifier) {
                                            window.captureCursor(!window.captureCursor());

@@ -55,7 +55,7 @@ void Thread::postRun() {}
 void Thread::thread_runtime(Thread *pThis)
 {
     pivotAssert(pThis);
-    pThis->preRun();
+    pThis->start();
     pThis->run();
     pThis->postRun();
 }

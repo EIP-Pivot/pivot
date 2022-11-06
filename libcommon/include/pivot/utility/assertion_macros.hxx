@@ -3,6 +3,8 @@
 #include "pivot/Compiler.hxx"
 #include "pivot/Platform.hxx"
 
+#include "pivot/utility/define.hxx"
+
 #include <atomic>
 
 #define STR(X) #X
@@ -24,9 +26,9 @@
                                          ([]() { pivot::Platform::breakpoint(); }(), false))
 
     #define verify(Expression) PIVOT_VERIFY_IMPL(, false, Expression)
-    #define verifyMsg(Expression, ...) PIVOT_VERIFY_IMPL(&, false, Expression, __VA_ARGS__)
+    #define verifyMsg(Expression, ...) PIVOT_VERIFY_IMPL(&, false, Expression, ##__VA_ARGS__)
     #define verifyAlways(Expression) PIVOT_VERIFY_IMPL(, true, Expression)
-    #define verifyAlwaysMsg(Expression, ...) PIVOT_VERIFY_IMPL(&, true, Expression, __VA_ARGS__)
+    #define verifyAlwaysMsg(Expression, ...) PIVOT_VERIFY_IMPL(&, true, Expression, ##__VA_ARGS__)
 
     #define PIVOT_ASSERT_IMPL(Always, Expression, ...)                                          \
         {                                                                                       \
@@ -40,7 +42,7 @@
         }
 
     #define pivotAssert(Expression) PIVOT_ASSERT_IMPL(false, Expression)
-    #define pivotAssertMsg(Expression, ...) PIVOT_ASSERT_IMPL(false, Expression, __VA_ARGS__)
+    #define pivotAssertMsg(Expression, ...) PIVOT_ASSERT_IMPL(false, Expression, ##__VA_ARGS__)
     #define pivotAssertNoEntry()                                             \
         {                                                                    \
             pivotAssertMsg(false, "Enclosing block should never be called"); \
@@ -48,9 +50,9 @@
         }
     #define pivotAssertNoReentry()                                                            \
         {                                                                                     \
-            static std::atomic_bool beenHere##__LINE__ = false;                               \
-            pivotAssertMsg(!beenHere##__LINE__, "Enclosing block was called more than once"); \
-            beenHere##__LINE__ = true;                                                        \
+            static std::atomic_bool PIVOT_MACRO_EXPENDER(beenHere, __LINE__) = false;                               \
+            pivotAssertMsg(!PIVOT_MACRO_EXPENDER(beenHere, __LINE__), "Enclosing block was called more than once"); \
+            PIVOT_MACRO_EXPENDER(beenHere, __LINE__) = true;                                                        \
         }
 
 #else

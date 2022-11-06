@@ -99,6 +99,7 @@ public:
     std::size_t size = 0;
     vma::AllocationInfo info = {};
     vma::AllocationCreateFlags flags = {};
+    std::string name;
     //// @endcond
 };
 

@@ -22,6 +22,8 @@ void SceneEditor::create()
     ImGui::PopStyleColor();
     viewport();
     ImGui::End();
+
+    setAspectRatio(size.x / size.y);
 }
 
 void SceneEditor::toolbar()
@@ -110,8 +112,8 @@ void SceneEditor::DisplayGuizmo(Entity entity, const pivot::internals::LocationC
 
     PROFILE_FUNCTION();
 
-    const auto view = camera.getView();
-    const auto projection = camera.getProjection(pivot::Engine::fov, aspectRatio);
+    const glm::mat4 view = camera.getView();
+    const glm::mat4 projection = camera.getProjection(pivot::Engine::fov, aspectRatio);
 
     const float *view_ptr = glm::value_ptr(view);
     const float *projection_ptr = glm::value_ptr(projection);

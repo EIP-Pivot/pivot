@@ -15,9 +15,11 @@ namespace pivot
 {
 
 template <typename T>
+/// Shorthand for std::reference_wrapper<T>
 using Ref = std::reference_wrapper<T>;
 
 template <typename T>
+/// Shorthand for std::optional<std::reference_wrapper<T>>
 using OptionalRef = std::optional<Ref<T>>;
 
 template <class...>
@@ -35,13 +37,4 @@ concept Hashable = requires(T a)
 
 }    // namespace pivot
 
-#ifndef NDEBUG
-
-    #define DEBUG_FUNCTION() \
-        PROFILE_FUNCTION();  \
-        logger.trace(::pivot::utils::function_name()) << "Entered";
-
-#else
-    #define DEBUG_FUNCTION() PROFILE_FUNCTION();
-
-#endif
+#define DEBUG_FUNCTION() PROFILE_FUNCTION();

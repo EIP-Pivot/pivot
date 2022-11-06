@@ -135,6 +135,8 @@ public:
     AssetStorage assetStorage;
     /// The application pipeline storage
     PipelineStorage pipelineStorage;
+    /// Thread pool
+    ThreadPool threadPool;
 
 private:
     DescriptorAllocator descriptorAllocator;

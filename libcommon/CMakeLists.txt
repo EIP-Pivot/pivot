@@ -3,7 +3,7 @@ project(pivot-common)
 fetchcontent_declare(
     logger
     GIT_REPOSITORY https://github.com/zcorniere/logger-cpp.git
-    GIT_TAG v1.0.2
+    GIT_TAG v1.0.3
 )
 fetchcontent_getproperties(logger)
 if(NOT logger_POPULATED)
@@ -76,6 +76,9 @@ add_library(
     ${PROJECT_NAME} STATIC
     sources/lib.cxx
     sources/utility/benchmark.cxx
+    sources/Threading/Thread.cxx
+    sources/Threading/ThreadPool.cxx
+
     # Select the correct platform to compile
     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
     sources/Platforms/UnixPlatform.cxx>

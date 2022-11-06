@@ -184,6 +184,9 @@ namespace
             auto &spotlight_array =
                 dynamic_cast<Array<pivot::graphics::SpotLight> &>(cm.GetComponentArray(*spotlight_id));
 
+            std::scoped_lock arrays_locks(ro_array.getMutex(), transform_array.getMutex(), point_array.getMutex(),
+                                          directional_array.getMutex(), spotlight_array.getMutex());
+
             return {{
                 .renderObjects =
                     {

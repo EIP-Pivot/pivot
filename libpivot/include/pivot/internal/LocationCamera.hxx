@@ -51,7 +51,7 @@ struct LocationCamera {
         glm::vec3 right = glm::normalize(glm::cross(tmpFront, WORLD_UP));
         glm::vec3 up = glm::normalize(glm::cross(right, tmpFront));
 
-        return Directions{front, right, up};
+        return Directions{front, up, right};
     }
 
     /// Get camera view

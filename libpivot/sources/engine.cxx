@@ -364,11 +364,12 @@ void Engine::setCurrentCamera(std::optional<Entity> camera) { m_camera_array.val
 
 internals::LocationCamera Engine::getCurrentCamera()
 {
+    std::scoped_lock lock(m_transform_array.value().get().getMutex());
     auto current_camera = m_camera_array.value().get().getCurrentCamera();
     if (current_camera.has_value()) {
         auto [camera_entity, camera] = current_camera.value();
         auto &transform_array = m_transform_array.value().get();
-        if (transform_array.entityHasValue(camera_entity)) {
+        if (transform_array.getExistence().at(camera_entity)) {
             return internals::LocationCamera{.camera = camera.get(),
                                              .transform = transform_array.getData()[camera_entity]};
         }

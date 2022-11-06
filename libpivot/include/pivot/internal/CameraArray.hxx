@@ -15,11 +15,7 @@ namespace pivot::internals
 class CameraArray : public pivot::ecs::component::DenseTypedComponentArray<builtins::components::Camera>
 {
 public:
-    CameraArray(ecs::component::Description d): DenseTypedComponentArray<builtins::components::Camera>(d)
-    {
-        m_component_exist.push_back(true);
-        m_components.push_back(builtins::components::Camera{});
-    }
+    CameraArray(ecs::component::Description d): DenseTypedComponentArray<builtins::components::Camera>(d) {}
 
     std::optional<std::pair<Entity, std::reference_wrapper<const builtins::components::Camera>>>
     getCurrentCamera() const

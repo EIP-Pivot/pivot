@@ -38,7 +38,7 @@ public:
           imGuiManager(getSceneManager(), *this, m_asset_directory),
           editor(getSceneManager(), getCurrentScene()),
           entity(getCurrentScene()),
-          componentEditor(m_component_index, getCurrentScene()),
+          componentEditor(m_component_index, getCurrentScene(), *this),
           systemsEditor(m_system_index, m_component_index, getCurrentScene()),
           assetBrowser(imGuiManager, m_vulkan_application.assetStorage, getCurrentScene()),
           sceneEditor(imGuiManager, getCurrentScene()),
@@ -112,30 +112,31 @@ public:
                          float dt) noexcept
     {
         PROFILE_FUNCTION();
+        float speed = 30.0f;
         using Movement = pivot::internals::LocationCamera::Movement;
         glm::vec3 &camera_position = camera.transform.position;
         pivot::internals::LocationCamera::Directions camera_directions = camera.getDirections();
         switch (direction) {
             case Movement::FORWARD: {
-                camera_position.x += camera_directions.front.x * 10.f * dt;
-                camera_position.z += camera_directions.front.z * 10.f * dt;
+                camera_position.x += camera_directions.front.x * speed * dt;
+                camera_position.z += camera_directions.front.z * speed * dt;
             } break;
             case Movement::BACKWARD: {
-                camera_position.x -= camera_directions.front.x * 10.f * dt;
-                camera_position.z -= camera_directions.front.z * 10.f * dt;
+                camera_position.x -= camera_directions.front.x * speed * dt;
+                camera_position.z -= camera_directions.front.z * speed * dt;
             } break;
             case Movement::RIGHT: {
-                camera_position.x += camera_directions.right.x * 10.f * dt;
-                camera_position.z += camera_directions.right.z * 10.f * dt;
+                camera_position.x += camera_directions.right.x * speed * dt;
+                camera_position.z += camera_directions.right.z * speed * dt;
             } break;
             case Movement::LEFT: {
-                camera_position.x -= camera_directions.right.x * 10.f * dt;
-                camera_position.z -= camera_directions.right.z * 10.f * dt;
+                camera_position.x -= camera_directions.right.x * speed * dt;
+                camera_position.z -= camera_directions.right.z * speed * dt;
             } break;
             case Movement::UP: {
-                camera_position.y += 10.f * dt;
+                camera_position.y += speed * dt;
             } break;
-            case Movement::DOWN: camera_position.y -= 10.f * dt; break;
+            case Movement::DOWN: camera_position.y -= speed * dt; break;
         }
     }
 

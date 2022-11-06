@@ -106,7 +106,7 @@ void SceneEditor::viewport()
 
 void SceneEditor::setAspectRatio(float aspect) { aspectRatio = aspect; }
 
-void SceneEditor::DisplayGuizmo(Entity entity, const pivot::builtins::Camera &camera)
+void SceneEditor::DisplayGuizmo(Entity entity, const pivot::internals::LocationCamera &camera)
 {
     using Transform = pivot::builtins::components::Transform;
 

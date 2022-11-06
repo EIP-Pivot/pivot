@@ -21,7 +21,6 @@
 #include "pivot/ecs/Core/types.hxx"
 #include <memory>
 
-#include "pivot/ecs/Components/Camera.hxx"
 #include "pivot/ecs/Components/Tag.hxx"
 
 namespace pivot::ecs
@@ -115,18 +114,6 @@ public:
     /// Get the event manager (const)
     const pivot::ecs::event::Manager &getEventManager() const;
 
-    // Camera
-    /// Set camera to use
-    void setCamera(std::uint16_t camera);
-    /// Add camera to scene camera list
-    void addCamera(Entity camera);
-    /// Switch camera
-    void switchCamera();
-    /// Get current camera
-    builtins::Camera &getCamera();
-    /// Get camera list
-    std::vector<Entity> &getCameras();
-
     /// Function used to retrieve the real path of an asset if possible
     using AssetTranslator = std::function<std::optional<std::string>(const std::string &)>;
     /// Function used to retrieve the real path of an external ressource
@@ -146,8 +133,6 @@ private:
     EntityManager mEntityManager;
     pivot::ecs::systems::Manager mSystemManager;
     pivot::ecs::event::Manager mEventManager;
-    std::vector<Entity> mCamera;
-    std::uint16_t mCurrentCamera;
     pivot::ecs::component::Manager::ComponentId mTagId;
 };
 

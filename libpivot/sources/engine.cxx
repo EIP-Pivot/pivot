@@ -11,7 +11,6 @@
 #include <pivot/engine.hxx>
 
 #include <pivot/internal/FrameLimiter.hxx>
-#include <pivot/internal/camera.hxx>
 
 #include <pivot/ecs/Components/Gravity.hxx>
 #include <pivot/ecs/Components/RigidBody.hxx>
@@ -27,6 +26,7 @@
 #include <pivot/builtins/systems/PhysicSystem.hxx>
 #include <pivot/builtins/systems/TestTickSystem.hxx>
 
+#include <pivot/builtins/components/Camera.hxx>
 #include <pivot/builtins/components/Collidable.hxx>
 #include <pivot/builtins/components/RenderObject.hxx>
 #include <pivot/builtins/components/Transform.hxx>
@@ -34,8 +34,6 @@
 #include <pivot/builtins/components/Light.hxx>
 #include <pivot/builtins/components/Text.hxx>
 #include <pivot/builtins/components/Transform2D.hxx>
-
-#include <pivot/ecs/Core/Component/SynchronizedComponentArray.hxx>
 
 #include <pivot/graphics/Resolver/AssetResolver.hxx>
 #include <pivot/graphics/Resolver/DrawCallResolver.hxx>
@@ -72,7 +70,9 @@ Engine::Engine()
     : m_scripting_engine(
           m_system_index, m_component_index,
           pivot::ecs::script::interpreter::builtins::BuiltinContext{std::bind_front(&Engine::isKeyPressed, this)}),
-      m_camera(builtins::Camera(glm::vec3(0, 5, 0)))
+      m_default_camera_data(),
+      m_default_camera_transform{.position = glm::vec3(0, 5, 0)},
+      m_default_camera{m_default_camera_data, m_default_camera_transform}
 {
     DEBUG_FUNCTION();
     Platform::setThreadName(logger.getThreadHandle(), "Logger Thread");
@@ -88,6 +88,7 @@ Engine::Engine()
     m_component_index.registerComponent(builtins::components::Collidable::description);
     m_component_index.registerComponent(builtins::components::Text::description);
     m_component_index.registerComponent(builtins::components::Transform2D::description);
+    m_component_index.registerComponent(builtins::components::Camera::description);
 
     m_event_index.registerEvent(builtins::events::tick);
     m_event_index.registerEvent(builtins::events::editor_tick);
@@ -140,9 +141,9 @@ void Engine::run()
         this->onFrameEnd();
 
         if (m_current_scene_draw_command) {
-            auto result = m_vulkan_application.draw(
-                m_current_scene_draw_command.value(),
-                pivot::internals::getGPUCameraData(m_camera, Engine::fov, aspectRatio), renderArea);
+            auto result = m_vulkan_application.draw(m_current_scene_draw_command.value(),
+                                                    this->getCurrentCamera().getGPUCameraData(Engine::fov, aspectRatio),
+                                                    renderArea);
             if (result == pivot::graphics::VulkanApplication::DrawResult::Error) {
                 std::terminate();
             } else if (result == pivot::graphics::VulkanApplication::DrawResult::FrameSkipped) {
@@ -161,35 +162,52 @@ void Engine::run()
     }
 }
 
-template <typename T>
-using Array = pivot::ecs::component::SynchronizedTypedComponentArray<T>;
+namespace
+{
+    template <typename T>
+    using Array = pivot::ecs::component::SynchronizedTypedComponentArray<T>;
+
+    /// can't return it because of copy/move shenanigans
+    void getDrawCommand(component::Manager &cm, std::optional<graphics::DrawSceneInformation> &draw_info)
+    {
+        using namespace pivot::builtins::components;
+
+        auto renderobject_id = cm.GetComponentId(RenderObject::description.name);
+        auto transform_id = cm.GetComponentId(Transform::description.name);
+        auto pointlight_id = cm.GetComponentId(PointLight::description.name);
+        auto directional_id = cm.GetComponentId(DirectionalLight::description.name);
+        auto spotlight_id = cm.GetComponentId(SpotLight::description.name);
+        if (renderobject_id && transform_id && pointlight_id && directional_id && spotlight_id) {
+            draw_info.emplace(graphics::DrawSceneInformation{
+                .renderObjects =
+                    dynamic_cast<const Array<pivot::graphics::RenderObject> &>(cm.GetComponentArray(*renderobject_id)),
+                .pointLight =
+                    dynamic_cast<const Array<pivot::graphics::PointLight> &>(cm.GetComponentArray(*pointlight_id)),
+                .directionalLight = dynamic_cast<const Array<pivot::graphics::DirectionalLight> &>(
+                    cm.GetComponentArray(*directional_id)),
+                .spotLight =
+                    dynamic_cast<const Array<pivot::graphics::SpotLight> &>(cm.GetComponentArray(*spotlight_id)),
+                .transform =
+                    dynamic_cast<const Array<pivot::graphics::Transform> &>(cm.GetComponentArray(*transform_id)),
+            });
+        } else {
+            draw_info = std::nullopt;
+        }
+    }
+}    // namespace
 
 void Engine::changeCurrentScene(ecs::SceneManager::SceneId sceneId)
 {
     DEBUG_FUNCTION();
     m_scene_manager.setCurrentSceneId(sceneId);
 
-    using namespace pivot::builtins::components;
-
     auto &cm = m_scene_manager.getCurrentScene().getComponentManager();
-    auto renderobject_id = cm.GetComponentId(RenderObject::description.name);
-    auto transform_id = cm.GetComponentId(Transform::description.name);
-    auto pointlight_id = cm.GetComponentId(PointLight::description.name);
-    auto directional_id = cm.GetComponentId(DirectionalLight::description.name);
-    auto spotlight_id = cm.GetComponentId(SpotLight::description.name);
-    if (renderobject_id && transform_id && pointlight_id && directional_id && spotlight_id) {
-        m_current_scene_draw_command.emplace(graphics::DrawSceneInformation{
-            .renderObjects =
-                dynamic_cast<Array<pivot::graphics::RenderObject> &>(cm.GetComponentArray(*renderobject_id)),
-            .pointLight = dynamic_cast<Array<pivot::graphics::PointLight> &>(cm.GetComponentArray(*pointlight_id)),
-            .directionalLight =
-                dynamic_cast<Array<pivot::graphics::DirectionalLight> &>(cm.GetComponentArray(*directional_id)),
-            .spotLight = dynamic_cast<Array<pivot::graphics::SpotLight> &>(cm.GetComponentArray(*spotlight_id)),
-            .transform = dynamic_cast<Array<pivot::graphics::Transform> &>(cm.GetComponentArray(*transform_id)),
-        });
-    } else {
-        m_current_scene_draw_command = std::nullopt;
-    }
+    getDrawCommand(cm, m_current_scene_draw_command);
+    auto camera_id = cm.GetComponentId(builtins::components::Camera::description.name);
+    m_camera_array = dynamic_cast<internals::CameraArray &>(cm.GetComponentArray(*camera_id));
+    auto transform_id = cm.GetComponentId(builtins::components::Transform::description.name);
+    m_transform_array = dynamic_cast<ecs::component::SynchronizedTypedComponentArray<graphics::Transform> &>(
+        cm.GetComponentArray(*transform_id));
 }
 
 namespace
@@ -212,6 +230,9 @@ namespace
         }
         if (!cm.GetComponentId(builtins::components::SpotLight::description.name).has_value()) {
             cm.RegisterComponent(builtins::components::SpotLight::description);
+        }
+        if (!cm.GetComponentId(builtins::components::Camera::description.name).has_value()) {
+            cm.RegisterComponent(builtins::components::Camera::description);
         }
     }
 }    // namespace
@@ -313,6 +334,23 @@ void Engine::onKeyPressed(graphics::Window &, const graphics::Window::Key key, c
         m_scene_manager.getCurrentScene().getEventManager().sendEvent(
             {pivot::builtins::events::keyPress, {}, data::Value(std::string(magic_enum::enum_name(key)))});
     }
+}
+
+void Engine::setCurrentCamera(std::optional<Entity> camera) { m_camera_array.value().get().setCurrentCamera(camera); }
+
+internals::LocationCamera Engine::getCurrentCamera()
+{
+    std::scoped_lock lock(m_transform_array.value().get().getMutex());
+    auto current_camera = m_camera_array.value().get().getCurrentCamera();
+    if (current_camera.has_value()) {
+        auto [camera_entity, camera] = current_camera.value();
+        auto &transform_array = m_transform_array.value().get();
+        if (transform_array.getExistence().at(camera_entity)) {
+            return internals::LocationCamera{.camera = camera.get(),
+                                             .transform = transform_array.getData()[camera_entity]};
+        }
+    }
+    return m_default_camera;
 }
 
 }    // namespace pivot

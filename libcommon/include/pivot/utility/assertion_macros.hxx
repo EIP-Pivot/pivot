@@ -48,8 +48,8 @@
             pivotAssertMsg(false, "Enclosing block should never be called"); \
             pivot::Compiler::unreachable();                                  \
         }
-    #define pivotAssertNoReentry()                                                            \
-        {                                                                                     \
+    #define pivotAssertNoReentry()                                                                                  \
+        {                                                                                                           \
             static std::atomic_bool PIVOT_MACRO_EXPENDER(beenHere, __LINE__) = false;                               \
             pivotAssertMsg(!PIVOT_MACRO_EXPENDER(beenHere, __LINE__), "Enclosing block was called more than once"); \
             PIVOT_MACRO_EXPENDER(beenHere, __LINE__) = true;                                                        \

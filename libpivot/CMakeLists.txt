@@ -3,7 +3,7 @@ project(pivot)
 add_library(
     ${PROJECT_NAME} STATIC
     sources/engine.cxx
-    sources/internal/camera.cxx
+    sources/internal/LocationCamera.cxx
     sources/builtins/systems/ControlSystem.cxx
     sources/builtins/systems/PhysicSystem.cxx
     sources/builtins/systems/CollisionSystem.cxx
@@ -14,6 +14,7 @@ add_library(
     sources/builtins/components/Collidable.cxx
     sources/builtins/components/Text.cxx
     sources/builtins/components/Transform2D.cxx
+    sources/builtins/components/Camera.cxx
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE PIVOT_ASSET_SEARCH_DEPTH=4)
@@ -25,6 +26,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC pivot-graphics pivot-ecs pivot-scri
 target_precompile_headers(${PROJECT_NAME} REUSE_FROM pivot-common)
 
 build_tests(
-    ${PROJECT_NAME} tests/components/test_render_object_component.cxx tests/components/test_transform_component.cxx
+    ${PROJECT_NAME}
+    tests/components/test_render_object_component.cxx
+    tests/components/test_transform_component.cxx
+    tests/components/test_camera.cxx
     tests/systems/test_collision_system.cxx
 )

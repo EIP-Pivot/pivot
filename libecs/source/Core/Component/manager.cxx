@@ -13,7 +13,7 @@ Manager::ComponentId Manager::RegisterComponent(const Description &componentDesc
     return index;
 }
 
-std::optional<Manager::ComponentId> Manager::GetComponentId(std::string_view name)
+std::optional<Manager::ComponentId> Manager::GetComponentId(std::string_view name) const
 {
     auto it = m_componentNameToIndex.find(name);
     if (it == m_componentNameToIndex.end()) {

@@ -3,6 +3,8 @@
 #define PIVOT_MACRO_EXPENDER2(X, Y) X##Y
 #define PIVOT_MACRO_EXPENDER(X, Y) PIVOT_MACRO_EXPENDER2(X, Y)
 
+#define STR(x) #x
+
 #define PIVOT_NO_COPY(Name)      \
     Name(const Name &) = delete; \
     Name &operator=(const Name &);

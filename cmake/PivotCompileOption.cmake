@@ -11,6 +11,6 @@ function(target_pivot_compile_option TARGET)
                /wd4201
                /wd4244>
     )
-    target_compile_features(${TARGET} PRIVATE cxx_std_20)
+    target_compile_features(${TARGET} PUBLIC cxx_std_20)
     target_include_directories(${TARGET} PUBLIC include/)
 endfunction()

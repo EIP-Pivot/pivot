@@ -7,8 +7,6 @@
 
 #include <atomic>
 
-#define STR(X) #X
-
 #ifndef NDEBUG
 
     #define PIVOT_VERIFY_IMPL(Capture, Always, Expression, ...)                                                 \

@@ -114,7 +114,7 @@ void VulkanBase::selectPhysicalDevice(const std::vector<const char *> &deviceExt
 void VulkanBase::createLogicalDevice(const std::vector<const char *> &deviceExtensions)
 {
     DEBUG_FUNCTION();
-    float fQueuePriority = 1.0f;
+    static const float fQueuePriority = 1.0f;
     queueIndices = QueueFamilyIndices::findQueueFamilies(physical_device, surface);
     std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
     auto [flag, uniqueQueueFamilies] = queueIndices.getUniqueQueues();

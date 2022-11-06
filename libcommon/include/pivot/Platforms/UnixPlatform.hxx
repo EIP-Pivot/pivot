@@ -4,6 +4,7 @@
 #include <thread>
 
 #include "pivot/debug.hxx"
+#include <signal.h>
 
 #if !defined(PLATFORM_UNIX)
 
@@ -16,7 +17,6 @@ namespace pivot
 
 ///
 /// @brief Unix-specific functions
-///
 ///
 class UnixPlateform
 {

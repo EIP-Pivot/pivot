@@ -46,8 +46,8 @@ jobs:
 
       - uses: rui314/setup-mold@v1
 
-      - uses: actions/checkout@v2
-
+      - uses: actions/checkout@v3.1.0
+      
       - name: Create build directory
         run: mkdir -p ${{ github.workspace }}${{ matrix.config.working_directory }}
 

@@ -56,6 +56,7 @@ public:
         AllocatedBuffer<T> buffer{
             .size = size,
             .flags = flags,
+            .name = debug_name,
         };
         vk::BufferCreateInfo bufferInfo{
             .size = buffer.getBytesSize(),

@@ -7,10 +7,7 @@
 using namespace pivot::ecs;
 
 Scene::Scene(std::string sceneName)
-    : name(sceneName),
-      mSystemManager(mComponentManager, mEntityManager),
-      mEventManager(mSystemManager),
-      mCurrentCamera(0)
+    : name(sceneName), mSystemManager(mComponentManager, mEntityManager), mEventManager(mSystemManager)
 {
     mTagId = mComponentManager.RegisterComponent(Tag::description);
 }
@@ -53,24 +50,6 @@ std::string Scene::getEntityName(Entity entity)
 }
 
 uint32_t Scene::getLivingEntityCount() { return mEntityManager.getLivingEntityCount(); }
-
-void Scene::setCamera(std::uint16_t camera) { mCurrentCamera = camera; }
-
-void Scene::addCamera(Entity camera) { mCamera.push_back(camera); }
-
-void Scene::switchCamera()
-{
-    if (mCamera.size() > 0) mCurrentCamera = (mCurrentCamera + 1) % mCamera.size();
-}
-
-pivot::builtins::Camera &Scene::getCamera()
-{
-    if (mCamera.size() == 0) throw EcsException("No camera set");
-    throw std::logic_error("Unimplemented");
-    // return mComponentManager.GetComponent<Camera>(mCamera[mCurrentCamera]);
-}
-
-std::vector<Entity> &Scene::getCameras() { return mCamera; }
 
 pivot::ecs::component::Manager &Scene::getComponentManager() { return mComponentManager; }
 

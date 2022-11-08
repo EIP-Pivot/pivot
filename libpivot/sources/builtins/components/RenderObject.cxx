@@ -1,7 +1,7 @@
 #include "pivot/builtins/components/RenderObject.hxx"
-#include "pivot/ecs/Core/Component/DenseComponentArray.hxx"
 #include "pivot/ecs/Core/Component/description_helpers_impl.hxx"
 #include "pivot/graphics/types/Transform.hxx"
+#include <pivot/ecs/Core/Component/SynchronizedComponentArray.hxx>
 
 #include <boost/fusion/include/adapt_struct.hpp>
 
@@ -57,4 +57,4 @@ struct Helpers<pivot::graphics::RenderObject> {
 
 BOOST_FUSION_ADAPT_STRUCT(pivot::graphics::RenderObject, meshID, pipelineID, materialIndex);
 PIVOT_REGISTER_WRAPPED_COMPONENT(RenderObject, pivot::graphics::RenderObject,
-                                 DenseTypedComponentArray<pivot::graphics::RenderObject>);
+                                 SynchronizedTypedComponentArray<pivot::graphics::RenderObject>);

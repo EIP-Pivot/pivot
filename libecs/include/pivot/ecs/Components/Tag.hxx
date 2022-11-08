@@ -16,4 +16,16 @@ struct Tag {
     /// Component description
     static const pivot::ecs::component::Description description;
 };
+
 }    // namespace pivot::ecs
+
+namespace std
+{
+template <>
+/// implementation of the standards hash for the Tag
+struct hash<pivot::ecs::Tag> {
+    /// Call operator
+    std::size_t operator()(const pivot::ecs::Tag &tagNative) const { return std::hash<std::string>()(tagNative.name); }
+};
+
+}    // namespace std

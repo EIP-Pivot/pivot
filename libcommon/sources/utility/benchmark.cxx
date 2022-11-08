@@ -28,7 +28,7 @@ void Instrumentor::endSession()
 
 bool Instrumentor::isSessionStarted() const { return outputStream.is_open(); }
 
-void Instrumentor::writeResult(TimerResult result)
+void Instrumentor::writeResult(const TimerResult &result)
 {
     if (!verifyMsg(isSessionStarted(), "No session are started !")) return;
 

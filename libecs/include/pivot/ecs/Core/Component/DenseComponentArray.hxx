@@ -22,7 +22,8 @@ class DenseTypedComponentArray : public IComponentArray
 {
 public:
     /// Creates a DenseTypedComponentArray from the Description of its component
-    DenseTypedComponentArray(Description description): m_description(description), m_component_exist(), m_components()
+    DenseTypedComponentArray(Description description)
+        : m_description(std::move(description)), m_component_exist(), m_components()
     {
     }
 

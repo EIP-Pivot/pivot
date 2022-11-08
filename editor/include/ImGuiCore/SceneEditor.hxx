@@ -6,6 +6,7 @@
 
 #include "ImGuiCore/AssetBrowser.hxx"
 #include "ImGuiCore/ImGuiManager.hxx"
+#include <pivot/internal/LocationCamera.hxx>
 
 class SceneEditor
 {
@@ -19,7 +20,7 @@ public:
           useSnap(false){};
     void create();
     void setAspectRatio(float aspect);
-    void DisplayGuizmo(Entity entity, const pivot::builtins::Camera &camera);
+    void DisplayGuizmo(Entity entity, const pivot::internals::LocationCamera &camera);
 
 public:
     ImVec2 offset;

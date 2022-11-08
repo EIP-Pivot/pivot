@@ -5,8 +5,7 @@
 
 namespace pivot::graphics
 {
-VulkanBase::VulkanBase(const std::string &windowName, const bool bForceValidation)
-    : VulkanLoader(), VulkanImmediateCommand(), window(windowName, 800, 600)
+VulkanBase::VulkanBase(const bool bForceValidation): VulkanLoader(), VulkanImmediateCommand()
 {
     DEBUG_FUNCTION();
     bEnableValidationLayers |= bForceValidation;
@@ -14,25 +13,26 @@ VulkanBase::VulkanBase(const std::string &windowName, const bool bForceValidatio
 
 VulkanBase::~VulkanBase() { DEBUG_FUNCTION(); }
 
-void VulkanBase::init(const std::vector<const char *> &instanceExtensions,
+void VulkanBase::init(Window &window, const std::vector<const char *> &instanceExtensions,
                       const std::vector<const char *> &deviceExtensions,
                       const std::vector<const char *> &validationLayers)
 {
     DEBUG_FUNCTION();
+    window_ref = window;
     createInstance(instanceExtensions, validationLayers);
     createDebugMessenger();
     createSurface();
     selectPhysicalDevice(deviceExtensions);
     createLogicalDevice(deviceExtensions);
     createAllocator();
-    VulkanImmediateCommand ::init(device, physical_device, queueIndices);
+    VulkanImmediateCommand::init(device, physical_device, queueIndices);
 }
 
 void VulkanBase::destroy()
 {
     DEBUG_FUNCTION();
 
-    VulkanImmediateCommand ::destroy();
+    VulkanImmediateCommand::destroy();
     baseDeletionQueue.flush();
 }
 

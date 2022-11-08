@@ -49,7 +49,7 @@ bool LightDataResolver::destroy(VulkanBase &)
 template <class T, class G>
 requires std::is_constructible_v<G, const T &, const Transform &> && BufferValid<G>
 static vk::DeviceSize handleLights(VulkanBase &base_ref, AllocatedBuffer<G> &buffer, const Object<T> &lights,
-                                   const Object<Transform> &transforms, const std::string &debug_name = "")
+                                   const Object<Transform> &transforms)
 {
     PROFILE_FUNCTION();
     verifyMsg(lights.objects.get().size() == lights.exist.get().size(), "Light ECS data are incorrect");
@@ -65,7 +65,7 @@ static vk::DeviceSize handleLights(VulkanBase &base_ref, AllocatedBuffer<G> &buf
     }
     if (buffer.getSize() < lightsData.size()) {
         if (buffer) base_ref.allocator.destroyBuffer(buffer);
-        buffer = base_ref.allocator.createMappedBuffer<G>(lightsData.size(), debug_name);
+        buffer = base_ref.allocator.createMappedBuffer<G>(lightsData.size(), buffer.name);
     }
     base_ref.allocator.copyBuffer(buffer, std::span(lightsData));
     return lightsData.size();
@@ -74,24 +74,68 @@ static vk::DeviceSize handleLights(VulkanBase &base_ref, AllocatedBuffer<G> &buf
 bool LightDataResolver::prepareForDraw(const DrawSceneInformation &sceneInformation)
 {
     PROFILE_FUNCTION();
-    verifyMsg(sceneInformation.pointLight.objects.get().size() == sceneInformation.pointLight.exist.get().size(),
-              "ECS Point tights arrays are invalid.");
-    verifyMsg(sceneInformation.directionalLight.objects.get().size() ==
-                  sceneInformation.directionalLight.exist.get().size(),
-              "ECS Directional lights arrays are invalid.");
-    verifyMsg(sceneInformation.spotLight.objects.get().size() == sceneInformation.spotLight.exist.get().size(),
-              "ECS Spot light arrays are invalid.");
 
-    frame.pointLightCount =
-        handleLights(base_ref.value(), frame.omniLightBuffer, sceneInformation.pointLight, sceneInformation.transform,
-                     "Point light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
-    frame.directionalLightCount = handleLights(
-        base_ref.value(), frame.directLightBuffer, sceneInformation.directionalLight, sceneInformation.transform,
-        "Directionnal light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
-    frame.spotLightCount =
-        handleLights(base_ref.value(), frame.spotLightBuffer, sceneInformation.spotLight, sceneInformation.transform,
-                     "Spot light Buffer " + std::to_string(reinterpret_cast<intptr_t>(&frame)));
+    std::int32_t iCount = 0;
+    std::scoped_lock lock(sceneInformation.pointLight.getMutex(), sceneInformation.directionalLight.getMutex(),
+                          sceneInformation.spotLight.getMutex(), sceneInformation.transform.getMutex());
 
+    const std::vector<PointLight> &pointLight = sceneInformation.pointLight.getComponents();
+    const std::vector<bool> &pointLight_exist = sceneInformation.pointLight.getExistence();
+
+    const std::vector<DirectionalLight> &directionalLight = sceneInformation.directionalLight.getComponents();
+    const std::vector<bool> &directionalLight_exist = sceneInformation.directionalLight.getExistence();
+
+    const std::vector<SpotLight> &spotLight = sceneInformation.spotLight.getComponents();
+    const std::vector<bool> &spotLight_exist = sceneInformation.spotLight.getExistence();
+
+    const std::vector<Transform> &transforms = sceneInformation.transform.getComponents();
+    const std::vector<bool> &transforms_exist = sceneInformation.transform.getExistence();
+
+    // verifyMsg(sceneInformation.pointLight.objects.get().size() == sceneInformation.pointLight.exist.get().size(),
+    //           "ECS Point tights arrays are invalid.");
+    // verifyMsg(sceneInformation.directionalLight.objects.get().size() ==
+    //               sceneInformation.directionalLight.exist.get().size(),
+    //           "ECS Directional lights arrays are invalid.");
+    // verifyMsg(sceneInformation.spotLight.objects.get().size() == sceneInformation.spotLight.exist.get().size(),
+    //           "ECS Spot light arrays are invalid.");
+
+    iCount += frame.pointLightCount;
+    frame.pointLightCount = handleLights(base_ref.value(), frame.omniLightBuffer,
+                                         Object<PointLight>{
+                                             .objects = pointLight,
+                                             .exist = pointLight_exist,
+                                         },
+                                         Object<Transform>{
+                                             .objects = transforms,
+                                             .exist = transforms_exist,
+                                         });
+    iCount -= frame.pointLightCount;
+
+    iCount += frame.directionalLightCount;
+    frame.directionalLightCount = handleLights(base_ref.value(), frame.directLightBuffer,
+                                               Object<DirectionalLight>{
+                                                   .objects = directionalLight,
+                                                   .exist = directionalLight_exist,
+                                               },
+                                               Object<Transform>{
+                                                   .objects = transforms,
+                                                   .exist = transforms_exist,
+                                               });
+    iCount += frame.directionalLightCount;
+
+    iCount += frame.spotLightCount;
+    frame.spotLightCount = handleLights(base_ref.value(), frame.spotLightBuffer,
+                                        Object<SpotLight>{
+                                            .objects = spotLight,
+                                            .exist = spotLight_exist,
+                                        },
+                                        Object<Transform>{
+                                            .objects = transforms,
+                                            .exist = transforms_exist,
+                                        });
+    iCount += frame.spotLightCount;
+
+    if (iCount != 0) updateDescriptorSet();
     return true;
 }
 

@@ -92,6 +92,7 @@ if(BUILD_DOCUMENTATION)
             libgraphics/include
             libecs/include
             libscript/include
+            libcommon/include
             README.md
         )
     else()

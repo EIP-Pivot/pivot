@@ -24,6 +24,7 @@ public:
     /// Creates a UniqueComponentArray using the Description of T.
     UniqueComponentArray(Description d): DenseTypedComponentArray<T>(d) {}
 
+    /// \copydoc pivot::ecs::component::IComponentArray::setValueForEntity()
     void setValueForEntity(Entity entity, std::optional<data::Value> value) override
     {
 
@@ -59,6 +60,7 @@ public:
     };
 
 protected:
+    /// Map between hashes of component and entity id
     std::map<std::size_t, Entity> m_unique_hash;
 };
 

@@ -58,7 +58,7 @@ public:
         DuplicateComponent(const std::string &tag): std::logic_error("Duplicate entity tag: " + tag) {}
     };
 
-private:
+protected:
     std::map<std::size_t, Entity> m_unique_hash;
 };
 

@@ -29,6 +29,7 @@ public:
     /// Creates a TransformArray using the Description of Transform.
     TransformArray(ecs::component::Description d): DenseTypedComponentArray<pivot::graphics::Transform>(d) {}
 
+    /// Sets the value of an entity's transform, and update roots if necessary
     void setValueForEntity(Entity entity, std::optional<ecs::data::Value> value) override;
 
     /// Error thrown when setting the root of the transform if the root depth goes over 1
@@ -48,6 +49,7 @@ private:
     void removeTransform(Entity entity);
 };
 
+/// Alias for a synchronized array of transforms
 using SynchronizedTransformArray =
     pivot::ecs::component::SynchronizedTypedComponentArray<pivot::graphics::Transform, std::mutex, TransformArray>;
 

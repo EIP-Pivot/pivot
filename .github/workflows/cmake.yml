@@ -14,12 +14,12 @@ jobs:
           - os: windows-2022
             working_directory: \build\
             extra_cmake: ' -A "x64"'
-            compiler: 'cl'
+            compiler: "cl"
 
           - os: ubuntu-22.04
             working_directory: /build/
-            extra_cmake: ''
-            compiler: 'g++-12'
+            extra_cmake: ""
+            compiler: "g++-12"
 
         build_type: [Debug, Release]
 
@@ -50,8 +50,8 @@ jobs:
           path: ${{ github.workspace }}/build/_deps/
           key: ${{ matrix.config.os }}-${{ matrix.config.compiler }}-${{ matrix.build_type }}-${{ github.ref_name }}-${{ hashFiles('.github/workflows/cmake.yml') }}
           restore-keys: |
-              ${{ matrix.config.os }}-${{ matrix.config.compiler }}-${{ matrix.build_type }}-dev-${{ hashFiles('.github/workflows/cmake.yml') }}
-              ${{ matrix.config.os }}-${{ matrix.config.compiler }}-${{ matrix.build_type }}-dev-
+            ${{ matrix.config.os }}-${{ matrix.config.compiler }}-${{ matrix.build_type }}-dev-${{ hashFiles('.github/workflows/cmake.yml') }}
+            ${{ matrix.config.os }}-${{ matrix.config.compiler }}-${{ matrix.build_type }}-dev-
 
       - name: Configure CMake
         working-directory: ${{ github.workspace }}${{ matrix.config.working_directory }}
@@ -72,6 +72,8 @@ jobs:
 
       - name: clang-format Check
         uses: jidicula/clang-format-action@v4.6.0
+        with:
+          clang-format-version: "15"
 
   documentation:
     runs-on: ubuntu-latest
@@ -105,7 +107,7 @@ jobs:
           --target doc
 
       - name: Check no warnings
-        run: '! test -s ${{github.workspace}}/build/doxygen-warnings.log'
+        run: "! test -s ${{github.workspace}}/build/doxygen-warnings.log"
 
       - uses: actions/upload-artifact@v2
         if: ${{ github.ref == 'refs/heads/dev' }}

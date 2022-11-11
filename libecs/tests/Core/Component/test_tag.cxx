@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <pivot/ecs/Components/Tag.hxx>
+#include <pivot/ecs/Components/TagArray.hxx>
 #include <pivot/ecs/Core/Component/description_helpers.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
 
@@ -27,4 +28,15 @@ TEST_CASE("Correct description for tag component", "[component][tag]")
 
     REQUIRE_THROWS(Helpers<Tag>::updateTypeWithValue(tag, Value{3}));
     REQUIRE_NOTHROW(Helpers<Tag>::updateTypeWithValue(tag, Value{Record{}}));
+}
+
+TEST_CASE("Get entity by tag", "[component][tag]")
+{
+    TagArray array(Tag::description);
+    array.setValueForEntity(0, Value{Record{{"name", "alice"}}});
+    array.setValueForEntity(1, Value{Record{{"name", "bob"}}});
+
+    REQUIRE(array.getEntityID("alice").value() == 0);
+    REQUIRE(array.getEntityID("bob").value() == 1);
+    REQUIRE_FALSE(array.getEntityID("camille").has_value());
 }

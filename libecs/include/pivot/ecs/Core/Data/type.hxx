@@ -43,7 +43,7 @@ enum class BasicType {
     Void,
 
     /// The property is a reference to another entity
-    Entity,
+    EntityRef,
 
     /// The property is of type Color
     Color,
@@ -99,7 +99,7 @@ constexpr std::optional<BasicType> basic_type_representation<Color> = BasicType:
 template <>
 constexpr std::optional<BasicType> basic_type_representation<Void> = BasicType::Void;
 template <>
-constexpr std::optional<BasicType> basic_type_representation<EntityRef> = BasicType::Entity;
+constexpr std::optional<BasicType> basic_type_representation<EntityRef> = BasicType::EntityRef;
 
 }    // namespace pivot::ecs::data
 

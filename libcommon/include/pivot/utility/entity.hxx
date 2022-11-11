@@ -29,7 +29,7 @@ struct EntityRef {
     static constexpr EntityRef empty() { return EntityRef{NULL_ENTITY}; }
 };
 
-static_assert(sizeof(EntityRef) == sizeof(Entity), "Not transparent");
+static_assert(sizeof(EntityRef) == sizeof(Entity), "Entity ref wrapper does not have the same size as the Entity !");
 
 /// Print an entity reference
 inline std::ostream &operator<<(std::ostream &os, const EntityRef &entity)

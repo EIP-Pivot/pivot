@@ -62,7 +62,7 @@ public:
 
     template <class F, typename... Args>
     /// Push a new job in the pool and return a future
-    requires std::is_invocable_v<F, unsigned, Args...>
+        requires std::is_invocable_v<F, unsigned, Args...>
     [[nodiscard]] auto push(F &&f, Args &&...args) -> std::future<decltype(f(0, args...))>
     {
         DEBUG_FUNCTION();

@@ -20,7 +20,7 @@ public:
 public:
     template <typename T>
     /// Add a new resolver responsible for descriptor set number setId
-    requires std::is_base_of_v<IResolver, T>
+        requires std::is_base_of_v<IResolver, T>
     void addResolver(unsigned setId)
     {
         if (!verify(setId <= resolverStorage.size())) { throw std::runtime_error("Set Id is too big"); }
@@ -34,7 +34,8 @@ public:
 
     template <typename T>
     /// Return a specific Resolver
-    requires std::is_base_of_v<IResolver, T> T &get()
+        requires std::is_base_of_v<IResolver, T>
+    T &get()
     {
         const std::type_index info(typeid(T));
         auto item = resolverTypes.find(info);

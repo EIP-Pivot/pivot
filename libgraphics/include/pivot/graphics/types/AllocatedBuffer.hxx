@@ -11,11 +11,8 @@ namespace pivot::graphics
 
 template <typename T>
 /// Check if the type is safe to use in a GLSL shader
-concept GLSL_safe =
-    std::is_standard_layout_v<T> && std::is_trivially_copyable_v<T> && std::is_trivially_destructible_v<T> && requires
-{
-    sizeof(T) % 4 == 0;
-};
+concept GLSL_safe = std::is_standard_layout_v<T> && std::is_trivially_copyable_v<T> &&
+                    std::is_trivially_destructible_v<T> && requires { sizeof(T) % 4 == 0; };
 
 template <typename T>
 /// Check if the type is usable in a GLSL shader and allow the void type
@@ -80,13 +77,16 @@ public:
 
     template <BufferValid O>
     /// Allow to convert AllocatedBuffer<void> to AllocatedBuffer<T>
-    requires std::is_same_v<T, void>
-    operator AllocatedBuffer<O>() const noexcept { return *this; }
+        requires std::is_same_v<T, void>
+    operator AllocatedBuffer<O>() const noexcept
+    {
+        return *this;
+    }
 
     template <BufferValid O>
     /// Allow to convert AllocatedBuffer<void> to AllocatedBuffer<T>
-    requires std::is_same_v<T, void> AllocatedBuffer<T>
-    operator=(const AllocatedBuffer<O> &other) const noexcept
+        requires std::is_same_v<T, void>
+    AllocatedBuffer<T> operator=(const AllocatedBuffer<O> &other) const noexcept
     {
         *this = other;
         return *this;

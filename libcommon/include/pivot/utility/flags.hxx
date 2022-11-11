@@ -13,7 +13,7 @@ using FlagsType = std::uint32_t;
 
 template <typename BitType>
 /// Wrapper for result of flag bits
-requires std::is_enum_v<BitType>
+    requires std::is_enum_v<BitType>
 class Flags
 {
 public:
@@ -82,23 +82,32 @@ private:
 
 template <typename T>
 /// Enable flags bitwise operation
-requires std::is_enum_v<T>
+    requires std::is_enum_v<T>
 constexpr bool enable_flag_for_enum = false;
 
 template <typename T>
 /// bitwise AND operator
-requires enable_flag_for_enum<T>
-constexpr Flags<T> operator&(const T &rhs, const T &lhs) noexcept { return Flags<T>(rhs) & lhs; }
+    requires enable_flag_for_enum<T>
+constexpr Flags<T> operator&(const T &rhs, const T &lhs) noexcept
+{
+    return Flags<T>(rhs) & lhs;
+}
 
 template <typename T>
 /// bitwise OR operator
-requires enable_flag_for_enum<T>
-constexpr Flags<T> operator|(const T &rhs, const T &lhs) noexcept { return Flags<T>(rhs) | lhs; }
+    requires enable_flag_for_enum<T>
+constexpr Flags<T> operator|(const T &rhs, const T &lhs) noexcept
+{
+    return Flags<T>(rhs) | lhs;
+}
 
 template <typename T>
 /// bitwise XOR operator
-requires enable_flag_for_enum<T>
-constexpr Flags<T> operator^(const T &rhs, const T &lhs) noexcept { return Flags<T>(rhs) ^ lhs; }
+    requires enable_flag_for_enum<T>
+constexpr Flags<T> operator^(const T &rhs, const T &lhs) noexcept
+{
+    return Flags<T>(rhs) ^ lhs;
+}
 
 }    // namespace pivot
 

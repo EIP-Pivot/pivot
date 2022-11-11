@@ -21,8 +21,8 @@ template <typename T>
 constexpr const char *component_name = nullptr;
 
 template <typename T>
-concept ComponentBaseType = data::basic_type_representation<T>
-!= std::nullopt;
+concept ComponentBaseType = data::basic_type_representation<T> !=
+std::nullopt;
 
 template <typename T>
 concept ComponentComplexType =

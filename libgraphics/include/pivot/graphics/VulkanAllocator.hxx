@@ -119,7 +119,7 @@ public:
 
     template <typename T>
     /// Copy the data into a buffer
-    requires std::is_standard_layout_v<T>
+        requires std::is_standard_layout_v<T>
     void copyBuffer(AllocatedBuffer<T> &buffer, const T *data, std::size_t data_size, std::size_t offset = 0)
     {
         if (data_size == 0) return;

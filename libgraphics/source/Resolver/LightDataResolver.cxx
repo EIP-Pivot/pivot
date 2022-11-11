@@ -47,7 +47,7 @@ bool LightDataResolver::destroy(VulkanBase &)
 }
 
 template <class T, class G>
-requires std::is_constructible_v<G, const T &, const Transform &> && BufferValid<G>
+    requires std::is_constructible_v<G, const T &, const Transform &> && BufferValid<G>
 static vk::DeviceSize handleLights(VulkanBase &base_ref, AllocatedBuffer<G> &buffer, const Object<T> &lights,
                                    const Object<Transform> &transforms)
 {

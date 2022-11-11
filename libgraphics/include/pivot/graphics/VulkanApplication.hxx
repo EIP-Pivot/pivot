@@ -53,7 +53,7 @@ class VulkanApplication : public VulkanBase
 public:
     template <typename T>
     /// Alias for storing a Renderer and its associated command buffer
-    requires std::is_base_of_v<IRenderer, T>
+        requires std::is_base_of_v<IRenderer, T>
     using RendererStorage = std::vector<std::unique_ptr<T>>;
 
     /// Result of the draw
@@ -112,7 +112,8 @@ public:
 
     template <typename T>
     /// Add a Resolver to the frame
-    requires std::is_base_of_v<IResolver, T> FORCEINLINE void addResolver(unsigned setID)
+        requires std::is_base_of_v<IResolver, T>
+    FORCEINLINE void addResolver(unsigned setID)
     {
         DEBUG_FUNCTION();
         for (auto &frame: frames) frame.addResolver<T>(setID);

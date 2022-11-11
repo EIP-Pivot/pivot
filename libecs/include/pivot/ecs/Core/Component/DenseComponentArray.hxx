@@ -79,7 +79,7 @@ public:
     /// Returns the vector containing the component data
     const std::vector<T> &getComponents() const { return this->m_components; }
 
-    /// Parse a pivot value into the type stored y the array
+    /// Parse a pivot value into the type stored in the array
     T parseValue(data::Value value)
     {
         auto value_type = value.type();

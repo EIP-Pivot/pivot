@@ -19,14 +19,14 @@ BraceWrapping:
   AfterClass: false
   AfterUnion: true
   BeforeElse: false
-#  BeforeWhile: false
+  #  BeforeWhile: false
   BeforeCatch: false
   AfterStruct: false
   AfterFunction: false
   AfterNamespace: false
   AfterCaseLabel: false
   AfterExternBlock: false
-#  BeforeLambdaBody: false
+  #  BeforeLambdaBody: false
   SplitEmptyFunction: false
 #  BraceWrappingAfterControlStatementStyle: Never
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
@@ -53,4 +53,5 @@ SpacesInContainerLiterals: false
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
 UseTab: Never
-...
+IndentRequiresClause: false
+RequiresClausePosition: OwnLine

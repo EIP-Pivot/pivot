@@ -9,6 +9,7 @@
 #include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
 #include <pivot/ecs/Core/Component/FlagComponentStorage.hxx>
 #include <pivot/ecs/Core/Component/SynchronizedComponentArray.hxx>
+#include <pivot/internal/TransformArray.hxx>
 
 using namespace pivot::ecs;
 using namespace pivot::builtins::components;
@@ -24,8 +25,7 @@ std::vector<event::Event> collisionSystemImpl(std::reference_wrapper<const pivot
 {
     logger.trace() << "Collision system run";
     auto collidableStorage = dynamic_cast<const component::FlagComponentStorage &>(cmb.arrays()[0].get());
-    const auto &transformArray =
-        dynamic_cast<component::SynchronizedTypedComponentArray<pivot::graphics::Transform> &>(cmb.arrays()[1].get());
+    const auto &transformArray = dynamic_cast<pivot::internal::SynchronizedTransformArray &>(cmb.arrays()[1].get());
     const auto &renderObjectArray =
         dynamic_cast<component::SynchronizedTypedComponentArray<pivot::graphics::RenderObject> &>(
             cmb.arrays()[2].get());

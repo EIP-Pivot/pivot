@@ -187,8 +187,8 @@ namespace
                     cm.GetComponentArray(*directional_id)),
                 .spotLight =
                     dynamic_cast<const Array<pivot::graphics::SpotLight> &>(cm.GetComponentArray(*spotlight_id)),
-                .transform =
-                    dynamic_cast<const Array<pivot::graphics::Transform> &>(cm.GetComponentArray(*transform_id)),
+                .transform = dynamic_cast<const pivot::internal::SynchronizedTransformArray &>(
+                    cm.GetComponentArray(*transform_id)),
             });
         } else {
             draw_info = std::nullopt;
@@ -206,8 +206,8 @@ void Engine::changeCurrentScene(ecs::SceneManager::SceneId sceneId)
     auto camera_id = cm.GetComponentId(builtins::components::Camera::description.name);
     m_camera_array = dynamic_cast<internals::CameraArray &>(cm.GetComponentArray(*camera_id));
     auto transform_id = cm.GetComponentId(builtins::components::Transform::description.name);
-    m_transform_array = dynamic_cast<ecs::component::SynchronizedTypedComponentArray<graphics::Transform> &>(
-        cm.GetComponentArray(*transform_id));
+    m_transform_array =
+        dynamic_cast<pivot::internal::SynchronizedTransformArray &>(cm.GetComponentArray(*transform_id));
 }
 
 namespace

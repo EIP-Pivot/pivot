@@ -5,6 +5,7 @@
 
 #include <pivot/builtins/components/Transform.hxx>
 #include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
+#include <pivot/ecs/Core/Component/SynchronizedComponentArray.hxx>
 #include <pivot/ecs/Core/Component/array.hxx>
 
 namespace pivot::internal
@@ -46,5 +47,8 @@ private:
     void removeRoot(Entity entity);
     void removeTransform(Entity entity);
 };
+
+using SynchronizedTransformArray =
+    pivot::ecs::component::SynchronizedTypedComponentArray<pivot::graphics::Transform, std::mutex, TransformArray>;
 
 }    // namespace pivot::internal

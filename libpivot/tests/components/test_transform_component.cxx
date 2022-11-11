@@ -42,7 +42,7 @@ TEST_CASE("Transform component works", "[graphics][component]")
 
     REQUIRE_NOTHROW(array->setValueForEntity(0, json::parse(data).get<Value>()));
 
-    const auto &transform_array = dynamic_cast<SynchronizedTypedComponentArray<pivot::graphics::Transform> &>(*array);
+    const auto &transform_array = dynamic_cast<SynchronizedTransformArray &>(*array);
     auto transform_array_lock = transform_array.lock();
 
     const pivot::graphics::Transform expected{{5, 5, 5}, {0, 2.7, 0.4}, {1, 2, 3}, EntityRef::empty()};

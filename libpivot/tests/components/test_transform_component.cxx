@@ -1,20 +1,18 @@
 #include <catch2/catch_test_macros.hpp>
 #include <nlohmann/json.hpp>
 
-#include <pivot/builtins/components/Transform.hxx>
 #include <pivot/ecs/Core/Component/SynchronizedComponentArray.hxx>
 #include <pivot/ecs/Core/Component/array.hxx>
 #include <pivot/ecs/Core/Component/description_helpers.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
 #include <pivot/ecs/Core/Data/value_serialization.hxx>
 #include <pivot/graphics/types/Transform.hxx>
-#include <pivot/internal/TransformArray.hxx>
+#include <pivot/graphics/types/TransformArray.hxx>
 
 using namespace nlohmann;
 using namespace pivot::ecs::data;
 using namespace pivot::ecs::component;
-using namespace pivot::builtins::components;
-using namespace pivot::internal;
+using namespace pivot::graphics;
 using namespace pivot;
 
 void check_matrices(const glm::mat4 &received, const glm::mat4 &expected)

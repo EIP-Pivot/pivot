@@ -3,9 +3,8 @@
 
 #include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
 #include <pivot/ecs/Core/Component/SynchronizedComponentArray.hxx>
-#include <pivot/internal/TransformArray.hxx>
+#include <pivot/graphics/types/TransformArray.hxx>
 
-#include <pivot/builtins/components/Transform.hxx>
 #include <pivot/ecs/Components/Gravity.hxx>
 #include <pivot/ecs/Components/RigidBody.hxx>
 
@@ -25,7 +24,7 @@ std::vector<event::Event> physicsSystemImpl(const systems::Description &, compon
     auto gravityArray = dynamic_cast<component::DenseTypedComponentArray<Gravity> &>(cmb.arrays()[0].get()).getData();
     auto rigidBodyArray =
         dynamic_cast<component::DenseTypedComponentArray<RigidBody> &>(cmb.arrays()[1].get()).getData();
-    auto &transformArray = dynamic_cast<pivot::internal::SynchronizedTransformArray &>(cmb.arrays()[2].get());
+    auto &transformArray = dynamic_cast<pivot::graphics::SynchronizedTransformArray &>(cmb.arrays()[2].get());
     auto transform_array_lock = transformArray.lock();
     auto transformData = transformArray.getData();
 

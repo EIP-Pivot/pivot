@@ -8,7 +8,9 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
 
+#include "pivot/graphics/types/Transform.hxx"
 #include "pivot/graphics/types/vk_types.hxx"
+#include <pivot/ecs/Core/Component/description.hxx>
 #include <pivot/utility/entity.hxx>
 
 namespace pivot::graphics
@@ -19,6 +21,9 @@ namespace pivot::graphics
 class Transform
 {
 public:
+    /// Component description
+    static const pivot::ecs::component::Description description;
+
     /// Get the model matrix
     FORCEINLINE glm::mat4 getModelMatrix() const noexcept { return recomposeMatrix(*this); }
 

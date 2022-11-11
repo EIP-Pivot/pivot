@@ -3,7 +3,6 @@ project(pivot)
 add_library(
     ${PROJECT_NAME} STATIC
     sources/engine.cxx
-    sources/internal/TransformArray.cxx
     sources/internal/LocationCamera.cxx
     sources/builtins/systems/ControlSystem.cxx
     sources/builtins/systems/PhysicSystem.cxx
@@ -11,7 +10,6 @@ add_library(
     sources/builtins/systems/DrawTextSystem.cxx
     sources/builtins/components/RenderObject.cxx
     sources/builtins/components/Light.cxx
-    sources/builtins/components/Transform.cxx
     sources/builtins/components/Collidable.cxx
     sources/builtins/components/Text.cxx
     sources/builtins/components/Transform2D.cxx

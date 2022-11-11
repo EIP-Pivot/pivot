@@ -1,18 +1,16 @@
 #include <csignal>
 
 #include <pivot/graphics/types/RenderObject.hxx>
+#include <pivot/graphics/types/TransformArray.hxx>
 
-#include <pivot/builtins/components/Transform.hxx>
 #include <pivot/builtins/events/collision.hxx>
 #include <pivot/builtins/events/tick.hxx>
 #include <pivot/builtins/systems/CollisionSystem.hxx>
 #include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
 #include <pivot/ecs/Core/Component/FlagComponentStorage.hxx>
 #include <pivot/ecs/Core/Component/SynchronizedComponentArray.hxx>
-#include <pivot/internal/TransformArray.hxx>
 
 using namespace pivot::ecs;
-using namespace pivot::builtins::components;
 using namespace pivot::builtins::systems::details;
 using AABB = pivot::graphics::gpu_object::AABB;
 using Prefab = pivot::graphics::asset::Prefab;
@@ -25,7 +23,7 @@ std::vector<event::Event> collisionSystemImpl(std::reference_wrapper<const pivot
 {
     logger.trace() << "Collision system run";
     auto collidableStorage = dynamic_cast<const component::FlagComponentStorage &>(cmb.arrays()[0].get());
-    const auto &transformArray = dynamic_cast<pivot::internal::SynchronizedTransformArray &>(cmb.arrays()[1].get());
+    const auto &transformArray = dynamic_cast<pivot::graphics::SynchronizedTransformArray &>(cmb.arrays()[1].get());
     const auto &renderObjectArray =
         dynamic_cast<component::SynchronizedTypedComponentArray<pivot::graphics::RenderObject> &>(
             cmb.arrays()[2].get());

@@ -1,10 +1,10 @@
 #include <cpplogger/Logger.hpp>
 
-#include <pivot/internal/TransformArray.hxx>
+#include <pivot/graphics/types/TransformArray.hxx>
 
 using Transform = pivot::graphics::Transform;
 
-namespace pivot::internal
+namespace pivot::graphics
 {
 
 void TransformArray::setValueForEntity(Entity entity, std::optional<ecs::data::Value> value)
@@ -117,4 +117,4 @@ void TransformArray::removeTransform(Entity entity)
 
     m_component_exist.at(entity) = false;
 }
-}    // namespace pivot::internal
+}    // namespace pivot::graphics

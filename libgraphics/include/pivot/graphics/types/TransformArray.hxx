@@ -3,12 +3,12 @@
 #include <set>
 #include <stdexcept>
 
-#include <pivot/builtins/components/Transform.hxx>
 #include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
 #include <pivot/ecs/Core/Component/SynchronizedComponentArray.hxx>
 #include <pivot/ecs/Core/Component/array.hxx>
+#include <pivot/graphics/types/Transform.hxx>
 
-namespace pivot::internal
+namespace pivot::graphics
 {
 
 // TODO: Synchronize again
@@ -51,4 +51,4 @@ private:
 using SynchronizedTransformArray =
     pivot::ecs::component::SynchronizedTypedComponentArray<pivot::graphics::Transform, std::mutex, TransformArray>;
 
-}    // namespace pivot::internal
+}    // namespace pivot::graphics

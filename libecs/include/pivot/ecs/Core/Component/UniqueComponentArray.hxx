@@ -24,6 +24,7 @@ public:
     /// Creates a UniqueComponentArray using the Description of T.
     UniqueComponentArray(Description d): DenseTypedComponentArray<T>(d) {}
 
+    /// \copydoc pivot::ecs::component::IComponentArray::setValueForEntity()
     void setValueForEntity(Entity entity, std::optional<data::Value> value) override
     {
 
@@ -34,7 +35,7 @@ public:
         // Check component did not exist
         if (value.has_value()) {
             std::optional<T> new_value = this->getEntity(entity);
-            if (m_unique_hash.contains(std::hash<T>()(new_value.value()))) {
+            if (new_value != old_value && m_unique_hash.contains(std::hash<T>()(new_value.value()))) {
                 this->setEntity(entity, old_value);
                 throw DuplicateComponent("TODO");
             }
@@ -59,6 +60,7 @@ public:
     };
 
 protected:
+    /// Map between hashes of component and entity id
     std::map<std::size_t, Entity> m_unique_hash;
 };
 

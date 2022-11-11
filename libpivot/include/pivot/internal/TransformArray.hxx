@@ -10,6 +10,7 @@
 namespace pivot::internal
 {
 
+// TODO: Synchronize again
 /** \brief Storage for Transform components
  *
  * This IComponentArray is a DenseTypedComponentArray, but it additionally

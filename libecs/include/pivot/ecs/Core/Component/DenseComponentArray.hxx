@@ -22,7 +22,8 @@ class DenseTypedComponentArray : public IComponentArray
 {
 public:
     /// Creates a DenseTypedComponentArray from the Description of its component
-    DenseTypedComponentArray(Description description): m_description(description), m_component_exist(), m_components()
+    DenseTypedComponentArray(Description description)
+        : m_description(std::move(description)), m_component_exist(), m_components()
     {
     }
 
@@ -93,6 +94,31 @@ public:
 
     /// Converts a C++ value to a pivot value
     data::Value unparseValue(const T &value) { return helpers::Helpers<T>::createValueFromType(value); }
+
+    /// Returns the value of the component if it exist for this entity
+    std::optional<T> getEntity(Entity entity) const
+    {
+        if (entity < m_component_exist.size() && m_component_exist[entity]) {
+            return std::make_optional(m_components[entity]);
+        } else {
+            return std::nullopt;
+        }
+    }
+
+    /// Sets the value of an entity
+    void setEntity(Entity entity, std::optional<T> value)
+    {
+        if (!value.has_value()) {
+            if (entity < m_components.size()) m_component_exist.at(entity) = false;
+        } else {
+            if (entity >= m_components.size()) {
+                m_components.resize(entity + 1);
+                m_component_exist.resize(entity + 1, false);
+            }
+            m_components.at(entity) = value.value();
+            m_component_exist.at(entity) = true;
+        }
+    }
 
 protected:
     /// Description of the component

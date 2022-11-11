@@ -58,6 +58,7 @@ std::uint32_t VulkanBase::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT m
 
 bool VulkanBase::checkValidationLayerSupport(const std::vector<const char *> &validationLayers)
 {
+    DEBUG_FUNCTION();
     auto availableLayers = vk::enumerateInstanceLayerProperties();
 
     for (const char *layerName: validationLayers) {
@@ -77,7 +78,7 @@ bool VulkanBase::checkValidationLayerSupport(const std::vector<const char *> &va
 bool VulkanBase::isDeviceSuitable(const vk::PhysicalDevice &gpu, const vk::SurfaceKHR &surface,
                                   const std::vector<const char *> &deviceExtensions)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
 #define IS_VALID(var, message) \
     isValid |= bool((var));    \
     if (!isValid) logger.debug("VulkanBase::isDeviceSuitable") << (message);
@@ -109,6 +110,7 @@ bool VulkanBase::isDeviceSuitable(const vk::PhysicalDevice &gpu, const vk::Surfa
 
 std::uint32_t VulkanBase::rateDeviceSuitability(const vk::PhysicalDevice &gpu)
 {
+    DEBUG_FUNCTION();
     vk::PhysicalDeviceProperties deviceProperties = gpu.getProperties();
     vk::PhysicalDeviceFeatures deviceFeatures = gpu.getFeatures();
     int32_t score = 0;
@@ -124,7 +126,7 @@ std::uint32_t VulkanBase::rateDeviceSuitability(const vk::PhysicalDevice &gpu)
 bool VulkanBase::checkDeviceExtensionSupport(const vk::PhysicalDevice &device,
                                              const std::vector<const char *> &deviceExtensions)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     auto availableExtensions = device.enumerateDeviceExtensionProperties();
 
     std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());

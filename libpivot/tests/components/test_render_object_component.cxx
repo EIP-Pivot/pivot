@@ -2,7 +2,7 @@
 #include <nlohmann/json.hpp>
 
 #include <pivot/builtins/components/RenderObject.hxx>
-#include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
+#include <pivot/ecs/Core/Component/SynchronizedComponentArray.hxx>
 #include <pivot/ecs/Core/Component/array.hxx>
 #include <pivot/ecs/Core/Component/description_helpers.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
@@ -38,8 +38,12 @@ TEST_CASE("RenderObject component works", "[graphics][component]")
     REQUIRE_NOTHROW(array->setValueForEntity(0, json::parse(data).get<Value>()));
 
     const pivot::graphics::RenderObject expected{"sponza", "default", "blue"};
-    const pivot::graphics::RenderObject &renderObject =
-        dynamic_cast<DenseTypedComponentArray<pivot::graphics::RenderObject> &>(*array).getData().front();
+
+    const auto &render_object_array =
+        dynamic_cast<SynchronizedTypedComponentArray<pivot::graphics::RenderObject> &>(*array);
+    auto render_object_array_lock = render_object_array.lock();
+
+    const pivot::graphics::RenderObject &renderObject = render_object_array.getData().front();
     REQUIRE(renderObject == expected);
 
     REQUIRE(description.defaultValue ==

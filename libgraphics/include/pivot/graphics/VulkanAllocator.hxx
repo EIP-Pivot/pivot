@@ -8,7 +8,7 @@
 
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 #include "pivot/graphics/types/AllocatedImage.hxx"
-#include "pivot/graphics/types/common.hxx"
+
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
@@ -56,6 +56,7 @@ public:
         AllocatedBuffer<T> buffer{
             .size = size,
             .flags = flags,
+            .name = debug_name,
         };
         vk::BufferCreateInfo bufferInfo{
             .size = buffer.getBytesSize(),

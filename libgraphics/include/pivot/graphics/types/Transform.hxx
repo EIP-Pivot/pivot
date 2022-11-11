@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <pivot/debug.hxx>
 #include <stdexcept>
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -19,7 +20,7 @@ class Transform
 {
 public:
     /// Get the model matrix
-    glm::mat4 getModelMatrix() const noexcept { return recomposeMatrix(*this); }
+    FORCEINLINE glm::mat4 getModelMatrix() const noexcept { return recomposeMatrix(*this); }
 
     /// Default equality operator
     bool operator==(const Transform &) const = default;
@@ -40,7 +41,7 @@ public:
     static Transform from_matrix(const glm::mat4 mat);
 
 private:
-    static glm::mat4 recomposeMatrix(const Transform &tran)
+    FORCEINLINE static glm::mat4 recomposeMatrix(const Transform &tran)
     {
         return glm::translate(glm::mat4(1.0f), tran.position) * glm::toMat4(glm::quat(tran.rotation)) *
                glm::scale(glm::mat4(1.0f), tran.scale);

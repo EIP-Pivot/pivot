@@ -39,7 +39,7 @@ TEST_CASE("Tag array works", "[component][ecs]")
 
     REQUIRE_NOTHROW(array.setValueForEntity(0, name1));
     REQUIRE_NOTHROW(array.setValueForEntity(1, name2));
-    REQUIRE_THROWS_AS(array.setValueForEntity(2, name1), TagArray::DuplicateEntityTag);
+    REQUIRE_THROWS_AS(array.setValueForEntity(2, name1), UniqueComponentArray<Tag>::DuplicateComponent);
     REQUIRE_NOTHROW(array.setValueForEntity(0, std::nullopt));
     REQUIRE_NOTHROW(array.setValueForEntity(2, name1));
 

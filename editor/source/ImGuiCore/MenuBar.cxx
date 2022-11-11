@@ -1,9 +1,12 @@
 #include "ImGuiCore/MenuBar.hxx"
 
+#include "pivot/utility/benchmark.hxx"
+
 #include <imgui.h>
 
 MenuBar::MenuBar(const pivot::ecs::SceneManager &sceneManager, pivot::Engine &engine)
 {
+    PROFILE_FUNCTION();
     fileSubMenu = std::unordered_map<std::string, std::vector<FileInteraction>>{
         {
             "File",
@@ -63,6 +66,7 @@ MenuBar::MenuBar(const pivot::ecs::SceneManager &sceneManager, pivot::Engine &en
 
 bool MenuBar::render()
 {
+    PROFILE_FUNCTION();
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{10.0f, 10.0f});
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5.0f, 5.0f));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
@@ -89,6 +93,21 @@ bool MenuBar::render()
             if (ImGui::MenuItem("Color Window", "", displayColors)) { displayColors = !displayColors; }
             ImGui::EndMenu();
         }
+
+#if !defined(NO_BENCHMARK)
+        if (ImGui::BeginMenu("Tracing")) {
+            if (!pivot::benchmark::Instrumentor::get().isSessionStarted()) {
+                if (ImGui::MenuItem("Start Tracing")) {
+                    pivot::benchmark::Instrumentor::get().beginSession("Pivot_Runtime.json");
+                }
+            } else {
+                if (ImGui::MenuItem("End Tracing")) { pivot::benchmark::Instrumentor::get().endSession(); }
+            }
+            if (ImGui::MenuItem("Capture One Frame")) { captureNextFrame = true; }
+            ImGui::EndMenu();
+        }
+#endif
+
         ImGui::EndMainMenuBar();
     }
 
@@ -100,6 +119,7 @@ bool MenuBar::render()
 
 MenuBar::FileResult MenuBar::FileInteraction::open() const
 {
+    PROFILE_FUNCTION();
     NFD::Guard nfd_guard;
     NFD::UniquePath path;
     nfdresult_t result = nfdresult_t::NFD_ERROR;

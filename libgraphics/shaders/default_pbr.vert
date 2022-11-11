@@ -19,7 +19,7 @@ struct UniformBufferObject {
     uint boundingBoxIndex;
 };
 
-layout(std140, set = 1, binding = 0) readonly buffer ObjectBuffer
+layout(std140, set = 0, binding = 1) readonly buffer ObjectBuffer
 {
     UniformBufferObject objects[];
 }

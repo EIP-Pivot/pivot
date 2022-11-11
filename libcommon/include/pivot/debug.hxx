@@ -1,7 +1,5 @@
 #pragma once
 
-#include <signal.h>
-
 #if defined(__clang__)
     #define COMPILER_CLANG
 #elif defined(__GNUC__)

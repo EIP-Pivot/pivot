@@ -1,7 +1,10 @@
 #include "ImGuiCore/ImGuiTheme.hxx"
 
+#include "pivot/pivot.hxx"
+
 ImGuiTheme::ImGuiTheme()
 {
+    PROFILE_FUNCTION();
     colors.insert({"Dark", ImVec4(0.00396481, 0.00396481, 0.00490195, 1.00f)});
     colors.insert({"Gray", ImVec4(0.0166282, 0.0166282, 0.0196078, 1.00f)});
     colors.insert({"FrameBg", ImVec4(0.064927, 0.0669828, 0.0686275, 1.00f)});
@@ -18,10 +21,15 @@ ImGuiTheme::ImGuiTheme()
     colors.insert({"HeaderActive", ImVec4(0.129412, 0.129412, 0.129412, 1.00f)});
 }
 
-void ImGuiTheme::setStyle() { setColorsStyle(); }
+void ImGuiTheme::setStyle()
+{
+    PROFILE_FUNCTION();
+    setColorsStyle();
+}
 
 void ImGuiTheme::setColorsStyle()
 {
+    PROFILE_FUNCTION();
     ImGui::GetStyle().FrameRounding = 4.0f;
     ImGui::GetStyle().GrabRounding = 4.0f;
     ImGui::GetStyle().TabRounding = 5.0f;

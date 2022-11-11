@@ -46,7 +46,7 @@ public:
         // Add new tag to tag set
         if (value.has_value()) {
             std::optional<T> new_value = this->getEntity(entity);
-            m_unique_hash.insert(std::hash<T>()(new_value.value()));
+            m_unique_hash.insert({std::hash<T>()(new_value.value()), entity});
         }
     }
 
@@ -59,7 +59,7 @@ public:
     };
 
 private:
-    std::set<std::size_t> m_unique_hash;
+    std::map<std::size_t, Entity> m_unique_hash;
 };
 
 }    // namespace pivot::ecs::component

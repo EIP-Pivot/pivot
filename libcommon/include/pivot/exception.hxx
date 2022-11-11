@@ -32,12 +32,15 @@ class RuntimeError : public PivotException
 
 }    // namespace pivot
 
-#define PIVOT_ERROR(kind, name)                                          \
-    struct name##Error : public ::pivot::kind {                          \
-        using kind::kind;                                                \
-        std::string getScope() const noexcept override { return #name; } \
-    };                                                                   \
-    static_assert(std::is_nothrow_copy_constructible_v<name##Error>);    \
+#define PIVOT_ERROR(kind, name)                                       \
+    struct name##Error : public ::pivot::kind {                       \
+        using kind::kind;                                             \
+        std::string getScope() const noexcept override                \
+        {                                                             \
+            return #name;                                             \
+        }                                                             \
+    };                                                                \
+    static_assert(std::is_nothrow_copy_constructible_v<name##Error>); \
     static_assert(std::is_nothrow_copy_assignable_v<name##Error>);
 
 #define RUNTIME_ERROR(name) PIVOT_ERROR(RuntimeError, name)

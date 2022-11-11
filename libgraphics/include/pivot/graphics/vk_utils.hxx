@@ -14,11 +14,10 @@ namespace pivot::graphics::vk_utils
 {
 
 template <typename T>
-concept wrappedVulkanType = requires
-{
-    typename T::CType;
-    requires requires(T a) { a.objectType; };
-};
+concept wrappedVulkanType = requires {
+                                typename T::CType;
+                                requires requires(T a) { a.objectType; };
+                            };
 
 /// Test if a vk::Result is considered as a success.
 constexpr void vk_try(vk::Result err)
@@ -31,8 +30,8 @@ constexpr void vk_try(VkResult res) { vk_try(vk::Result(res)); }
 
 /// Read a whole file into a vector of byte.
 template <typename T = std::byte>
-requires std::is_trivial_v<T> && std::is_standard_layout_v<T> std::vector<T>
-readBinaryFile(const std::filesystem::path &filename)
+requires std::is_trivial_v<T> && std::is_standard_layout_v<T>
+std::vector<T> readBinaryFile(const std::filesystem::path &filename)
 {
     assert(!std::filesystem::is_symlink(filename));
     size_t fileSize = std::filesystem::file_size(filename);

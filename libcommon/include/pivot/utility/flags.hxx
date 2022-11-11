@@ -88,17 +88,26 @@ constexpr bool enable_flag_for_enum = false;
 template <typename T>
 /// bitwise AND operator
 requires enable_flag_for_enum<T>
-constexpr Flags<T> operator&(const T &rhs, const T &lhs) noexcept { return Flags<T>(rhs) & lhs; }
+constexpr Flags<T> operator&(const T &rhs, const T &lhs) noexcept
+{
+    return Flags<T>(rhs) & lhs;
+}
 
 template <typename T>
 /// bitwise OR operator
 requires enable_flag_for_enum<T>
-constexpr Flags<T> operator|(const T &rhs, const T &lhs) noexcept { return Flags<T>(rhs) | lhs; }
+constexpr Flags<T> operator|(const T &rhs, const T &lhs) noexcept
+{
+    return Flags<T>(rhs) | lhs;
+}
 
 template <typename T>
 /// bitwise XOR operator
 requires enable_flag_for_enum<T>
-constexpr Flags<T> operator^(const T &rhs, const T &lhs) noexcept { return Flags<T>(rhs) ^ lhs; }
+constexpr Flags<T> operator^(const T &rhs, const T &lhs) noexcept
+{
+    return Flags<T>(rhs) ^ lhs;
+}
 
 }    // namespace pivot
 

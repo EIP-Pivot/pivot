@@ -34,7 +34,8 @@ public:
 
     template <typename T>
     /// Return a specific Resolver
-    requires std::is_base_of_v<IResolver, T> T &get()
+    requires std::is_base_of_v<IResolver, T>
+    T &get()
     {
         const std::type_index info(typeid(T));
         auto item = resolverTypes.find(info);

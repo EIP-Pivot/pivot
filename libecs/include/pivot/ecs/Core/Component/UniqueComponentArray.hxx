@@ -35,7 +35,7 @@ public:
         // Check component did not exist
         if (value.has_value()) {
             std::optional<T> new_value = this->getEntity(entity);
-            if (m_unique_hash.contains(std::hash<T>()(new_value.value()))) {
+            if (new_value != old_value && m_unique_hash.contains(std::hash<T>()(new_value.value()))) {
                 this->setEntity(entity, old_value);
                 throw DuplicateComponent("TODO");
             }

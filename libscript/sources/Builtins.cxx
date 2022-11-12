@@ -9,6 +9,13 @@
 namespace pivot::ecs::script::interpreter::builtins
 {
 
+data::Value builtin_selectCamera(const std::vector<data::Value> &params, const BuiltinContext &context)
+{
+    EntityRef entity = std::get<EntityRef>(params.at(0));
+    if (!entity.is_empty()) { context.selectCamera(std::make_optional(entity.ref)); }
+    return {data::Void{}};
+}
+
 data::Value builtin_isPressed(const std::vector<data::Value> &params, const BuiltinContext &context)
 {
     return context.isKeyPressed(std::get<std::string>(params.at(0)));

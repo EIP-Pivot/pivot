@@ -45,6 +45,7 @@ using ParameterPair = std::pair<size_t, std::vector<std::vector<data::Type>>>;
 /// This map will map the name of a builtin, to its callback paired with its signature
 const std::unordered_map<std::string, std::pair<BuiltinFunctionCallback, ParameterPair>> gBuiltinsCallbacks = {
     {"isPressed", {interpreter::builtins::builtin_isPressed, {1, {{data::BasicType::String}}}}},
+    {"selectCamera", {interpreter::builtins::builtin_selectCamera, {1, {{data::BasicType::EntityRef}}}}},
     {"cos", {interpreter::builtins::builtin_cos, {1, {{data::BasicType::Number}}}}},
     {"sin", {interpreter::builtins::builtin_sin, {1, {{data::BasicType::Number}}}}},
     {"print",
@@ -128,10 +129,10 @@ void Interpreter::executeSystem(const Node &systemEntry, const systems::Descript
     logger.trace() << "Executing block " << systemEntry.value;
     auto entityComponents = entityComponentCombination.getAllComponents();
     // Push input entity to stack
-    stack.pushEntity(desc.entityName, entityComponents);
+    stack.pushEntity(desc.entityName, entityComponentCombination.entity, entityComponents);
     // Push event entities to the stack
     for (std::size_t i = 0; i < desc.eventListener.entities.size(); i++) {
-        stack.pushEntity(desc.eventListener.entities[i], trigger.components[i]);
+        stack.pushEntity(desc.eventListener.entities[i], trigger.event.entities[i], trigger.components[i]);
     }
     // Push payload to stack
     if (!trigger.event.description.payloadName.empty()) {

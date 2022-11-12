@@ -83,7 +83,7 @@ public:
     T parseValue(data::Value value)
     {
         auto value_type = value.type();
-        if (value_type != m_description.type) {
+        if (!value_type.isSubsetOf(m_description.type)) {
             throw InvalidComponentValue(m_description.name, m_description.type, value_type);
         }
 

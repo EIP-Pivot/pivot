@@ -30,13 +30,20 @@ TEST_CASE("Correct description for tag component", "[component][tag]")
     REQUIRE_NOTHROW(Helpers<Tag>::updateTypeWithValue(tag, Value{Record{}}));
 }
 
-TEST_CASE("Get entity by tag", "[component][tag]")
+TEST_CASE("Tag array works", "[component][ecs]")
 {
     TagArray array(Tag::description);
-    array.setValueForEntity(0, Value{Record{{"name", "alice"}}});
-    array.setValueForEntity(1, Value{Record{{"name", "bob"}}});
 
-    REQUIRE(array.getEntityID("alice").value() == 0);
-    REQUIRE(array.getEntityID("bob").value() == 1);
-    REQUIRE_FALSE(array.getEntityID("camille").has_value());
+    auto name1 = Value{Record{{"name", "name"}}};
+    auto name2 = Value{Record{{"name", "other name"}}};
+
+    REQUIRE_NOTHROW(array.setValueForEntity(0, name1));
+    REQUIRE_NOTHROW(array.setValueForEntity(1, name2));
+    REQUIRE_THROWS_AS(array.setValueForEntity(2, name1), UniqueComponentArray<Tag>::DuplicateComponent);
+    REQUIRE_NOTHROW(array.setValueForEntity(0, std::nullopt));
+    REQUIRE_NOTHROW(array.setValueForEntity(2, name1));
+
+    REQUIRE(array.getEntityID("name") == 2);
+    REQUIRE(array.getEntityID("other name") == 1);
+    REQUIRE(array.getEntityID("no one") == std::nullopt);
 }

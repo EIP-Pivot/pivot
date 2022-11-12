@@ -79,6 +79,22 @@ public:
     /// Returns the vector containing the component data
     const std::vector<T> &getComponents() const { return this->m_components; }
 
+    /// Parse a pivot value into the type stored in the array
+    T parseValue(data::Value value)
+    {
+        auto value_type = value.type();
+        if (value_type != m_description.type) {
+            throw InvalidComponentValue(m_description.name, m_description.type, value_type);
+        }
+
+        T parsed;
+        helpers::Helpers<T>::updateTypeWithValue(parsed, value);
+        return parsed;
+    }
+
+    /// Converts a C++ value to a pivot value
+    data::Value unparseValue(const T &value) { return helpers::Helpers<T>::createValueFromType(value); }
+
     /// Returns the value of the component if it exist for this entity
     std::optional<T> getEntity(Entity entity) const
     {

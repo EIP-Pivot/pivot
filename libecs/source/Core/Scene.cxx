@@ -2,6 +2,7 @@
 
 #include "pivot/ecs/Core/Scene.hxx"
 #include <pivot/ecs/Components/Tag.hxx>
+#include <pivot/ecs/Components/TagArray.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
 
 using namespace pivot::ecs;
@@ -170,4 +171,10 @@ void Scene::registerSystem(const systems::Description &description, pivot::Optio
         }
     }
     mSystemManager.useSystem(description);
+}
+
+std::optional<Entity> Scene::getEntityID(const std::string &name)
+{
+    auto array = dynamic_cast<const component::TagArray &>(mComponentManager.GetComponentArray(mTagId));
+    return array.getEntityID(name);
 }

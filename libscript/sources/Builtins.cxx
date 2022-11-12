@@ -45,6 +45,8 @@ data::Value builtin_print_stream(const std::vector<data::Value> &params, std::os
                     stream << "Asset(" << value.name << ")";
                 } else if constexpr (std::is_same_v<type, glm::vec3>) {
                     stream << "vec3(" << value.x << "," << value.y << "," << value.z << ")";
+                } else if constexpr (std::is_same_v<type, pivot::EntityRef>) {
+                    stream << "EntityRef(" << (value.is_empty() ? "EMPTY" : std::to_string(value.ref).c_str()) << ")";
                 } else {
                     throw std::runtime_error("Code branch shouldn't execute.");
                 }

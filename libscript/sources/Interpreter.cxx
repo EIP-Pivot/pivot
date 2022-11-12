@@ -52,7 +52,7 @@ const std::unordered_map<std::string, std::pair<BuiltinFunctionCallback, Paramet
      {interpreter::builtins::builtin_print,
       {std::numeric_limits<size_t>::max(),
        {{data::BasicType::String, data::BasicType::Number, data::BasicType::Integer, data::BasicType::Boolean,
-         data::BasicType::Asset, data::BasicType::Vec3}}}}},
+         data::BasicType::Asset, data::BasicType::Vec3, data::BasicType::EntityRef}}}}},
     {"randint", {interpreter::builtins::builtin_randint, {1, {{data::BasicType::Number}}}}},
     {"pow", {interpreter::builtins::builtin_power, {2, {{data::BasicType::Number}, {data::BasicType::Number}}}}},
     {"sqrt", {interpreter::builtins::builtin_sqrt, {1, {{data::BasicType::Number}}}}},

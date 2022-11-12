@@ -66,9 +66,11 @@ static std::filesystem::path getAssetFilePass()
 namespace pivot
 {
 Engine::Engine()
-    : m_scripting_engine(
-          m_system_index, m_component_index,
-          pivot::ecs::script::interpreter::builtins::BuiltinContext{std::bind_front(&Engine::isKeyPressed, this)}),
+    : m_scripting_engine(m_system_index, m_component_index,
+                         pivot::ecs::script::interpreter::builtins::BuiltinContext{
+                             .isKeyPressed = std::bind_front(&Engine::isKeyPressed, this),
+                             .selectCamera = std::bind_front(&Engine::setCurrentCamera, this),
+                         }),
       m_default_camera_data(),
       m_default_camera_transform{.position = glm::vec3(0, 5, 0)},
       m_default_camera{m_default_camera_data, m_default_camera_transform}

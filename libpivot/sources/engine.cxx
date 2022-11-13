@@ -29,7 +29,6 @@
 #include <pivot/builtins/components/Camera.hxx>
 #include <pivot/builtins/components/Collidable.hxx>
 #include <pivot/builtins/components/RenderObject.hxx>
-#include <pivot/builtins/components/Transform.hxx>
 
 #include <pivot/builtins/components/Light.hxx>
 #include <pivot/builtins/components/Text.hxx>
@@ -67,9 +66,11 @@ static std::filesystem::path getAssetFilePass()
 namespace pivot
 {
 Engine::Engine()
-    : m_scripting_engine(
-          m_system_index, m_component_index,
-          pivot::ecs::script::interpreter::builtins::BuiltinContext{std::bind_front(&Engine::isKeyPressed, this)}),
+    : m_scripting_engine(m_system_index, m_component_index,
+                         pivot::ecs::script::interpreter::builtins::BuiltinContext{
+                             .isKeyPressed = std::bind_front(&Engine::isKeyPressed, this),
+                             .selectCamera = std::bind_front(&Engine::setCurrentCamera, this),
+                         }),
       m_default_camera_data(),
       m_default_camera_transform{.position = glm::vec3(0, 5, 0)},
       m_default_camera{m_default_camera_data, m_default_camera_transform}
@@ -78,10 +79,10 @@ Engine::Engine()
     Platform::setThreadName(logger.getThreadHandle(), "Logger Thread");
     m_asset_directory = getAssetFilePass();
 
+    m_component_index.registerComponent(graphics::Transform::description);
     m_component_index.registerComponent(builtins::components::Gravity::description);
     m_component_index.registerComponent(builtins::components::RigidBody::description);
     m_component_index.registerComponent(builtins::components::RenderObject::description);
-    m_component_index.registerComponent(builtins::components::Transform::description);
     m_component_index.registerComponent(builtins::components::PointLight::description);
     m_component_index.registerComponent(builtins::components::DirectionalLight::description);
     m_component_index.registerComponent(builtins::components::SpotLight::description);
@@ -173,7 +174,7 @@ namespace
         using namespace pivot::builtins::components;
 
         auto renderobject_id = cm.GetComponentId(RenderObject::description.name);
-        auto transform_id = cm.GetComponentId(Transform::description.name);
+        auto transform_id = cm.GetComponentId(graphics::Transform::description.name);
         auto pointlight_id = cm.GetComponentId(PointLight::description.name);
         auto directional_id = cm.GetComponentId(DirectionalLight::description.name);
         auto spotlight_id = cm.GetComponentId(SpotLight::description.name);
@@ -187,8 +188,8 @@ namespace
                     cm.GetComponentArray(*directional_id)),
                 .spotLight =
                     dynamic_cast<const Array<pivot::graphics::SpotLight> &>(cm.GetComponentArray(*spotlight_id)),
-                .transform =
-                    dynamic_cast<const Array<pivot::graphics::Transform> &>(cm.GetComponentArray(*transform_id)),
+                .transform = dynamic_cast<const pivot::graphics::SynchronizedTransformArray &>(
+                    cm.GetComponentArray(*transform_id)),
             });
         } else {
             draw_info = std::nullopt;
@@ -205,9 +206,9 @@ void Engine::changeCurrentScene(ecs::SceneManager::SceneId sceneId)
     getDrawCommand(cm, m_current_scene_draw_command);
     auto camera_id = cm.GetComponentId(builtins::components::Camera::description.name);
     m_camera_array = dynamic_cast<internals::CameraArray &>(cm.GetComponentArray(*camera_id));
-    auto transform_id = cm.GetComponentId(builtins::components::Transform::description.name);
-    m_transform_array = dynamic_cast<ecs::component::SynchronizedTypedComponentArray<graphics::Transform> &>(
-        cm.GetComponentArray(*transform_id));
+    auto transform_id = cm.GetComponentId(graphics::Transform::description.name);
+    m_transform_array =
+        dynamic_cast<pivot::graphics::SynchronizedTransformArray &>(cm.GetComponentArray(*transform_id));
 }
 
 namespace
@@ -219,8 +220,8 @@ namespace
         if (!cm.GetComponentId(builtins::components::RenderObject::description.name).has_value()) {
             cm.RegisterComponent(builtins::components::RenderObject::description);
         }
-        if (!cm.GetComponentId(builtins::components::Transform::description.name).has_value()) {
-            cm.RegisterComponent(builtins::components::Transform::description);
+        if (!cm.GetComponentId(graphics::Transform::description.name).has_value()) {
+            cm.RegisterComponent(graphics::Transform::description);
         }
         if (!cm.GetComponentId(builtins::components::PointLight::description.name).has_value()) {
             cm.RegisterComponent(builtins::components::PointLight::description);

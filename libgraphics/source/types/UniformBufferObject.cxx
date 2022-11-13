@@ -7,8 +7,13 @@ namespace pivot::graphics::gpu_object
 
 UniformBufferObject::UniformBufferObject(const Transform &transform, const RenderObject &obj,
                                          const AssetStorage &assetStorage)
-    : modelMatrix(transform.getModelMatrix())
+    : UniformBufferObject(transform.getModelMatrix(), obj, assetStorage)
+{
+}
 
+UniformBufferObject::UniformBufferObject(const glm::mat4 &modelMatrix, const RenderObject &obj,
+                                         const AssetStorage &assetStorage)
+    : modelMatrix(modelMatrix)
 {
     PROFILE_FUNCTION();
     const auto &model = assetStorage.get<asset::Model>(obj.meshID);

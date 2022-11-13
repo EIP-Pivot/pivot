@@ -1,6 +1,7 @@
 #include "ImGuiCore/ComponentEditor.hxx"
+#include "ImGuiCore/CustomWidget.hxx"
 #include "ImGuiCore/ImGuiTheme.hxx"
-#include "ImGuiCore/TypeTemplate/Template.hxx"
+#include "ImGuiCore/ValueInput.hxx"
 #include <magic_enum.hpp>
 
 #include <imgui.h>
@@ -62,7 +63,7 @@ void ComponentEditor::displayComponent()
             ImGui::TreePop();
             Value value = ref;
             ImGui::PushID(ref.description().name.c_str());
-            draw(value, "oui");
+            m_value_input.drawInput(value, "oui");
             ImGui::PopID();
             ref = value;
             this->selectCamera(ref);

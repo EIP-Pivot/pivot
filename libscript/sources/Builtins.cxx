@@ -9,6 +9,13 @@
 namespace pivot::ecs::script::interpreter::builtins
 {
 
+data::Value builtin_selectCamera(const std::vector<data::Value> &params, const BuiltinContext &context)
+{
+    EntityRef entity = std::get<EntityRef>(params.at(0));
+    if (!entity.is_empty()) { context.selectCamera(std::make_optional(entity.ref)); }
+    return {data::Void{}};
+}
+
 data::Value builtin_isPressed(const std::vector<data::Value> &params, const BuiltinContext &context)
 {
     return context.isKeyPressed(std::get<std::string>(params.at(0)));
@@ -38,6 +45,8 @@ data::Value builtin_print_stream(const std::vector<data::Value> &params, std::os
                     stream << "Asset(" << value.name << ")";
                 } else if constexpr (std::is_same_v<type, glm::vec3>) {
                     stream << "vec3(" << value.x << "," << value.y << "," << value.z << ")";
+                } else if constexpr (std::is_same_v<type, pivot::EntityRef>) {
+                    stream << "EntityRef(" << (value.is_empty() ? "EMPTY" : std::to_string(value.ref).c_str()) << ")";
                 } else {
                     throw std::runtime_error("Code branch shouldn't execute.");
                 }

@@ -25,7 +25,7 @@ public:
     /// Add a variable to the stack, name is pure (no '.')
     void push(const std::string &name, const data::Value &var);
     /// Add an entity and all its components to the stack
-    void pushEntity(const std::string &entityName, std::span<const component::ComponentRef>);
+    void pushEntity(const std::string &entityName, Entity entityId, std::span<const component::ComponentRef>);
     /// Update an entity components from its value on the stack
     void updateEntity(const std::string &entityName, std::span<component::ComponentRef>);
     /// Find a variable in the stack (read-only), name can contain access ('.')

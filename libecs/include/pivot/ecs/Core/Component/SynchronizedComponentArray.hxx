@@ -12,7 +12,7 @@ namespace pivot::ecs::component
  *
  * This child class of the DenseTypedComponentArray allow the array to be safely shared between thread.
  */
-template <typename T, typename Mutex = std::mutex>
+template <typename T, typename Mutex = std::mutex, typename Array = DenseTypedComponentArray<T>>
 class SynchronizedTypedComponentArray : public IComponentArray
 {
 public:
@@ -93,7 +93,7 @@ public:
     }
 
 private:
-    DenseTypedComponentArray<T> internalComponentArray;
+    Array internalComponentArray;
     mutable Mutex accessMutex;
 };
 }    // namespace pivot::ecs::component

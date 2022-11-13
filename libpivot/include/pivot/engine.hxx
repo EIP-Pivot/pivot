@@ -8,6 +8,7 @@
 
 #include <pivot/graphics/VulkanApplication.hxx>
 #include <pivot/graphics/types/AllocatedImage.hxx>
+#include <pivot/graphics/types/TransformArray.hxx>
 
 #include <pivot/script/Engine.hxx>
 
@@ -67,7 +68,7 @@ private:
     ecs::SceneManager m_scene_manager;
     std::optional<graphics::DrawSceneInformation> m_current_scene_draw_command;
     pivot::OptionalRef<internals::CameraArray> m_camera_array;
-    pivot::OptionalRef<ecs::component::SynchronizedTypedComponentArray<graphics::Transform>> m_transform_array;
+    pivot::OptionalRef<pivot::graphics::SynchronizedTransformArray> m_transform_array;
     builtins::components::Camera m_default_camera_data;
     graphics::Transform m_default_camera_transform;
 

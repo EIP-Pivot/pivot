@@ -13,6 +13,9 @@ struct Tag {
     /// Name of an entity
     std::string name;
 
+    /// Default comparison
+    auto operator<=>(const Tag &rhs) const = default;
+
     /// Component description
     static const pivot::ecs::component::Description description;
 };

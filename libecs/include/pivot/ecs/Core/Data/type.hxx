@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <map>
 #include <optional>
@@ -8,7 +9,9 @@
 #include <variant>
 
 #include <pivot/ecs/Core/Data/asset.hxx>
+#include <pivot/ecs/Core/Data/color.hxx>
 #include <pivot/ecs/Core/Data/void.hxx>
+#include <pivot/utility/entity.hxx>
 
 namespace pivot::ecs::data
 {
@@ -30,11 +33,20 @@ enum class BasicType {
     /// The property is of type glm::vec3
     Vec3,
 
+    /// The property is of type glm::vec2
+    Vec2,
+
     /// The property is of type Asset
     Asset,
 
     /// The property has no value
     Void,
+
+    /// The property is a reference to another entity
+    EntityRef,
+
+    /// The property is of type Color
+    Color,
 };
 
 struct Type;
@@ -52,6 +64,13 @@ struct Type : public std::variant<BasicType, RecordType> {
 
     /// Creates a default value corresponding to this type
     data::Value defaultValue() const;
+
+    /// \brief Check that this type is a subset of another type
+    ///
+    /// A type A is a subset of type B, iff every property of A is present in B,
+    /// and the type each property in A is a subset of the corresponding
+    /// property in B
+    bool isSubsetOf(const Type &other) const;
 };
 
 std::ostream &operator<<(std::ostream &stream, const BasicType &type);
@@ -72,9 +91,15 @@ constexpr std::optional<BasicType> basic_type_representation<bool> = BasicType::
 template <>
 constexpr std::optional<BasicType> basic_type_representation<glm::vec3> = BasicType::Vec3;
 template <>
+constexpr std::optional<BasicType> basic_type_representation<glm::vec2> = BasicType::Vec2;
+template <>
 constexpr std::optional<BasicType> basic_type_representation<Asset> = BasicType::Asset;
 template <>
+constexpr std::optional<BasicType> basic_type_representation<Color> = BasicType::Color;
+template <>
 constexpr std::optional<BasicType> basic_type_representation<Void> = BasicType::Void;
+template <>
+constexpr std::optional<BasicType> basic_type_representation<EntityRef> = BasicType::EntityRef;
 
 }    // namespace pivot::ecs::data
 

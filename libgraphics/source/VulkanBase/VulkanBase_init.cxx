@@ -17,7 +17,7 @@ namespace pivot::graphics
 void VulkanBase::createInstance(const std::vector<const char *> &instanceExtensions,
                                 const std::vector<const char *> &validationLayers)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     auto debugInfo = vk_init::populateDebugUtilsMessengerCreateInfoEXT(&VulkanBase::debugCallback);
     auto extensions = Window::getRequiredExtensions();
     std::copy(instanceExtensions.begin(), instanceExtensions.end(), std::back_inserter(extensions));
@@ -44,7 +44,7 @@ void VulkanBase::createInstance(const std::vector<const char *> &instanceExtensi
 
 void VulkanBase::createDebugMessenger()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     if (!bEnableValidationLayers) return;
     auto debugInfo = vk_init::populateDebugUtilsMessengerCreateInfoEXT(&VulkanBase::debugCallback);
     debugUtilsMessenger = instance.createDebugUtilsMessengerEXT(debugInfo);
@@ -55,14 +55,14 @@ void VulkanBase::createDebugMessenger()
 
 void VulkanBase::createSurface()
 {
-    DEBUG_FUNCTION
-    surface = window.createSurface(instance);
+    DEBUG_FUNCTION();
+    surface = window_ref->get().createSurface(instance);
     baseDeletionQueue.push([&] { instance.destroy(surface); });
 }
 
 void VulkanBase::selectPhysicalDevice(const std::vector<const char *> &deviceExtensions)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     std::vector<vk::PhysicalDevice> gpus = instance.enumeratePhysicalDevices();
     std::multimap<std::uint32_t, vk::PhysicalDevice> ratedGpus;
 
@@ -113,8 +113,8 @@ void VulkanBase::selectPhysicalDevice(const std::vector<const char *> &deviceExt
 
 void VulkanBase::createLogicalDevice(const std::vector<const char *> &deviceExtensions)
 {
-    DEBUG_FUNCTION
-    float fQueuePriority = 1.0f;
+    DEBUG_FUNCTION();
+    static const float fQueuePriority = 1.0f;
     queueIndices = QueueFamilyIndices::findQueueFamilies(physical_device, surface);
     std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
     auto [flag, uniqueQueueFamilies] = queueIndices.getUniqueQueues();
@@ -153,7 +153,7 @@ void VulkanBase::createLogicalDevice(const std::vector<const char *> &deviceExte
 
 void VulkanBase::createAllocator()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     vma::AllocatorCreateInfo allocatorInfo;
     allocatorInfo.physicalDevice = physical_device;
     allocatorInfo.device = device;

@@ -21,12 +21,27 @@ void to_json(nlohmann::json &json, const Asset &value);
 /// Deserialize an Asset from json
 void from_json(const nlohmann::json &json, Asset &value);
 
+/// Serialize an Color to json
+void to_json(nlohmann::json &json, const Color &value);
+
+/// Deserialize an Color from json
+void from_json(const nlohmann::json &json, Color &value);
+
 /// Serialize Void to json
 void to_json(nlohmann::json &json, const Void &value);
 
 /// Deserialize Void from json
 void from_json(const nlohmann::json &json, Void &value);
 }    // namespace pivot::ecs::data
+
+namespace pivot
+{
+/// Serialize EntityRef to json
+void to_json(nlohmann::json &json, const EntityRef &value);
+
+/// Deserialize EntityRef from json
+void from_json(const nlohmann::json &json, EntityRef &value);
+}    // namespace pivot
 
 namespace nlohmann
 {
@@ -37,5 +52,14 @@ struct adl_serializer<glm::vec3> {
     static void to_json(json &j, const glm::vec3 &opt);
     /// Specialization to allow serializing and deserializing glm::vec3
     static void from_json(const json &j, glm::vec3 &opt);
+};
+
+template <>
+/// Specialization to allow serializing and deserializing glm::vec2
+struct adl_serializer<glm::vec2> {
+    /// Specialization to allow serializing and deserializing glm::vec2
+    static void to_json(json &j, const glm::vec2 &opt);
+    /// Specialization to allow serializing and deserializing glm::vec2
+    static void from_json(const json &j, glm::vec2 &opt);
 };
 }    // namespace nlohmann

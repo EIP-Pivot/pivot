@@ -32,19 +32,19 @@ layout(location = 4) in flat uint materialIndex;
 
 layout(location = 0) out vec4 outColor;
 
-layout(std140, set = 0, binding = 1) readonly buffer ObjectMaterials
+layout(std140, set = 2, binding = 1) readonly buffer ObjectMaterials
 {
     Material materials[];
 }
 objectMaterials;
+
+layout(set = 2, binding = 2) uniform sampler2D texSampler[NUMBER_OF_TEXTURES];
 
 layout(push_constant) uniform readonly constants
 {
     layout(offset = 64) pushConstantStruct push;
 }
 cameraData;
-
-layout(set = 0, binding = 2) uniform sampler2D texSampler[NUMBER_OF_TEXTURES];
 
 void main()
 {

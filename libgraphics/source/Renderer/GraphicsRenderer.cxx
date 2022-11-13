@@ -3,51 +3,54 @@
 #include "pivot/graphics/PipelineBuilders/GraphicsPipelineBuilder.hxx"
 #include "pivot/graphics/vk_debug.hxx"
 
+#include "pivot/graphics/Resolver/DrawCallResolver.hxx"
+#include "pivot/graphics/Resolver/LightDataResolver.hxx"
+
 namespace pivot::graphics
 {
 
 GraphicsRenderer::GraphicsRenderer(StorageUtils &utils): IGraphicsRenderer(utils) {}
 GraphicsRenderer::~GraphicsRenderer() {}
 
-bool GraphicsRenderer::onInit(const vk::Extent2D &, VulkanBase &base_ref, const vk::DescriptorSetLayout &resolverLayout,
+bool GraphicsRenderer::onInit(const vk::Extent2D &, VulkanBase &base_ref, const ResolverDispatcher &dispatcher,
                               vk::RenderPass &pass)
 {
-    DEBUG_FUNCTION;
+    DEBUG_FUNCTION();
+
     bIsMultiDraw = base_ref.deviceFeature.multiDrawIndirect;
 
-    createPipelineLayout(base_ref.device, resolverLayout);
+    createPipelineLayout(base_ref.device, dispatcher);
     createPipeline(base_ref, pass);
     return true;
 }
 
 void GraphicsRenderer::onStop(VulkanBase &base_ref)
 {
-    DEBUG_FUNCTION;
-    if (pipelineLayout) base_ref.device.destroyPipelineLayout(pipelineLayout);
-}
+    DEBUG_FUNCTION();
 
-bool GraphicsRenderer::onRecreate(const vk::Extent2D &size, VulkanBase &base_ref,
-                                  const vk::DescriptorSetLayout &resolverLayout, vk::RenderPass &pass)
-{
-    onStop(base_ref);
     storage.pipeline.get().removePipeline("pbr");
     storage.pipeline.get().removePipeline("lit");
     storage.pipeline.get().removePipeline("unlit");
     storage.pipeline.get().removePipeline("wireframe");
     storage.pipeline.get().removePipeline("skybox");
-    return onInit(size, base_ref, resolverLayout, pass);
+    if (pipelineLayout) base_ref.device.destroyPipelineLayout(pipelineLayout);
 }
 
-bool GraphicsRenderer::onDraw(const RenderingContext &context, const CameraData &cameraData, DrawCallResolver &resolver,
-                              vk::CommandBuffer &cmd)
+bool GraphicsRenderer::onDraw(const RenderingContext &context, const CameraData &cameraData,
+                              ResolverDispatcher &dispatcher, vk::CommandBuffer &cmd)
 {
+    PROFILE_FUNCTION();
+
+    const LightDataResolver &light = dispatcher.get<LightDataResolver>();
+    const DrawCallResolver &resolver = dispatcher.get<DrawCallResolver>();
+
     const gpu_object::VertexPushConstant vertexCamere{
         .viewProjection = cameraData.viewProjection,
     };
     const gpu_object::FragmentPushConstant fragmentCamera{
-        .omniLightCount = static_cast<uint32_t>(resolver.getFrameData().pointLightCount),
-        .directLightCount = static_cast<uint32_t>(resolver.getFrameData().directionalLightCount),
-        .spotLightCount = static_cast<uint32_t>(resolver.getFrameData().spotLightCount),
+        .omniLightCount = static_cast<uint32_t>(light.getFrameData().pointLightCount),
+        .directLightCount = static_cast<uint32_t>(light.getFrameData().directionalLightCount),
+        .spotLightCount = static_cast<uint32_t>(light.getFrameData().spotLightCount),
         .position = cameraData.position,
     };
     const vk::Viewport viewport{
@@ -60,9 +63,7 @@ bool GraphicsRenderer::onDraw(const RenderingContext &context, const CameraData 
     };
 
     vk_debug::beginRegion(cmd, "Draw Commands", {0.f, 1.f, 0.f, 1.f});
-    storage.assets.get().bindForGraphics(cmd, pipelineLayout);
-    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1,
-                           resolver.getFrameData().objectDescriptor, nullptr);
+    dispatcher.bind(cmd, pipelineLayout, vk::PipelineBindPoint::eGraphics);
     cmd.pushConstants<gpu_object::VertexPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0,
                                                       vertexCamere);
     cmd.pushConstants<gpu_object::FragmentPushConstant>(pipelineLayout, vk::ShaderStageFlagBits::eFragment,
@@ -90,9 +91,9 @@ bool GraphicsRenderer::onDraw(const RenderingContext &context, const CameraData 
     return true;
 }
 
-void GraphicsRenderer::createPipelineLayout(vk::Device &device, const vk::DescriptorSetLayout &resolverLayout)
+void GraphicsRenderer::createPipelineLayout(vk::Device &device, const ResolverDispatcher &dispatcher)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     std::vector<vk::PushConstantRange> pipelinePushConstant = {
         vk_init::populateVkPushConstantRange(vk::ShaderStageFlagBits::eVertex, sizeof(gpu_object::VertexPushConstant)),
         vk_init::populateVkPushConstantRange(vk::ShaderStageFlagBits::eFragment,
@@ -100,7 +101,8 @@ void GraphicsRenderer::createPipelineLayout(vk::Device &device, const vk::Descri
                                              sizeof(gpu_object::VertexPushConstant)),
     };
 
-    std::vector<vk::DescriptorSetLayout> setLayout = {storage.assets.get().getDescriptorSetLayout(), resolverLayout};
+    std::vector<vk::DescriptorSetLayout> setLayout = dispatcher.getDescriptorPair();
+
     auto pipelineLayoutCreateInfo = vk_init::populateVkPipelineLayoutCreateInfo(setLayout, pipelinePushConstant);
     pipelineLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
     vk_debug::setObjectName(device, pipelineLayout, "Graphics pipeline Layout");
@@ -108,7 +110,7 @@ void GraphicsRenderer::createPipelineLayout(vk::Device &device, const vk::Descri
 
 void GraphicsRenderer::createPipeline(VulkanBase &base_ref, vk::RenderPass &pass)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
 
     GraphicsPipelineBuilder builder;
     const std::uint32_t count = storage.assets.get().getSize<AssetStorage::Texture>();

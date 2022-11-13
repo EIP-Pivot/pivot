@@ -1,71 +1,136 @@
+#include <boost/dll/runtime_symbol_info.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/range/iterator_range.hpp>
+#include <imgui.h>
 #include <magic_enum.hpp>
+
+// Must be after imgui
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_vulkan.h>
 
 #include <pivot/engine.hxx>
 
 #include <pivot/internal/FrameLimiter.hxx>
-#include <pivot/internal/camera.hxx>
 
 #include <pivot/ecs/Components/Gravity.hxx>
 #include <pivot/ecs/Components/RigidBody.hxx>
 
 #include <pivot/builtins/events/collision.hxx>
+#include <pivot/builtins/events/editor_tick.hxx>
 #include <pivot/builtins/events/key_press.hxx>
 #include <pivot/builtins/events/tick.hxx>
+
 #include <pivot/builtins/systems/CollisionSystem.hxx>
 #include <pivot/builtins/systems/CollisionTestSystem.hxx>
+#include <pivot/builtins/systems/DrawTextSystem.hxx>
 #include <pivot/builtins/systems/PhysicSystem.hxx>
 #include <pivot/builtins/systems/TestTickSystem.hxx>
 
+#include <pivot/builtins/components/Camera.hxx>
 #include <pivot/builtins/components/Collidable.hxx>
 #include <pivot/builtins/components/RenderObject.hxx>
-#include <pivot/builtins/components/Transform.hxx>
 
 #include <pivot/builtins/components/Light.hxx>
+#include <pivot/builtins/components/Text.hxx>
+#include <pivot/builtins/components/Transform2D.hxx>
+
+#include <pivot/graphics/Resolver/AssetResolver.hxx>
+#include <pivot/graphics/Resolver/DrawCallResolver.hxx>
+#include <pivot/graphics/Resolver/LightDataResolver.hxx>
 
 using namespace pivot;
 using namespace pivot::ecs;
 
+static std::filesystem::path getAssetFilePass()
+{
+    auto current_entry = boost::dll::program_location().parent_path();
+    auto find_asset_folder = [](const boost::filesystem::path &entry) -> std::optional<std::filesystem::path> {
+        for (auto &directory_entry: boost::make_iterator_range(boost::filesystem::directory_iterator(entry), {})) {
+            if (!boost::filesystem::is_directory(directory_entry)) continue;
+            if (directory_entry.path().filename() == "assets")
+                return std::filesystem::path(directory_entry.path().string());
+        }
+        return std::nullopt;
+    };
+    for (int i = 0; i < PIVOT_ASSET_SEARCH_DEPTH; i++) {
+        auto path = find_asset_folder(current_entry);
+        if (path.has_value()) {
+            return path.value();
+            break;
+        }
+        current_entry = current_entry.parent_path();
+    }
+    throw std::runtime_error("Can't find the asset folder !");
+}
+
 namespace pivot
 {
 Engine::Engine()
-    : m_scripting_engine(
-          m_system_index, m_component_index,
-          pivot::ecs::script::interpreter::builtins::BuiltinContext{std::bind_front(&Engine::isKeyPressed, this)}),
-      m_camera(builtins::Camera(glm::vec3(0, 5, 0)))
+    : m_scripting_engine(m_system_index, m_component_index,
+                         pivot::ecs::script::interpreter::builtins::BuiltinContext{
+                             .isKeyPressed = std::bind_front(&Engine::isKeyPressed, this),
+                             .selectCamera = std::bind_front(&Engine::setCurrentCamera, this),
+                         }),
+      m_default_camera_data(),
+      m_default_camera_transform{.position = glm::vec3(0, 5, 0)},
+      m_default_camera{m_default_camera_data, m_default_camera_transform}
 {
+    DEBUG_FUNCTION();
+    Platform::setThreadName(logger.getThreadHandle(), "Logger Thread");
+    m_asset_directory = getAssetFilePass();
+
+    m_component_index.registerComponent(graphics::Transform::description);
     m_component_index.registerComponent(builtins::components::Gravity::description);
     m_component_index.registerComponent(builtins::components::RigidBody::description);
     m_component_index.registerComponent(builtins::components::RenderObject::description);
-    m_component_index.registerComponent(builtins::components::Transform::description);
     m_component_index.registerComponent(builtins::components::PointLight::description);
     m_component_index.registerComponent(builtins::components::DirectionalLight::description);
     m_component_index.registerComponent(builtins::components::SpotLight::description);
     m_component_index.registerComponent(builtins::components::Collidable::description);
+    m_component_index.registerComponent(builtins::components::Text::description);
+    m_component_index.registerComponent(builtins::components::Transform2D::description);
+    m_component_index.registerComponent(builtins::components::Camera::description);
 
     m_event_index.registerEvent(builtins::events::tick);
+    m_event_index.registerEvent(builtins::events::editor_tick);
     m_event_index.registerEvent(builtins::events::keyPress);
     m_event_index.registerEvent(builtins::events::collision);
     m_system_index.registerSystem(builtins::systems::physicSystem);
     m_system_index.registerSystem(builtins::systems::makeCollisionSystem(m_vulkan_application.assetStorage));
     m_system_index.registerSystem(builtins::systems::collisionTestSystem);
     m_system_index.registerSystem(builtins::systems::testTickSystem);
+    m_system_index.registerSystem(builtins::systems::drawTextSystem);
+
+    m_window.initWindow("Pivot Engine");
+    m_window.addGlobalKeyPressCallback(std::bind_front(&Engine::onKeyPressed, this));
 
     m_vulkan_application.addRenderer<pivot::graphics::CullingRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::GraphicsRenderer>();
     m_vulkan_application.addRenderer<pivot::graphics::ImGuiRenderer>();
-    m_vulkan_application.init();
 
-    m_vulkan_application.window.addGlobalKeyPressCallback(std::bind_front(&Engine::onKeyPressed, this));
+    m_vulkan_application.addResolver<pivot::graphics::DrawCallResolver>(0);
+    m_vulkan_application.addResolver<pivot::graphics::LightDataResolver>(1);
+    m_vulkan_application.addResolver<pivot::graphics::AssetResolver>(2);
+
+    m_vulkan_application.init(m_window, m_asset_directory);
 }
 
 void Engine::run()
 {
-
+    DEBUG_FUNCTION();
     float dt = 0.0f;
     FrameLimiter<60> fpsLimiter;
-    while (!m_vulkan_application.window.shouldClose()) {
+
+    ImGui::GetIO().WantCaptureMouse = m_window.captureCursor();
+
+    while (!m_window.shouldClose()) {
         auto startTime = std::chrono::high_resolution_clock::now();
-        m_vulkan_application.window.pollEvent();
+        m_window.pollEvent();
+
+        this->onFrameStart();
+
+        m_scene_manager.getCurrentScene().getEventManager().sendEvent(
+            {pivot::builtins::events::editor_tick, {}, data::Value(dt)});
 
         this->onTick(dt);
 
@@ -74,10 +139,12 @@ void Engine::run()
                 ? (static_cast<float>(renderArea->extent.width) / static_cast<float>(renderArea->extent.height))
                 : (m_vulkan_application.getAspectRatio());
 
+        this->onFrameEnd();
+
         if (m_current_scene_draw_command) {
-            auto result = m_vulkan_application.draw(
-                m_current_scene_draw_command.value(),
-                pivot::internals::getGPUCameraData(m_camera, Engine::fov, aspectRatio), renderArea);
+            auto result = m_vulkan_application.draw(m_current_scene_draw_command.value(),
+                                                    this->getCurrentCamera().getGPUCameraData(Engine::fov, aspectRatio),
+                                                    renderArea);
             if (result == pivot::graphics::VulkanApplication::DrawResult::Error) {
                 std::terminate();
             } else if (result == pivot::graphics::VulkanApplication::DrawResult::FrameSkipped) {
@@ -96,71 +163,65 @@ void Engine::run()
     }
 }
 
-template <typename T>
-using Array = pivot::ecs::component::DenseTypedComponentArray<T>;
+namespace
+{
+    template <typename T>
+    using Array = pivot::ecs::component::SynchronizedTypedComponentArray<T>;
+
+    /// can't return it because of copy/move shenanigans
+    void getDrawCommand(component::Manager &cm, std::optional<graphics::DrawSceneInformation> &draw_info)
+    {
+        using namespace pivot::builtins::components;
+
+        auto renderobject_id = cm.GetComponentId(RenderObject::description.name);
+        auto transform_id = cm.GetComponentId(graphics::Transform::description.name);
+        auto pointlight_id = cm.GetComponentId(PointLight::description.name);
+        auto directional_id = cm.GetComponentId(DirectionalLight::description.name);
+        auto spotlight_id = cm.GetComponentId(SpotLight::description.name);
+        if (renderobject_id && transform_id && pointlight_id && directional_id && spotlight_id) {
+            draw_info.emplace(graphics::DrawSceneInformation{
+                .renderObjects =
+                    dynamic_cast<const Array<pivot::graphics::RenderObject> &>(cm.GetComponentArray(*renderobject_id)),
+                .pointLight =
+                    dynamic_cast<const Array<pivot::graphics::PointLight> &>(cm.GetComponentArray(*pointlight_id)),
+                .directionalLight = dynamic_cast<const Array<pivot::graphics::DirectionalLight> &>(
+                    cm.GetComponentArray(*directional_id)),
+                .spotLight =
+                    dynamic_cast<const Array<pivot::graphics::SpotLight> &>(cm.GetComponentArray(*spotlight_id)),
+                .transform = dynamic_cast<const pivot::graphics::SynchronizedTransformArray &>(
+                    cm.GetComponentArray(*transform_id)),
+            });
+        } else {
+            draw_info = std::nullopt;
+        }
+    }
+}    // namespace
 
 void Engine::changeCurrentScene(ecs::SceneManager::SceneId sceneId)
 {
+    DEBUG_FUNCTION();
     m_scene_manager.setCurrentSceneId(sceneId);
 
-    using namespace pivot::builtins::components;
-
     auto &cm = m_scene_manager.getCurrentScene().getComponentManager();
-    auto renderobject_id = cm.GetComponentId(RenderObject::description.name);
-    auto transform_id = cm.GetComponentId(Transform::description.name);
-    auto pointlight_id = cm.GetComponentId(PointLight::description.name);
-    auto directional_id = cm.GetComponentId(DirectionalLight::description.name);
-    auto spotlight_id = cm.GetComponentId(SpotLight::description.name);
-    if (renderobject_id && transform_id && pointlight_id && directional_id && spotlight_id) {
-        auto &ro_array = dynamic_cast<Array<pivot::graphics::RenderObject> &>(cm.GetComponentArray(*renderobject_id));
-        auto &transform_array = dynamic_cast<Array<pivot::graphics::Transform> &>(cm.GetComponentArray(*transform_id));
-        auto &point_array = dynamic_cast<Array<pivot::graphics::PointLight> &>(cm.GetComponentArray(*pointlight_id));
-        auto &directional_array =
-            dynamic_cast<Array<pivot::graphics::DirectionalLight> &>(cm.GetComponentArray(*directional_id));
-        auto &spotlight_array = dynamic_cast<Array<pivot::graphics::SpotLight> &>(cm.GetComponentArray(*spotlight_id));
-
-        m_current_scene_draw_command = {
-            .renderObjects =
-                {
-                    .objects = ro_array.getComponents(),
-                    .exist = ro_array.getExistence(),
-                },
-            .pointLight =
-                {
-                    .objects = point_array.getComponents(),
-                    .exist = point_array.getExistence(),
-                },
-            .directionalLight =
-                {
-                    .objects = directional_array.getComponents(),
-                    .exist = directional_array.getExistence(),
-                },
-            .spotLight =
-                {
-                    .objects = spotlight_array.getComponents(),
-                    .exist = spotlight_array.getExistence(),
-                },
-            .transform =
-                {
-                    .objects = transform_array.getComponents(),
-                    .exist = transform_array.getExistence(),
-                },
-        };
-    } else {
-        m_current_scene_draw_command = std::nullopt;
-    }
+    getDrawCommand(cm, m_current_scene_draw_command);
+    auto camera_id = cm.GetComponentId(builtins::components::Camera::description.name);
+    m_camera_array = dynamic_cast<internals::CameraArray &>(cm.GetComponentArray(*camera_id));
+    auto transform_id = cm.GetComponentId(graphics::Transform::description.name);
+    m_transform_array =
+        dynamic_cast<pivot::graphics::SynchronizedTransformArray &>(cm.GetComponentArray(*transform_id));
 }
 
 namespace
 {
     void postSceneRegister(Scene &scene)
     {
+        DEBUG_FUNCTION();
         auto &cm = scene.getComponentManager();
         if (!cm.GetComponentId(builtins::components::RenderObject::description.name).has_value()) {
             cm.RegisterComponent(builtins::components::RenderObject::description);
         }
-        if (!cm.GetComponentId(builtins::components::Transform::description.name).has_value()) {
-            cm.RegisterComponent(builtins::components::Transform::description);
+        if (!cm.GetComponentId(graphics::Transform::description.name).has_value()) {
+            cm.RegisterComponent(graphics::Transform::description);
         }
         if (!cm.GetComponentId(builtins::components::PointLight::description.name).has_value()) {
             cm.RegisterComponent(builtins::components::PointLight::description);
@@ -171,11 +232,15 @@ namespace
         if (!cm.GetComponentId(builtins::components::SpotLight::description.name).has_value()) {
             cm.RegisterComponent(builtins::components::SpotLight::description);
         }
+        if (!cm.GetComponentId(builtins::components::Camera::description.name).has_value()) {
+            cm.RegisterComponent(builtins::components::Camera::description);
+        }
     }
 }    // namespace
 
 ecs::SceneManager::SceneId Engine::registerScene()
 {
+    DEBUG_FUNCTION();
     auto id = m_scene_manager.registerScene();
     postSceneRegister(m_scene_manager.getSceneById(id));
     return id;
@@ -183,7 +248,7 @@ ecs::SceneManager::SceneId Engine::registerScene()
 
 ecs::SceneManager::SceneId Engine::registerScene(std::string name)
 {
-
+    DEBUG_FUNCTION();
     auto id = m_scene_manager.registerScene(name);
     postSceneRegister(m_scene_manager.getSceneById(id));
     return id;
@@ -191,6 +256,7 @@ ecs::SceneManager::SceneId Engine::registerScene(std::string name)
 
 ecs::SceneManager::SceneId Engine::registerScene(std::unique_ptr<ecs::Scene> scene)
 {
+    DEBUG_FUNCTION();
     auto id = m_scene_manager.registerScene(std::move(scene));
     postSceneRegister(m_scene_manager.getSceneById(id));
     return id;
@@ -198,6 +264,7 @@ ecs::SceneManager::SceneId Engine::registerScene(std::unique_ptr<ecs::Scene> sce
 
 void Engine::saveScene(ecs::SceneManager::SceneId id, const std::filesystem::path &path)
 {
+    DEBUG_FUNCTION();
     auto assetTranslator =
         std::make_optional(std::function([this, &path](const std::string &asset) -> std::optional<std::string> {
             auto &assetStorage = m_vulkan_application.assetStorage;
@@ -219,6 +286,7 @@ void Engine::saveScene(ecs::SceneManager::SceneId id, const std::filesystem::pat
 
 ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
 {
+    DEBUG_FUNCTION();
     logger.info("Scene Manager") << "Loading scene at " << path;
     std::ifstream scene_file{path};
     if (!scene_file.is_open()) {
@@ -238,10 +306,15 @@ ecs::SceneManager::SceneId Engine::loadScene(const std::filesystem::path &path)
     return this->registerScene(std::move(scene));
 }
 
-void Engine::loadScript(const std::filesystem::path &path) { m_scripting_engine.loadFile(path.string(), false, true); }
+void Engine::loadScript(const std::filesystem::path &path)
+{
+    DEBUG_FUNCTION();
+    m_scripting_engine.loadFile(path.string(), false, true);
+}
 
 void Engine::loadAsset(const std::filesystem::path &path, bool reload)
 {
+    DEBUG_FUNCTION();
     m_vulkan_application.assetStorage.addAsset(path);
     if (reload) m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
 }
@@ -250,7 +323,7 @@ bool Engine::isKeyPressed(const std::string &key) const
 {
     auto key_cast = magic_enum::enum_cast<pivot::graphics::Window::Key>(key);
     if (key_cast.has_value()) {
-        return this->m_vulkan_application.window.isKeyPressed(key_cast.value());
+        return m_window.isKeyPressed(key_cast.value());
     } else {
         return false;
     }
@@ -263,4 +336,22 @@ void Engine::onKeyPressed(graphics::Window &, const graphics::Window::Key key, c
             {pivot::builtins::events::keyPress, {}, data::Value(std::string(magic_enum::enum_name(key)))});
     }
 }
+
+void Engine::setCurrentCamera(std::optional<Entity> camera) { m_camera_array.value().get().setCurrentCamera(camera); }
+
+internals::LocationCamera Engine::getCurrentCamera()
+{
+    std::scoped_lock lock(m_transform_array.value().get().getMutex());
+    auto current_camera = m_camera_array.value().get().getCurrentCamera();
+    if (current_camera.has_value()) {
+        auto [camera_entity, camera] = current_camera.value();
+        auto &transform_array = m_transform_array.value().get();
+        if (transform_array.getExistence().at(camera_entity)) {
+            return internals::LocationCamera{.camera = camera.get(),
+                                             .transform = transform_array.getData()[camera_entity]};
+        }
+    }
+    return m_default_camera;
+}
+
 }    // namespace pivot

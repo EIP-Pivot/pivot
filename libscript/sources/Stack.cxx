@@ -12,10 +12,32 @@ Stack::Stack() {}
 void Stack::push(const std::string &name, const data::Value &var)
 {
     if (_stack.contains(name)) {
-        logger.err("ERROR") << " with variable " << name;
+        logger.err() << "Redifinition of variable '" << name << "'";
         throw InvalidException("Stack Redefinition: Redefinition of variable which already exists.");
     }
     _stack.insert_or_assign(name, var);
+}
+
+void Stack::pushEntity(const std::string &entityName, Entity entityId,
+                       std::span<const component::ComponentRef> components)
+{
+    if (entityName.empty()) return;
+
+    data::Record entityRecord;
+
+    for (const component::ComponentRef &ref: components) {
+        entityRecord.insert_or_assign(ref.description().name, ref.get());
+    }
+    entityRecord.insert_or_assign("id", data::Value{EntityRef{entityId}});
+    this->push(entityName, entityRecord);
+}
+
+void Stack::updateEntity(const std::string &entityName, std::span<component::ComponentRef> components)
+{
+    if (entityName.empty()) return;
+
+    const data::Record newEntityRecord = std::get<data::Record>(this->find(entityName));
+    for (component::ComponentRef &ref: components) { ref.set(newEntityRecord.at(ref.description().name)); }
 }
 
 const data::Value Stack::find(const std::string &name) const { return find(name, _stack); }

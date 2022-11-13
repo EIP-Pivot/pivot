@@ -4,8 +4,6 @@
 #include <vector>
 #include <vulkan/vulkan.hpp>
 
-#include "pivot/graphics/types/common.hxx"
-
 namespace pivot::graphics
 {
 /// @brief This class handle the allocation of DescriptorSet

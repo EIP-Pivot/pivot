@@ -11,8 +11,8 @@ namespace pivot::graphics::vk_debug
 {
 template <vk_utils::wrappedVulkanType T>
 /// Set the debug name of the object
-void setObjectName([[maybe_unused]] vk::Device &device, [[maybe_unused]] const T &object,
-                   [[maybe_unused]] const std::string &name)
+FORCEINLINE void setObjectName([[maybe_unused]] vk::Device &device, [[maybe_unused]] const T &object,
+                               [[maybe_unused]] const std::string &name)
 {
 #ifndef NDEBUG
     vk::DebugUtilsObjectNameInfoEXT nameInfo{
@@ -26,8 +26,8 @@ void setObjectName([[maybe_unused]] vk::Device &device, [[maybe_unused]] const T
 
 template <vk_utils::wrappedVulkanType T, typename D>
 /// Set the debug tag of the object
-void setObjectTag([[maybe_unused]] vk::Device &device, [[maybe_unused]] const T &object,
-                  [[maybe_unused]] const std::span<D> &tag)
+FORCEINLINE void setObjectTag([[maybe_unused]] vk::Device &device, [[maybe_unused]] const T &object,
+                              [[maybe_unused]] const std::span<D> &tag)
 {
 #ifndef NDEBUG
     vk::DebugUtilsObjectTagInfoEXT tagInfo{
@@ -41,9 +41,25 @@ void setObjectTag([[maybe_unused]] vk::Device &device, [[maybe_unused]] const T 
 }
 
 /// Begin a new debug region
-void beginRegion([[maybe_unused]] vk::CommandBuffer &cmdbuffer, [[maybe_unused]] const char *pMarkerName,
-                 [[maybe_unused]] const std::array<float, 4> color);
+FORCEINLINE void beginRegion([[maybe_unused]] vk::CommandBuffer &cmdbuffer, [[maybe_unused]] const char *pMarkerName,
+                             [[maybe_unused]] const std::array<float, 4> color)
+{
+#ifndef NDEBUG
+    pivotAssertMsg(pMarkerName, "Command region's name is NULL");
+    vk::DebugUtilsLabelEXT markerInfo{
+        .pLabelName = pMarkerName,
+        .color = color,
+    };
+    cmdbuffer.beginDebugUtilsLabelEXT(markerInfo);
+#endif
+};
+
 /// End a debug region
-void endRegion([[maybe_unused]] vk::CommandBuffer &cmdBuffer);
+FORCEINLINE void endRegion([[maybe_unused]] vk::CommandBuffer &cmdBuffer)
+{
+#ifndef NDEBUG
+    cmdBuffer.endDebugUtilsLabelEXT();
+#endif
+}
 
 };    // namespace pivot::graphics::vk_debug

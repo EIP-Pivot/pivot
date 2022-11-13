@@ -8,7 +8,6 @@
 #include <pivot/ecs/Core/SceneManager.hxx>
 #include <pivot/engine.hxx>
 #include <pivot/graphics/VulkanApplication.hxx>
-#include <pivot/graphics/types/common.hxx>
 
 class Editor
 {
@@ -20,6 +19,7 @@ public:
     pivot::ecs::SceneManager::SceneId addScene(pivot::Engine &engine, std::string name);
 
     bool getRun();
+    void setRun(bool run) { this->run = run; }
 
 private:
     void createPopUp(pivot::Engine &engine);

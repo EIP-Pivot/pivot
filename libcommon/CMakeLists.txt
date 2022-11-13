@@ -3,7 +3,7 @@ project(pivot-common)
 fetchcontent_declare(
     logger
     GIT_REPOSITORY https://github.com/zcorniere/logger-cpp.git
-    GIT_TAG v1.0.0
+    GIT_TAG v1.0.3
 )
 fetchcontent_getproperties(logger)
 if(NOT logger_POPULATED)
@@ -11,6 +11,22 @@ if(NOT logger_POPULATED)
     fetchcontent_populate(logger)
     add_subdirectory(${logger_SOURCE_DIR} ${logger_BINARY_DIR})
     target_compile_definitions(logger PUBLIC LOGGER_EXTERN_DECLARATION)
+endif()
+
+fetchcontent_declare(
+    mimalloc
+    GIT_REPOSITORY https://github.com/microsoft/mimalloc.git
+    GIT_TAG v2.0.6
+)
+fetchcontent_getproperties(mimalloc)
+if(NOT mimalloc_POPULATED)
+    message(STATUS "Populating mimalloc")
+    fetchcontent_populate(mimalloc)
+    set(MI_BUILD_TESTS
+        OFF
+        CACHE INTERNAL "" FORCE
+    )
+    add_subdirectory(${mimalloc_SOURCE_DIR} ${mimalloc_BINARY_DIR})
 endif()
 
 fetchcontent_declare(
@@ -56,23 +72,28 @@ if(NOT magic_enum_POPULATED)
     add_subdirectory(${magic_enum_SOURCE_DIR} ${magic_enum_BINARY_DIR})
 endif()
 
-add_library(${PROJECT_NAME} STATIC sources/lib.cxx)
+add_library(
+    ${PROJECT_NAME} STATIC
+    sources/lib.cxx
+    sources/utility/benchmark.cxx
+    sources/Threading/Thread.cxx
+    sources/Threading/ThreadPool.cxx
 
-target_compile_options(
-    ${PROJECT_NAME}
-    PUBLIC $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-            -Wall
-            -Wextra>
-            $<$<CXX_COMPILER_ID:MSVC>:
-            /W4
-            /wd4267
-            /wd4201
-            /wd4244>
+    # Select the correct platform to compile
+    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
+    sources/Platforms/UnixPlatform.cxx>
+    $<$<CXX_COMPILER_ID:MSVC>:
+    sources/Platforms/WindowsPlatform.cxx>
 )
 
-target_include_directories(${PROJECT_NAME} PUBLIC include/)
+target_pivot_compile_option(${PROJECT_NAME})
 
-target_link_libraries(${PROJECT_NAME} PUBLIC logger glm magic_enum)
+if(DEFINED ENV{CI})
+    message(STATUS "Benchmark macros - disabled")
+    target_compile_definitions(${PROJECT_NAME} PUBLIC NO_BENCHMARK)
+endif()
+
+target_link_libraries(${PROJECT_NAME} PUBLIC logger glm magic_enum mimalloc-static)
 
 target_precompile_headers(
     ${PROJECT_NAME}

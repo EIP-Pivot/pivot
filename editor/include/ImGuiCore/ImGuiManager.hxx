@@ -7,17 +7,15 @@
 #include <imgui.h>
 #include <nfd.hpp>
 
-template <class...>
-constexpr std::false_type always_false;
-
 class ImGuiManager
 {
 
 public:
-    ImGuiManager(const pivot::ecs::SceneManager &sceneManager, pivot::Engine &engine)
+    ImGuiManager(const pivot::ecs::SceneManager &sceneManager, pivot::Engine &engine,
+                 const std::filesystem::path &asset_dir)
         : m_sceneManager(sceneManager), m_engine(engine)
     {
-        for (const auto &directoryEntry: std::filesystem::recursive_directory_iterator(PIVOT_EDITOR_ICON_PATH)) {
+        for (const auto &directoryEntry: std::filesystem::recursive_directory_iterator(asset_dir / "Editor")) {
             if (directoryEntry.is_directory()) continue;
             m_engine.loadAsset(directoryEntry.path(), false);
         }

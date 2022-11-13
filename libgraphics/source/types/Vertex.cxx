@@ -1,5 +1,7 @@
 #include "pivot/graphics/types/Vertex.hxx"
 
+#include "pivot/pivot.hxx"
+
 namespace pivot::graphics
 {
 
@@ -20,6 +22,7 @@ vk::VertexInputBindingDescription Vertex::getBindingDescription() noexcept
 vk::VertexInputAttributeDescription Vertex::inputAttributeDescription(uint32_t binding, uint32_t location,
                                                                       VertexComponentFlagBits component)
 {
+    DEBUG_FUNCTION();
     switch (component) {
         case VertexComponentFlagBits::Position:
             return {
@@ -57,12 +60,13 @@ vk::VertexInputAttributeDescription Vertex::inputAttributeDescription(uint32_t b
                 offsetof(Vertex, tangent),
             };
     }
-    return {};
+    pivotAssertNoEntry();
 }
 
 std::vector<vk::VertexInputAttributeDescription>
 Vertex::getInputAttributeDescriptions(uint32_t binding, const VertexComponentFlags components)
 {
+    DEBUG_FUNCTION();
     std::vector<vk::VertexInputAttributeDescription> result;
     uint32_t location = 0;
 

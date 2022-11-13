@@ -1,8 +1,11 @@
 #include "ImGuiCore/CustomWidget.hxx"
 
+#include <pivot/pivot.hxx>
+
 void CustomWidget::CustomVec3(const std::string &label, glm::vec3 &values, const glm::vec3 resetValues,
                               float columnWidth)
 {
+    PROFILE_FUNCTION();
     ImGuiIO &io = ImGui::GetIO();
     auto boldFont = io.Fonts->Fonts[0];
 
@@ -76,8 +79,7 @@ void CustomWidget::CustomVec3(const std::string &label, glm::vec3 &values, const
 
 void CustomWidget::CustomInputText(const std::string &label, std::string &value, float columnWidth)
 {
-    ImGuiIO &io = ImGui::GetIO();
-    auto boldFont = io.Fonts->Fonts[0];
+    PROFILE_FUNCTION();
 
     ImGui::PushID(label.c_str());
 
@@ -97,8 +99,7 @@ void CustomWidget::CustomInputText(const std::string &label, std::string &value,
 
 void CustomWidget::CustomInputInt(const std::string &label, int &value, float columnWidth)
 {
-    ImGuiIO &io = ImGui::GetIO();
-    auto boldFont = io.Fonts->Fonts[0];
+    PROFILE_FUNCTION();
 
     ImGui::PushID(label.c_str());
 
@@ -118,8 +119,7 @@ void CustomWidget::CustomInputInt(const std::string &label, int &value, float co
 
 void CustomWidget::CustomInputDouble(const std::string &label, double &value, float columnWidth)
 {
-    ImGuiIO &io = ImGui::GetIO();
-    auto boldFont = io.Fonts->Fonts[0];
+    PROFILE_FUNCTION();
 
     ImGui::PushID(label.c_str());
 
@@ -139,6 +139,7 @@ void CustomWidget::CustomInputDouble(const std::string &label, double &value, fl
 
 void CustomWidget::ImageText(ImTextureID texture_id, const ImVec2 &size, const std::string &text)
 {
+    PROFILE_FUNCTION();
     ImGui::BeginGroup();
     ImGui::Image(texture_id, size);
     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ((size.x - ImGui::CalcTextSize(text.c_str()).x) * 0.5f));
@@ -148,6 +149,7 @@ void CustomWidget::ImageText(ImTextureID texture_id, const ImVec2 &size, const s
 
 bool CustomWidget::ButtonCenteredOnLine(const std::string &label, float alignment)
 {
+    PROFILE_FUNCTION();
     ImGuiStyle &style = ImGui::GetStyle();
 
     float size = ImGui::CalcTextSize(label.c_str()).x + style.FramePadding.x * 2.0f;
@@ -161,6 +163,7 @@ bool CustomWidget::ButtonCenteredOnLine(const std::string &label, float alignmen
 
 bool CustomWidget::RadioImageButton(const std::string &label, ImTextureID texture_id, const ImVec2 &size, bool active)
 {
+    PROFILE_FUNCTION();
     bool buttonValue;
     ImVec4 bgColor = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
     ImVec4 activeColor = ImGui::GetStyle().Colors[ImGuiCol_Button];

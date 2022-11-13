@@ -1,9 +1,12 @@
 #include "ImGuiCore/ComponentEditor.hxx"
+#include "ImGuiCore/CustomWidget.hxx"
 #include "ImGuiCore/ImGuiTheme.hxx"
-#include "ImGuiCore/TypeTemplate/Template.hxx"
+#include "ImGuiCore/ValueInput.hxx"
 #include <magic_enum.hpp>
 
 #include <imgui.h>
+
+#include <pivot/builtins/components/Camera.hxx>
 
 using namespace pivot::ecs;
 using namespace pivot::ecs::component;
@@ -11,6 +14,7 @@ using namespace pivot::ecs::data;
 
 void ComponentEditor::create(Entity entity)
 {
+    PROFILE_FUNCTION();
     currentEntity = entity;
     ImGui::Begin(" Component editor ");
     ImGuiTheme::setDefaultFramePadding();
@@ -23,6 +27,7 @@ void ComponentEditor::create(Entity entity)
 
 void ComponentEditor::create()
 {
+    PROFILE_FUNCTION();
     ImGui::Begin(" Component editor ");
     ImGui::Text("No entity selected.");
     ImGui::End();
@@ -30,6 +35,7 @@ void ComponentEditor::create()
 
 void ComponentEditor::createPopUp()
 {
+    PROFILE_FUNCTION();
     auto &cm = m_scene->getComponentManager();
     if (ImGui::BeginPopup("AddComponent")) {
         for (const auto &[name, description]: m_index) {
@@ -47,6 +53,7 @@ void ComponentEditor::createPopUp()
 
 void ComponentEditor::displayComponent()
 {
+    PROFILE_FUNCTION();
     auto &cm = m_scene->getComponentManager();
     displayName();
     for (ComponentRef ref: cm.GetAllComponents(currentEntity)) {
@@ -55,8 +62,11 @@ void ComponentEditor::displayComponent()
         if (ImGui::TreeNode(ref.description().name.c_str())) {
             ImGui::TreePop();
             Value value = ref;
-            draw(value, "oui");
+            ImGui::PushID(ref.description().name.c_str());
+            m_value_input.drawInput(value, "oui");
+            ImGui::PopID();
             ref = value;
+            this->selectCamera(ref);
             ImGui::Separator();
         }
     }
@@ -64,6 +74,7 @@ void ComponentEditor::displayComponent()
 
 void ComponentEditor::displayName()
 {
+    PROFILE_FUNCTION();
     auto &cm = m_scene->getComponentManager();
     auto tagId = cm.GetComponentId("Tag").value();
     auto &tagArray = cm.GetComponentArray(tagId);
@@ -78,6 +89,7 @@ void ComponentEditor::displayName()
 
 void ComponentEditor::deleteComponent(ComponentRef ref)
 {
+    PROFILE_FUNCTION();
     auto &cm = m_scene->getComponentManager();
     ImGuiIO &io = ImGui::GetIO();
     auto boldFont = io.Fonts->Fonts[0];
@@ -100,8 +112,19 @@ void ComponentEditor::deleteComponent(ComponentRef ref)
 
 void ComponentEditor::addComponent(const Description &description)
 {
+    PROFILE_FUNCTION();
     auto &cm = m_scene->getComponentManager();
     auto id = cm.GetComponentId(description.name).value();
     Value newComponent = description.defaultValue;
     cm.AddComponent(currentEntity, newComponent, id);
+}
+
+void ComponentEditor::selectCamera(pivot::ecs::component::ComponentRef ref)
+{
+    if (ref.description() == pivot::builtins::components::Camera::description) {
+        ImGuiIO &io = ImGui::GetIO();
+        auto boldFont = io.Fonts->Fonts[0];
+        float lineHeight = (GImGui->Font->FontSize * boldFont->Scale) + GImGui->Style.FramePadding.y * 2.f;
+        if (ImGui::Button("Select camera")) { m_engine.setCurrentCamera(ref.entity()); }
+    }
 }

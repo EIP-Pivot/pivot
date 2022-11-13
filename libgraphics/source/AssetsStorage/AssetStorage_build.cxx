@@ -1,4 +1,4 @@
-#include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/AssetStorage.hxx"
 
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/pivot.hxx"
@@ -6,13 +6,14 @@
 namespace pivot::graphics
 {
 
-static AssetStorage::CPUStorage
+static asset::CPUStorage
 batch_load(const std::unordered_map<std::string, std::filesystem::path> &storage_map,
-           const std::function<std::optional<AssetStorage::CPUStorage>(unsigned, const std::filesystem::path &)> load,
+           const std::function<std::optional<asset::CPUStorage>(unsigned, const std::filesystem::path &)> load,
            const std::string &debug_name, ThreadPool &threadPool)
 {
-    AssetStorage::CPUStorage cpuStorage;
-    std::vector<std::pair<std::filesystem::path, std::future<std::optional<AssetStorage::CPUStorage>>>> futures;
+    DEBUG_FUNCTION();
+    asset::CPUStorage cpuStorage;
+    std::vector<std::pair<std::filesystem::path, std::future<std::optional<asset::CPUStorage>>>> futures;
     futures.reserve(storage_map.size());
 
     /// Model must be loaded first, as they may add new texture to load
@@ -29,10 +30,10 @@ batch_load(const std::unordered_map<std::string, std::filesystem::path> &storage
 
 void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     // check for incorrect combination of flags
-    pivot_assert(std::popcount(static_cast<std::underlying_type_t<AssetStorage::BuildFlagBits>>(flags)) == 1,
-                 "More than one BuildFlag is set !");
+    pivotAssertMsg(std::popcount(static_cast<std::underlying_type_t<AssetStorage::BuildFlagBits>>(flags)) == 1,
+                   "More than one BuildFlag is set !");
 
     // TODO: better separation of loading ressources
     modelStorage.clear();
@@ -48,15 +49,14 @@ void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
 
     createTextureSampler();
 
-    cpuStorage.merge(CPUStorage::default_assets());
+    cpuStorage.merge(asset::CPUStorage::default_assets());
     if (flags & (BuildFlagBits::eReloadOldAssets)) {
         cpuStorage.modelPaths.insert(modelPaths.begin(), modelPaths.end());
         cpuStorage.texturePaths.insert(texturePaths.begin(), texturePaths.end());
     }
 
-    threadPool.start();
-    cpuStorage += batch_load(cpuStorage.modelPaths, loadModel, "Model", threadPool);
-    cpuStorage += batch_load(cpuStorage.texturePaths, loadTexture, "Texture", threadPool);
+    cpuStorage += batch_load(cpuStorage.modelPaths, loadModel, "Model", threadPool_ref);
+    cpuStorage += batch_load(cpuStorage.texturePaths, loadTexture, "Texture", threadPool_ref);
 
     modelStorage.swap(cpuStorage.modelStorage);
     prefabStorage.swap(cpuStorage.prefabStorage);
@@ -76,12 +76,11 @@ void AssetStorage::build(DescriptorBuilder builder, BuildFlags flags)
     createDescriptorSet(builder);
 
     cpuStorage = {};
-    threadPool.stop();
 }
 
 void AssetStorage::destroy()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     base_ref->get().allocator.destroyBuffer(vertexBuffer);
     base_ref->get().allocator.destroyBuffer(indicesBuffer);
     base_ref->get().allocator.destroyBuffer(materialBuffer);
@@ -99,6 +98,7 @@ template <typename T>
 static void copy_with_staging_buffer(VulkanBase &base_ref, vk::BufferUsageFlags flag, std::vector<T> &data,
                                      AllocatedBuffer<T> &buffer)
 {
+    DEBUG_FUNCTION();
     auto true_size = data.size();
     auto staging = base_ref.allocator.createBuffer<T>(
         true_size, vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst,
@@ -117,7 +117,7 @@ static void copy_with_staging_buffer(VulkanBase &base_ref, vk::BufferUsageFlags 
 
 void AssetStorage::pushModelsOnGPU()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     meshAABBStorage.clear();
     meshAABBStorage.reserve(modelStorage.size());
 
@@ -131,7 +131,7 @@ void AssetStorage::pushModelsOnGPU()
                             gpu_object::AABB(std::span(cpuStorage.vertexStagingBuffer.begin() + model.mesh.vertexOffset,
                                                        model.mesh.vertexSize)));
     }
-    pivot_assert(modelStorage.size() == meshAABBStorage.size(), "The Model Storage is bigger than the AABB Storage.");
+    pivotAssertMsg(modelStorage.size() == meshAABBStorage.size(), "The Model Storage is bigger than the AABB Storage.");
 
     copy_with_staging_buffer(base_ref->get(), vk::BufferUsageFlagBits::eVertexBuffer, cpuStorage.vertexStagingBuffer,
                              vertexBuffer);
@@ -148,7 +148,7 @@ void AssetStorage::pushModelsOnGPU()
 
 void AssetStorage::pushTexturesOnGPU()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     if (cpuStorage.textureStaging.size() == 0) {
         logger.warn("Asset Storage") << "No textures to push";
         return;
@@ -191,7 +191,7 @@ void AssetStorage::pushTexturesOnGPU()
 
 void AssetStorage::pushMaterialOnGPU()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     if (cpuStorage.materialStaging.empty()) {
         logger.warn("Asset Storage") << "No material to push";
         return;

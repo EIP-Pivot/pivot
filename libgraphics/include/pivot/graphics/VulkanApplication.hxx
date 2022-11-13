@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/AssetStorage.hxx"
 #include "pivot/graphics/DeletionQueue.hxx"
 #include "pivot/graphics/DescriptorAllocator/DescriptorAllocator.hxx"
 #include "pivot/graphics/DescriptorAllocator/DescriptorLayoutCache.hxx"
@@ -12,12 +12,14 @@
 #include "pivot/graphics/types/Frame.hxx"
 #include "pivot/graphics/types/vk_types.hxx"
 #include "pivot/graphics/vk_debug.hxx"
-#include "pivot/pivot.hxx"
 
-#include "pivot/graphics/DrawCallResolver.hxx"
+#include "pivot/containers/RotaryBuffer.hxx"
+
 #include "pivot/graphics/Renderer/CullingRenderer.hxx"
 #include "pivot/graphics/Renderer/GraphicsRenderer.hxx"
 #include "pivot/graphics/Renderer/ImGuiRenderer.hxx"
+
+#include "pivot/pivot.hxx"
 
 #include <optional>
 #include <vector>
@@ -70,7 +72,7 @@ public:
     /// @brief Initialise the Vulkan ressources
     ///
     /// @throw VulkanException if something went awry
-    void init();
+    void init(Window &window, const std::filesystem::path &asset_dir);
 
     /// @brief draw the next frame
     ///
@@ -78,11 +80,11 @@ public:
     /// @arg camera The information about the camera
     ///
     /// You must have already loaded your models and texture !
-    DrawResult draw(DrawCallResolver::DrawSceneInformation sceneInformation, const CameraData &camera,
+    DrawResult draw(DrawSceneInformation sceneInformation, const CameraData &camera,
                     std::optional<vk::Rect2D> renderArea = std::nullopt);
 
     /// @brief get Swapchain aspect ratio
-    constexpr float getAspectRatio() const noexcept { return swapchain.getAspectRatio(); }
+    inline float getAspectRatio() const noexcept { return swapchain.getAspectRatio(); }
 
     /// Build the asset Storage
     void buildAssetStorage(AssetStorage::BuildFlags flags = AssetStorage::BuildFlagBits::eClear);
@@ -91,7 +93,7 @@ public:
     /// Add a Renderer to the frame
     T &addRenderer()
     {
-        DEBUG_FUNCTION
+        DEBUG_FUNCTION();
         StorageUtils utils{
             .pipeline = pipelineStorage,
             .assets = assetStorage,
@@ -103,9 +105,17 @@ public:
         } else if constexpr (std::is_base_of_v<IComputeRenderer, T>) {
             computeRenderer.emplace_back(std::move(rendy));
         } else {
-            throw std::logic_error("Unsuported Renderer : " + rendy->getType());
+            static_assert(always_false<T>, "Unsupported Renderer !");
         }
         return ret;
+    }
+
+    template <typename T>
+    /// Add a Resolver to the frame
+    requires std::is_base_of_v<IResolver, T> FORCEINLINE void addResolver(unsigned setID)
+    {
+        DEBUG_FUNCTION();
+        for (auto &frame: frames) frame.addResolver<T>(setID);
     }
 
 private:
@@ -125,6 +135,8 @@ public:
     AssetStorage assetStorage;
     /// The application pipeline storage
     PipelineStorage pipelineStorage;
+    /// Thread pool
+    ThreadPool threadPool;
 
 private:
     DescriptorAllocator descriptorAllocator;
@@ -140,8 +152,7 @@ private:
     DeletionQueue swapchainDeletionQueue;
     VulkanSwapchain swapchain;
 
-    uint8_t currentFrame = 0;
-    std::array<Frame, PIVOT_MAX_FRAMES_IN_FLIGHT> frames;
+    RotaryBuffer<Frame, PIVOT_MAX_FRAMES_IN_FLIGHT> frames;
 
     VulkanRenderPass renderPass;
 

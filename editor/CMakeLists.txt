@@ -12,7 +12,7 @@ fetchcontent_getproperties(nativefiledialog)
 if(NOT nativefiledialog_POPULATED)
     message(STATUS "Populating nativefiledialog")
     fetchcontent_populate(nativefiledialog)
-    add_subdirectory(${nativefiledialog_SOURCE_DIR} ${nativefiledialog_BINARY_DIR})
+    add_subdirectory(${nativefiledialog_SOURCE_DIR} ${nativefiledialog_BINARY_DIR} EXCLUDE_FROM_ALL)
     target_compile_definitions(nfd PUBLIC NFD_THROWS_EXCEPTIONS)
 endif()
 
@@ -26,7 +26,7 @@ fetchcontent_getproperties(argparse)
 if(NOT argparse_POPULATED)
     message(STATUS "Populating argparse")
     fetchcontent_populate(argparse)
-    add_subdirectory(${argparse_SOURCE_DIR} ${argparse_BINARY_DIR})
+    add_subdirectory(${argparse_SOURCE_DIR} ${argparse_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
 add_executable(
@@ -45,23 +45,29 @@ add_executable(
     source/ImGuiCore/ImGuiTheme.cxx
 )
 
-target_compile_definitions(
-        ${PROJECT_NAME}
-        PRIVATE PIVOT_EDITOR_ICON_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../editor/assets/Editor"
-)
-
-target_compile_options(
-    ${PROJECT_NAME}
-    PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-            -Wall
-            -Wextra>
-            $<$<CXX_COMPILER_ID:MSVC>:
-            /W4
-            /wd4267
-            /wd4201
-            /wd4244>
-)
-
-target_include_directories(${PROJECT_NAME} PRIVATE include/)
+target_pivot_compile_option(${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE pivot nfd argparse)
+
+install(TARGETS ${PROJECT_NAME}
+        DESTINATION .
+        OPTIONAL)
+
+install(DIRECTORY ${CMAKE_BINARY_DIR}/shaders/ DESTINATION ./shaders)
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/assets/ DESTINATION ./assets)
+
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ImGuiConfig/imgui.ini DESTINATION .)
+
+set(CPACK_GENERATOR ZIP)
+
+set(CPACK_PACKAGE_NAME "PivotEditor")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "PivotEditor")
+
+set(CPACK_PACKAGE_VERSION "1.0.0")
+set(CPACK_PACKAGE_VERSION_MAJOR "1")
+set(CPACK_PACKAGE_VERSION_MINOR "0")
+set(CPACK_PACKAGE_VERSION_PATCH "0")
+
+
+include(CPack)

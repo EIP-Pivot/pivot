@@ -11,15 +11,6 @@
 namespace pivot
 {
 
-template <typename T>
-/// Only accept hashable type
-concept Hashable = requires(T a)
-{
-    {
-        std::hash<T>{}(a)
-        } -> std::convertible_to<std::size_t>;
-};
-
 template <Hashable Key, typename Value>
 /// Store a type in a vector, while keeping a map to the indexes
 class IndexedStorage
@@ -82,7 +73,7 @@ public:
     /// return the number of item in the storage
     constexpr auto size() const noexcept
     {
-        pivot_assert(storage.size() == index.size(), "Index and Storage are not the same.");
+        pivotAssert(storage.size() == index.size());
         return storage.size();
     }
     /// return whether or not the size is equal to 0

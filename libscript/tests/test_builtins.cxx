@@ -52,3 +52,12 @@ TEST_CASE("Builtin vec3", "[script][builtin]")
     REQUIRE(std::holds_alternative<glm::vec3>(result));
     REQUIRE(std::get<glm::vec3>(result) == glm::vec3{1, 2, 3});
 }
+
+TEST_CASE("Builtin color", "[script][builtin]")
+{
+    auto context = BuiltinContext::mock();
+
+    auto result = builtin_color({{4.}, {255.}, {2.}, {1.0}}, context);
+    REQUIRE(std::holds_alternative<data::Color>(result));
+    REQUIRE(std::get<data::Color>(result) == Color{4, 255, 2, 1});
+}

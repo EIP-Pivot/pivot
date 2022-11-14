@@ -66,4 +66,12 @@ TEST_CASE("Builtin toString", "[script][builtin]")
     REQUIRE(std::get<std::string>(builtin_toString({glm::vec3(1, 2, 3)}, context)) == "Vector3(1,2,3)");
     REQUIRE(std::get<std::string>(builtin_toString({data::Color{{255, 255, 255, 1}}}, context)) ==
             "Color(255,255,255,1)");
+
+TEST_CASE("Builtin color", "[script][builtin]")
+{
+    auto context = BuiltinContext::mock();
+
+    auto result = builtin_color({{4.}, {255.}, {2.}, {1.0}}, context);
+    REQUIRE(std::holds_alternative<data::Color>(result));
+    REQUIRE(std::get<data::Color>(result) == Color{4, 255, 2, 1});
 }

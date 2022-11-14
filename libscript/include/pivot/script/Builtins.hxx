@@ -71,8 +71,12 @@ data::Value builtin_abs(const std::vector<data::Value> &params, const BuiltinCon
 data::Value builtin_toString(const std::vector<data::Value> &params, const BuiltinContext &);
 
 /// Vec3  vec3(Number x, Number y, Number z)
-///     Returns the absolute value of the given Number
+///     Returns a built Vector3 value from the xyz parameters
 data::Value builtin_vec3(const std::vector<data::Value> &params, const BuiltinContext &context);
+
+/// Color  color(Number r, Number g, Number b, Number a)
+///     Returns a built Color value from the rgba parameters
+data::Value builtin_color(const std::vector<data::Value> &params, const BuiltinContext &context);
 
 /// Void selectCamera(Entity entity)
 data::Value builtin_selectCamera(const std::vector<data::Value> &params, const BuiltinContext &context);

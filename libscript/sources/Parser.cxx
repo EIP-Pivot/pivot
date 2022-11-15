@@ -214,12 +214,14 @@ void Parser::tokens_from_file(const std::string &file, bool isContent, bool verb
             } else {    // tokens are the string up until the symbol, and the symbol itself
                 std::string tokenStr = line.substr(lcursor, rcursor - lcursor);
                 bool isLiteral = false;
+                bool isLastToken = false;
                 try {                                 // if token is a literal number, store it as that
                     std::stod(tokenStr);              // check integral part is a number
                     if (line.at(rcursor) == '.') {    // handle decimal literals
                         rcursor = line.find_first_of(gKnownSymbols, rcursor + 1);
-                        rcursor = ((rcursor == std::string::npos) ? line.size() - 1 : rcursor);
-                        tokenStr = line.substr(lcursor, rcursor - lcursor + 1);
+                        isLastToken = (rcursor == std::string::npos);
+                        rcursor = ((rcursor == std::string::npos) ? line.size() : rcursor);
+                        tokenStr = line.substr(lcursor, rcursor - lcursor);
                         std::stod(tokenStr);    // check full decimal number
                     }
                     _tokens.push(Token{.type = TokenType::LiteralNumber,
@@ -248,7 +250,7 @@ void Parser::tokens_from_file(const std::string &file, bool isContent, bool verb
                     _tokens.push(Token{
                         .type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
                 }
-                if (!std::isspace(line.at(rcursor)))
+                if (!isLastToken && !std::isspace(line.at(rcursor)))
                     _tokens.push(Token{.type = TokenType::Symbol,
                                        .value = line.substr(rcursor, 1),
                                        .line_nb = lineNb,
@@ -736,7 +738,10 @@ void Parser::consumeSystemFuncParams(Node &result, Token &lastToken)
     // TODO : handle parentheses '(' ')'
     while (_tokens.size() > 0 && _tokens.front().value != ")") {    // an expression runs until a ')' symbol
         // consumeSystemVariable(paramsResult, lastToken);             // consume variable
-        consumeSystemExpression(paramsResult, lastToken);
+        Node expressionResult = {
+            .type = NodeType::Expression, .line_nb = _tokens.front().line_nb, .char_nb = _tokens.front().char_nb};
+        consumeSystemExpression(expressionResult, lastToken);
+        paramsResult.children.push_back(expressionResult);
         if (_tokens.empty() || _tokens.front().value == ")")    // no more variables, end of expression
             break;
         if (_tokens.front().value != ",") {    // token is not an comma

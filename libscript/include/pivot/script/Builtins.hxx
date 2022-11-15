@@ -22,10 +22,13 @@ struct BuiltinContext {
     /// Functor calling the setScene from ecs::ScenemManager
     std::function<void(const std::string &)> loadScene;
 
+    /// Select an entity as the new current camera
+    std::function<void(std::optional<Entity>)> selectCamera;
+
     /// Mock builtin context for unit testing
     static BuiltinContext mock()
     {
-        return BuiltinContext{.isKeyPressed = [](auto) { return false; }, .loadScene = [](auto) {}};
+        return BuiltinContext{.isKeyPressed = [](auto) { return false; }, .loadScene = [](auto) {}, .selectCamera = [](auto) {}};
     }
 };
 
@@ -70,9 +73,20 @@ data::Value builtin_sqrt(const std::vector<data::Value> &params, const BuiltinCo
 ///     Returns the absolute value of the given Number
 data::Value builtin_abs(const std::vector<data::Value> &params, const BuiltinContext &context);
 
+/// String	toString(Any val)
+///		Returns a string representation of the given Value
+data::Value builtin_toString(const std::vector<data::Value> &params, const BuiltinContext &);
+
 /// Vec3  vec3(Number x, Number y, Number z)
-///     Returns the absolute value of the given Number
+///     Returns a built Vector3 value from the xyz parameters
 data::Value builtin_vec3(const std::vector<data::Value> &params, const BuiltinContext &context);
+
+/// Color  color(Number r, Number g, Number b, Number a)
+///     Returns a built Color value from the rgba parameters
+data::Value builtin_color(const std::vector<data::Value> &params, const BuiltinContext &context);
+
+/// Void selectCamera(Entity entity)
+data::Value builtin_selectCamera(const std::vector<data::Value> &params, const BuiltinContext &context);
 
 // Operators
 

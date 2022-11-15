@@ -64,6 +64,19 @@ bool DrawCallResolver::prepareForDraw(const DrawSceneInformation &sceneInformati
         if (!renderObjects_exist.at(i) || !transforms_exist.at(i)) continue;
         const auto &object = renderObjects.at(i);
         const auto &transform = transforms.at(i);
+        glm::mat4 modelMatrix;
+
+        if (!transform.root.is_empty()) {
+            if (!transforms_exist.at(transform.root.ref)) continue;
+            const Transform &root = transforms.at(transform.root.ref);
+            if (!root.root.is_empty()) {
+                logger.warn() << "Entity " << i << " root also has a root. Not displaying.";
+                continue;
+            }
+            modelMatrix = root.getModelMatrix() * transform.getModelMatrix();
+        } else {
+            modelMatrix = transform.getModelMatrix();
+        }
 
         // TODO: better Pipeline batch
         if (frame.pipelineBatch.empty() || frame.pipelineBatch.back().pipelineID != object.pipelineID) {
@@ -84,7 +97,7 @@ bool DrawCallResolver::prepareForDraw(const DrawSceneInformation &sceneInformati
                 });
                 auto obj = object;
                 obj.meshID = model;
-                objectGPUData.emplace_back(transform, obj, storage_ref->get());
+                objectGPUData.emplace_back(modelMatrix, obj, storage_ref->get());
             }
         }
     }

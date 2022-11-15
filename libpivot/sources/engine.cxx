@@ -76,8 +76,7 @@ Engine::Engine()
                                          return;
                                      }
                                      // Set the scene as the active one
-                                     this->m_scene_manager.setCurrentSceneId(
-                                         this->m_scene_manager.getSceneId(scene).value());
+                                     this->changeCurrentScene(this->m_scene_manager.getSceneId(scene).value());
                                  },
                              .isKeyPressed = std::bind_front(&Engine::isKeyPressed, this),
                              .selectCamera = std::bind_front(&Engine::setCurrentCamera, this),

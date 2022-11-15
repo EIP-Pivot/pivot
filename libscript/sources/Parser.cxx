@@ -738,7 +738,10 @@ void Parser::consumeSystemFuncParams(Node &result, Token &lastToken)
     // TODO : handle parentheses '(' ')'
     while (_tokens.size() > 0 && _tokens.front().value != ")") {    // an expression runs until a ')' symbol
         // consumeSystemVariable(paramsResult, lastToken);             // consume variable
-        consumeSystemExpression(paramsResult, lastToken);
+        Node expressionResult = {
+            .type = NodeType::Expression, .line_nb = _tokens.front().line_nb, .char_nb = _tokens.front().char_nb};
+        consumeSystemExpression(expressionResult, lastToken);
+        paramsResult.children.push_back(expressionResult);
         if (_tokens.empty() || _tokens.front().value == ")")    // no more variables, end of expression
             break;
         if (_tokens.front().value != ",") {    // token is not an comma

@@ -9,7 +9,9 @@ TEST_CASE("Scripting-Interpreter-Decimals")
 {
     std::cout << "------Interpreter Decimals------start" << std::endl;
 
-    // logger.start();
+    logger.start();
+
+    logger.info("-------------------------------------------");
 
     component::Index cind;
     systems::Index sind;
@@ -22,7 +24,9 @@ TEST_CASE("Scripting-Interpreter-Decimals")
                               "\tprint(anyEntity.C.vec)\n"
                               "\tanyEntity.C.vec.x = 39.45\n"
                               "\tanyEntity.C.vec.y = 4597.45648\n"
-                              "\tanyEntity.C.vec.z = 12\n"
+                              "\tNumber n = 12 * 48.415 * 65.4\n"
+                              "\tn = n * 0.648 + 41.46 * 12 * 48.415 * 65.4\n"
+                              "\tanyEntity.C.vec.z = n\n"
                               "\tprint(anyEntity.C.vec)\n";
     engine.loadFile(fileContent, true);
 
@@ -45,7 +49,7 @@ TEST_CASE("Scripting-Interpreter-Decimals")
     glm::vec3 vec = std::get<glm::vec3>(std::get<data::Record>(array1->getValueForEntity(0).value()).at("vec"));
     REQUIRE(vec.x == 39.45f);
     REQUIRE(vec.y == 4597.45648f);
-    REQUIRE(vec.z == 12);
+    REQUIRE(vec.z == 1599939.44194f);
 
     std::cout << "------Interpreter Decimals------end" << std::endl;
 }

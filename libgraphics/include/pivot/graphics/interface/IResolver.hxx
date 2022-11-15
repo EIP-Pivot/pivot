@@ -8,12 +8,15 @@
 
 #include "pivot/graphics/types/Light.hxx"
 #include "pivot/graphics/types/RenderObject.hxx"
+#include "pivot/graphics/types/TransformArray.hxx"
 #include "pivot/graphics/types/UniformBufferObject.hxx"
+
+#include "pivot/ecs/Core/Component/SynchronizedComponentArray.hxx"
 
 namespace pivot::graphics
 {
 
-// Forward Declaration of the dispatcher
+// Forward declaration of the dispatcher
 class ResolverDispatcher;
 
 template <typename T>
@@ -28,11 +31,11 @@ struct Object {
 /// Informations needed to draw a scene. Including all objects and al lights
 struct DrawSceneInformation {
     /// @cond
-    Object<RenderObject> renderObjects;
-    Object<PointLight> pointLight;
-    Object<DirectionalLight> directionalLight;
-    Object<SpotLight> spotLight;
-    Object<Transform> transform;
+    const pivot::ecs::component::SynchronizedTypedComponentArray<RenderObject> &renderObjects;
+    const pivot::ecs::component::SynchronizedTypedComponentArray<PointLight> &pointLight;
+    const pivot::ecs::component::SynchronizedTypedComponentArray<DirectionalLight> &directionalLight;
+    const pivot::ecs::component::SynchronizedTypedComponentArray<SpotLight> &spotLight;
+    const pivot::graphics::SynchronizedTransformArray &transform;
     ///@endcond
 };
 

@@ -62,4 +62,5 @@ TEST_CASE("A scene can register components and add entities", "[component][scene
         if (description.name == "Tag") { component.set(Value{Record{{"name", newEntityName}}}); }
     }
     REQUIRE(scene.getEntityName(entity) == newEntityName);
+    REQUIRE(scene.getEntityID(newEntityName) == entity);
 }

@@ -2,15 +2,13 @@
 
 #include "pivot/ecs/Core/Scene.hxx"
 #include <pivot/ecs/Components/Tag.hxx>
+#include <pivot/ecs/Components/TagArray.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
 
 using namespace pivot::ecs;
 
 Scene::Scene(std::string sceneName)
-    : name(sceneName),
-      mSystemManager(mComponentManager, mEntityManager),
-      mEventManager(mSystemManager),
-      mCurrentCamera(0)
+    : name(sceneName), mSystemManager(mComponentManager, mEntityManager), mEventManager(mSystemManager)
 {
     mTagId = mComponentManager.RegisterComponent(Tag::description);
 }
@@ -53,24 +51,6 @@ std::string Scene::getEntityName(Entity entity)
 }
 
 uint32_t Scene::getLivingEntityCount() { return mEntityManager.getLivingEntityCount(); }
-
-void Scene::setCamera(std::uint16_t camera) { mCurrentCamera = camera; }
-
-void Scene::addCamera(Entity camera) { mCamera.push_back(camera); }
-
-void Scene::switchCamera()
-{
-    if (mCamera.size() > 0) mCurrentCamera = (mCurrentCamera + 1) % mCamera.size();
-}
-
-pivot::builtins::Camera &Scene::getCamera()
-{
-    if (mCamera.size() == 0) throw EcsException("No camera set");
-    throw std::logic_error("Unimplemented");
-    // return mComponentManager.GetComponent<Camera>(mCamera[mCurrentCamera]);
-}
-
-std::vector<Entity> &Scene::getCameras() { return mCamera; }
 
 pivot::ecs::component::Manager &Scene::getComponentManager() { return mComponentManager; }
 
@@ -191,4 +171,10 @@ void Scene::registerSystem(const systems::Description &description, pivot::Optio
         }
     }
     mSystemManager.useSystem(description);
+}
+
+std::optional<Entity> Scene::getEntityID(const std::string &name)
+{
+    auto array = dynamic_cast<const component::TagArray &>(mComponentManager.GetComponentArray(mTagId));
+    return array.getEntityID(name);
 }

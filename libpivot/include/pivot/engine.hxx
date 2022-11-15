@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
+#include <pivot/ecs/Core/Component/SynchronizedComponentArray.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
 #include <pivot/ecs/Core/Event/index.hxx>
 #include <pivot/ecs/Core/SceneManager.hxx>
@@ -8,10 +8,13 @@
 
 #include <pivot/graphics/VulkanApplication.hxx>
 #include <pivot/graphics/types/AllocatedImage.hxx>
+#include <pivot/graphics/types/TransformArray.hxx>
 
 #include <pivot/script/Engine.hxx>
 
 #include <pivot/builtins/components/RenderObject.hxx>
+#include <pivot/internal/CameraArray.hxx>
+#include <pivot/internal/LocationCamera.hxx>
 
 namespace pivot
 {
@@ -37,15 +40,18 @@ public:
     }
     vk::Sampler getSampler() const { return m_vulkan_application.assetStorage.getSampler(); }
 
+    void setCurrentCamera(std::optional<Entity> camera);
+    internals::LocationCamera getCurrentCamera();
+
     static constexpr float fov = 80;
 
 protected:
     ecs::component::Index m_component_index;
     ecs::event::Index m_event_index;
     ecs::systems::Index m_system_index;
+    graphics::Window m_window;
     graphics::VulkanApplication m_vulkan_application;
     ecs::script::Engine m_scripting_engine;
-    builtins::Camera m_camera;
     bool m_paused = true;
     std::optional<vk::Rect2D> renderArea = std::nullopt;
     std::filesystem::path m_asset_directory;
@@ -61,8 +67,15 @@ protected:
 private:
     ecs::SceneManager m_scene_manager;
     std::optional<graphics::DrawSceneInformation> m_current_scene_draw_command;
+    pivot::OptionalRef<internals::CameraArray> m_camera_array;
+    pivot::OptionalRef<pivot::graphics::SynchronizedTransformArray> m_transform_array;
+    builtins::components::Camera m_default_camera_data;
+    graphics::Transform m_default_camera_transform;
 
     bool isKeyPressed(const std::string &key) const;
     void onKeyPressed(graphics::Window &window, const graphics::Window::Key key, const graphics::Window::Modifier);
+
+protected:
+    internals::LocationCamera m_default_camera;
 };
 }    // namespace pivot

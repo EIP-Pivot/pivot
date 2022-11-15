@@ -9,6 +9,8 @@
     #include <sys/utsname.h>
     #include <unistd.h>
 
+    #include "pivot/pivot.hxx"
+
 namespace pivot
 {
 
@@ -43,6 +45,42 @@ bool UnixPlateform::isDebuggerPresent()
     } else {
         return false;
     }
+}
+
+void UnixPlateform::setThreadName(std::jthread &thread, const std::string &name)
+{
+    std::string sizeLimitedThreadName = name;
+
+    if (sizeLimitedThreadName.size() > UnixThreadNameLimit) {
+        constexpr char sDash[] = "-";
+        constexpr size_t uDashLen = std::size(sDash);
+        constexpr int numToLeave = (UnixThreadNameLimit - uDashLen) / 2;
+        constexpr int delimiter = UnixThreadNameLimit - (numToLeave + uDashLen);
+
+        sizeLimitedThreadName = name.substr(0, delimiter);
+        sizeLimitedThreadName += sDash;
+        sizeLimitedThreadName += name.substr(numToLeave + delimiter, name.size());
+
+        pivotAssert(sizeLimitedThreadName.size() <= UnixThreadNameLimit);
+    }
+
+    int errorCode = pthread_setname_np(thread.native_handle(), sizeLimitedThreadName.c_str());
+    if (errorCode != 0) {
+        logger.err("UnixPlateform::setThreadName") << "pthread_setname_np('" << name << "') failed with error "
+                                                   << errorCode << "(" << strerror(errorCode) << ").";
+    }
+}
+
+std::string UnixPlateform::getThreadName(std::jthread &thread)
+{
+    char name[UnixThreadNameLimit + 1] = {'\0'};
+
+    int errorCode = pthread_getname_np(thread.native_handle(), name, std::size(name));
+    if (errorCode != 0) {
+        logger.err("UnixPlateform::getThreadName")
+            << "pthread_getname_np() failed with error " << errorCode << "(" << strerror(errorCode) << ").";
+    }
+    return std::string(name);
 }
 
 }    // namespace pivot

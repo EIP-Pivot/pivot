@@ -1,9 +1,12 @@
 #include "ImGuiCore/ComponentEditor.hxx"
+#include "ImGuiCore/CustomWidget.hxx"
 #include "ImGuiCore/ImGuiTheme.hxx"
-#include "ImGuiCore/TypeTemplate/Template.hxx"
+#include "ImGuiCore/ValueInput.hxx"
 #include <magic_enum.hpp>
 
 #include <imgui.h>
+
+#include <pivot/builtins/components/Camera.hxx>
 
 using namespace pivot::ecs;
 using namespace pivot::ecs::component;
@@ -60,9 +63,10 @@ void ComponentEditor::displayComponent()
             ImGui::TreePop();
             Value value = ref;
             ImGui::PushID(ref.description().name.c_str());
-            draw(value, "oui");
+            m_value_input.drawInput(value, "oui");
             ImGui::PopID();
             ref = value;
+            this->selectCamera(ref);
             ImGui::Separator();
         }
     }
@@ -113,4 +117,14 @@ void ComponentEditor::addComponent(const Description &description)
     auto id = cm.GetComponentId(description.name).value();
     Value newComponent = description.defaultValue;
     cm.AddComponent(currentEntity, newComponent, id);
+}
+
+void ComponentEditor::selectCamera(pivot::ecs::component::ComponentRef ref)
+{
+    if (ref.description() == pivot::builtins::components::Camera::description) {
+        ImGuiIO &io = ImGui::GetIO();
+        auto boldFont = io.Fonts->Fonts[0];
+        float lineHeight = (GImGui->Font->FontSize * boldFont->Scale) + GImGui->Style.FramePadding.y * 2.f;
+        if (ImGui::Button("Select camera")) { m_engine.setCurrentCamera(ref.entity()); }
+    }
 }

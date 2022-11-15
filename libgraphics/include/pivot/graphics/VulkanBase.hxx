@@ -22,13 +22,13 @@ public:
 
 protected:
     /// Default ctor
-    VulkanBase(const std::string &windowName = "VulkanBase", const bool bForceValidation = false);
+    VulkanBase(const bool bForceValidation = false);
     /// Default ctor
     ~VulkanBase();
 
     /// Initialize the ressources
-    void init(const std::vector<const char *> &instanceExtensions, const std::vector<const char *> &deviceExtensions,
-              const std::vector<const char *> &validationLayers);
+    void init(Window &window, const std::vector<const char *> &instanceExtensions,
+              const std::vector<const char *> &deviceExtensions, const std::vector<const char *> &validationLayers);
 
     /// Flush the deletionQueue
     void destroy();
@@ -57,7 +57,7 @@ private:
 
 public:
     /// The Window used to render 3D objects
-    Window window;
+    OptionalRef<Window> window_ref;
     /// The Surface used by Vulkan to draw onto
     vk::SurfaceKHR surface = VK_NULL_HANDLE;
     /// The selected GPU used by Vulkan

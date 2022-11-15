@@ -7,9 +7,6 @@
 #include <imgui.h>
 #include <nfd.hpp>
 
-template <class...>
-constexpr std::false_type always_false;
-
 class ImGuiManager
 {
 

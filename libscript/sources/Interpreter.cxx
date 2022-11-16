@@ -284,6 +284,8 @@ data::Value Interpreter::executeFunction(const Node &functionCall, const Stack &
     for (const Node &param: functionCall.children.at(1).children) {    // get all the parameters for the callback
         if (param.type == NodeType::FunctionCall)                      // parameter is function call
             parameters.push_back(executeFunction(param, stack));
+        else if (param.type == NodeType::Expression)    // parameter is expression
+            parameters.push_back(evaluateExpression(param, stack));
         else    // parameter is variable
             parameters.push_back(valueOf(param, stack));
     }

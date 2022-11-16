@@ -26,7 +26,7 @@ event::Description changeNameDescription{
     .payload = pivot::ecs::data::BasicType::String,
 };
 
-std::vector<event::Event> changeName(const systems::Description &description, component::ArrayCombination &entities,
+std::vector<event::Event> changeName(const systems::Description &, component::ArrayCombination &,
                                      const event::EventWithComponent &event)
 {
     auto value = event.components[0][0];
@@ -36,8 +36,8 @@ std::vector<event::Event> changeName(const systems::Description &description, co
     return {};
 }
 
-std::vector<event::Event> childTickSystem(const systems::Description &description,
-                                          component::ArrayCombination &entities, const event::EventWithComponent &event)
+std::vector<event::Event> childTickSystem(const systems::Description &, component::ArrayCombination &entities,
+                                          const event::EventWithComponent &)
 {
     std::vector<event::Event> events;
 

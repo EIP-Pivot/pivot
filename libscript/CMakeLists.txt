@@ -21,4 +21,5 @@ build_tests(
     tests/test_builtins.cxx
     tests/test_escaped.cxx
     tests/test_loadScene.cxx
+    tests/test_decimals.cxx
 )

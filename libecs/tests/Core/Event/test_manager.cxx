@@ -20,8 +20,8 @@ using namespace pivot::ecs;
 using namespace pivot::ecs::data;
 using namespace pivot::builtins::components;
 
-std::vector<event::Event> tickSystem(const systems::Description &description, component::ArrayCombination &entities,
-                                     const event::EventWithComponent &event)
+std::vector<event::Event> tickSystem(const systems::Description &, component::ArrayCombination &entities,
+                                     const event::EventWithComponent &)
 {
     for (auto combination: entities) {
         auto tag = combination[1].get();

@@ -13,21 +13,21 @@ if(NOT logger_POPULATED)
     target_compile_definitions(logger PUBLIC LOGGER_EXTERN_DECLARATION)
 endif()
 
-fetchcontent_declare(
-    mimalloc
-    GIT_REPOSITORY https://github.com/microsoft/mimalloc.git
-    GIT_TAG v2.0.6
-)
-fetchcontent_getproperties(mimalloc)
-if(NOT mimalloc_POPULATED)
-    message(STATUS "Populating mimalloc")
-    fetchcontent_populate(mimalloc)
-    set(MI_BUILD_TESTS
-        OFF
-        CACHE INTERNAL "" FORCE
-    )
-    add_subdirectory(${mimalloc_SOURCE_DIR} ${mimalloc_BINARY_DIR})
-endif()
+# fetchcontent_declare(
+#     mimalloc
+#     GIT_REPOSITORY https://github.com/microsoft/mimalloc.git
+#     GIT_TAG v2.0.6
+# )
+# fetchcontent_getproperties(mimalloc)
+# if(NOT mimalloc_POPULATED)
+#     message(STATUS "Populating mimalloc")
+#     fetchcontent_populate(mimalloc)
+#     set(MI_BUILD_TESTS
+#         OFF
+#         CACHE INTERNAL "" FORCE
+#     )
+#     add_subdirectory(${mimalloc_SOURCE_DIR} ${mimalloc_BINARY_DIR})
+# endif()
 
 fetchcontent_declare(
     glm
@@ -93,7 +93,8 @@ if(DEFINED ENV{CI})
     target_compile_definitions(${PROJECT_NAME} PUBLIC NO_BENCHMARK)
 endif()
 
-target_link_libraries(${PROJECT_NAME} PUBLIC logger glm magic_enum mimalloc-static boost_dll)
+# target_link_libraries(${PROJECT_NAME} PUBLIC logger glm magic_enum mimalloc-static boost_dll)
+target_link_libraries(${PROJECT_NAME} PUBLIC logger glm magic_enum boost_dll)
 
 target_precompile_headers(
     ${PROJECT_NAME}

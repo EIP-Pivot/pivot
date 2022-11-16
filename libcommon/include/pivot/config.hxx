@@ -14,10 +14,7 @@ public:
     {
         namespace fs = std::filesystem;
 
-        fs::path PIVOT_INSTALLED_DATAROOT = "/usr/share/pivot";
-        fs::path dataroot_directory = PIVOT_INSTALLED_DATAROOT / folder;
-
-        if (fs::exists(dataroot_directory) && fs::is_directory(dataroot_directory)) { return dataroot_directory; }
+        fs::path PIVOT_INSTALLED_DATAROOT = "usr/share/pivot";
 
         auto program_path = fs::path(boost::dll::program_location().string());
 
@@ -25,6 +22,8 @@ public:
         while (search_directory.parent_path() != search_directory) {
             auto folder_path = search_directory / folder;
             if (fs::exists(folder_path) && fs::is_directory(folder_path)) { return folder_path; }
+            auto dataroot_path = search_directory / PIVOT_INSTALLED_DATAROOT / folder;
+            if (fs::exists(dataroot_path) && fs::is_directory(dataroot_path)) { return dataroot_path; }
             search_directory = search_directory.parent_path();
         }
         throw std::runtime_error(std::string("Could not find data folder " + folder));

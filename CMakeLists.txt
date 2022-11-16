@@ -3,6 +3,7 @@ project(pivot)
 
 include(FetchContent)
 include(CheckIPOSupported)
+include(GNUInstallDirs)
 include(cmake/find_linker.cmake)
 include(cmake/CompileShaders.cmake)
 include(cmake/PivotCompileOption.cmake)

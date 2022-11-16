@@ -49,9 +49,7 @@ target_pivot_compile_option(${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE pivot nfd argparse)
 
-install(TARGETS ${PROJECT_NAME}
-        DESTINATION .
-        OPTIONAL)
+install(TARGETS ${PROJECT_NAME})
 
 install(DIRECTORY ${CMAKE_BINARY_DIR}/shaders/ DESTINATION ./shaders)
 

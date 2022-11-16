@@ -39,8 +39,7 @@ std::vector<event::Event> drawTextSystemImpl(const systems::Description &, compo
     PROFILE_FUNCTION();
     const auto &textArray = dynamic_cast<component::DenseTypedComponentArray<Text> &>(cmb.arrays()[0].get());
     const auto &transformArray =
-        dynamic_cast<component::SynchronizedTypedComponentArray<Transform2D> &>(cmb.arrays()[1].get());
-    auto transform_array_lock = transformArray.lock();
+        dynamic_cast<component::DenseTypedComponentArray<Transform2D> &>(cmb.arrays()[1].get());
 
     auto maxEntity = std::min({textArray.maxEntity(), transformArray.maxEntity()});
     for (std::size_t entity = 0; entity < maxEntity; entity++) {

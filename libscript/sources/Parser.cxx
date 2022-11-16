@@ -99,7 +99,6 @@ void Parser::tokens_from_file(const std::string &file, bool isContent, bool verb
     _tokens = {};
     // Indices for navigating file string
     size_t lineNb = 1;
-    size_t lastLine = 0;
     size_t lastLineIndentSize = 0;
     size_t lineStart = 0;
     size_t lineEnd = text.find('\n', lineStart);
@@ -213,7 +212,6 @@ void Parser::tokens_from_file(const std::string &file, bool isContent, bool verb
 
             } else {    // tokens are the string up until the symbol, and the symbol itself
                 std::string tokenStr = line.substr(lcursor, rcursor - lcursor);
-                bool isLiteral = false;
                 bool isLastToken = false;
                 try {                                 // if token is a literal number, store it as that
                     std::stod(tokenStr);              // check integral part is a number
@@ -228,7 +226,6 @@ void Parser::tokens_from_file(const std::string &file, bool isContent, bool verb
                                        .value = tokenStr,
                                        .line_nb = lineNb,
                                        .char_nb = lcursor + 1});
-                    isLiteral = true;
                 } catch (const std::invalid_argument &) {    // token is not a number
                     if (tokenStr == "True" || tokenStr == "False") {
                         _tokens.push(Token{
@@ -261,12 +258,10 @@ void Parser::tokens_from_file(const std::string &file, bool isContent, bool verb
         }
         if (lcursor < line.size()) {    // TODO : handle last token more elegantly ?
             std::string tokenStr = line.substr(lcursor, rcursor - lcursor);
-            bool isLiteral = false;
             try {                       // if token is a literal number, store it as that
                 std::stod(tokenStr);    // check integral part is a number
                 _tokens.push(Token{
                     .type = TokenType::LiteralNumber, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
-                isLiteral = true;
             } catch (const std::invalid_argument &) {    // token is not a number
                 if (tokenStr == "True" || tokenStr == "False") {
                     _tokens.push(Token{
@@ -517,7 +512,6 @@ void Parser::consumeSystemStatement(Node &result, Token &lastToken)
     }
     const Token &token = _tokens.front();
     Node statementResult = {.type = NodeType::Statement, .line_nb = token.line_nb, .char_nb = token.char_nb};
-    size_t lineNb = token.line_nb;
     if (std::find(gBlockops.begin(), gBlockops.end(), token.value) != gBlockops.end()) {    // Is block operator
         statementResult.value = token.value;    // store the "if","while","for" for the interpreter
         consumeSystemBlock(statementResult, lastToken);

@@ -1,5 +1,7 @@
-#include "pivot/script/Engine.hxx"
 #include <catch2/catch_test_macros.hpp>
+
+#include "pivot/script/Engine.hxx"
+
 #include <string>
 #include <vector>
 
@@ -7,11 +9,9 @@ using namespace pivot::ecs;
 
 TEST_CASE("Scripting-Interpreter-Decimals")
 {
-    std::cout << "------Interpreter Decimals------start" << std::endl;
-
     logger.start();
 
-    logger.info("-------------------------------------------");
+    logger.info("------Interpreter Decimals------") << "Start";
 
     component::Index cind;
     systems::Index sind;
@@ -42,7 +42,13 @@ TEST_CASE("Scripting-Interpreter-Decimals")
     array1->setValueForEntity(0, entity.at(0));
     component::ArrayCombination combinations{{std::ref(*array1)}};
     event::EventWithComponent evt = {
-        .event = event::Event{.description = Sdescription.eventListener, .entities = {1, 2}, .payload = 0.12}};
+        .event =
+            event::Event{
+                .description = Sdescription.eventListener,
+                .entities = {1, 2},
+                .payload = 0.12,
+            },
+    };
 
     Sdescription.system(Sdescription, combinations, evt);
 
@@ -51,5 +57,5 @@ TEST_CASE("Scripting-Interpreter-Decimals")
     REQUIRE(vec.y == 4597.45648f);
     REQUIRE(vec.z == 1599939.44194f);
 
-    std::cout << "------Interpreter Decimals------end" << std::endl;
+    logger.info("------Interpreter Decimals------") << "End";
 }

@@ -137,11 +137,11 @@ private:
                             vk::PipelineCache pipelineCache = VK_NULL_HANDLE) const;
 
 private:
-    std::string vertexShaderPath;
-    std::optional<std::string> fragmentShaderPath;
-    std::optional<std::string> geometryShaderPath;
-    std::optional<std::string> tessellationControlShaderPath;
-    std::optional<std::string> tessellationEvaluationShaderPath;
+    std::filesystem::path vertexShaderPath;
+    std::optional<std::filesystem::path> fragmentShaderPath;
+    std::optional<std::filesystem::path> geometryShaderPath;
+    std::optional<std::filesystem::path> tessellationControlShaderPath;
+    std::optional<std::filesystem::path> tessellationEvaluationShaderPath;
 
     vk::PipelineInputAssemblyStateCreateInfo inputAssembly;
     vk::PipelineColorBlendAttachmentState colorBlendAttachment;

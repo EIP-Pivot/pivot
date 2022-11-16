@@ -45,15 +45,17 @@ add_executable(
     source/ImGuiCore/ImGuiTheme.cxx
 )
 
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "pivot-editor" ) 
+
 target_pivot_compile_option(${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE pivot nfd argparse)
 
 install(TARGETS ${PROJECT_NAME})
 
-install(DIRECTORY ${CMAKE_BINARY_DIR}/shaders/ DESTINATION ./shaders)
+install(DIRECTORY ${CMAKE_BINARY_DIR}/shaders DESTINATION ${CMAKE_INSTALL_DATADIR}/pivot)
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/assets/ DESTINATION ./assets)
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/assets DESTINATION ${CMAKE_INSTALL_DATADIR}/pivot)
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ImGuiConfig/imgui.ini DESTINATION .)
 

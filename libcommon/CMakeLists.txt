@@ -93,7 +93,7 @@ if(DEFINED ENV{CI})
     target_compile_definitions(${PROJECT_NAME} PUBLIC NO_BENCHMARK)
 endif()
 
-target_link_libraries(${PROJECT_NAME} PUBLIC logger glm magic_enum mimalloc-static)
+target_link_libraries(${PROJECT_NAME} PUBLIC logger glm magic_enum mimalloc-static boost_dll)
 
 target_precompile_headers(
     ${PROJECT_NAME}

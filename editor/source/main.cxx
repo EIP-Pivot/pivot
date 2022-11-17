@@ -1,7 +1,5 @@
-#include <iostream>
 
 #include <pivot/graphics/Window.hxx>
-#include <pivot/graphics/vk_utils.hxx>
 
 #include <pivot/builtins/systems/ControlSystem.hxx>
 #include <pivot/internal/camera.hxx>
@@ -11,24 +9,18 @@
 #include <pivot/ecs/Core/Scene.hxx>
 #include <pivot/ecs/Core/SceneManager.hxx>
 
-#include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
 
 #include "CmdLineArg.hxx"
-#include "ImGuiCore/AssetBrowser.hxx"
-#include "ImGuiCore/ComponentEditor.hxx"
-#include "ImGuiCore/Editor.hxx"
-#include "ImGuiCore/EntityModule.hxx"
-#include "ImGuiCore/ImGuiManager.hxx"
 #include "ImGuiCore/ImGuiTheme.hxx"
 #include "ImGuiCore/MenuBar.hxx"
-#include "ImGuiCore/SceneEditor.hxx"
-#include "ImGuiCore/SystemsEditor.hxx"
+#include "WindowsManager.hxx"
 
 #include <pivot/engine.hxx>
 #include <pivot/utility/benchmark.hxx>
 
 using namespace pivot::ecs;
+using namespace pivot::editor;
 using Window = pivot::graphics::Window;
 
 class Application : public pivot::Engine
@@ -36,15 +28,15 @@ class Application : public pivot::Engine
 public:
     Application()
         : Engine(),
-          imGuiManager(getSceneManager(), *this, m_asset_directory),
-          editor(getSceneManager(), getCurrentScene()),
-          entity(getCurrentScene()),
-          componentEditor(m_component_index, getCurrentScene()),
-          systemsEditor(m_system_index, m_component_index, getCurrentScene()),
-          assetBrowser(imGuiManager, m_vulkan_application.assetStorage, getCurrentScene()),
-          sceneEditor(imGuiManager, getCurrentScene()),
-          menuBar(getSceneManager(), *this)
+          menuBar(getSceneManager(), *this),
+          windowsManager(m_component_index, m_system_index, getSceneManager(), getCurrentScene(),
+                         m_vulkan_application.assetStorage, m_vulkan_application.pipelineStorage, *this, m_camera,
+                         m_paused)
     {
+        for (const auto &directoryEntry: std::filesystem::recursive_directory_iterator(m_asset_directory / "Editor")) {
+            if (directoryEntry.is_directory()) continue;
+            loadAsset(directoryEntry.path(), false);
+        }
     }
 
     SceneManager::SceneId loadDefaultScene() { return registerScene("Default"); }
@@ -52,6 +44,7 @@ public:
     void init()
     {
         PROFILE_FUNCTION();
+
         auto &window = m_vulkan_application.window;
 
         Scene &scene = *getCurrentScene();
@@ -104,7 +97,7 @@ public:
             if (this->m_paused) {
                 window.shouldClose(true);
             } else {
-                this->editor.setRun(false);
+                m_paused = false;
             }
         });
         m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
@@ -168,32 +161,23 @@ public:
         PROFILE_FUNCTION();
         imGuiTheme.setStyle();
         if (!menuBar.render()) {
-            imGuiManager.reset();
+            windowsManager.reset();
             return onTick(dt);
         }
+        windowsManager.render();
         if (menuBar.shouldDisplayColorwindow()) imGuiTheme.setColors();
-        editor.create(*this, m_vulkan_application.pipelineStorage);
-        m_paused = !editor.getRun();
-        sceneEditor.create();
-        if (m_paused) {
-            sceneEditor.setAspectRatio(m_vulkan_application.getAspectRatio());
-            entity.create();
-            entity.hasSelected() ? componentEditor.create(entity.getEntitySelected()) : componentEditor.create();
-            systemsEditor.create();
-            assetBrowser.create();
-            if (entity.hasSelected()) { sceneEditor.DisplayGuizmo(entity.getEntitySelected(), m_camera); }
-        }
+        windowsManager.setAspectRatio(m_vulkan_application.getAspectRatio());
         UpdateCamera(dt);
         this->setRenderArea(vk::Rect2D{
             .offset =
                 {
-                    .x = static_cast<int32_t>(sceneEditor.offset.x),
-                    .y = static_cast<int32_t>(sceneEditor.offset.y),
+                    .x = static_cast<int32_t>(windowsManager.workspace.offset.x),
+                    .y = static_cast<int32_t>(windowsManager.workspace.offset.y),
                 },
             .extent =
                 {
-                    .width = static_cast<uint32_t>(sceneEditor.size.x),
-                    .height = static_cast<uint32_t>(sceneEditor.size.y),
+                    .width = static_cast<uint32_t>(windowsManager.workspace.size.x),
+                    .height = static_cast<uint32_t>(windowsManager.workspace.size.y),
                 },
         });
     }
@@ -212,31 +196,25 @@ public:
         }
 #endif
         PROFILE_FUNCTION();
-        imGuiManager.newFrame();
+        windowsManager.newFrame();
     }
 
     void onFrameEnd() override
     {
         PROFILE_FUNCTION();
-        ImGuiManager::render();
+        windowsManager.endFrame();
     }
 
     void onReset() override
     {
         PROFILE_FUNCTION();
-        imGuiManager.reset();
+        windowsManager.reset();
     }
 
 public:
-    ImGuiManager imGuiManager;
-    Editor editor;
-    EntityModule entity;
-    ComponentEditor componentEditor;
-    SystemsEditor systemsEditor;
-    AssetBrowser assetBrowser;
-    SceneEditor sceneEditor;
     ImGuiTheme imGuiTheme;
     MenuBar menuBar;
+    WindowsManager windowsManager;
     glm::dvec2 last;
 
     bool bFirstMouse = true;

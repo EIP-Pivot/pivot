@@ -33,16 +33,16 @@ add_executable(
     ${PROJECT_NAME}
     source/main.cxx
     source/CmdLineArg.cxx
-    source/ImGuiCore/ImGuiManager.cxx
     source/ImGuiCore/Editor.cxx
-    source/ImGuiCore/EntityModule.cxx
-    source/ImGuiCore/ComponentEditor.cxx
-    source/ImGuiCore/SystemsEditor.cxx
-    source/ImGuiCore/AssetBrowser.cxx
     source/ImGuiCore/MenuBar.cxx
-    source/ImGuiCore/SceneEditor.cxx
     source/ImGuiCore/CustomWidget.cxx
     source/ImGuiCore/ImGuiTheme.cxx
+    source/Windows/ComponentWindow.cxx
+    source/Windows/SystemWindow.cxx
+    source/Windows/EntityWindow.cxx
+    source/Windows/AssetWindow.cxx
+    source/Windows/SceneWindow.cxx
+    source/WindowsManager.cxx
 )
 
 target_pivot_compile_option(${PROJECT_NAME})

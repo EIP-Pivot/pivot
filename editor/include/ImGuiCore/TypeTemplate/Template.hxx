@@ -2,8 +2,8 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
-#include "ImGuiCore/AssetBrowser.hxx"
 #include "ImGuiCore/CustomWidget.hxx"
+#include "Windows/AssetWindow.hxx"
 #include <pivot/ecs/Core/Component/description.hxx>
 #include <pivot/ecs/Core/Data/value.hxx>
 
@@ -25,7 +25,7 @@ void draw(pivot::ecs::data::Asset &asset, const std::string &name)
     if (ImGui::BeginDragDropTarget()) {
         if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET")) {
             pivotAssertMsg(payload->Data, "Empty drag and drop payload");
-            auto *assetWrapper = reinterpret_cast<AssetBrowser::wrapper *>(payload->Data);
+            auto *assetWrapper = reinterpret_cast<pivot::editor::AssetWindow::wrapper *>(payload->Data);
             asset.name = std::string(assetWrapper->name);
         }
         ImGui::EndDragDropTarget();

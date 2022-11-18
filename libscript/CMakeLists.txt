@@ -20,8 +20,16 @@ target_compile_options(
     /wd4244>
 )
 
-target_include_directories(${PROJECT_NAME} PUBLIC include/)
-
 target_link_libraries(${PROJECT_NAME} PUBLIC pivot-graphics pivot-ecs)
 
-build_tests(${PROJECT_NAME} tests/test_parser.cxx tests/test_interpreter.cxx tests/test_builtins.cxx tests/test_negative_numbers.cxx)
+target_precompile_headers(${PROJECT_NAME} REUSE_FROM pivot-common)
+build_tests(
+    ${PROJECT_NAME}
+    tests/test_parser.cxx
+    tests/test_interpreter.cxx
+    tests/test_builtins.cxx
+    tests/test_escaped.cxx
+    tests/test_decimals.cxx
+    tests/test_multibyte.cxx
+    tests/test_negative_numbers.cxx
+)

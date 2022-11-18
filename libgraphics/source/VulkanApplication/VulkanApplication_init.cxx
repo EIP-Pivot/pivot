@@ -1,12 +1,12 @@
 #include "pivot/graphics/VulkanApplication.hxx"
 
-#include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/PipelineBuilders/ComputePipelineBuilder.hxx"
 #include "pivot/graphics/PipelineBuilders/GraphicsPipelineBuilder.hxx"
-#include "pivot/graphics/QueueFamilyIndices.hxx"
+#include "pivot/graphics/types/QueueFamilyIndices.hxx"
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"
+#include "pivot/pivot.hxx"
 
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
@@ -17,7 +17,7 @@ namespace pivot::graphics
 
 void VulkanApplication::createRenderPass()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     vk::AttachmentDescription colorAttachmentResolve{
         .format = swapchain.getSwapchainFormat(),
         .samples = vk::SampleCountFlagBits::e1,
@@ -28,14 +28,6 @@ void VulkanApplication::createRenderPass()
         .initialLayout = vk::ImageLayout::eUndefined,
         .finalLayout = vk::ImageLayout::ePresentSrcKHR,
     };
-    const auto depthFormat =
-        vk_utils::findSupportedFormat(physical_device,
-                                      {
-                                          vk::Format::eD32Sfloat,
-                                          vk::Format::eD32SfloatS8Uint,
-                                          vk::Format::eD24UnormS8Uint,
-                                      },
-                                      vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
 
     renderPass.addAttachement(VulkanRenderPass::Color, swapchain.getSwapchainFormat(), maxMsaaSample,
                               vk::ImageLayout::eColorAttachmentOptimal);
@@ -50,7 +42,7 @@ void VulkanApplication::createRenderPass()
 
 void VulkanApplication::createFramebuffers()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     swapChainFramebuffers.resize(swapchain.nbOfImage());
     for (size_t i = 0; i < swapchain.nbOfImage(); i++) {
         std::array<vk::ImageView, 3> attachments = {colorImage.imageView, depthResources.imageView,
@@ -74,7 +66,7 @@ void VulkanApplication::createFramebuffers()
 
 void VulkanApplication::createCommandPool()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     vk::CommandPoolCreateInfo poolInfo{
         .flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
         .queueFamilyIndex = queueIndices.graphicsFamily.value(),
@@ -86,10 +78,7 @@ void VulkanApplication::createCommandPool()
 
 void VulkanApplication::createDepthResources()
 {
-    DEBUG_FUNCTION
-    vk::Format depthFormat = pivot::graphics::vk_utils::findSupportedFormat(
-        physical_device, {vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint},
-        vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
+    DEBUG_FUNCTION();
     vk::ImageCreateInfo imageInfo{
         .imageType = vk::ImageType::e2D,
         .format = depthFormat,
@@ -121,7 +110,7 @@ void VulkanApplication::createDepthResources()
 
 void VulkanApplication::createColorResources()
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     vk::ImageCreateInfo imageInfo{
         .imageType = vk::ImageType::e2D,
         .format = swapchain.getSwapchainFormat(),

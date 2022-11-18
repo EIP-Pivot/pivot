@@ -1,8 +1,7 @@
 project(pivot-ecs)
 
-include(FetchContent)
-
 function(fetch_boost_library library)
+    set(BUILD_TESTING OFF)
     fetchcontent_declare(
         boost_${library}
         GIT_REPOSITORY https://github.com/boostorg/${library}.git
@@ -33,6 +32,47 @@ fetch_boost_library(typeof)
 fetch_boost_library(utility)
 fetch_boost_library(predef)
 fetch_boost_library(io)
+fetch_boost_library(dll)
+
+fetch_boost_library(filesystem)
+fetch_boost_library(atomic)
+fetch_boost_library(align)
+fetch_boost_library(iterator)
+fetch_boost_library(concept_check)
+fetch_boost_library(conversion)
+fetch_boost_library(function)
+fetch_boost_library(bind)
+fetch_boost_library(move)
+fetch_boost_library(smart_ptr)
+fetch_boost_library(spirit)
+fetch_boost_library(array)
+fetch_boost_library(endian)
+fetch_boost_library(foreach)
+fetch_boost_library(optional)
+fetch_boost_library(phoenix)
+fetch_boost_library(pool)
+fetch_boost_library(proto)
+fetch_boost_library(range)
+fetch_boost_library(regex)
+fetch_boost_library(thread)
+fetch_boost_library(chrono)
+fetch_boost_library(ratio)
+fetch_boost_library(rational)
+fetch_boost_library(container)
+fetch_boost_library(date_time)
+fetch_boost_library(numeric_conversion)
+fetch_boost_library(tokenizer)
+fetch_boost_library(exception)
+fetch_boost_library(intrusive)
+fetch_boost_library(algorithm)
+fetch_boost_library(lexical_cast)
+fetch_boost_library(unordered)
+fetch_boost_library(variant)
+fetch_boost_library(variant2)
+fetch_boost_library(system)
+fetch_boost_library(type_index)
+fetch_boost_library(winapi)
+fetch_boost_library(mp11)
 
 fetchcontent_declare(
     nlohmann_json
@@ -65,32 +105,17 @@ add_library(
     source/Core/Event/index.cxx
     source/Core/Event/description.cxx
     source/Core/Event/manager.cxx
-    source/Components/TagArray.cxx
     source/Components/Tag.cxx
     source/Components/RigidBody.cxx
     source/Components/Gravity.cxx
-)
-target_include_directories(${PROJECT_NAME} PUBLIC include/)
-
-target_compile_options(
-    ${PROJECT_NAME}
-    PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-            -Wall -Wextra>
-            $<$<CXX_COMPILER_ID:MSVC>:
-            /W4
-            /wd4267
-            /wd4201
-            /wd4244>
+    source/Core/Component/FlagComponentStorage.cxx
 )
 
-target_link_libraries(
-    ${PROJECT_NAME}
-    PUBLIC glm
-           magic_enum
-           boost_fusion
-           nlohmann_json::nlohmann_json
-           logger
-)
+target_pivot_compile_option(${PROJECT_NAME})
+
+target_link_libraries(${PROJECT_NAME} PUBLIC pivot-common boost_fusion boost_dll nlohmann_json::nlohmann_json)
+
+target_precompile_headers(${PROJECT_NAME} REUSE_FROM pivot-common)
 
 build_tests(
     ${PROJECT_NAME}
@@ -108,4 +133,5 @@ build_tests(
     tests/Core/Event/test_child_event.cxx
     tests/Core/Scene/test_load.cxx
     tests/Core/Scene/test_save.cxx
+    tests/Core/Component/test_flag_component_storage.cxx
 )

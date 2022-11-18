@@ -1,7 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "pivot/ecs/Core/Component/ScriptingComponentArray.hxx"
 #include <pivot/ecs/Components/Tag.hxx>
+#include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
+#include <pivot/ecs/Core/Component/ScriptingComponentArray.hxx>
 #include <pivot/ecs/Core/Component/combination.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
 
@@ -12,20 +13,20 @@ using namespace pivot::ecs::component;
 TEST_CASE("Component array combinations", "[component]")
 {
     auto description = Tag::description;
-    auto array1 = description.createContainer(description);
-    auto array2 = description.createContainer(description);
+    auto array1 = DenseTypedComponentArray<Tag>(description);
+    auto array2 = DenseTypedComponentArray<Tag>(description);
 
     Value name1{Record{{"name", "bobby"}}};
     Value name2{Record{{"name", "max"}}};
 
-    array1->setValueForEntity(0, name1);
-    array2->setValueForEntity(0, name2);
-    array1->setValueForEntity(3, name1);
-    array2->setValueForEntity(5, name2);
-    array1->setValueForEntity(7, name1);
-    array2->setValueForEntity(7, name2);
+    array1.setValueForEntity(0, name1);
+    array2.setValueForEntity(0, name2);
+    array1.setValueForEntity(3, name1);
+    array2.setValueForEntity(5, name2);
+    array1.setValueForEntity(7, name1);
+    array2.setValueForEntity(7, name2);
 
-    ArrayCombination combinations{{std::ref(*array1), std::ref(*array2)}};
+    ArrayCombination combinations{{std::ref(array1), std::ref(array2)}};
 
     unsigned count = 0;
     for (auto combination: combinations) {
@@ -36,7 +37,7 @@ TEST_CASE("Component array combinations", "[component]")
     REQUIRE(count == 2);
 
     (*combinations.begin())[0].set(name2);
-    REQUIRE(array1->getValueForEntity(0) == name2);
+    REQUIRE(array1.getValueForEntity(0) == name2);
 }
 
 std::unique_ptr<IComponentArray> createArray(Description d) { return std::make_unique<ScriptingComponentArray>(d); }
@@ -78,6 +79,17 @@ TEST_CASE("Array intersections work", "[component]")
 
     REQUIRE(it != combination.end());
     REQUIRE(it->entity == 3);
+
+    auto allComponents = it->getAllComponents();
+    REQUIRE(allComponents.size() == 3);
+
+    REQUIRE(allComponents[0].description() == components[0]);
+    REQUIRE(allComponents[1].description() == components[1]);
+    REQUIRE(allComponents[2].description() == components[2]);
+
+    REQUIRE(allComponents[0].entity() == 3);
+    REQUIRE(allComponents[1].entity() == 3);
+    REQUIRE(allComponents[2].entity() == 3);
 
     it++;
 

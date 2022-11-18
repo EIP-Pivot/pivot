@@ -2,9 +2,8 @@
 
 #include "pivot/graphics/interface/IRenderer.hxx"
 
-#include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/AssetStorage.hxx"
 #include "pivot/graphics/PipelineStorage.hxx"
-#include "pivot/graphics/types/common.hxx"
 
 namespace pivot::graphics
 {
@@ -18,15 +17,13 @@ public:
     ~CullingRenderer();
 
     std::string getName() const noexcept override { return "Culling"; }
-    bool onInit(VulkanBase &base_ref, const vk::DescriptorSetLayout &resolverLayout) override;
+    bool onInit(VulkanBase &base_ref, const ResolverDispatcher &dispatcher) override;
     void onStop(VulkanBase &base_ref) override;
-    bool onRecreate(const vk::Extent2D &size, VulkanBase &base_ref, const vk::DescriptorSetLayout &resolverLayout,
-                    vk::RenderPass &pass) override;
-
-    bool onDraw(const CameraData &cameraData, DrawCallResolver &resolver, vk::CommandBuffer &cmd) override;
+    bool onDraw(const RenderingContext &context, const CameraData &cameraData, ResolverDispatcher &dispatcher,
+                vk::CommandBuffer &cmd) override;
 
 private:
-    void createPipelineLayout(vk::Device &device, const vk::DescriptorSetLayout &resolverLayout);
+    void createPipelineLayout(vk::Device &device, const ResolverDispatcher &dispatcher);
     void createPipeline();
 
 private:

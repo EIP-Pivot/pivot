@@ -8,7 +8,7 @@
 
 #include "pivot/graphics/types/AllocatedBuffer.hxx"
 #include "pivot/graphics/types/AllocatedImage.hxx"
-#include "pivot/graphics/types/common.hxx"
+
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_utils.hxx"
 
@@ -31,9 +31,13 @@ public:
         uint64_t free = 0;
     };
 
+    /// The path where the json mem dump file will be written to.
+    constexpr static auto memory_dump_file_name = "./vma_mem_dump.json";
+
 public:
     /// Constructor
     VulkanAllocator();
+    VulkanAllocator(const VulkanAllocator &) = delete;
     /// Destructor
     ~VulkanAllocator();
 
@@ -44,13 +48,15 @@ public:
 
     template <typename T>
     /// Create a buffer.
-    AllocatedBuffer<T> createBuffer(std::size_t size, vk::BufferUsageFlags usage, vma::MemoryUsage memoryUsage,
+    AllocatedBuffer<T> createBuffer(std::size_t size, vk::BufferUsageFlags usage,
+                                    vma::MemoryUsage memoryUsage = vma::MemoryUsage::eAuto,
                                     vma::AllocationCreateFlags flags = {}, const std::string &debug_name = "")
     {
-        assert(size != 0);
+        pivotAssertMsg(size != 0, "Can't create empty buffer !");
         AllocatedBuffer<T> buffer{
             .size = size,
             .flags = flags,
+            .name = debug_name,
         };
         vk::BufferCreateInfo bufferInfo{
             .size = buffer.getBytesSize(),
@@ -60,8 +66,23 @@ public:
         vmaallocInfo.usage = memoryUsage;
         vmaallocInfo.flags = flags;
         std::tie(buffer.buffer, buffer.memory) = allocator.createBuffer(bufferInfo, vmaallocInfo, buffer.info);
-        if (!debug_name.empty()) vk_debug::setObjectName(device, buffer.buffer, debug_name);
+        if (!debug_name.empty()) {
+            vk_debug::setObjectName(device, buffer.buffer, debug_name);
+            vk_debug::setObjectName(device, buffer.info.deviceMemory, debug_name + " Memory");
+            allocator.setAllocationName(buffer.memory, debug_name.c_str());
+        }
         return buffer;
+    }
+
+    template <typename T>
+    /// Create a CPU mappable buffer
+    AllocatedBuffer<T> createMappedBuffer(std::size_t bufferSize, const std::string &debug_name = "",
+                                          vk::BufferUsageFlags usage = {})
+    {
+        return createBuffer<T>(bufferSize, vk::BufferUsageFlagBits::eStorageBuffer | usage, vma::MemoryUsage::eAuto,
+                               vma::AllocationCreateFlagBits::eMapped |
+                                   vma::AllocationCreateFlagBits::eHostAccessSequentialWrite,
+                               debug_name);
     }
 
     /// @brief Create an image.
@@ -73,7 +94,7 @@ public:
     /// Map buffer memory to a pointer
     T *mapMemory(AllocatedBuffer<T> &buffer)
     {
-        assert(buffer);
+        pivotAssert(buffer);
         return static_cast<T *>(allocator.mapMemory(buffer.memory));
     }
 
@@ -81,7 +102,7 @@ public:
     /// Map buffer memory as a read-only pointer
     const T *mapMemory(AllocatedBuffer<T> &buffer) const
     {
-        assert(buffer);
+        pivotAssert(buffer);
         return static_cast<const T *const>(allocator.mapMemory(buffer.memory));
     }
 
@@ -92,7 +113,7 @@ public:
     /// It is safe to call even if the buffer has been created with vma::AllocationCreateFlagBits::eMapped.
     void unmapMemory(AllocatedBuffer<T> &buffer)
     {
-        assert(buffer);
+        pivotAssert(buffer);
         allocator.unmapMemory(buffer.memory);
     }
 
@@ -102,10 +123,10 @@ public:
     void copyBuffer(AllocatedBuffer<T> &buffer, const T *data, std::size_t data_size, std::size_t offset = 0)
     {
         if (data_size == 0) return;
-        assert(buffer);
-        assert(buffer.getBytesSize() >= data_size + offset);
-        assert((data_size + offset) % sizeof(T) == 0);
-        assert(data);
+        pivotAssert(buffer);
+        pivotAssert(data);
+        pivotAssertMsg(buffer.getBytesSize() >= data_size + offset, "Buffer not big enough");
+        pivotAssertMsg((data_size + offset) % sizeof(T) == 0, "Source data is incorrectly aligned");
 
         auto *mapped = mapMemory<T>(buffer);
         std::memcpy(mapped + offset, data, data_size);

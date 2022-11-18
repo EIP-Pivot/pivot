@@ -1,6 +1,6 @@
-#include <Logger.hpp>
-
 #include <pivot/ecs/Core/Component/index.hxx>
+
+#include "pivot/pivot.hxx"
 
 namespace pivot::ecs::component
 {
@@ -33,6 +33,7 @@ Index::const_iterator Index::end() const { return m_components.end(); }
 
 std::vector<std::string> Index::getAllComponentsNames() const
 {
+    PROFILE_FUNCTION();
     std::vector<std::string> names;
     names.reserve(m_components.size());
     for (auto &[key, value]: m_components) { names.push_back(key); }

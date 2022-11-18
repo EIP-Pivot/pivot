@@ -6,171 +6,69 @@
 #include <ImGuizmo.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
+#include <imgui_internal.h>
 
-#include <Logger.hpp>
-#include <nfd.hpp>
-
-void ImGuiManager::newFrame(pivot::Engine &engine)
+void ImGuiManager::newFrame()
 {
+    PROFILE_FUNCTION();
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
     ImGuizmo::BeginFrame();
 
-    ImGui::Begin("Load/Save");
-    saveScene(engine);
-    loadScene(engine);
-    loadScript(engine);
-    loadAsset(engine);
+    dockSpace();
+}
+
+void ImGuiManager::dockSpace()
+{
+    PROFILE_FUNCTION();
+    ImGuiIO &io = ImGui::GetIO();
+    if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
+        const ImGuiViewport *viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(viewport->WorkSize);
+        ImGui::SetNextWindowViewport(viewport->ID);
+
+        ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode |
+                                             ImGuiDockNodeFlags_NoDockingInCentralNode |
+                                             ImGuiDockNodeFlags_NoWindowMenuButton | ImGuiDockNodeFlags_NoCloseButton;
+        ImGuiWindowFlags host_window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
+                                             ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                                             ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoBringToFrontOnFocus |
+                                             ImGuiWindowFlags_NoNavFocus;
+        if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
+            host_window_flags |= ImGuiWindowFlags_NoBackground;
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+        ImGui::Begin("DockSpace Window", nullptr, host_window_flags);
+        {
+            ImGui::PopStyleVar(3);
+
+            ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0));
+
+            ImGuiID dockspace_id = ImGui::GetID("DockSpace");
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2{0.f, 0.f});
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 7.0f));
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+            ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags, nullptr);
+            ImGui::PopStyleVar(3);
+            if (ImGuiDockNode *node = ImGui::DockBuilderGetCentralNode(dockspace_id)) {
+                m_centerDockId = node->ID;
+                //                node->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
+            }
+            ImGui::PopStyleColor();
+        }
+    }
     ImGui::End();
 }
 
-void ImGuiManager::saveScene(pivot::Engine &engine)
+void ImGuiManager::render()
 {
-    if (ImGui::Button("Save Scene")) {
-        NFD::Guard nfd_guard;
-        NFD::UniquePath savePath;
-        nfdfilteritem_t filterItemSave[] = {{"Scene", "json"}};
-        auto filename = m_sceneManager.getCurrentScene().getName() + ".json";
-        auto resultSave = NFD::SaveDialog(savePath, filterItemSave, 1, nullptr, filename.c_str());
-
-        switch (resultSave) {
-            case NFD_OKAY: {
-                logger.info("Save Scene") << savePath;
-                engine.saveScene(m_sceneManager.getCurrentSceneId(), savePath.get());
-                ImGui::OpenPopup("SaveOk");
-            } break;
-            case NFD_ERROR: {
-                logger.err("File Dialog") << NFD::GetError();
-                NFD::ClearError();
-                ImGui::OpenPopup("SaveFail");
-            } break;
-            case NFD_CANCEL: break;
-        }
-    }
-
-    if (ImGui::BeginPopupModal("SaveOk", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Scene correctly saved.");
-        if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
-        ImGui::EndPopup();
-    }
-    if (ImGui::BeginPopupModal("SaveFail", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Failed to save the scene, please check the log.");
-        if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
-        ImGui::EndPopup();
-    }
+    PROFILE_FUNCTION();
+    ImGui::EndFrame();
+    ImGui::Render();
+    // ImGui::UpdatePlatformWindows();
 }
-
-void ImGuiManager::loadScene(pivot::Engine &engine)
-{
-    if (ImGui::Button("Load Scene")) {
-        NFD::Guard nfd_guard;
-        NFD::UniquePath scenePath;
-        nfdfilteritem_t filterItemSave[] = {{"Scene", "json"}};
-        auto filename = m_sceneManager.getCurrentScene().getName() + ".json";
-        auto resultSave = NFD::OpenDialog(scenePath, filterItemSave, 1);
-
-        switch (resultSave) {
-            case NFD_OKAY: {
-                logger.info("Load Scene") << scenePath;
-                try {
-                    engine.loadScene(scenePath.get());
-                    ImGui::OpenPopup("LoadOk");
-                } catch (const std::exception &e) {
-                    logger.err() << e.what();
-                    ImGui::OpenPopup("LoadFail");
-                }
-            } break;
-            case NFD_ERROR: {
-                logger.err("File Dialog") << NFD::GetError();
-                NFD::ClearError();
-                ImGui::OpenPopup("LoadFail");
-            } break;
-            case NFD_CANCEL: break;
-        }
-    }
-    if (ImGui::BeginPopupModal("LoadOk", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Scene loaded succefully !");
-        if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
-        ImGui::EndPopup();
-    }
-    if (ImGui::BeginPopupModal("LoadFail", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Scene loading failed, please look at the logs.");
-        if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
-        ImGui::EndPopup();
-    }
-}
-
-void ImGuiManager::loadScript(pivot::Engine &engine)
-{
-    if (ImGui::Button("Load Script")) {
-        NFD::Guard nfd_guard;
-        NFD::UniquePath scriptPath;
-        nfdfilteritem_t filterItemScript[] = {{"PivotScript", "pivotscript"}};
-        auto resultSave = NFD::OpenDialog(scriptPath, filterItemScript, 1);
-
-        switch (resultSave) {
-            case NFD_OKAY: {
-                logger.info("Load Script") << scriptPath;
-                try {
-                    engine.loadScript(scriptPath.get());
-                    ImGui::OpenPopup("LoadScriptOk");
-                } catch (const std::exception &e) {
-                    logger.err() << e.what();
-                    ImGui::OpenPopup("LoadScriptFail");
-                }
-            } break;
-            case NFD_ERROR: {
-                logger.err("File Dialog") << NFD::GetError();
-                NFD::ClearError();
-                ImGui::OpenPopup("LoadScriptFail");
-            } break;
-            case NFD_CANCEL: break;
-        }
-    }
-    if (ImGui::BeginPopupModal("LoadScriptOk", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Script loaded succefully !");
-        if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
-        ImGui::EndPopup();
-    }
-    if (ImGui::BeginPopupModal("LoadScriptFail", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Script loading failed, please look at the logs.");
-        if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
-        ImGui::EndPopup();
-    }
-}
-
-void ImGuiManager::loadAsset(pivot::Engine &engine)
-{
-    if (ImGui::Button("Load asset")) {
-        NFD::Guard nfd_guard;
-        NFD::UniquePath path;
-        nfdfilteritem_t filterItem[] = {{"Model", "gltf"}, {"Model", "obj"}};
-
-        switch (NFD::OpenDialog(path, filterItem, 2)) {
-            case NFD_OKAY: {
-                logger.info("Load asset") << path;
-                engine.loadAsset(path.get());
-                ImGui::OpenPopup("LoadAssetOK");
-            } break;
-            case NFD_ERROR: {
-                logger.err("File Dialog") << NFD::GetError();
-                NFD::ClearError();
-                ImGui::OpenPopup("LoadFail");
-            } break;
-            case NFD_CANCEL: break;
-        }
-    }
-    if (ImGui::BeginPopupModal("LoadAssetOK", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Asset loaded succefully !");
-        if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
-        ImGui::EndPopup();
-    }
-    if (ImGui::BeginPopupModal("LoadFail", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Asset loading failed, please look at the logs.");
-        if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
-        ImGui::EndPopup();
-    }
-}
-
-void ImGuiManager::render() { ImGui::Render(); }
+ImGuiID ImGuiManager::getCenterDockId() { return m_centerDockId; }

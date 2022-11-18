@@ -1,20 +1,22 @@
-#include "pivot/graphics/AssetStorage.hxx"
+#include "pivot/graphics/AssetStorage/Loaders.hxx"
 
 #include <ktx.h>
 
 namespace pivot::graphics::loaders
 {
 
-bool loadKtxImage(const std::filesystem::path &path, AssetStorage::CPUStorage &storage)
+std::optional<asset::CPUStorage> loadKtxImage(const std::filesystem::path &path)
 try {
-    AssetStorage::CPUTexture texture;
+    DEBUG_FUNCTION();
+    asset::CPUStorage storage;
+    asset::CPUTexture texture;
     ktxTexture *ktxTexture = nullptr;
     auto result =
         ktxTexture_CreateFromNamedFile(path.string().c_str(), KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &ktxTexture);
 
     if (result != KTX_SUCCESS) {
         logger.err("AssetStorage/KTX") << ktxErrorString(result);
-        return false;
+        return std::nullopt;
     }
     ktx_uint8_t *ktxTextureData = ktxTexture_GetData(ktxTexture);
     ktx_size_t ktxTextureSize = ktxTexture_GetDataSize(ktxTexture);
@@ -27,10 +29,10 @@ try {
     };
     ktxTexture_Destroy(ktxTexture);
     storage.textureStaging.add(path.stem().string(), std::move(texture));
-    return true;
+    return storage;
 } catch (const std::runtime_error &re) {
     logger.err("Asset Storage/KTX") << re.what();
-    return false;
+    return std::nullopt;
 }
 
 }    // namespace pivot::graphics::loaders

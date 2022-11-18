@@ -1,9 +1,11 @@
 #include "ImGuiCore/EntityModule.hxx"
+#include "ImGuiCore/ImGuiTheme.hxx"
+
 #include <misc/cpp/imgui_stdlib.h>
-#include <pivot/graphics/DebugMacros.hxx>
 
 void EntityModule::create()
 {
+    PROFILE_FUNCTION();
     auto &componentManager = m_scene->getComponentManager();
     auto tagId = componentManager.GetComponentId("Tag").value();
     if (m_scene.id() != currentScene) {
@@ -11,8 +13,15 @@ void EntityModule::create()
         entitySelected = -1;
     }
     currentScene = m_scene.id();
-    ImGui::Begin("Entity");
+    ImGui::Begin(" Entity ");
+    ImGuiTheme::setDefaultFramePadding();
     createPopUp();
+    if (ImGui::Button("Add entity")) ImGui::OpenPopup("NewEntity");
+    if (_hasSelected) {
+        ImGui::SameLine();
+        if (ImGui::Button("Remove entity")) removeEntity();
+    }
+    ImGui::Separator();
     for (auto const &[entity, _]: m_scene->getEntities()) {
         if (ImGui::Selectable(
                 std::get<std::string>(
@@ -22,18 +31,21 @@ void EntityModule::create()
             _hasSelected = true;
             entitySelected = entity;
         }
+        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
+            std::cout << std::get<std::string>(
+                             std::get<pivot::ecs::data::Record>(componentManager.GetComponent(entity, tagId).value())
+                                 .at("name"))
+                             .c_str()
+                      << std::endl;
+        }
     }
-    ImGui::Separator();
-    if (ImGui::Button("Add entity")) ImGui::OpenPopup("NewEntity");
-    if (_hasSelected) {
-        ImGui::SameLine();
-        if (ImGui::Button("Remove entity")) removeEntity();
-    }
+    ImGuiTheme::unsetDefaultFramePadding();
     ImGui::End();
 }
 
 Entity EntityModule::addEntity()
 {
+    PROFILE_FUNCTION();
     Entity newEntity = m_scene->CreateEntity();
     entitySelected = newEntity;
     _hasSelected = true;
@@ -42,6 +54,7 @@ Entity EntityModule::addEntity()
 
 Entity EntityModule::addEntity(std::string name)
 {
+    PROFILE_FUNCTION();
     Entity newEntity = m_scene->CreateEntity(name);
     entitySelected = newEntity;
     _hasSelected = true;
@@ -50,6 +63,7 @@ Entity EntityModule::addEntity(std::string name)
 
 void EntityModule::removeEntity()
 {
+    PROFILE_FUNCTION();
     m_scene->DestroyEntity(entitySelected);
     entitySelected = 0;
     _hasSelected = false;
@@ -61,6 +75,7 @@ bool EntityModule::hasSelected() { return _hasSelected; }
 
 void EntityModule::createPopUp()
 {
+    PROFILE_FUNCTION();
     if (ImGui::BeginPopup("NewEntity")) {
         static std::string entityName;
         ImGui::SetKeyboardFocusHere();

@@ -1,4 +1,4 @@
-#include <Logger.hpp>
+
 #include <iostream>
 
 #include "pivot/script/Builtins.hxx"
@@ -8,6 +8,13 @@
 
 namespace pivot::ecs::script::interpreter::builtins
 {
+
+data::Value builtin_selectCamera(const std::vector<data::Value> &params, const BuiltinContext &context)
+{
+    EntityRef entity = std::get<EntityRef>(params.at(0));
+    if (!entity.is_empty()) { context.selectCamera(std::make_optional(entity.ref)); }
+    return {data::Void{}};
+}
 
 data::Value builtin_isPressed(const std::vector<data::Value> &params, const BuiltinContext &context)
 {
@@ -38,6 +45,8 @@ data::Value builtin_print_stream(const std::vector<data::Value> &params, std::os
                     stream << "Asset(" << value.name << ")";
                 } else if constexpr (std::is_same_v<type, glm::vec3>) {
                     stream << "vec3(" << value.x << "," << value.y << "," << value.z << ")";
+                } else if constexpr (std::is_same_v<type, pivot::EntityRef>) {
+                    stream << "EntityRef(" << (value.is_empty() ? "EMPTY" : std::to_string(value.ref).c_str()) << ")";
                 } else {
                     throw std::runtime_error("Code branch shouldn't execute.");
                 }
@@ -85,6 +94,59 @@ data::Value builtin_abs(const std::vector<data::Value> &params, const BuiltinCon
 {
     auto absVal = std::get<double>(params[0]) > 0 ? std::get<double>(params[0]) : -std::get<double>(params[0]);
     return data::Value(absVal);
+}
+
+std::string removeTrailingZeroes(std::string str)
+{    // Helper function until std::format is available in gcc
+    str.erase(str.find_last_not_of('0') + 1, std::string::npos);
+    str.erase(str.find_last_not_of('.') + 1, std::string::npos);
+    return str;
+}
+
+data::Value builtin_toString(const std::vector<data::Value> &params, const BuiltinContext &)
+{
+    bool first = true;
+    std::string result = "";
+    for (const data::Value &param: params) {
+        if (!first) { result += " "; };
+        first = false;
+        std::visit(
+            [&result](auto &value) {
+                using type = std::decay_t<decltype(value)>;
+                if constexpr (std::is_same_v<type, double> || std::is_same_v<type, int>) {
+                    // result += std::format("{}", value);
+                    result += removeTrailingZeroes(std::to_string(value));
+                } else if constexpr (std::is_same_v<type, std::string>) {
+                    // result += std::format("{}", value);
+                    result += value;
+                } else if constexpr (std::is_same_v<type, bool>) {
+                    result += (value) ? "True" : "False";
+                } else if constexpr (std::is_same_v<type, pivot::ecs::data::Asset>) {
+                    // result += std::format("Asset({})", value.name);
+                    result += "Asset(" + value.name + ")";
+                } else if constexpr (std::is_same_v<type, glm::vec3>) {
+                    // result += std::format("Vector3({},{},{})", value.x, value.y, value.z);
+                    result += "Vector3(" + removeTrailingZeroes(std::to_string(value.x)) + "," +
+                              removeTrailingZeroes(std::to_string(value.y)) + "," +
+                              removeTrailingZeroes(std::to_string(value.z)) + ")";
+                } else if constexpr (std::is_same_v<type, glm::vec2>) {
+                    // result += std::format("Vector2({},{})", value.x, value.y);
+                    result += "Vector2(" + removeTrailingZeroes(std::to_string(value.x)) + "," +
+                              removeTrailingZeroes(std::to_string(value.y)) + ")";
+                } else if constexpr (std::is_same_v<type, data::Color>) {
+                    // result += std::format("Color({},{},{},{})", value.rgba[0], value.rgba[1], value.rgba[2],
+                    // value.rgba[3]);
+                    result += "Color(" + removeTrailingZeroes(std::to_string(value.rgba[0])) + "," +
+                              removeTrailingZeroes(std::to_string(value.rgba[1])) + "," +
+                              removeTrailingZeroes(std::to_string(value.rgba[2])) + "," +
+                              removeTrailingZeroes(std::to_string(value.rgba[3])) + ")";
+                } else {
+                    throw std::runtime_error("Code branch shouldn't execute.");
+                }
+            },
+            static_cast<const data::Value::variant &>(param));
+    }
+    return data::Value(result);
 }
 
 // Builtin binary (which take two operands) operators
@@ -320,6 +382,17 @@ data::Value builtin_operator<Operator::Modulo>(const data::Value &left, const da
         logger.err("ERROR") << " by '" << left.type().toString() << "' and '" << right.type().toString() << "'";
         throw InvalidOperation("Invalid modulo '%' operator between these types.");
     }
+}
+
+data::Value builtin_vec3(const std::vector<data::Value> &params, const BuiltinContext &)
+{
+    return {glm::vec3{std::get<double>(params.at(0)), std::get<double>(params.at(1)), std::get<double>(params.at(2))}};
+}
+
+data::Value builtin_color(const std::vector<data::Value> &params, const BuiltinContext &)
+{
+    return {data::Color{.rgba = {(float)std::get<double>(params.at(0)), (float)std::get<double>(params.at(1)),
+                                 (float)std::get<double>(params.at(2)), (float)std::get<double>(params.at(3))}}};
 }
 
 // Mathematical/Arithmetic operators -- end

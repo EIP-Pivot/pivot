@@ -1,24 +1,19 @@
 #include <imgui.h>
-// Must be after imgui
-#include <ImGuizmo.h>
-
-#include <glm/gtc/type_ptr.hpp>
 #include <misc/cpp/imgui_stdlib.h>
 
-#include <numbers>
-
-#include <pivot/builtins/components/Transform.hxx>
-
 #include "ImGuiCore/Editor.hxx"
+#include "ImGuiCore/ImGuiTheme.hxx"
 
 using namespace pivot::ecs;
 
 void Editor::create(pivot::Engine &engine, pivot::graphics::PipelineStorage &pipelineStorage)
 {
+    PROFILE_FUNCTION();
     ImVec2 sceneSize = ImVec2(50, 15);
     ImVec2 newSceneSize = ImVec2(20, 15);
     ImGuiIO &io = ImGui::GetIO();
-    ImGui::Begin("Editor");
+    ImGui::Begin(" Editor ");
+    ImGuiTheme::setDefaultFramePadding();
     if (!run) {
         createPopUp(engine);
         for (SceneManager::SceneId sceneId = 0; sceneId < m_sceneManager.getLivingScene(); sceneId++) {
@@ -29,44 +24,6 @@ void Editor::create(pivot::Engine &engine, pivot::graphics::PipelineStorage &pip
             ImGui::SameLine();
         }
         if (ImGui::Selectable(" +", false, 0, newSceneSize)) { ImGui::OpenPopup("AddScene"); }
-        ImGui::Separator();
-        if (ImGui::RadioButton("Translate", currentGizmoOperation == ImGuizmo::TRANSLATE))
-            currentGizmoOperation = ImGuizmo::TRANSLATE;
-        ImGui::SameLine();
-        if (ImGui::RadioButton("Rotate", currentGizmoOperation == ImGuizmo::ROTATE))
-            currentGizmoOperation = ImGuizmo::ROTATE;
-        ImGui::SameLine();
-        if (ImGui::RadioButton("Scale", currentGizmoOperation == ImGuizmo::SCALE))
-            currentGizmoOperation = ImGuizmo::SCALE;
-        ImGui::Separator();
-        if (ImGuizmo::IsUsing()) {
-            ImGui::Text("Using gizmo");
-        } else {
-            ImGui::Text(ImGuizmo::IsOver() ? "Over gizmo" : "");
-            ImGui::SameLine();
-            ImGui::Text(ImGuizmo::IsOver(ImGuizmo::TRANSLATE) ? "Over translate gizmo" : "");
-            ImGui::SameLine();
-            ImGui::Text(ImGuizmo::IsOver(ImGuizmo::ROTATE) ? "Over rotate gizmo" : "");
-            ImGui::SameLine();
-            ImGui::Text(ImGuizmo::IsOver(ImGuizmo::SCALE) ? "Over scale gizmo" : "");
-        }
-        ImGui::Separator();
-        if (currentGizmoOperation != ImGuizmo::SCALE) {
-            if (ImGui::RadioButton("Local", currentGizmoMode == ImGuizmo::LOCAL)) currentGizmoMode = ImGuizmo::LOCAL;
-            ImGui::SameLine();
-            if (ImGui::RadioButton("World", currentGizmoMode == ImGuizmo::WORLD)) currentGizmoMode = ImGuizmo::WORLD;
-        } else {
-            currentGizmoMode = ImGuizmo::LOCAL;
-        }
-        ImGui::Checkbox("##", &useSnap);
-        ImGui::SameLine();
-        switch (currentGizmoOperation) {
-            case ImGuizmo::TRANSLATE: ImGui::InputFloat3("Snap", &snap[0]); break;
-            case ImGuizmo::ROTATE: ImGui::InputFloat("Angle Snap", &snap[0]); break;
-            case ImGuizmo::SCALE: ImGui::InputFloat("Scale Snap", &snap[0]); break;
-            default: break;
-        }
-        ImGui::Separator();
     }
     ImGui::Checkbox("Should force pipeline ?", &shouldForce);
     if (ImGui::BeginCombo("##sample_count", pipelineStorage.getDefaultName().c_str())) {
@@ -82,11 +39,14 @@ void Editor::create(pivot::Engine &engine, pivot::graphics::PipelineStorage &pip
     ImGui::Text("Fps: %.1f", ImGui::GetIO().Framerate);
     ImGui::Text("ms/frame %.3f", 1000.0f / ImGui::GetIO().Framerate);
     ImGui::Checkbox("Systems", &run);
+    if (ImGui::Button("Select default camera")) { engine.setCurrentCamera(std::nullopt); }
+    ImGuiTheme::unsetDefaultFramePadding();
     ImGui::End();
 }
 
 SceneManager::SceneId Editor::addScene(pivot::Engine &engine)
 {
+    PROFILE_FUNCTION();
     SceneManager::SceneId newScene = engine.registerScene();
     engine.changeCurrentScene(newScene);
     // m_sceneManager.getCurrentLevel().Init();
@@ -95,6 +55,7 @@ SceneManager::SceneId Editor::addScene(pivot::Engine &engine)
 
 SceneManager::SceneId Editor::addScene(pivot::Engine &engine, std::string name)
 {
+    PROFILE_FUNCTION();
     SceneManager::SceneId newScene = engine.registerScene(name);
     engine.changeCurrentScene(newScene);
     // m_sceneManager.getCurrentLevel().Init();
@@ -103,41 +64,9 @@ SceneManager::SceneId Editor::addScene(pivot::Engine &engine, std::string name)
 
 bool Editor::getRun() { return run; }
 
-void Editor::setAspectRatio(float aspect) { aspectRatio = aspect; }
-
-void Editor::DisplayGuizmo(Entity entity, const pivot::builtins::Camera &camera)
-{
-    using Transform = pivot::builtins::components::Transform;
-
-    const auto view = camera.getView();
-    const auto projection = camera.getProjection(pivot::Engine::fov, aspectRatio);
-
-    const float *view_ptr = glm::value_ptr(view);
-    const float *projection_ptr = glm::value_ptr(projection);
-
-    // TODO: Refactor this out, to compute only when the scene changes
-    auto &cm = m_currentScene->getComponentManager();
-    auto &array = cm.GetComponentArray(cm.GetComponentId(Transform::description.name).value());
-    auto &ro_array = dynamic_cast<pivot::ecs::component::DenseTypedComponentArray<pivot::graphics::Transform> &>(array);
-    if (!ro_array.entityHasValue(entity)) return;
-    pivot::graphics::Transform &transform = ro_array.getData()[entity];
-    auto matrix = transform.getModelMatrix();
-    float *matrix_data = glm::value_ptr(matrix);
-    ImGuiIO &io = ImGui::GetIO();
-    ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
-    glm::mat4x4 delta_matrix;
-    bool changed = ImGuizmo::Manipulate(view_ptr, projection_ptr, currentGizmoOperation, currentGizmoMode, matrix_data,
-                                        glm::value_ptr(delta_matrix), useSnap ? &snap[0] : NULL);
-    if (!changed) return;
-
-    glm::vec3 rotation_deg;
-    ImGuizmo::DecomposeMatrixToComponents(matrix_data, glm::value_ptr(transform.position), glm::value_ptr(rotation_deg),
-                                          glm::value_ptr(transform.scale));
-    transform.rotation = rotation_deg * std::numbers::pi_v<float> / 180.0f;
-}
-
 void Editor::createPopUp(pivot::Engine &engine)
 {
+    PROFILE_FUNCTION();
     if (ImGui::BeginPopup("AddScene")) {
         static std::string sceneName;
         ImGui::SetKeyboardFocusHere();

@@ -5,6 +5,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include <pivot/pivot.hxx>
+
 #include <pivot/ecs/Core/Data/value_serialization.hxx>
 
 #include "pivot/ecs/Core/Component/index.hxx"
@@ -19,7 +21,6 @@
 #include "pivot/ecs/Core/types.hxx"
 #include <memory>
 
-#include "pivot/ecs/Components/Camera.hxx"
 #include "pivot/ecs/Components/Tag.hxx"
 
 namespace pivot::ecs
@@ -79,6 +80,9 @@ public:
     /// Get name of an entity
     std::string getEntityName(Entity entity);
 
+    /// Get the id of an entity by its name
+    std::optional<Entity> getEntityID(const std::string &name);
+
     /// Get the number of entity in the scene
     uint32_t getLivingEntityCount();
 
@@ -90,11 +94,14 @@ public:
 
     // System methods
 
-    /// Get the system manager
-    pivot::ecs::systems::Manager &getSystemManager();
-
     /// Get the system manager (const)
     const pivot::ecs::systems::Manager &getSystemManager() const;
+
+    /// Register a system in the scene
+    ///
+    /// This optionally automatically registers needed components, by taking them from cIndex
+    void registerSystem(const systems::Description &description,
+                        pivot::OptionalRef<const component::Index> cIndex = std::nullopt);
 
     /// Get the Entity manager
     EntityManager &getEntityManager();
@@ -109,18 +116,6 @@ public:
 
     /// Get the event manager (const)
     const pivot::ecs::event::Manager &getEventManager() const;
-
-    // Camera
-    /// Set camera to use
-    void setCamera(std::uint16_t camera);
-    /// Add camera to scene camera list
-    void addCamera(Entity camera);
-    /// Switch camera
-    void switchCamera();
-    /// Get current camera
-    builtins::Camera &getCamera();
-    /// Get camera list
-    std::vector<Entity> &getCameras();
 
     /// Function used to retrieve the real path of an asset if possible
     using AssetTranslator = std::function<std::optional<std::string>(const std::string &)>;
@@ -141,10 +136,7 @@ private:
     EntityManager mEntityManager;
     pivot::ecs::systems::Manager mSystemManager;
     pivot::ecs::event::Manager mEventManager;
-    std::vector<Entity> mCamera;
-    std::uint16_t mCurrentCamera;
     pivot::ecs::component::Manager::ComponentId mTagId;
-    pivot::ecs::component::Index mComponentIndex;
 };
 
 }    // namespace pivot::ecs

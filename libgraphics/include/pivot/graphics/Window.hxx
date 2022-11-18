@@ -1,6 +1,7 @@
 #pragma once
 
 #include <GLFW/glfw3.h>
+#include <functional>
 #include <glm/vec2.hpp>
 #include <optional>
 #include <span>
@@ -8,7 +9,9 @@
 #include <unordered_map>
 #include <vulkan/vulkan.hpp>
 
-#include "pivot/graphics/PivotException.hxx"
+#include "pivot/exception.hxx"
+#include "pivot/pivot.hxx"
+#include "pivot/utility/flags.hxx"
 
 namespace pivot::graphics
 {
@@ -76,31 +79,45 @@ public:
         RIGHT = GLFW_KEY_RIGHT,
         LEFT = GLFW_KEY_LEFT,
     };
+
+    /// Represent the modifier key
+    enum class ModifierBits : FlagsType {
+        Alt = GLFW_MOD_ALT,
+        Ctrl = GLFW_MOD_CONTROL,
+        Shift = GLFW_MOD_SHIFT,
+        Super = GLFW_MOD_SUPER,
+    };
+    /// Flag type
+    using Modifier = Flags<ModifierBits>;
+
     /// Enum of the different key state
-    enum class KeyAction : std::uint8_t {
+    enum class Action {
         Pressed = GLFW_PRESS,
         Release = GLFW_RELEASE,
     };
 
     /// Keyboard event callback signature
-    using KeyEvent = std::function<void(Window &window, const Key key)>;
+    using KeyEvent = std::function<void(Window &window, const Key key, const Modifier modifier)>;
     /// Mouse movement event callback signature
     using MouseEvent = std::function<void(Window &window, const glm::dvec2 pos)>;
+    /// Resize event callback signature
+    using ResizeEvent = std::function<void(Window &window, const glm::i32vec2 size)>;
 
     /// Error type for Window
     RUNTIME_ERROR(Window);
 
 public:
     /// Create a new Window
-    ///
-    /// @param windowName
-    /// @param width
-    /// @param height
-    explicit Window(std::string windowName, unsigned width, unsigned height);
+    Window();
     Window(Window &) = delete;
     Window(const Window &) = delete;
     /// Destructor
     ~Window();
+
+    /// Initialize the window to the maximum size
+    void initWindow(const std::string &windowName);
+    /// Initialiaze the window to the provided size
+    void initWindow(const std::string &windowName, unsigned width, unsigned height);
 
     /// Return wether or not the window should be closed
     inline bool shouldClose() const noexcept { return glfwWindowShouldClose(window); }
@@ -123,7 +140,7 @@ public:
     /// Tell wether or not a key is pressed
     ///
     /// @return true if the key is pressed, otherwise false
-    inline bool isKeyPressed(Key _key) const noexcept
+    FORCEINLINE bool isKeyPressed(Key _key) const noexcept
     {
         auto key = getTrueKey(_key);
         return glfwGetKey(this->window, static_cast<unsigned>(key)) == GLFW_PRESS;
@@ -131,11 +148,14 @@ public:
     /// Tell wether or not a key is not pressed
     ///
     /// @return true if the key is not pressed, otherwise false
-    inline bool isKeyReleased(Key _key) const noexcept
+    FORCEINLINE bool isKeyReleased(Key _key) const noexcept
     {
         auto key = getTrueKey(_key);
         return glfwGetKey(this->window, static_cast<unsigned>(key)) == GLFW_RELEASE;
     }
+
+    /// Setup a callback function when the window is resized
+    void addResizeCallback(ResizeEvent event);
 
     /// Setup a callback function for provided key when it is pressed
     ///
@@ -216,18 +236,19 @@ private:
     void setErrorCallback(GLFWerrorfun &&f) noexcept;
 
     void setUserPointer(void *ptr) noexcept;
-    void initWindow(const unsigned width, const unsigned height);
     glm::ivec2 updateSize() const noexcept;
     Key getTrueKey(const Key &ex) const noexcept;
 
     static void error_callback(int code, const char *msg) noexcept;
     static void cursor_callback(GLFWwindow *win, double xpos, double ypos);
     static void keyboard_callback(GLFWwindow *win, int key, int scancode, int action, int mods);
+    static void resize_callback(GLFWwindow *win, int width, int height);
 
 private:
-    std::vector<MouseEvent> mouseCallback = {};
+    std::vector<MouseEvent> mouseCallback;
     std::vector<KeyEvent> globalKeyReleaseMap;
     std::vector<KeyEvent> globalKeyPressMap;
+    std::vector<ResizeEvent> resizeEventCallback;
 
     std::unordered_map<Key, std::vector<KeyEvent>> keyPressMap;
     std::unordered_map<Key, std::vector<KeyEvent>> keyReleaseMap;
@@ -236,3 +257,5 @@ private:
     GLFWwindow *window = nullptr;
 };
 }    // namespace pivot::graphics
+
+ENABLE_FLAGS_FOR_ENUM(pivot::graphics::Window::ModifierBits);

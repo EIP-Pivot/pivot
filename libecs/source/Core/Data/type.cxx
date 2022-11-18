@@ -4,6 +4,8 @@
 #include <pivot/ecs/Core/Data/type.hxx>
 #include <pivot/ecs/Core/Data/value.hxx>
 
+#include "pivot/pivot.hxx"
+
 namespace pivot::ecs::data
 {
 
@@ -41,6 +43,7 @@ std::string Type::toString() const
 
 data::Value Type::defaultValue() const
 {
+    PROFILE_FUNCTION();
     return std::visit(
         [](const auto &type) {
             using type_type = std::decay_t<decltype(type)>;
@@ -51,6 +54,11 @@ data::Value Type::defaultValue() const
                     case BasicType::Integer: return Value{0};
                     case BasicType::Boolean: return Value{false};
                     case BasicType::Vec3: return Value{glm::vec3{0, 0, 0}};
+                    case BasicType::Asset: return Value{Asset{""}};
+                    case BasicType::EntityRef: return Value{EntityRef::empty()};
+                    case BasicType::Vec2: return Value{glm::vec2{0, 0}};
+                    case BasicType::Void: return Value{Void{}};
+                    case BasicType::Color: return Value{Color{1, 1, 1, 1}};
                     default: throw std::runtime_error("Unknown basic type");
                 }
             } else {
@@ -60,5 +68,21 @@ data::Value Type::defaultValue() const
             }
         },
         static_cast<const Type::variant &>(*this));
+}
+
+bool Type::isSubsetOf(const Type &other) const
+{
+    PROFILE_FUNCTION();
+    if (const RecordType *record = std::get_if<RecordType>(this)) {
+        if (const RecordType *other_record = std::get_if<RecordType>(&other)) {
+            for (auto &[key, subtype]: *record) {
+                auto other_subtype = other_record->find(key);
+                if (other_subtype == other_record->end()) { return false; }
+                if (other_subtype->second != subtype) { return false; }
+            }
+            return true;
+        }
+    }
+    return *this == other;
 }
 }    // namespace pivot::ecs::data

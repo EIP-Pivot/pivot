@@ -109,11 +109,14 @@ constexpr auto generic_builtin_comparator(auto op, const std::string &op_string)
             [&left_value, &right_value, &op_string, &op](const auto &left, const auto &right) -> bool {
                 using L = std::decay_t<decltype(left)>;
                 using R = std::decay_t<decltype(right)>;
-                if constexpr (std::predicate<decltype(op), L, R>) { return op(left, right); }
-                logger.err("ERROR") << " by '" << left_value.type().toString() << "' and '"
-                                    << right_value.type().toString() << "'";
-                throw InvalidOperation(std::string("Invalid equal to '") + op_string +
-                                       "'operator between these types.");
+                if constexpr (std::predicate<decltype(op), L, R>) {
+                    return op(left, right);
+                } else {
+                    logger.err("ERROR") << " by '" << left_value.type().toString() << "' and '"
+                                        << right_value.type().toString() << "'";
+                    throw InvalidOperation(std::string("Invalid equal to '") + op_string +
+                                           "'operator between these types.");
+                }
             },
             static_cast<const data::Value::variant &>(left_value),
             static_cast<const data::Value::variant &>(right_value));

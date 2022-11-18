@@ -21,4 +21,5 @@ build_tests(
     tests/test_builtins.cxx
     tests/test_escaped.cxx
     tests/test_decimals.cxx
+    tests/test_multibyte.cxx
 )

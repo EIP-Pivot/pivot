@@ -7,9 +7,13 @@
 namespace pivot
 {
 
+/// @brief Stores the global configuration of the engine
 class Config
 {
 public:
+    /// @brief Find the absolute path of a folder containing engine date
+    /// @param folder name of the folder
+    /// @return absolute path of the folder
     static std::filesystem::path find_data_folder(std::string folder)
     {
         namespace fs = std::filesystem;
@@ -29,7 +33,12 @@ public:
         throw std::runtime_error(std::string("Could not find data folder " + folder));
     }
 
+    /// @brief Find the absolute path of the engine assets folder
+    /// @return absolute path of the folder
     static std::filesystem::path find_assets_folder() { return find_data_folder("assets"); }
+
+    /// @brief Find the absolute path of the engine shaders folder
+    /// @return absolute path of the folder
     static std::filesystem::path find_shaders_folder() { return find_data_folder("shaders"); }
 };
 }    // namespace pivot

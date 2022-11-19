@@ -41,10 +41,7 @@ namespace pivot::graphics
 
 template <typename T>
 /// @brief Is the type convertible to filesystem path ?
-concept is_valid_path = requires
-{
-    std::is_convertible_v<T, std::filesystem::path>;
-};
+concept is_valid_path = requires { std::is_convertible_v<T, std::filesystem::path>; };
 
 /// @brief Store all of the assets used by the game
 class AssetStorage

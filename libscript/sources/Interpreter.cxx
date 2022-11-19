@@ -11,11 +11,10 @@
 namespace pivot::ecs::script::interpreter
 {
 
-const std::map<std::string, data::BasicType> gVariableTypes{{"Vector3", data::BasicType::Vec3},
-                                                            {"Number", data::BasicType::Number},
-                                                            {"Boolean", data::BasicType::Boolean},
-                                                            {"Color", data::BasicType::Number},
-                                                            {"String", data::BasicType::String}};
+const std::map<std::string, data::BasicType> gVariableTypes{
+    {"Vector3", data::BasicType::Vec3},  {"Vector2", data::BasicType::Vec2},    {"Asset", data::BasicType::Asset},
+    {"Number", data::BasicType::Number}, {"Boolean", data::BasicType::Boolean}, {"Color", data::BasicType::Color},
+    {"String", data::BasicType::String}};
 // Map builtin binary (two operands) operators, to their operator enum
 const std::map<std::string, std::function<data::Value(const data::Value &, const data::Value &)>> gOperatorCallbacks = {
     {"*", interpreter::builtins::builtin_operator<builtins::Operator::Multiplication>},
@@ -48,6 +47,11 @@ const std::unordered_map<std::string, std::pair<BuiltinFunctionCallback, Paramet
     {"selectCamera", {interpreter::builtins::builtin_selectCamera, {1, {{data::BasicType::EntityRef}}}}},
     {"cos", {interpreter::builtins::builtin_cos, {1, {{data::BasicType::Number}}}}},
     {"sin", {interpreter::builtins::builtin_sin, {1, {{data::BasicType::Number}}}}},
+    {"toString",
+     {interpreter::builtins::builtin_toString,
+      {std::numeric_limits<size_t>::max(),
+       {{data::BasicType::String, data::BasicType::Number, data::BasicType::Integer, data::BasicType::Boolean,
+         data::BasicType::Asset, data::BasicType::Vec3, data::BasicType::Vec2, data::BasicType::Color}}}}},
     {"print",
      {interpreter::builtins::builtin_print,
       {std::numeric_limits<size_t>::max(),
@@ -59,7 +63,11 @@ const std::unordered_map<std::string, std::pair<BuiltinFunctionCallback, Paramet
     {"abs", {interpreter::builtins::builtin_abs, {1, {{data::BasicType::Number}}}}},
     {"vec3",
      {interpreter::builtins::builtin_vec3,
-      {3, {{data::BasicType::Number}, {data::BasicType::Number}, {data::BasicType::Number}}}}}};
+      {3, {{data::BasicType::Number}, {data::BasicType::Number}, {data::BasicType::Number}}}}},
+    {"color",
+     {interpreter::builtins::builtin_color,
+      {4,
+       {{data::BasicType::Number}, {data::BasicType::Number}, {data::BasicType::Number}, {data::BasicType::Number}}}}}};
 
 // Public functions ( can be called anywhere )
 
@@ -275,6 +283,8 @@ data::Value Interpreter::executeFunction(const Node &functionCall, const Stack &
     for (const Node &param: functionCall.children.at(1).children) {    // get all the parameters for the callback
         if (param.type == NodeType::FunctionCall)                      // parameter is function call
             parameters.push_back(executeFunction(param, stack));
+        else if (param.type == NodeType::Expression)    // parameter is expression
+            parameters.push_back(evaluateExpression(param, stack));
         else    // parameter is variable
             parameters.push_back(valueOf(param, stack));
     }

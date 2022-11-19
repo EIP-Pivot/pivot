@@ -26,6 +26,14 @@ endif()
 #         OFF
 #         CACHE INTERNAL "" FORCE
 #     )
+#     set(MI_BUILD_OBJECT
+#         OFF
+#         CACHE INTERNAL "" FORCE
+#     )
+#     set(MI_BUILD_SHARED
+#         OFF
+#         CACHE INTERNAL "" FORCE
+#     )
 #     add_subdirectory(${mimalloc_SOURCE_DIR} ${mimalloc_BINARY_DIR})
 # endif()
 

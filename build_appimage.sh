@@ -10,4 +10,4 @@ app_dir=$(realpath AppDir)
 cmake -B $build_dir -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
 cmake --build $build_dir --parallel
 make -C $build_dir DESTDIR=$app_dir install
-appimage-builder --skip-tests
+# appimage-builder --skip-tests

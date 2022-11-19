@@ -57,7 +57,11 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/shaders DESTINATION ${CMAKE_INSTALL_DATADI
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/assets DESTINATION ${CMAKE_INSTALL_DATADIR}/pivot)
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ImGuiConfig/imgui.ini DESTINATION .)
+install(FILES ${CMAKE_SOURCE_DIR}/assets/PivotEngine.svg DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps)
+
+# install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ImGuiConfig/imgui.ini DESTINATION .)
+
+install(FILES ${CMAKE_SOURCE_DIR}/eu.epitech.eip.pivot.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
 
 set(CPACK_GENERATOR ZIP)
 

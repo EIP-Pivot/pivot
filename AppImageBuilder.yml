@@ -4,8 +4,8 @@ AppDir:
   path: /home/lucie/EIP/pivot/AppDir
   app_info:
     id: eu.epitech.eip.pivot
-    name: Pivot Engine
-    icon: application-vnd.appimage
+    name: PivotEngine
+    icon: PivotEngine
     version: latest
     exec: usr/bin/pivot-editor
     exec_args: $@

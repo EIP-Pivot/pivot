@@ -1,26 +1,23 @@
 #pragma once
 
 #include <glm/gtc/type_ptr.hpp>
+#include <iostream>
 
-#include <pivot/ecs/Core/types.hxx>
-
+#include <ImGuiCore/ValueInput.hxx>
 #include <pivot/builtins/components/RenderObject.hxx>
 #include <pivot/ecs/Components/Gravity.hxx>
 #include <pivot/ecs/Components/RigidBody.hxx>
-#include <pivot/graphics/types/UniformBufferObject.hxx>
-
 #include <pivot/ecs/Core/Component/index.hxx>
-
-#include <iostream>
-
 #include <pivot/ecs/Core/SceneManager.hxx>
+#include <pivot/ecs/Core/types.hxx>
 #include <pivot/engine.hxx>
+#include <pivot/graphics/types/UniformBufferObject.hxx>
 
 class ComponentEditor
 {
 public:
     ComponentEditor(const pivot::ecs::component::Index &index, pivot::ecs::CurrentScene scene, pivot::Engine &engine)
-        : m_index(index), m_scene(scene), m_engine(engine)
+        : m_index(index), m_scene(scene), m_value_input(scene), m_engine(engine)
     {
     }
 
@@ -39,5 +36,6 @@ private:
     Entity currentEntity;
     const pivot::ecs::component::Index &m_index;
     pivot::ecs::CurrentScene m_scene;
+    ValueInput m_value_input;
     pivot::Engine &m_engine;
 };

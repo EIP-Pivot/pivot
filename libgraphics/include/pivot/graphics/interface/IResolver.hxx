@@ -8,6 +8,7 @@
 
 #include "pivot/graphics/types/Light.hxx"
 #include "pivot/graphics/types/RenderObject.hxx"
+#include "pivot/graphics/types/TransformArray.hxx"
 #include "pivot/graphics/types/UniformBufferObject.hxx"
 
 #include "pivot/ecs/Core/Component/SynchronizedComponentArray.hxx"
@@ -34,7 +35,7 @@ struct DrawSceneInformation {
     const pivot::ecs::component::SynchronizedTypedComponentArray<PointLight> &pointLight;
     const pivot::ecs::component::SynchronizedTypedComponentArray<DirectionalLight> &directionalLight;
     const pivot::ecs::component::SynchronizedTypedComponentArray<SpotLight> &spotLight;
-    const pivot::ecs::component::SynchronizedTypedComponentArray<Transform> &transform;
+    const pivot::graphics::SynchronizedTransformArray &transform;
     ///@endcond
 };
 

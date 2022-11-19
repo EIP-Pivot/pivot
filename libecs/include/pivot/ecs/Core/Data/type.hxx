@@ -11,6 +11,7 @@
 #include <pivot/ecs/Core/Data/asset.hxx>
 #include <pivot/ecs/Core/Data/color.hxx>
 #include <pivot/ecs/Core/Data/void.hxx>
+#include <pivot/utility/entity.hxx>
 
 namespace pivot::ecs::data
 {
@@ -40,6 +41,9 @@ enum class BasicType {
 
     /// The property has no value
     Void,
+
+    /// The property is a reference to another entity
+    EntityRef,
 
     /// The property is of type Color
     Color,
@@ -94,6 +98,8 @@ template <>
 constexpr std::optional<BasicType> basic_type_representation<Color> = BasicType::Color;
 template <>
 constexpr std::optional<BasicType> basic_type_representation<Void> = BasicType::Void;
+template <>
+constexpr std::optional<BasicType> basic_type_representation<EntityRef> = BasicType::EntityRef;
 
 }    // namespace pivot::ecs::data
 

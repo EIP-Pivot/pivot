@@ -18,7 +18,8 @@ void Stack::push(const std::string &name, const data::Value &var)
     _stack.insert_or_assign(name, var);
 }
 
-void Stack::pushEntity(const std::string &entityName, std::span<const component::ComponentRef> components)
+void Stack::pushEntity(const std::string &entityName, Entity entityId,
+                       std::span<const component::ComponentRef> components)
 {
     if (entityName.empty()) return;
 
@@ -27,6 +28,7 @@ void Stack::pushEntity(const std::string &entityName, std::span<const component:
     for (const component::ComponentRef &ref: components) {
         entityRecord.insert_or_assign(ref.description().name, ref.get());
     }
+    entityRecord.insert_or_assign("id", data::Value{EntityRef{entityId}});
     this->push(entityName, entityRecord);
 }
 

@@ -7,7 +7,7 @@ echo Build directory $build_dir
 
 app_dir=$(realpath AppDir)
 
-cmake -B $build_dir -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
+cmake -B $build_dir -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -D CMAKE_CXX_COMPILER=g++-12
 cmake --build $build_dir --parallel
 make -C $build_dir DESTDIR=$app_dir install
 # appimage-builder --skip-tests

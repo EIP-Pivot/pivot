@@ -25,7 +25,7 @@ vk::Pipeline ComputePipelineBuilder::build(vk::Device &device, vk::PipelineCache
     auto computeShaderModule = vk_utils::createShaderModule(device, computeShaderCode);
     auto computeShaderStage =
         vk_init::populateVkPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eCompute, computeShaderModule);
-    vk_debug::setObjectName(device, computeShaderModule, shaderPath);
+    vk_debug::setObjectName(device, computeShaderModule, shaderPath.string());
 
     vk::ComputePipelineCreateInfo pipelineInfo{
         .stage = computeShaderStage,

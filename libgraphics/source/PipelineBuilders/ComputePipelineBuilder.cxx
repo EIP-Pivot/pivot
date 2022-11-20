@@ -13,7 +13,7 @@ ComputePipelineBuilder &ComputePipelineBuilder::setPipelineLayout(vk::PipelineLa
     return *this;
 }
 
-ComputePipelineBuilder &ComputePipelineBuilder::setComputeShaderPath(const std::string &path)
+ComputePipelineBuilder &ComputePipelineBuilder::setComputeShaderPath(const std::filesystem::path &path)
 {
     shaderPath = path;
     return *this;

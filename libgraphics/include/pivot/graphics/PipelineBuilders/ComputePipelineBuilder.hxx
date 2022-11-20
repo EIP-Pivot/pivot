@@ -17,12 +17,12 @@ public:
     ComputePipelineBuilder &setPipelineLayout(vk::PipelineLayout &layout);
 
     /// Set the path of the shader to use
-    ComputePipelineBuilder &setComputeShaderPath(const std::string &);
+    ComputePipelineBuilder &setComputeShaderPath(const std::filesystem::path &);
 
     vk::Pipeline build(vk::Device &, vk::PipelineCache) const;
 
 private:
-    std::string shaderPath;
+    std::filesystem::path shaderPath;
     vk::PipelineLayout pipelineLayout;
 };
 

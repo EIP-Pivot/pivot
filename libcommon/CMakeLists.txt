@@ -3,7 +3,7 @@ project(pivot-common)
 fetchcontent_declare(
     logger
     GIT_REPOSITORY https://github.com/zcorniere/logger-cpp.git
-    GIT_TAG v1.0.2
+    GIT_TAG v1.0.3
 )
 fetchcontent_getproperties(logger)
 if(NOT logger_POPULATED)
@@ -11,6 +11,30 @@ if(NOT logger_POPULATED)
     fetchcontent_populate(logger)
     add_subdirectory(${logger_SOURCE_DIR} ${logger_BINARY_DIR})
     target_compile_definitions(logger PUBLIC LOGGER_EXTERN_DECLARATION)
+endif()
+
+fetchcontent_declare(
+    mimalloc
+    GIT_REPOSITORY https://github.com/microsoft/mimalloc.git
+    GIT_TAG v2.0.6
+)
+fetchcontent_getproperties(mimalloc)
+if(NOT mimalloc_POPULATED)
+    message(STATUS "Populating mimalloc")
+    fetchcontent_populate(mimalloc)
+    set(MI_BUILD_TESTS
+        OFF
+        CACHE INTERNAL "" FORCE
+    )
+    set(MI_BUILD_OBJECT
+        OFF
+        CACHE INTERNAL "" FORCE
+    )
+    set(MI_BUILD_SHARED
+        OFF
+        CACHE INTERNAL "" FORCE
+    )
+    add_subdirectory(${mimalloc_SOURCE_DIR} ${mimalloc_BINARY_DIR})
 endif()
 
 fetchcontent_declare(
@@ -60,6 +84,8 @@ add_library(
     ${PROJECT_NAME} STATIC
     sources/lib.cxx
     sources/utility/benchmark.cxx
+    sources/Threading/Thread.cxx
+    sources/Threading/ThreadPool.cxx
 
     # Select the correct platform to compile
     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
@@ -75,7 +101,7 @@ if(DEFINED ENV{CI})
     target_compile_definitions(${PROJECT_NAME} PUBLIC NO_BENCHMARK)
 endif()
 
-target_link_libraries(${PROJECT_NAME} PUBLIC logger glm magic_enum)
+target_link_libraries(${PROJECT_NAME} PUBLIC logger glm magic_enum mimalloc-static)
 
 target_precompile_headers(
     ${PROJECT_NAME}

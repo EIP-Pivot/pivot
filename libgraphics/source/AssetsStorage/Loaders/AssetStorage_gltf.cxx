@@ -228,10 +228,10 @@ loadGltfNode(const tinygltf::Model &gltfModel, const tinygltf::Node &node, std::
 static std::pair<std::string, asset::CPUMaterial> loadGltfMaterial(const std::vector<std::string> &texture,
                                                                    const tinygltf::Material &mat)
 {
-#define GET_MATERIAL_TEXTURE(value, name)                                                           \
-    if (mat.value.find(#name) != mat.value.end()) {                                                 \
-        std::size_t idx = mat.value.at(#name).TextureIndex();                                       \
-        material.name = (texture.size() > idx) ? (texture.at(idx)) : (asset::missing_texture_name); \
+#define GET_MATERIAL_TEXTURE(value, name)                                  \
+    if (mat.value.find(#name) != mat.value.end()) {                        \
+        std::size_t idx = mat.value.at(#name).TextureIndex();              \
+        material.name = (texture.size() > idx) ? (texture.at(idx)) : (""); \
     }
 #define GET_MATERIAL_COLOR(value, name)                                           \
     if (mat.value.find(#name) != mat.value.end()) {                               \

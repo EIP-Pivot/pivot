@@ -2,15 +2,13 @@
 
 #include "pivot/ecs/Core/Scene.hxx"
 #include <pivot/ecs/Components/Tag.hxx>
+#include <pivot/ecs/Components/TagArray.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
 
 using namespace pivot::ecs;
 
 Scene::Scene(std::string sceneName)
-    : name(sceneName),
-      mSystemManager(mComponentManager, mEntityManager),
-      mEventManager(mSystemManager),
-      mCurrentCamera(0)
+    : name(sceneName), mSystemManager(mComponentManager, mEntityManager), mEventManager(mSystemManager)
 {
     mTagId = mComponentManager.RegisterComponent(Tag::description);
 }
@@ -53,24 +51,6 @@ std::string Scene::getEntityName(Entity entity)
 }
 
 uint32_t Scene::getLivingEntityCount() { return mEntityManager.getLivingEntityCount(); }
-
-void Scene::setCamera(std::uint16_t camera) { mCurrentCamera = camera; }
-
-void Scene::addCamera(Entity camera) { mCamera.push_back(camera); }
-
-void Scene::switchCamera()
-{
-    if (mCamera.size() > 0) mCurrentCamera = (mCurrentCamera + 1) % mCamera.size();
-}
-
-pivot::builtins::Camera &Scene::getCamera()
-{
-    if (mCamera.size() == 0) throw EcsException("No camera set");
-    throw std::logic_error("Unimplemented");
-    // return mComponentManager.GetComponent<Camera>(mCamera[mCurrentCamera]);
-}
-
-std::vector<Entity> &Scene::getCameras() { return mCamera; }
 
 pivot::ecs::component::Manager &Scene::getComponentManager() { return mComponentManager; }
 
@@ -137,8 +117,8 @@ void extract_assets(const data::Value &value, std::set<std::string> &assets,
 }
 }    // namespace
 
-void Scene::save(const std::filesystem::path &path, std::optional<AssetTranslator> assetTranslator,
-                 std::optional<ScriptTranslator> scriptTranslator) const
+nlohmann::json Scene::getJson(std::optional<AssetTranslator> assetTranslator,
+                              std::optional<ScriptTranslator> scriptTranslator) const
 {
     PROFILE_FUNCTION();
     // serialize scene
@@ -173,9 +153,16 @@ void Scene::save(const std::filesystem::path &path, std::optional<AssetTranslato
     output["systems"] = systems;
     output["scripts"] = scriptUsed;
     output["assets"] = assets;
+    return output;
+}
+
+void Scene::save(const std::filesystem::path &path, std::optional<AssetTranslator> assetTranslator,
+                 std::optional<ScriptTranslator> scriptTranslator) const
+{
+    PROFILE_FUNCTION();
     // write in file
     std::ofstream out(path);
-    out << std::setw(4) << output << std::endl;
+    out << std::setw(4) << getJson(assetTranslator, scriptTranslator) << std::endl;
     out.close();
 }
 
@@ -191,4 +178,10 @@ void Scene::registerSystem(const systems::Description &description, pivot::Optio
         }
     }
     mSystemManager.useSystem(description);
+}
+
+std::optional<Entity> Scene::getEntityID(const std::string &name)
+{
+    auto array = dynamic_cast<const component::TagArray &>(mComponentManager.GetComponentArray(mTagId));
+    return array.getEntityID(name);
 }

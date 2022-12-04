@@ -8,6 +8,7 @@
 #include <pivot/ecs/Core/Systems/index.hxx>
 #include <pivot/engine.hxx>
 #include <pivot/graphics/AssetStorage/AssetStorage.hxx>
+#include <pivot/internal/LocationCamera.hxx>
 
 #include "Windows/IWindow.hxx"
 #include "Windows/SceneWindow.hxx"
@@ -27,9 +28,13 @@ public:
     WindowsManager(const ecs::component::Index &componentIndex, const pivot::ecs::systems::Index &systemIndex,
                    const ecs::SceneManager &sceneManager, ecs::CurrentScene scene,
                    pivot::graphics::AssetStorage &assetStorage, pivot::graphics::PipelineStorage &pipelineStorage,
-                   Engine &engine, const builtins::Camera &camera, bool &paused);
-    const ecs::component::Index &getComponentIndex();
-    const ecs::systems::Index &getSystemIndex();
+                   Engine &engine, bool &paused);
+
+    const ecs::component::Index &getComponentIndex() const;
+    const ecs::systems::Index &getSystemIndex() const;
+    const pivot::Engine &getEngine() const;
+    pivot::Engine &getEngine();
+
     ecs::CurrentScene getCurrentScene();
     pivot::graphics::AssetStorage &getAssetStorage();
     void setCurrentScene(ecs::SceneManager::SceneId sceneId);
@@ -67,7 +72,6 @@ private:
     pivot::graphics::AssetStorage &m_assetStorage;
     pivot::graphics::PipelineStorage &m_pipelineStorage;
     pivot::Engine &m_engine;
-    const builtins::Camera &m_camera;
     bool &m_paused;
 };
 

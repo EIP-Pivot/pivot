@@ -3,7 +3,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <numbers>
 
-#include <pivot/builtins/components/Transform.hxx>
+#include <pivot/graphics/types/Transform.hxx>
 
 #include "ImGuiCore/CustomWidget.hxx"
 #include "Windows/AssetWindow.hxx"
@@ -25,7 +25,7 @@ void SceneWindow::render()
     ImGui::PopStyleVar(2);
     ImGui::PopStyleColor();
     viewport();
-    if (m_manager.getSelectedEntity() != -1) displayGuizmo();
+    if (m_manager.getSelectedEntity() != -1u) displayGuizmo();
     ImGui::End();
 }
 
@@ -171,12 +171,15 @@ void SceneWindow::setAspectRatio(float aspect) { aspectRatio = aspect; }
 
 void SceneWindow::displayGuizmo()
 {
-    using Transform = builtins::components::Transform;
+    using Transform = pivot::graphics::Transform;
 
     PROFILE_FUNCTION();
 
-    const auto view = m_camera.getView();
-    const auto projection = m_camera.getProjection(pivot::Engine::fov, aspectRatio);
+    pivot::Entity entity = m_manager.getSelectedEntity();
+
+    const glm::mat4 view = m_manager.getEngine().getCurrentCamera().getView();
+    const glm::mat4 projection =
+        m_manager.getEngine().getCurrentCamera().getProjection(pivot::Engine::fov, aspectRatio);
 
     const float *view_ptr = glm::value_ptr(view);
     const float *projection_ptr = glm::value_ptr(projection);
@@ -184,9 +187,11 @@ void SceneWindow::displayGuizmo()
     // TODO: Refactor this out, to compute only when the scene changes
     auto &cm = m_manager.getCurrentScene()->getComponentManager();
     auto &array = cm.GetComponentArray(cm.GetComponentId(Transform::description.name).value());
-    auto &ro_array = dynamic_cast<pivot::ecs::component::DenseTypedComponentArray<pivot::graphics::Transform> &>(array);
-    if (!ro_array.entityHasValue(m_manager.getSelectedEntity())) return;
-    pivot::graphics::Transform &transform = ro_array.getData()[m_manager.getSelectedEntity()];
+    auto &transform_array = dynamic_cast<pivot::graphics::SynchronizedTransformArray &>(array);
+    if (!transform_array.entityHasValue(entity)) return;
+
+    auto transform_lock = transform_array.lock();
+    pivot::graphics::Transform &transform = transform_array.getData()[entity];
     auto matrix = transform.getModelMatrix();
     float *matrix_data = glm::value_ptr(matrix);
     ImGuizmo::SetRect(m_manager.workspace.offset.x, m_manager.workspace.offset.y, m_manager.workspace.size.x,

@@ -39,6 +39,7 @@ void Editor::create(pivot::Engine &engine, pivot::graphics::PipelineStorage &pip
     ImGui::Text("Fps: %.1f", ImGui::GetIO().Framerate);
     ImGui::Text("ms/frame %.3f", 1000.0f / ImGui::GetIO().Framerate);
     ImGui::Checkbox("Systems", &run);
+    if (ImGui::Button("Select default camera")) { engine.setCurrentCamera(std::nullopt); }
     ImGuiTheme::unsetDefaultFramePadding();
     ImGui::End();
 }

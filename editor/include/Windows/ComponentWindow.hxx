@@ -21,6 +21,7 @@ private:
     void displayName();
     void deleteComponent(ecs::component::ComponentRef ref);
     void createPopUp();
+    void selectCamera(pivot::ecs::component::ComponentRef ref);
 };
 
 }    // namespace pivot::editor

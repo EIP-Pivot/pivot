@@ -2,7 +2,6 @@
 #include <pivot/graphics/Window.hxx>
 
 #include <pivot/builtins/systems/ControlSystem.hxx>
-#include <pivot/internal/camera.hxx>
 
 #include <pivot/ecs/Core/Event/description.hxx>
 
@@ -30,8 +29,7 @@ public:
         : Engine(),
           menuBar(getSceneManager(), *this),
           windowsManager(m_component_index, m_system_index, getSceneManager(), getCurrentScene(),
-                         m_vulkan_application.assetStorage, m_vulkan_application.pipelineStorage, *this, m_camera,
-                         m_paused)
+                         m_vulkan_application.assetStorage, m_vulkan_application.pipelineStorage, *this, m_paused)
     {
         for (const auto &directoryEntry: std::filesystem::recursive_directory_iterator(m_asset_directory / "Editor")) {
             if (directoryEntry.is_directory()) continue;
@@ -44,19 +42,12 @@ public:
     void init()
     {
         PROFILE_FUNCTION();
-
-        auto &window = m_vulkan_application.window;
-
-        Scene &scene = *getCurrentScene();
-
-        window.addKeyReleaseCallback(Window::Key::LEFT_ALT,
-                                     [&](Window &window, const Window::Key, const Window::Modifier) {
-                                         window.captureCursor(!window.captureCursor());
-                                         bFirstMouse = window.captureCursor();
-                                         button.reset();
-                                     });
-        window.addKeyReleaseCallback(
-            Window::Key::V, [&](Window &, const Window::Key, const Window::Modifier) { scene.switchCamera(); });
+        m_window.addKeyReleaseCallback(Window::Key::LEFT_ALT,
+                                       [&](Window &window, const Window::Key, const Window::Modifier) {
+                                           window.captureCursor(!window.captureCursor());
+                                           bFirstMouse = window.captureCursor();
+                                           button.reset();
+                                       });
 
         auto key_lambda_press = [&](Window &window, const Window::Key key, const Window::Modifier) {
             if (window.captureCursor()) button.set(static_cast<std::size_t>(key));
@@ -65,21 +56,21 @@ public:
             if (window.captureCursor()) button.reset(static_cast<std::size_t>(key));
         };
         // Press action
-        window.addKeyPressCallback(Window::Key::Z, key_lambda_press);
-        window.addKeyPressCallback(Window::Key::Q, key_lambda_press);
-        window.addKeyPressCallback(Window::Key::S, key_lambda_press);
-        window.addKeyPressCallback(Window::Key::D, key_lambda_press);
-        window.addKeyPressCallback(Window::Key::SPACE, key_lambda_press);
-        window.addKeyPressCallback(Window::Key::LEFT_SHIFT, key_lambda_press);
+        m_window.addKeyPressCallback(Window::Key::Z, key_lambda_press);
+        m_window.addKeyPressCallback(Window::Key::Q, key_lambda_press);
+        m_window.addKeyPressCallback(Window::Key::S, key_lambda_press);
+        m_window.addKeyPressCallback(Window::Key::D, key_lambda_press);
+        m_window.addKeyPressCallback(Window::Key::SPACE, key_lambda_press);
+        m_window.addKeyPressCallback(Window::Key::LEFT_SHIFT, key_lambda_press);
         // Release action
-        window.addKeyReleaseCallback(Window::Key::Z, key_lambda_release);
-        window.addKeyReleaseCallback(Window::Key::Q, key_lambda_release);
-        window.addKeyReleaseCallback(Window::Key::S, key_lambda_release);
-        window.addKeyReleaseCallback(Window::Key::D, key_lambda_release);
-        window.addKeyReleaseCallback(Window::Key::SPACE, key_lambda_release);
-        window.addKeyReleaseCallback(Window::Key::LEFT_SHIFT, key_lambda_release);
+        m_window.addKeyReleaseCallback(Window::Key::Z, key_lambda_release);
+        m_window.addKeyReleaseCallback(Window::Key::Q, key_lambda_release);
+        m_window.addKeyReleaseCallback(Window::Key::S, key_lambda_release);
+        m_window.addKeyReleaseCallback(Window::Key::D, key_lambda_release);
+        m_window.addKeyReleaseCallback(Window::Key::SPACE, key_lambda_release);
+        m_window.addKeyReleaseCallback(Window::Key::LEFT_SHIFT, key_lambda_release);
 
-        window.addMouseMovementCallback([&](Window &window, const glm::dvec2 pos) {
+        m_window.addMouseMovementCallback([&](Window &window, const glm::dvec2 pos) {
             if (!window.captureCursor()) return;
 
             if (bFirstMouse) {
@@ -90,70 +81,77 @@ public:
             auto yoffset = last.y - pos.y;
 
             last = pos;
-            pivot::builtins::systems::ControlSystem::processMouseMovement(m_camera, glm::dvec2(xoffset, yoffset));
+            pivot::builtins::systems::ControlSystem::processMouseMovement(getCurrentCamera().camera,
+                                                                          glm::dvec2(xoffset, yoffset));
         });
-        window.addKeyPressCallback(Window::Key::ESCAPE, [&](Window &window, const Window::Key, const Window::Modifier) {
-            logger.debug() << "Escape";
-            if (this->m_paused) {
-                window.shouldClose(true);
-            } else {
-                m_paused = false;
-            }
-        });
+        m_window.addKeyPressCallback(Window::Key::ESCAPE,
+                                     [&](Window &window, const Window::Key, const Window::Modifier) {
+                                         logger.debug() << "Escape";
+                                         if (this->m_paused) {
+                                             window.shouldClose(true);
+                                         } else {
+                                             m_paused = false;
+                                         }
+                                     });
         m_vulkan_application.buildAssetStorage(pivot::graphics::AssetStorage::BuildFlagBits::eReloadOldAssets);
         // resize or loading asset reset imgui -> style reset
         //        ImGuiTheme::setStyle();
     }
 
-    void processKeyboard(const pivot::builtins::Camera::Movement direction, float dt) noexcept
+    void processKeyboard(pivot::internals::LocationCamera camera, pivot::internals::LocationCamera::Movement direction,
+                         float dt) noexcept
     {
         PROFILE_FUNCTION();
-        using Camera = pivot::builtins::Camera;
+        float speed = 30.0f;
+        using Movement = pivot::internals::LocationCamera::Movement;
+        glm::vec3 &camera_position = camera.transform.position;
+        pivot::internals::LocationCamera::Directions camera_directions = camera.getDirections();
         switch (direction) {
-            case Camera::Movement::FORWARD: {
-                m_camera.position.x += m_camera.front.x * 10.f * dt;
-                m_camera.position.z += m_camera.front.z * 10.f * dt;
+            case Movement::FORWARD: {
+                camera_position.x += camera_directions.front.x * speed * dt;
+                camera_position.z += camera_directions.front.z * speed * dt;
             } break;
-            case Camera::Movement::BACKWARD: {
-                m_camera.position.x -= m_camera.front.x * 10.f * dt;
-                m_camera.position.z -= m_camera.front.z * 10.f * dt;
+            case Movement::BACKWARD: {
+                camera_position.x -= camera_directions.front.x * speed * dt;
+                camera_position.z -= camera_directions.front.z * speed * dt;
             } break;
-            case Camera::Movement::RIGHT: {
-                m_camera.position.x += m_camera.right.x * 10.f * dt;
-                m_camera.position.z += m_camera.right.z * 10.f * dt;
+            case Movement::RIGHT: {
+                camera_position.x += camera_directions.right.x * speed * dt;
+                camera_position.z += camera_directions.right.z * speed * dt;
             } break;
-            case Camera::Movement::LEFT: {
-                m_camera.position.x -= m_camera.right.x * 10.f * dt;
-                m_camera.position.z -= m_camera.right.z * 10.f * dt;
+            case Movement::LEFT: {
+                camera_position.x -= camera_directions.right.x * speed * dt;
+                camera_position.z -= camera_directions.right.z * speed * dt;
             } break;
-            case Camera::Movement::UP: {
-                m_camera.position.y += 10.f * dt;
+            case Movement::UP: {
+                camera_position.y += speed * dt;
             } break;
-            case Camera::Movement::DOWN: m_camera.position.y -= 10.f * dt; break;
+            case Movement::DOWN: camera_position.y -= speed * dt; break;
         }
     }
 
-    void UpdateCamera(float dt)
-    try {
+    void UpdateCamera(pivot::internals::LocationCamera camera, float dt)
+    {
         PROFILE_FUNCTION();
-        using Camera = pivot::builtins::Camera;
+        using LocationCamera = pivot::internals::LocationCamera;
+        try {
+            if (button.test(static_cast<std::size_t>(Window::Key::Z)))
+                processKeyboard(camera, LocationCamera::FORWARD, dt);
+            else if (button.test(static_cast<std::size_t>(Window::Key::S)))
+                processKeyboard(camera, LocationCamera::BACKWARD, dt);
 
-        if (button.test(static_cast<std::size_t>(Window::Key::Z)))
-            processKeyboard(Camera::FORWARD, dt);
-        else if (button.test(static_cast<std::size_t>(Window::Key::S)))
-            processKeyboard(Camera::BACKWARD, dt);
+            if (button.test(static_cast<std::size_t>(Window::Key::Q)))
+                processKeyboard(camera, LocationCamera::LEFT, dt);
+            else if (button.test(static_cast<std::size_t>(Window::Key::D)))
+                processKeyboard(camera, LocationCamera::RIGHT, dt);
 
-        if (button.test(static_cast<std::size_t>(Window::Key::Q)))
-            processKeyboard(Camera::LEFT, dt);
-        else if (button.test(static_cast<std::size_t>(Window::Key::D)))
-            processKeyboard(Camera::RIGHT, dt);
-
-        if (button.test(static_cast<std::size_t>(Window::Key::SPACE)))
-            processKeyboard(Camera::UP, dt);
-        else if (button.test(static_cast<std::size_t>(Window::Key::LEFT_SHIFT)))
-            processKeyboard(Camera::DOWN, dt);
-    } catch (const std::exception &e) {
-        logger.err(pivot::utils::function_name()) << e.what();
+            if (button.test(static_cast<std::size_t>(Window::Key::SPACE)))
+                processKeyboard(camera, LocationCamera::UP, dt);
+            else if (button.test(static_cast<std::size_t>(Window::Key::LEFT_SHIFT)))
+                processKeyboard(camera, LocationCamera::DOWN, dt);
+        } catch (const std::exception &e) {
+            std::cerr << e.what() << std::endl;
+        }
     }
 
     void onTick(float dt) override
@@ -167,7 +165,7 @@ public:
         windowsManager.render();
         if (menuBar.shouldDisplayColorwindow()) imGuiTheme.setColors();
         windowsManager.setAspectRatio(m_vulkan_application.getAspectRatio());
-        UpdateCamera(dt);
+        UpdateCamera(getCurrentCamera(), dt);
         this->setRenderArea(vk::Rect2D{
             .offset =
                 {

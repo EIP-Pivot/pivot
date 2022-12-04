@@ -7,6 +7,8 @@
 #include "Windows/IWindow.hxx"
 #include "WindowsManager.hxx"
 
+#include "pivot/internal/LocationCamera.hxx"
+
 namespace pivot::editor
 {
 
@@ -14,7 +16,7 @@ class SceneWindow : public IWindow
 {
 public:
     SceneWindow(const std::string &name, ecs::SceneManager::SceneId sceneId, WindowsManager &manager,
-                pivot::graphics::PipelineStorage &pipelineStorage, const builtins::Camera &camera, bool &paused)
+                pivot::graphics::PipelineStorage &pipelineStorage, bool &paused)
         : IWindow(manager, true),
           sceneStatus(SceneStatus::STOP),
           m_paused(paused),
@@ -22,7 +24,6 @@ public:
           currentGizmoMode(ImGuizmo::LOCAL),
           aspectRatio(0.f),
           useSnap(false),
-          m_camera(camera),
           m_pipelineStorage(pipelineStorage),
           m_name(name),
           m_sceneId(sceneId){};
@@ -47,7 +48,6 @@ private:
     float aspectRatio;
     bool useSnap;
     float snap[3] = {20.f, 20.f, 20.f};
-    const builtins::Camera &m_camera;
     pivot::graphics::PipelineStorage &m_pipelineStorage;
     const std::string &m_name;
     ecs::SceneManager::SceneId m_sceneId;

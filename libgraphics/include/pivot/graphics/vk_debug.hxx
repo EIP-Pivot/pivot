@@ -41,10 +41,11 @@ FORCEINLINE void setObjectTag([[maybe_unused]] vk::Device &device, [[maybe_unuse
 }
 
 /// Begin a new debug region
-FORCEINLINE void beginRegion(vk::CommandBuffer &cmdbuffer, const char *pMarkerName, const std::array<float, 4> color)
+FORCEINLINE void beginRegion([[maybe_unused]] vk::CommandBuffer &cmdbuffer, [[maybe_unused]] const char *pMarkerName,
+                             [[maybe_unused]] const std::array<float, 4> color)
 {
-    pivotAssertMsg(pMarkerName, "Command region's name is NULL");
 #ifndef NDEBUG
+    pivotAssertMsg(pMarkerName, "Command region's name is NULL");
     vk::DebugUtilsLabelEXT markerInfo{
         .pLabelName = pMarkerName,
         .color = color,
@@ -54,7 +55,7 @@ FORCEINLINE void beginRegion(vk::CommandBuffer &cmdbuffer, const char *pMarkerNa
 };
 
 /// End a debug region
-FORCEINLINE void endRegion(vk::CommandBuffer &cmdBuffer)
+FORCEINLINE void endRegion([[maybe_unused]] vk::CommandBuffer &cmdBuffer)
 {
 #ifndef NDEBUG
     cmdBuffer.endDebugUtilsLabelEXT();

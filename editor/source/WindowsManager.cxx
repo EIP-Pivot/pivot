@@ -19,8 +19,7 @@ using namespace pivot::editor;
 WindowsManager::WindowsManager(const pivot::ecs::component::Index &componentIndex,
                                const pivot::ecs::systems::Index &systemIndex, const ecs::SceneManager &sceneManager,
                                pivot::ecs::CurrentScene scene, pivot::graphics::AssetStorage &assetStorage,
-                               pivot::graphics::PipelineStorage &pipelineStorage, Engine &engine,
-                               const builtins::Camera &camera, bool &paused)
+                               pivot::graphics::PipelineStorage &pipelineStorage, Engine &engine, bool &paused)
     : m_componentIndex(componentIndex),
       m_systemIndex(systemIndex),
       m_sceneManager(sceneManager),
@@ -28,7 +27,6 @@ WindowsManager::WindowsManager(const pivot::ecs::component::Index &componentInde
       m_assetStorage(assetStorage),
       m_pipelineStorage(pipelineStorage),
       m_engine(engine),
-      m_camera(camera),
       m_paused(paused)
 {
     m_windows["ComponentWindow"] = std::make_unique<ComponentWindow>(*this);
@@ -37,9 +35,13 @@ WindowsManager::WindowsManager(const pivot::ecs::component::Index &componentInde
     m_windows["AssetWindow"] = std::make_unique<AssetWindow>(*this);
 }
 
-const pivot::ecs::component::Index &WindowsManager::getComponentIndex() { return m_componentIndex; }
+const pivot::ecs::component::Index &WindowsManager::getComponentIndex() const { return m_componentIndex; }
 
-const pivot::ecs::systems::Index &WindowsManager::getSystemIndex() { return m_systemIndex; }
+const pivot::ecs::systems::Index &WindowsManager::getSystemIndex() const { return m_systemIndex; }
+
+const pivot::Engine &WindowsManager::getEngine() const { return m_engine; }
+
+pivot::Engine &WindowsManager::getEngine() { return m_engine; }
 
 pivot::ecs::CurrentScene WindowsManager::getCurrentScene() { return m_scene; }
 
@@ -74,7 +76,7 @@ void WindowsManager::render()
     for (ecs::SceneManager::SceneId sceneId = 0; sceneId < m_sceneManager.getLivingScene(); sceneId++) {
         const std::string &name = m_sceneManager.getSceneById(sceneId).getName();
         if (m_scenes.find(name) == m_scenes.end())
-            m_scenes[name] = std::make_unique<SceneWindow>(name, sceneId, *this, m_pipelineStorage, m_camera, m_paused);
+            m_scenes[name] = std::make_unique<SceneWindow>(name, sceneId, *this, m_pipelineStorage, m_paused);
     }
     for (auto &[_, window]: m_scenes) { window->render(); }
     for (auto &[_, window]: m_windows) {

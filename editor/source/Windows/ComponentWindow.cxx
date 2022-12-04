@@ -3,7 +3,7 @@
 #include <imgui.h>
 
 #include "ImGuiCore/ImGuiTheme.hxx"
-#include "ImGuiCore/TypeTemplate/Template.hxx"
+#include "ImGuiCore/ValueInput.hxx"
 #include <magic_enum.hpp>
 
 using namespace pivot::editor;
@@ -15,7 +15,7 @@ void ComponentWindow::render()
 {
     PROFILE_FUNCTION();
     ImGui::Begin(" Component editor ", &m_open);
-    if (m_manager.getSelectedEntity() != -1) {
+    if (m_manager.getSelectedEntity() != -1u) {
         ImGuiTheme::setDefaultFramePadding();
         createPopUp();
         displayComponent();
@@ -47,6 +47,7 @@ void ComponentWindow::createPopUp()
 
 void ComponentWindow::displayComponent()
 {
+    ValueInput valueInput(m_manager.getCurrentScene());
     PROFILE_FUNCTION();
     auto &cm = m_manager.getCurrentScene()->getComponentManager();
     displayName();
@@ -57,9 +58,10 @@ void ComponentWindow::displayComponent()
             ImGui::TreePop();
             Value value = ref;
             ImGui::PushID(ref.description().name.c_str());
-            draw(value, "oui");
+            valueInput.drawInput(value, "oui");
             ImGui::PopID();
             ref.set(value);
+            this->selectCamera(ref);
             ImGui::Separator();
         }
     }
@@ -110,4 +112,11 @@ void ComponentWindow::addComponent(const Description &description)
     auto id = cm.GetComponentId(description.name).value();
     Value newComponent = description.defaultValue;
     cm.AddComponent(m_manager.getSelectedEntity(), newComponent, id);
+}
+
+void ComponentWindow::selectCamera(pivot::ecs::component::ComponentRef ref)
+{
+    if (ref.description() == pivot::builtins::components::Camera::description) {
+        if (ImGui::Button("Select camera")) { m_manager.getEngine().setCurrentCamera(ref.entity()); }
+    }
 }

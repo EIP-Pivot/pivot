@@ -16,7 +16,7 @@ void EntityWindow::render()
     ImGuiTheme::setDefaultFramePadding();
     createPopUp();
     if (ImGui::Button("Add entity")) ImGui::OpenPopup("NewEntity");
-    if (m_manager.getSelectedEntity() != -1) {
+    if (m_manager.getSelectedEntity() != -1u) {
         ImGui::SameLine();
         if (ImGui::Button("Remove entity")) removeEntity();
     }

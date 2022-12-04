@@ -35,7 +35,7 @@ public:
     ComponentId RegisterComponent(const Description &componentDescription);
 
     /// Get the id of a component if it was registered
-    std::optional<ComponentId> GetComponentId(std::string_view name);
+    std::optional<ComponentId> GetComponentId(std::string_view name) const;
 
     /// Add or replace the component associated to an entity
     void AddComponent(Entity entity, data::Value component, ComponentId index);

@@ -57,9 +57,7 @@ void SceneWindow::imGuizmoOperation()
 
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.f);
-    if (ImGui::ImageButton("Camera", camera, ImVec2(17.f, 17.f))) {
-        m_manager.setDefaultCamera();
-    }
+    if (ImGui::ImageButton("Camera", camera, ImVec2(17.f, 17.f))) { m_manager.setDefaultCamera(); }
     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 5.f);
     ImGui::Separator();
     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 5.f);
@@ -109,9 +107,7 @@ void SceneWindow::setSceneStatus()
     else
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (ImGui::GetColumnWidth() / 2) - 51.f);
     if (CustomWidget::RadioImageButton("Play", play, ImVec2(17.f, 17.f), sceneStatus == SceneStatus::PLAY)) {
-        if (sceneStatus == SceneStatus::STOP) {
-            m_save = m_manager.getCurrentScene()->getJson();
-        }
+        if (sceneStatus == SceneStatus::STOP) { m_save = m_manager.getCurrentScene()->getJson(); }
         sceneStatus = SceneStatus::PLAY;
         m_paused = false;
     }
@@ -121,9 +117,7 @@ void SceneWindow::setSceneStatus()
             m_paused = true;
         }
     if (CustomWidget::RadioImageButton("Stop", stop, ImVec2(17.f, 17.f), sceneStatus == SceneStatus::STOP)) {
-        if (sceneStatus != SceneStatus::STOP) {
-            m_manager.resetScene(m_manager.getCurrentScene().id(), m_save);
-        }
+        if (sceneStatus != SceneStatus::STOP) { m_manager.resetScene(m_manager.getCurrentScene().id(), m_save); }
         sceneStatus = SceneStatus::STOP;
         m_paused = true;
     }

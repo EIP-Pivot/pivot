@@ -36,8 +36,10 @@ public:
     pivot::Engine &getEngine();
 
     ecs::CurrentScene getCurrentScene();
+    const ecs::Scene &getSceneByID(ecs::SceneManager::SceneId id);
     pivot::graphics::AssetStorage &getAssetStorage();
     void setCurrentScene(ecs::SceneManager::SceneId sceneId);
+    void resetScene(ecs::SceneManager::SceneId id, const nlohmann::json &json);
     Entity getSelectedEntity() const;
     void setSelectedEntity(Entity entity);
     void render();

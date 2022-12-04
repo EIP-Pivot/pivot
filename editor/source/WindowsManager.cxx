@@ -76,7 +76,7 @@ void WindowsManager::render()
     for (ecs::SceneManager::SceneId sceneId = 0; sceneId < m_sceneManager.getLivingScene(); sceneId++) {
         const std::string &name = m_sceneManager.getSceneById(sceneId).getName();
         if (m_scenes.find(name) == m_scenes.end())
-            m_scenes[name] = std::make_unique<SceneWindow>(name, sceneId, *this, m_pipelineStorage, m_paused);
+            m_scenes[name] = std::make_unique<SceneWindow>(sceneId, *this, m_pipelineStorage, m_paused);
     }
     for (auto &[_, window]: m_scenes) { window->render(); }
     for (auto &[_, window]: m_windows) {
@@ -153,4 +153,13 @@ void WindowsManager::endFrame()
 void WindowsManager::setAspectRatio(float aspect)
 {
     for (auto &[_, scene]: m_scenes) dynamic_cast<SceneWindow *>(scene.get())->setAspectRatio(aspect);
+}
+void WindowsManager::resetScene(pivot::ecs::SceneManager::SceneId id, const nlohmann::json &json)
+{
+    m_engine.resetScene(id, json);
+}
+
+const pivot::ecs::Scene &WindowsManager::getSceneByID(pivot::ecs::SceneManager::SceneId id)
+{
+    return m_sceneManager.getSceneById(id);
 }

@@ -121,6 +121,9 @@ public:
     using AssetTranslator = std::function<std::optional<std::string>(const std::string &)>;
     /// Function used to retrieve the real path of an external ressource
     using ScriptTranslator = std::function<std::optional<std::string>(const std::string &)>;
+    /// Get scene as json format
+    nlohmann::json getJson(std::optional<AssetTranslator> assetTranslator = std::nullopt,
+                           std::optional<ScriptTranslator> scriptTranslator = std::nullopt) const;
     /// Save scene in json file
     void save(const std::filesystem::path &path, std::optional<AssetTranslator> assetTranslator = std::nullopt,
               std::optional<ScriptTranslator> scriptTranslator = std::nullopt) const;

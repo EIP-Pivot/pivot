@@ -90,4 +90,9 @@ Scene &SceneManager::operator[](SceneId id)
 
 std::size_t SceneManager::getLivingScene() const { return m_scenes.size(); }
 
+void SceneManager::resetScene(SceneManager::SceneId sceneId, std::unique_ptr<Scene> scene)
+{
+    this->m_scenes.at(sceneId).value().swap(scene);
+}
+
 }    // namespace pivot::ecs

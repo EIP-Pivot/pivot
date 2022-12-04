@@ -50,12 +50,19 @@ void SceneWindow::toolbar()
 void SceneWindow::imGuizmoOperation()
 {
     PROFILE_FUNCTION();
+    auto camera = m_manager.getTextureId("Camera");
     auto move = m_manager.getTextureId("MoveTool");
     auto rotate = m_manager.getTextureId("RotateTool");
     auto scale = m_manager.getTextureId("ScaleTool");
 
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.f);
+    if (ImGui::ImageButton("Camera", camera, ImVec2(17.f, 17.f))) {
+        m_manager.setDefaultCamera();
+    }
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 5.f);
+    ImGui::Separator();
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 5.f);
     if (CustomWidget::RadioImageButton("Translate", move, ImVec2(17.f, 17.f),
                                        currentGizmoOperation == ImGuizmo::TRANSLATE))
         currentGizmoOperation = ImGuizmo::TRANSLATE;

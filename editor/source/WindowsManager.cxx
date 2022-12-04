@@ -163,3 +163,5 @@ const pivot::ecs::Scene &WindowsManager::getSceneByID(pivot::ecs::SceneManager::
 {
     return m_sceneManager.getSceneById(id);
 }
+
+void WindowsManager::setDefaultCamera() { m_engine.setCurrentCamera(std::nullopt); }

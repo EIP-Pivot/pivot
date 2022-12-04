@@ -39,6 +39,7 @@ public:
     const ecs::Scene &getSceneByID(ecs::SceneManager::SceneId id);
     pivot::graphics::AssetStorage &getAssetStorage();
     void setCurrentScene(ecs::SceneManager::SceneId sceneId);
+    void setDefaultCamera();
     void resetScene(ecs::SceneManager::SceneId id, const nlohmann::json &json);
     Entity getSelectedEntity() const;
     void setSelectedEntity(Entity entity);

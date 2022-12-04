@@ -140,8 +140,6 @@ private:
     pivot::ecs::systems::Manager mSystemManager;
     pivot::ecs::event::Manager mEventManager;
     pivot::ecs::component::Manager::ComponentId mTagId;
-    pivot::ecs::component::Manager mCopyComponentManager;
-    EntityManager mCopyEntityManager;
 };
 
 }    // namespace pivot::ecs

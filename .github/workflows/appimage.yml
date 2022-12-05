@@ -15,7 +15,7 @@ jobs:
         config:
           - os: ubuntu-22.04
             working_directory: /build/
-            extra_cmake: "-DCMAKE_INSTALL_PREFIX=/usr"
+            extra_cmake: "-DCMAKE_INSTALL_PREFIX=/usr -DMIMALLOC_ENABLED=OFF"
             compiler: "g++-12"
 
         build_type: [Release]

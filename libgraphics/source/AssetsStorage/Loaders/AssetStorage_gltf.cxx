@@ -48,9 +48,9 @@ static std::span<const T> getSpan(const tinygltf::Buffer &buffer, const unsigned
 }
 
 template <typename T>
-requires(gltf_type_code<T> != -1)
-std::vector<T> sliceGltfBuffer(const tinygltf::Buffer &buffer, const tinygltf::BufferView &view,
-                               const tinygltf::Accessor &accessor)
+requires(gltf_type_code<T> != -1) std::vector<T> sliceGltfBuffer(const tinygltf::Buffer &buffer,
+                                                                 const tinygltf::BufferView &view,
+                                                                 const tinygltf::Accessor &accessor)
 {
     if (accessor.type != gltf_type_code<T>) throw std::logic_error("Invalid type");
     if (accessor.componentType != gltf_component_type_code<float>) throw std::logic_error("Invalid component type");

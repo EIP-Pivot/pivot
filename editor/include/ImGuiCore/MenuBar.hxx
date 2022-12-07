@@ -7,6 +7,7 @@
 #include <nfd.hpp>
 #include <unordered_map>
 #include <vector>
+#include <imgui.h>
 
 class MenuBar
 {
@@ -31,6 +32,8 @@ public:
         const std::string sButtonText;
         const std::string sSuccesText;
         const std::string sErrorText;
+        const ImGuiKey_ key;
+        const ImGuiKey_ mod;
         const std::vector<nfdfilteritem_t> acceptedFiles;
         Handler handler;
         FileResult open() const;

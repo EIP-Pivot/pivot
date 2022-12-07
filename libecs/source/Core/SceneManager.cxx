@@ -29,7 +29,7 @@ void SceneManager::unregisterScene(SceneId toDelete)
         throw EcsException("Scene with id _" + std::to_string(toDelete) +
                            "_ doesn't exist. Register it before trying to delete it.");
 
-    m_scenes[toDelete] = std::nullopt;
+    m_scenes.erase(m_scenes.begin() + toDelete);
 }
 
 SceneManager::SceneId SceneManager::getCurrentSceneId() const { return m_currentActiveScene.value(); }

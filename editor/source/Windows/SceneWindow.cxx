@@ -62,11 +62,15 @@ void SceneWindow::imGuizmoOperation()
     ImGui::Separator();
     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 5.f);
     if (CustomWidget::RadioImageButton("Translate", move, ImVec2(17.f, 17.f),
-                                       currentGizmoOperation == ImGuizmo::TRANSLATE))
+                                       currentGizmoOperation == ImGuizmo::TRANSLATE) ||
+        ImGui::IsKeyPressed(ImGuiKey_T))
         currentGizmoOperation = ImGuizmo::TRANSLATE;
-    if (CustomWidget::RadioImageButton("Rotate", rotate, ImVec2(17.f, 17.f), currentGizmoOperation == ImGuizmo::ROTATE))
+    if (CustomWidget::RadioImageButton("Rotate", rotate, ImVec2(17.f, 17.f),
+                                       currentGizmoOperation == ImGuizmo::ROTATE) ||
+        ImGui::IsKeyPressed(ImGuiKey_R))
         currentGizmoOperation = ImGuizmo::ROTATE;
-    if (CustomWidget::RadioImageButton("Scale", scale, ImVec2(17.f, 17.f), currentGizmoOperation == ImGuizmo::SCALE))
+    if (CustomWidget::RadioImageButton("Scale", scale, ImVec2(17.f, 17.f), currentGizmoOperation == ImGuizmo::SCALE) ||
+        ImGui::IsKeyPressed(ImGuiKey_S))
         currentGizmoOperation = ImGuizmo::SCALE;
     ImGui::PopStyleVar(2);
 }
@@ -106,17 +110,20 @@ void SceneWindow::setSceneStatus()
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (ImGui::GetColumnWidth() / 2) - 34.f);
     else
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (ImGui::GetColumnWidth() / 2) - 51.f);
-    if (CustomWidget::RadioImageButton("Play", play, ImVec2(17.f, 17.f), sceneStatus == SceneStatus::PLAY)) {
+    if (CustomWidget::RadioImageButton("Play", play, ImVec2(17.f, 17.f), sceneStatus == SceneStatus::PLAY) ||
+        ImGui::IsKeyPressed(ImGuiKey_P)) {
         if (sceneStatus == SceneStatus::STOP) { m_save = m_manager.getCurrentScene()->getJson(); }
         sceneStatus = SceneStatus::PLAY;
         m_paused = false;
     }
     if (sceneStatus != SceneStatus::STOP)
-        if (CustomWidget::RadioImageButton("Pause", pause, ImVec2(17.f, 17.f), sceneStatus == SceneStatus::PAUSE)) {
+        if (CustomWidget::RadioImageButton("Pause", pause, ImVec2(17.f, 17.f), sceneStatus == SceneStatus::PAUSE) ||
+            ImGui::IsKeyPressed(ImGuiKey_M)) {
             sceneStatus = SceneStatus::PAUSE;
             m_paused = true;
         }
-    if (CustomWidget::RadioImageButton("Stop", stop, ImVec2(17.f, 17.f), sceneStatus == SceneStatus::STOP)) {
+    if (CustomWidget::RadioImageButton("Stop", stop, ImVec2(17.f, 17.f), sceneStatus == SceneStatus::STOP) ||
+        ImGui::IsKeyPressed(ImGuiKey_J)) {
         if (sceneStatus != SceneStatus::STOP) { m_manager.resetScene(m_manager.getCurrentScene().id(), m_save); }
         sceneStatus = SceneStatus::STOP;
         m_paused = true;

@@ -73,6 +73,12 @@ void WindowsManager::setSelectedEntity(Entity entity) { m_entitySelected = entit
 
 void WindowsManager::render()
 {
+    if (ImGui::IsKeyPressed(ImGuiKey_N)) { m_engine.registerScene(); }
+    if (ImGui::IsKeyPressed(ImGuiKey_W)) {
+        ImGui::SetWindowFocus(std::string(" " + m_sceneManager.getSceneById(0).getName() + " ").c_str());
+        m_scenes.erase(m_sceneManager.getCurrentScene().getName());
+        m_engine.unregisterScene(m_scene.id());
+    }
     for (ecs::SceneManager::SceneId sceneId = 0; sceneId < m_sceneManager.getLivingScene(); sceneId++) {
         const std::string &name = m_sceneManager.getSceneById(sceneId).getName();
         if (m_scenes.find(name) == m_scenes.end())

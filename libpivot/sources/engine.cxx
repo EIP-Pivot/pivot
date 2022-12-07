@@ -238,6 +238,8 @@ namespace
     }
 }    // namespace
 
+void Engine::unregisterScene(ecs::SceneManager::SceneId toDelete) { m_scene_manager.unregisterScene(toDelete); }
+
 ecs::SceneManager::SceneId Engine::registerScene()
 {
     DEBUG_FUNCTION();

@@ -16,6 +16,8 @@ MenuBar::MenuBar(const pivot::ecs::SceneManager &sceneManager, pivot::Engine &en
                     .sButtonText = "Save Scene",
                     .sSuccesText = "Scene correctly saved.",
                     .sErrorText = "Failed to save the scene, please check the log.",
+                    .key = ImGuiKey_S,
+                    .mod = ImGuiKey_LeftCtrl,
                     .acceptedFiles = {{"Scene", "json"}},
                     .handler =
                         [&](const std::filesystem::path &path) {
@@ -28,6 +30,8 @@ MenuBar::MenuBar(const pivot::ecs::SceneManager &sceneManager, pivot::Engine &en
                     .sButtonText = "Load Scene",
                     .sSuccesText = "Scene loaded succefully !",
                     .sErrorText = "Scene loading failed, please check the log.",
+                    .key = ImGuiKey_O,
+                    .mod = ImGuiKey_LeftCtrl,
                     .acceptedFiles = {{"Scene", "json"}},
                     .handler =
                         [&](const std::filesystem::path &path) {
@@ -40,6 +44,8 @@ MenuBar::MenuBar(const pivot::ecs::SceneManager &sceneManager, pivot::Engine &en
                     .sButtonText = "Load Script",
                     .sSuccesText = "Script loaded succefully !",
                     .sErrorText = "Script loading failed, please look at the logs.",
+                    .key = ImGuiKey_L,
+                    .mod = ImGuiKey_LeftCtrl,
                     .acceptedFiles = {{"Pivot script", "pivotscript"}},
                     .handler =
                         [&](const std::filesystem::path &path) {
@@ -52,6 +58,8 @@ MenuBar::MenuBar(const pivot::ecs::SceneManager &sceneManager, pivot::Engine &en
                     .sButtonText = "Load asset",
                     .sSuccesText = "Asset loaded succefully !",
                     .sErrorText = "Asset loading failed, please look at the logs.",
+                    .key = ImGuiKey_M,
+                    .mod = ImGuiKey_LeftCtrl,
                     .acceptedFiles = {{"Model", "gltf,obj"}, {"Textures", "jpg,png,ktx"}},
                     .handler =
                         [&](const std::filesystem::path &path) {
@@ -63,17 +71,32 @@ MenuBar::MenuBar(const pivot::ecs::SceneManager &sceneManager, pivot::Engine &en
         },
     };
 }
-
 bool MenuBar::render()
 {
     PROFILE_FUNCTION();
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{10.0f, 10.0f});
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5.0f, 5.0f));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    for (const auto &[menu_name, menu_item]: fileSubMenu) {
+        for (const auto &fileInteraction: menu_item) {
+            if (ImGui::IsKeyPressed(fileInteraction.mod)) {
+                if (ImGui::IsKeyPressed(fileInteraction.key)) {
+                    switch (fileInteraction.open()) {
+                        case FileResult::HandlerError:
+                        case FileResult::ResetFrame: return false;
+                        case FileResult::Success:
+                        case FileResult::Error:
+                        case FileResult::Cancel: break;
+                    }
+                }
+            }
+        }
+    }
     if (ImGui::BeginMainMenuBar()) {
         for (const auto &[menu_name, menu_item]: fileSubMenu) {
             if (ImGui::BeginMenu(menu_name.c_str())) {
                 for (const auto &fileInteraction: menu_item) {
+
                     if (ImGui::MenuItem(fileInteraction.sButtonText.c_str())) {
                         switch (fileInteraction.open()) {
                             case FileResult::HandlerError:

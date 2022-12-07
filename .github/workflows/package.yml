@@ -79,7 +79,7 @@ jobs:
           retention-days: 1
 
   release:
-    needs: [build]
+    needs: [build, appimage]
     runs-on: ubuntu-latest
     steps:
       - name: Create release directory
@@ -93,6 +93,11 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: pivot-windows-${{ github.ref_name }}
+          path: ${{ github.workspace }}/release
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: pivot-appimage-${{ github.ref_name }}
           path: ${{ github.workspace }}/release
 
       - name: Publish

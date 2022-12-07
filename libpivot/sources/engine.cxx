@@ -241,6 +241,14 @@ ecs::SceneManager::SceneId Engine::registerScene(std::unique_ptr<ecs::Scene> sce
     return id;
 }
 
+void Engine::resetScene(ecs::SceneManager::SceneId id, const nlohmann::json &json)
+{
+    auto scene = Scene::load(json, m_component_index, m_system_index);
+    m_scene_manager.resetScene(id, std::move(scene));
+    postSceneRegister(m_scene_manager.getSceneById(id));
+    changeCurrentScene(id);
+}
+
 void Engine::saveScene(ecs::SceneManager::SceneId id, const std::filesystem::path &path)
 {
     DEBUG_FUNCTION();

@@ -1,3 +1,6 @@
+#include <cpplogger/Logger.hpp>
+#include <pivot/config.hxx>
+
 #include "pivot/graphics/Renderer/GraphicsRenderer.hxx"
 
 #include "pivot/graphics/PipelineBuilders/GraphicsPipelineBuilder.hxx"
@@ -122,17 +125,20 @@ void GraphicsRenderer::createPipeline(VulkanBase &base_ref, vk::RenderPass &pass
         },
     };
 
+    std::filesystem::path shader_directory = pivot::Config::find_shaders_folder();
+
     builder.setPipelineLayout(pipelineLayout)
         .setRenderPass(pass)
         .setMsaaSample(base_ref.maxMsaaSample)
         .setFaceCulling(vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise);
 
-    builder.setVertexShaderPath("shaders/default.vert.spv").setFragmentShaderPath("shaders/default_lit.frag.spv");
+    builder.setVertexShaderPath(shader_directory / "default.vert.spv")
+        .setFragmentShaderPath(shader_directory / "default_lit.frag.spv");
     storage.pipeline.get().newGraphicsPipeline(
         "lit", builder.buildWithSpecialisation(base_ref.device, specializationData, count,
                                                vk::ShaderStageFlagBits::eFragment, storage.pipeline.get().getCache()));
 
-    builder.setFragmentShaderPath("shaders/default_unlit.frag.spv");
+    builder.setFragmentShaderPath(shader_directory / "default_unlit.frag.spv");
     storage.pipeline.get().newGraphicsPipeline(
         "unlit",
         builder.buildWithSpecialisation(base_ref.device, specializationData, count, vk::ShaderStageFlagBits::eFragment,
@@ -155,8 +161,8 @@ void GraphicsRenderer::createPipeline(VulkanBase &base_ref, vk::RenderPass &pass
         .setVertexAttributes(Vertex::getInputAttributeDescriptions(
             0, VertexComponentFlagBits::Position | VertexComponentFlagBits::Normal | VertexComponentFlagBits::UV |
                    VertexComponentFlagBits::Color | VertexComponentFlagBits::Tangent))
-        .setVertexShaderPath("shaders/default_pbr.vert.spv")
-        .setFragmentShaderPath("shaders/default_pbr.frag.spv");
+        .setVertexShaderPath(shader_directory / "default_pbr.vert.spv")
+        .setFragmentShaderPath(shader_directory / "default_pbr.frag.spv");
     storage.pipeline.get().newGraphicsPipeline(
         "pbr", builder.buildWithSpecialisation(base_ref.device, specializationData, count,
                                                vk::ShaderStageFlagBits::eFragment, storage.pipeline.get().getCache()));

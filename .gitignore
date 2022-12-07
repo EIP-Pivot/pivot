@@ -23,3 +23,10 @@ cmake-build-*
 
 # vscode
 .vscode
+
+build.appimage
+AppDir
+appimage-build
+*.AppImage
+*.AppImage.zsync
+Pivot_Startup.json

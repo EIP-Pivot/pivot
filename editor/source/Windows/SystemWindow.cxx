@@ -1,13 +1,16 @@
-#include "ImGuiCore/SystemsEditor.hxx"
-#include "ImGuiCore/CustomWidget.hxx"
-#include "ImGuiCore/ImGuiTheme.hxx"
+#include "Windows/SystemWindow.hxx"
 
 #include <imgui.h>
 
-void SystemsEditor::create()
+#include "ImGuiCore/CustomWidget.hxx"
+#include "ImGuiCore/ImGuiTheme.hxx"
+
+using namespace pivot::editor;
+
+void SystemWindow::render()
 {
     PROFILE_FUNCTION();
-    ImGui::Begin(" Systems ");
+    ImGui::Begin(" Systems ", &m_open);
     ImGuiTheme::setDefaultFramePadding();
     displaySystem();
     if (CustomWidget::ButtonCenteredOnLine("Add System")) { ImGui::OpenPopup("AddSystem"); }
@@ -16,24 +19,25 @@ void SystemsEditor::create()
     ImGui::End();
 }
 
-void SystemsEditor::createPopUp()
+void SystemWindow::createPopUp()
 {
     PROFILE_FUNCTION();
-    auto &sm = m_scene->getSystemManager();
+    auto &sm = m_manager.getCurrentScene()->getSystemManager();
     if (ImGui::BeginPopup("AddSystem")) {
-        for (const auto &[name, description]: m_systemIndex) {
+        for (const auto &[name, description]: m_manager.getSystemIndex()) {
             if (!sm.hasSystem(name))
                 if (ImGui::MenuItem(name.c_str()))
-                    m_scene->registerSystem(description, std::optional(std::ref(m_componentIndex)));
+                    m_manager.getCurrentScene()->registerSystem(description,
+                                                                std::optional(std::ref(m_manager.getComponentIndex())));
         }
         ImGui::EndPopup();
     }
 }
 
-void SystemsEditor::displaySystem()
+void SystemWindow::displaySystem()
 {
     PROFILE_FUNCTION();
-    auto &sm = m_scene->getSystemManager();
+    auto &sm = m_manager.getCurrentScene()->getSystemManager();
     for (const auto &[name, description]: sm) {
         if (ImGui::TreeNode(name.c_str())) ImGui::TreePop();
     }

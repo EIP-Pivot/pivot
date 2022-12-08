@@ -13,6 +13,11 @@ void EntityWindow::render()
     auto &componentManager = m_manager.getCurrentScene()->getComponentManager();
     auto tagId = componentManager.GetComponentId("Tag").value();
     ImGui::Begin(" Entity ", &m_open);
+    if (ImGui::IsKeyPressed(ImGuiKey_LeftCtrl)) {
+        if (ImGui::IsKeyPressed(ImGuiKey_D)) {
+            addEntity(m_manager.getCurrentScene()->getEntityName(m_manager.getSelectedEntity()) + " - Copied");
+        }
+    }
     ImGuiTheme::setDefaultFramePadding();
     createPopUp();
     if (ImGui::Button("Add entity")) ImGui::OpenPopup("NewEntity");

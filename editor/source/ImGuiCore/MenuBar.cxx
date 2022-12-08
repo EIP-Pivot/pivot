@@ -96,7 +96,6 @@ bool MenuBar::render()
         for (const auto &[menu_name, menu_item]: fileSubMenu) {
             if (ImGui::BeginMenu(menu_name.c_str())) {
                 for (const auto &fileInteraction: menu_item) {
-
                     if (ImGui::MenuItem(fileInteraction.sButtonText.c_str())) {
                         switch (fileInteraction.open()) {
                             case FileResult::HandlerError:

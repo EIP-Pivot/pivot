@@ -1,46 +1,40 @@
-#include "ImGuiCore/ComponentEditor.hxx"
-#include "ImGuiCore/CustomWidget.hxx"
+#include "Windows/ComponentWindow.hxx"
+
+#include <imgui.h>
+
 #include "ImGuiCore/ImGuiTheme.hxx"
 #include "ImGuiCore/ValueInput.hxx"
 #include <magic_enum.hpp>
 
-#include <imgui.h>
-
-#include <pivot/builtins/components/Camera.hxx>
-
+using namespace pivot::editor;
 using namespace pivot::ecs;
 using namespace pivot::ecs::component;
 using namespace pivot::ecs::data;
 
-void ComponentEditor::create(Entity entity)
+void ComponentWindow::render()
 {
     PROFILE_FUNCTION();
-    currentEntity = entity;
-    ImGui::Begin(" Component editor ");
-    ImGuiTheme::setDefaultFramePadding();
-    createPopUp();
-    displayComponent();
-    if (CustomWidget::ButtonCenteredOnLine("Add Component")) { ImGui::OpenPopup("AddComponent"); }
-    ImGuiTheme::unsetDefaultFramePadding();
+    ImGui::Begin(" Component editor ", &m_open);
+    if (m_manager.getSelectedEntity() != -1u) {
+        ImGuiTheme::setDefaultFramePadding();
+        createPopUp();
+        displayComponent();
+        if (CustomWidget::ButtonCenteredOnLine("Add Component")) { ImGui::OpenPopup("AddComponent"); }
+        ImGuiTheme::unsetDefaultFramePadding();
+    } else {
+        ImGui::Text("No entity selected.");
+    }
     ImGui::End();
 }
 
-void ComponentEditor::create()
+void ComponentWindow::createPopUp()
 {
     PROFILE_FUNCTION();
-    ImGui::Begin(" Component editor ");
-    ImGui::Text("No entity selected.");
-    ImGui::End();
-}
-
-void ComponentEditor::createPopUp()
-{
-    PROFILE_FUNCTION();
-    auto &cm = m_scene->getComponentManager();
+    auto &cm = m_manager.getCurrentScene()->getComponentManager();
     if (ImGui::BeginPopup("AddComponent")) {
-        for (const auto &[name, description]: m_index) {
+        for (const auto &[name, description]: m_manager.getComponentIndex()) {
             auto id = cm.GetComponentId(name);
-            if (!id || cm.GetComponent(currentEntity, *id) == std::nullopt) {
+            if (!id || cm.GetComponent(m_manager.getSelectedEntity(), *id) == std::nullopt) {
                 if (ImGui::MenuItem(name.c_str())) {
                     if (!id) { cm.RegisterComponent(description); }
                     addComponent(description);
@@ -51,34 +45,35 @@ void ComponentEditor::createPopUp()
     }
 }
 
-void ComponentEditor::displayComponent()
+void ComponentWindow::displayComponent()
 {
+    ValueInput valueInput(m_manager.getCurrentScene());
     PROFILE_FUNCTION();
-    auto &cm = m_scene->getComponentManager();
+    auto &cm = m_manager.getCurrentScene()->getComponentManager();
     displayName();
-    for (ComponentRef ref: cm.GetAllComponents(currentEntity)) {
+    for (ComponentRef ref: cm.GetAllComponents(m_manager.getSelectedEntity())) {
         if (ref.description().name == "Tag") continue;
         deleteComponent(ref);
         if (ImGui::TreeNode(ref.description().name.c_str())) {
             ImGui::TreePop();
             Value value = ref;
             ImGui::PushID(ref.description().name.c_str());
-            m_value_input.drawInput(value, "oui");
+            valueInput.drawInput(value, "oui");
             ImGui::PopID();
-            ref = value;
+            ref.set(value);
             this->selectCamera(ref);
             ImGui::Separator();
         }
     }
 }
 
-void ComponentEditor::displayName()
+void ComponentWindow::displayName()
 {
     PROFILE_FUNCTION();
-    auto &cm = m_scene->getComponentManager();
+    auto &cm = m_manager.getCurrentScene()->getComponentManager();
     auto tagId = cm.GetComponentId("Tag").value();
     auto &tagArray = cm.GetComponentArray(tagId);
-    auto tag = ComponentRef(tagArray, currentEntity);
+    auto tag = ComponentRef(tagArray, m_manager.getSelectedEntity());
     Value value = tag;
     auto &name = std::get<std::string>(std::get<Record>(value).at("name"));
     ImGui::PushItemWidth(-1);
@@ -87,10 +82,10 @@ void ComponentEditor::displayName()
     tag.set(value);
 }
 
-void ComponentEditor::deleteComponent(ComponentRef ref)
+void ComponentWindow::deleteComponent(ComponentRef ref)
 {
     PROFILE_FUNCTION();
-    auto &cm = m_scene->getComponentManager();
+    auto &cm = m_manager.getCurrentScene()->getComponentManager();
     ImGuiIO &io = ImGui::GetIO();
     auto boldFont = io.Fonts->Fonts[0];
     float lineHeight = (GImGui->Font->FontSize * boldFont->Scale) + GImGui->Style.FramePadding.y * 2.f;
@@ -102,7 +97,7 @@ void ComponentEditor::deleteComponent(ComponentRef ref)
     ImGui::PushID((std::string("Delete") + ref.description().name).c_str());
     if (ImGui::Button("X", buttonSize)) {
         auto id = cm.GetComponentId(ref.description().name).value();
-        cm.RemoveComponent(currentEntity, id);
+        cm.RemoveComponent(m_manager.getSelectedEntity(), id);
     }
     ImGui::PopID();
     ImGui::PopFont();
@@ -110,21 +105,18 @@ void ComponentEditor::deleteComponent(ComponentRef ref)
     ImGui::SameLine();
 }
 
-void ComponentEditor::addComponent(const Description &description)
+void ComponentWindow::addComponent(const Description &description)
 {
     PROFILE_FUNCTION();
-    auto &cm = m_scene->getComponentManager();
+    auto &cm = m_manager.getCurrentScene()->getComponentManager();
     auto id = cm.GetComponentId(description.name).value();
     Value newComponent = description.defaultValue;
-    cm.AddComponent(currentEntity, newComponent, id);
+    cm.AddComponent(m_manager.getSelectedEntity(), newComponent, id);
 }
 
-void ComponentEditor::selectCamera(pivot::ecs::component::ComponentRef ref)
+void ComponentWindow::selectCamera(pivot::ecs::component::ComponentRef ref)
 {
     if (ref.description() == pivot::builtins::components::Camera::description) {
-        ImGuiIO &io = ImGui::GetIO();
-        auto boldFont = io.Fonts->Fonts[0];
-        float lineHeight = (GImGui->Font->FontSize * boldFont->Scale) + GImGui->Style.FramePadding.y * 2.f;
-        if (ImGui::Button("Select camera")) { m_engine.setCurrentCamera(ref.entity()); }
+        if (ImGui::Button("Select camera")) { m_manager.getEngine().setCurrentCamera(ref.entity()); }
     }
 }

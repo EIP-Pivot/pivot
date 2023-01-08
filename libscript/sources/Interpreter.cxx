@@ -1,19 +1,20 @@
 #include "pivot/script/Interpreter.hxx"
-#include "Logger.hpp"
-#include "magic_enum.hpp"
 #include "pivot/script/Builtins.hxx"
 #include "pivot/script/Exceptions.hxx"
+#include <cpplogger/Logger.hpp>
 #include <limits>
+#include <magic_enum.hpp>
 #include <unordered_map>
+
+#include "pivot/pivot.hxx"
 
 namespace pivot::ecs::script::interpreter
 {
 
-const std::map<std::string, data::BasicType> gVariableTypes{{"Vector3", data::BasicType::Vec3},
-                                                            {"Number", data::BasicType::Number},
-                                                            {"Boolean", data::BasicType::Boolean},
-                                                            {"Color", data::BasicType::Number},
-                                                            {"String", data::BasicType::String}};
+const std::map<std::string, data::BasicType> gVariableTypes{
+    {"Vector3", data::BasicType::Vec3},  {"Vector2", data::BasicType::Vec2},    {"Asset", data::BasicType::Asset},
+    {"Number", data::BasicType::Number}, {"Boolean", data::BasicType::Boolean}, {"Color", data::BasicType::Color},
+    {"String", data::BasicType::String}};
 // Map builtin binary (two operands) operators, to their operator enum
 const std::map<std::string, std::function<data::Value(const data::Value &, const data::Value &)>> gOperatorCallbacks = {
     {"*", interpreter::builtins::builtin_operator<builtins::Operator::Multiplication>},
@@ -43,17 +44,30 @@ using ParameterPair = std::pair<size_t, std::vector<std::vector<data::Type>>>;
 /// This map will map the name of a builtin, to its callback paired with its signature
 const std::unordered_map<std::string, std::pair<BuiltinFunctionCallback, ParameterPair>> gBuiltinsCallbacks = {
     {"isPressed", {interpreter::builtins::builtin_isPressed, {1, {{data::BasicType::String}}}}},
+    {"selectCamera", {interpreter::builtins::builtin_selectCamera, {1, {{data::BasicType::EntityRef}}}}},
     {"cos", {interpreter::builtins::builtin_cos, {1, {{data::BasicType::Number}}}}},
     {"sin", {interpreter::builtins::builtin_sin, {1, {{data::BasicType::Number}}}}},
+    {"toString",
+     {interpreter::builtins::builtin_toString,
+      {std::numeric_limits<size_t>::max(),
+       {{data::BasicType::String, data::BasicType::Number, data::BasicType::Integer, data::BasicType::Boolean,
+         data::BasicType::Asset, data::BasicType::Vec3, data::BasicType::Vec2, data::BasicType::Color}}}}},
     {"print",
      {interpreter::builtins::builtin_print,
       {std::numeric_limits<size_t>::max(),
        {{data::BasicType::String, data::BasicType::Number, data::BasicType::Integer, data::BasicType::Boolean,
-         data::BasicType::Asset, data::BasicType::Vec3}}}}},
+         data::BasicType::Asset, data::BasicType::Vec3, data::BasicType::EntityRef}}}}},
     {"randint", {interpreter::builtins::builtin_randint, {1, {{data::BasicType::Number}}}}},
     {"pow", {interpreter::builtins::builtin_power, {2, {{data::BasicType::Number}, {data::BasicType::Number}}}}},
     {"sqrt", {interpreter::builtins::builtin_sqrt, {1, {{data::BasicType::Number}}}}},
-    {"abs", {interpreter::builtins::builtin_abs, {1, {{data::BasicType::Number}}}}}};
+    {"abs", {interpreter::builtins::builtin_abs, {1, {{data::BasicType::Number}}}}},
+    {"vec3",
+     {interpreter::builtins::builtin_vec3,
+      {3, {{data::BasicType::Number}, {data::BasicType::Number}, {data::BasicType::Number}}}}},
+    {"color",
+     {interpreter::builtins::builtin_color,
+      {4,
+       {{data::BasicType::Number}, {data::BasicType::Number}, {data::BasicType::Number}, {data::BasicType::Number}}}}}};
 
 // Public functions ( can be called anywhere )
 
@@ -61,6 +75,7 @@ const std::unordered_map<std::string, std::pair<BuiltinFunctionCallback, Paramet
 std::vector<systems::Description> registerDeclarations(const Node &file, component::Index &componentIndex,
                                                        event::Index &eventIndex)
 {
+    DEBUG_FUNCTION();
     std::vector<systems::Description> result;
     if (file.type != NodeType::File) {
         // std::cerr << std::format("registerDeclarations(const Node &file): can't interpret node {} (not a file)",
@@ -116,34 +131,32 @@ std::vector<systems::Description> registerDeclarations(const Node &file, compone
 
 // This will execute a SystemEntryPoint node by executing all of its statements
 void Interpreter::executeSystem(const Node &systemEntry, const systems::Description &desc,
-                                component::ArrayCombination::ComponentCombination &entity,
-                                const event::EventWithComponent &trigger, Stack &stack)
+                                component::ArrayCombination::ComponentCombination &entityComponentCombination,
+                                event::EventWithComponent &trigger, Stack &stack)
 {
+    PROFILE_FUNCTION();
     // systemComponents : [ "Position", "Velocity" ]
     // entity : [ PositionRecord, VelocityRecord ]
-    std::cout << "Executing block " << systemEntry.value << std::endl;
+    logger.trace() << "Executing block " << systemEntry.value;
+    auto entityComponents = entityComponentCombination.getAllComponents();
     // Push input entity to stack
-    data::Record inputEntity;
-    size_t componentIndex = 0;
-
-    for (const std::string &componentString: desc.systemComponents) {
-        inputEntity.insert_or_assign(componentString, std::get<data::Record>(entity[componentIndex].get()));
-        componentIndex++;    // go to next component
+    stack.pushEntity(desc.entityName, entityComponentCombination.entity, entityComponents);
+    // Push event entities to the stack
+    for (std::size_t i = 0; i < desc.eventListener.entities.size(); i++) {
+        stack.pushEntity(desc.eventListener.entities[i], trigger.event.entities[i], trigger.components[i]);
     }
-    stack.push(desc.entityName, inputEntity);
     // Push payload to stack
-    stack.push(trigger.event.description.payloadName, trigger.event.payload);
+    if (!trigger.event.description.payloadName.empty()) {
+        stack.push(trigger.event.description.payloadName, trigger.event.payload);
+    }
 
     for (const Node &statement: systemEntry.children) {    // execute all statements
         executeStatement(statement, stack);
     }
 
-    // Push stack data to the component array
-    const data::Record &newInputEntity = std::get<data::Record>(stack.find(desc.entityName));
-    componentIndex = 0;
-    for (const std::string &componentString: desc.systemComponents) {
-        entity[componentIndex].set(newInputEntity.at(componentString));
-        componentIndex++;
+    stack.updateEntity(desc.entityName, entityComponents);
+    for (std::size_t i = 0; i < desc.eventListener.entities.size(); i++) {
+        stack.updateEntity(desc.eventListener.entities[i], trigger.components[i]);
     }
 }
 
@@ -152,6 +165,7 @@ void Interpreter::executeSystem(const Node &systemEntry, const systems::Descript
 // Execute a statement (used for recursion for blocks)
 void Interpreter::executeStatement(const Node &statement, Stack &stack)
 {
+    PROFILE_FUNCTION();
     if (statement.value == "functionCall") {
         executeFunction(statement, stack);
     } else if (statement.value == "if") {
@@ -258,6 +272,7 @@ void Interpreter::executeStatement(const Node &statement, Stack &stack)
 // Execute a function
 data::Value Interpreter::executeFunction(const Node &functionCall, const Stack &stack)
 {
+    PROFILE_FUNCTION();
     if (functionCall.children.size() != 2) {    // should be [Variable, FunctionParams]
         logger.err("ERROR") << " at node " << functionCall.value;
         throw InvalidException("Invalid Function Statement: Expected callee and params children node.");
@@ -271,6 +286,8 @@ data::Value Interpreter::executeFunction(const Node &functionCall, const Stack &
     for (const Node &param: functionCall.children.at(1).children) {    // get all the parameters for the callback
         if (param.type == NodeType::FunctionCall)                      // parameter is function call
             parameters.push_back(executeFunction(param, stack));
+        else if (param.type == NodeType::Expression)    // parameter is expression
+            parameters.push_back(evaluateExpression(param, stack));
         else    // parameter is variable
             parameters.push_back(valueOf(param, stack));
     }
@@ -286,6 +303,7 @@ data::Value Interpreter::executeFunction(const Node &functionCall, const Stack &
 void validateParams(const std::vector<data::Value> &toValidate, size_t expectedSize,
                     const std::vector<std::vector<data::Type>> &expectedTypes, const std::string &name)
 {
+    PROFILE_FUNCTION();
     if (expectedSize != std::numeric_limits<size_t>::max()) {    // limited number of parameters
         // check expected size
         if (toValidate.size() != expectedSize) {
@@ -320,6 +338,7 @@ void validateParams(const std::vector<data::Value> &toValidate, size_t expectedS
 // Register a component declaration node
 void registerComponentDeclaration(const Node &component, component::Index &componentIndex, const std::string &fileName)
 {
+    DEBUG_FUNCTION();
     pivot::ecs::component::Description r = {
         .name = component.value, .type = data::BasicType::Boolean, .createContainer = arrayFunctor};
     // Either it is a one line component
@@ -383,6 +402,7 @@ void registerEventDeclaration(const Node &event, event::Index &eventIndex, const
 // Register a system declaration node
 systems::Description registerSystemDeclaration(const Node &system, const std::string &fileName)
 {
+    DEBUG_FUNCTION();
     pivot::ecs::systems::Description sysDesc = {.name = system.value};
     size_t nbChildren = system.children.size();
     if (nbChildren < 6) {    // ??minimum system declaration node??
@@ -453,6 +473,7 @@ systems::Description registerSystemDeclaration(const Node &system, const std::st
 void consumeNode(const std::vector<Node> &children, size_t &childIndex, systems::Description &sysDesc,
                  event::Description &evtDesc, NodeType expectedType)
 {
+    DEBUG_FUNCTION();
     if (childIndex >= children.size()) {    // TODO : for sure this -1 crashes, fix
         logger.err("ERROR") << " at line " << children.at(childIndex - 1).line_nb << " char "
                             << children.at(childIndex - 1).char_nb << ": '" << children.at(childIndex - 1).value << "'";
@@ -497,6 +518,7 @@ void consumeNode(const std::vector<Node> &children, size_t &childIndex, systems:
 
 data::Value valueOf(const Node &var, const Stack &stack)
 {    // get the data::Value version of a variable
+    PROFILE_FUNCTION();
     if (var.type == NodeType::LiteralNumberVariable)
         return data::Value(std::stod(var.value));
     else if (var.type == NodeType::DoubleQuotedStringVariable)
@@ -520,6 +542,7 @@ data::Value valueOf(const Node &var, const Stack &stack)
 // Only binary operators are supported (which take 2 operands exactly)
 data::Value evaluateFactor(const data::Value &left, const data::Value &right, const std::string &op)
 {    // Return the result of the operation op on left and right
+    PROFILE_FUNCTION();
     if (!gOperatorCallbacks.contains(op)) {
         logger.err("ERROR") << " with operator " << op;
         throw InvalidException("Unsupported Feature: This type of operator is not supported yet.");
@@ -530,6 +553,7 @@ data::Value evaluateFactor(const data::Value &left, const data::Value &right, co
 data::Value Interpreter::evaluateExpression(const Node &expr, const Stack &stack)
 {    // evaluate a postfix expression
     // assume expr.type is NodeType::Expression
+    PROFILE_FUNCTION();
     if (expr.children.size() == 1) {    // only one variable in the expression, no operators
         if (expr.children.at(0).type == NodeType::FunctionCall)
             return executeFunction(expr.children.at(0), stack);
@@ -569,6 +593,7 @@ data::Value Interpreter::evaluateExpression(const Node &expr, const Stack &stack
 void expectNodeTypeValue(const std::vector<Node> &children, size_t &childIndex, NodeType expectedType,
                          const std::string &expectedValue, bool consume)
 {
+    PROFILE_FUNCTION();
     if (childIndex == children.size()) {
         logger.err("ERROR") << " at line " << children.at(childIndex - 1).line_nb << " char "
                             << children.at(childIndex - 1).char_nb << ": '" << children.at(childIndex - 1).value << "'";
@@ -591,6 +616,7 @@ void expectNodeTypeValue(const std::vector<Node> &children, size_t &childIndex, 
 // Throw if the type of the targeted node isn't equal to the expected type
 void expectNodeType(const std::vector<Node> &children, size_t &childIndex, NodeType expectedType, bool consume)
 {
+    PROFILE_FUNCTION();
     if (childIndex == children.size()) {
         logger.err("ERROR") << " at line " << children.at(childIndex - 1).line_nb << " char "
                             << children.at(childIndex - 1).char_nb << ": '" << children.at(childIndex - 1).value << "'";
@@ -609,6 +635,7 @@ void expectNodeType(const std::vector<Node> &children, size_t &childIndex, NodeT
 void expectNodeValue(const std::vector<Node> &children, size_t &childIndex, const std::string &expectedValue,
                      bool consume)
 {
+    PROFILE_FUNCTION();
     if (childIndex == children.size()) {
         logger.err("ERROR") << " at line " << children.at(childIndex - 1).line_nb << " char "
                             << children.at(childIndex - 1).char_nb << ": '" << children.at(childIndex - 1).value << "'";

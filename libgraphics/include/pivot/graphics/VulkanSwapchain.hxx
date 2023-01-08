@@ -5,8 +5,8 @@
 #include <vector>
 #include <vulkan/vulkan.hpp>
 
+#include "pivot/exception.hxx"
 #include "pivot/graphics/DeletionQueue.hxx"
-#include "pivot/graphics/PivotException.hxx"
 
 namespace pivot::graphics
 {

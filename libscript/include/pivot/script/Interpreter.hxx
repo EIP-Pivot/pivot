@@ -37,8 +37,8 @@ public:
 
     /// Execute a SystemEntryPoint node by executing all of its statements
     void executeSystem(const Node &systemEntry, const systems::Description &desc,
-                       component::ArrayCombination::ComponentCombination &entity,
-                       const event::EventWithComponent &trigger, Stack &stack);
+                       component::ArrayCombination::ComponentCombination &entity, event::EventWithComponent &trigger,
+                       Stack &stack);
 
 private:
     /// Execute a statement (used for recursion for blocks)

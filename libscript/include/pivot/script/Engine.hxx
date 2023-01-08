@@ -30,7 +30,7 @@ public:
     ///	This is the callback the SystemManager will call to execute a system on entities with a given event trigger
     std::vector<ecs::event::Event> systemCallback(const systems::Description &system,
                                                   component::ArrayCombination &entities,
-                                                  const event::EventWithComponent &trigger);
+                                                  event::EventWithComponent &trigger);
 
 private:
     systems::Index &_systemIndex;

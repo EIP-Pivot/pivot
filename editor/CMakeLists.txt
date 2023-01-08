@@ -12,30 +12,66 @@ fetchcontent_getproperties(nativefiledialog)
 if(NOT nativefiledialog_POPULATED)
     message(STATUS "Populating nativefiledialog")
     fetchcontent_populate(nativefiledialog)
-    add_subdirectory(${nativefiledialog_SOURCE_DIR} ${nativefiledialog_BINARY_DIR})
+    add_subdirectory(${nativefiledialog_SOURCE_DIR} ${nativefiledialog_BINARY_DIR} EXCLUDE_FROM_ALL)
     target_compile_definitions(nfd PUBLIC NFD_THROWS_EXCEPTIONS)
+endif()
+
+
+fetchcontent_declare(
+    argparse
+    GIT_REPOSITORY https://github.com/p-ranav/argparse.git
+    GIT_TAG v2.6
+)
+fetchcontent_getproperties(argparse)
+if(NOT argparse_POPULATED)
+    message(STATUS "Populating argparse")
+    fetchcontent_populate(argparse)
+    add_subdirectory(${argparse_SOURCE_DIR} ${argparse_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
 add_executable(
     ${PROJECT_NAME}
     source/main.cxx
-    source/ImGuiCore/ImGuiManager.cxx
+    source/CmdLineArg.cxx
     source/ImGuiCore/Editor.cxx
-    source/ImGuiCore/EntityModule.cxx
-    source/ImGuiCore/ComponentEditor.cxx
-    source/ImGuiCore/SystemsEditor.cxx
-)
-target_compile_options(
-    ${PROJECT_NAME}
-    PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-            -Wall -Wextra>
-            $<$<CXX_COMPILER_ID:MSVC>:
-            /W4
-            /wd4267
-            /wd4201
-            /wd4244>
+    source/ImGuiCore/MenuBar.cxx
+    source/ImGuiCore/CustomWidget.cxx
+    source/ImGuiCore/ImGuiTheme.cxx
+    source/Windows/ComponentWindow.cxx
+    source/Windows/SystemWindow.cxx
+    source/Windows/EntityWindow.cxx
+    source/Windows/AssetWindow.cxx
+    source/Windows/SceneWindow.cxx
+    source/WindowsManager.cxx
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE include/)
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "pivot-editor" ) 
 
-target_link_libraries(${PROJECT_NAME} PRIVATE pivot nfd)
+target_pivot_compile_option(${PROJECT_NAME})
+
+target_link_libraries(${PROJECT_NAME} PRIVATE pivot nfd argparse)
+
+install(TARGETS ${PROJECT_NAME})
+
+install(DIRECTORY ${CMAKE_BINARY_DIR}/shaders DESTINATION ${CMAKE_INSTALL_DATADIR}/pivot)
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/assets DESTINATION ${CMAKE_INSTALL_DATADIR}/pivot)
+
+install(FILES ${CMAKE_SOURCE_DIR}/assets/PivotEngine.svg DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps)
+
+# install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ImGuiConfig/imgui.ini DESTINATION .)
+
+install(FILES ${CMAKE_SOURCE_DIR}/eu.epitech.eip.pivot.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
+
+set(CPACK_GENERATOR ZIP)
+
+set(CPACK_PACKAGE_NAME "PivotEditor")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "PivotEditor")
+
+set(CPACK_PACKAGE_VERSION "1.0.0")
+set(CPACK_PACKAGE_VERSION_MAJOR "1")
+set(CPACK_PACKAGE_VERSION_MINOR "0")
+set(CPACK_PACKAGE_VERSION_PATCH "0")
+
+
+include(CPack)

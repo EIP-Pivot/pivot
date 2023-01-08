@@ -1,10 +1,10 @@
 #include "pivot/graphics/PipelineBuilders/GraphicsPipelineBuilder.hxx"
 
-#include "pivot/graphics/DebugMacros.hxx"
 #include "pivot/graphics/types/Vertex.hxx"
 #include "pivot/graphics/vk_debug.hxx"
 #include "pivot/graphics/vk_init.hxx"
 #include "pivot/graphics/vk_utils.hxx"
+#include "pivot/pivot.hxx"
 
 namespace pivot::graphics
 {
@@ -16,25 +16,26 @@ GraphicsPipelineBuilder::GraphicsPipelineBuilder()
       depthStencil(vk_init::populateVkPipelineDepthStencilStateCreateInfo()),
       rasterizer(vk_init::populateVkPipelineRasterizationStateCreateInfo(vk::PolygonMode::eFill)),
       vertexDescription({Vertex::getBindingDescription()}),
-      vertexAttributes(Vertex::getInputAttributeDescriptions(
-          0, VertexComponentFlagBits::Position | VertexComponentFlagBits::Normal | VertexComponentFlagBits::UV))
+      vertexAttributes(
+          Vertex::getInputAttributeDescriptions(0, VertexComponentFlagBits::Position | VertexComponentFlagBits::Normal |
+                                                       VertexComponentFlagBits::UV | VertexComponentFlagBits::Color))
 {
 }
 
 GraphicsPipelineBuilder::~GraphicsPipelineBuilder() {}
 
-static void loadShader(const std::string &path, const vk::ShaderStageFlagBits &stage, vk::Device &device,
+static void loadShader(const std::filesystem::path &path, const vk::ShaderStageFlagBits &stage, vk::Device &device,
                        std::vector<vk::PipelineShaderStageCreateInfo> &shaderStages) noexcept
 {
     auto shaderCode = vk_utils::readBinaryFile(path);
     auto shaderModule = vk_utils::createShaderModule(device, shaderCode);
-    vk_debug::setObjectName(device, shaderModule, path);
+    vk_debug::setObjectName(device, shaderModule, path.string());
     shaderStages.push_back(vk_init::populateVkPipelineShaderStageCreateInfo(stage, shaderModule));
 }
 
 vk::Pipeline GraphicsPipelineBuilder::build(vk::Device &device, vk::PipelineCache pipelineCache) const
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
     auto shaderStages = build_shader(device);
     return build_impl(device, shaderStages, pipelineCache);
 }

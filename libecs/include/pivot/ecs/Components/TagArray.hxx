@@ -1,11 +1,7 @@
 #pragma once
 
-#include <set>
-#include <stdexcept>
-
 #include <pivot/ecs/Components/Tag.hxx>
-#include <pivot/ecs/Core/Component/DenseComponentArray.hxx>
-#include <pivot/ecs/Core/Component/array.hxx>
+#include <pivot/ecs/Core/Component/UniqueComponentArray.hxx>
 
 namespace pivot::ecs::component
 {
@@ -16,24 +12,22 @@ namespace pivot::ecs::component
  * checks that every entity has always a duplicate Tag, by throwing a
  * DuplicateEntityTag exception when a duplicated Tag is registered.
  */
-class TagArray : public DenseTypedComponentArray<Tag>
+class TagArray : public UniqueComponentArray<Tag>
 {
 public:
-    /// Creates a TagArray using the Description of Tag.
-    TagArray(Description d): DenseTypedComponentArray<Tag>(d) {}
+    /// Creates a TagArray
+    TagArray(Description d): UniqueComponentArray<Tag>(d) {}
 
-    void setValueForEntity(Entity entity, std::optional<data::Value> value) override;
-
-    /// Error thrown when a duplicate Tag is registered
-    class DuplicateEntityTag : public std::logic_error
+    /// Get the id of an Entity by its name
+    std::optional<Entity> getEntityID(const std::string &name)
     {
-    public:
-        /// Creates a DuplicateEntityTag with the duplicated tag
-        DuplicateEntityTag(const std::string &tag): std::logic_error("Duplicate entity tag: " + tag) {}
-    };
-
-private:
-    std::set<std::string> m_tag_names;
+        auto it = m_unique_hash.find(std::hash<Tag>()(Tag{name}));
+        if (it == m_unique_hash.end()) {
+            return std::nullopt;
+        } else {
+            return std::make_optional(it->second);
+        }
+    }
 };
 
 }    // namespace pivot::ecs::component

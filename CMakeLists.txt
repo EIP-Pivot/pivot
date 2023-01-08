@@ -3,8 +3,10 @@ project(pivot)
 
 include(FetchContent)
 include(CheckIPOSupported)
+include(GNUInstallDirs)
 include(cmake/find_linker.cmake)
 include(cmake/CompileShaders.cmake)
+include(cmake/PivotCompileOption.cmake)
 include(cmake/tests.cmake)
 
 find_linker()
@@ -41,7 +43,7 @@ if(BUILD_TESTING)
     fetchcontent_declare(
         catch2
         GIT_REPOSITORY https://github.com/catchorg/Catch2
-        GIT_TAG ed6b38b096eac9a976e1fdeee5320fa913146af7
+        GIT_TAG v3.0.1
     )
     if(NOT catch2_POPULATED)
         message(STATUS "Populating Catch2")
@@ -91,6 +93,7 @@ if(BUILD_DOCUMENTATION)
             libgraphics/include
             libecs/include
             libscript/include
+            libcommon/include
             README.md
         )
     else()
@@ -111,66 +114,94 @@ if(COMPILER_PROFILING)
     endif()
 endif()
 
-fetchcontent_declare(
-    logger
-    GIT_REPOSITORY https://github.com/zcorniere/logger-cpp.git
-    GIT_TAG v0.8.0
-)
-fetchcontent_getproperties(logger)
-if(NOT logger_POPULATED)
-    message(STATUS "Populating logger")
-    fetchcontent_populate(logger)
-    add_subdirectory(${logger_SOURCE_DIR} ${logger_BINARY_DIR})
-    target_compile_definitions(logger PUBLIC LOGGER_EXTERN_DECLARATION)
-endif()
+function(fetch_boost_library library)
+    set(BUILD_TESTING OFF)
+    fetchcontent_declare(
+        boost_${library}
+        GIT_REPOSITORY https://github.com/boostorg/${library}.git
+        GIT_TAG boost-1.79.0
+    )
+    if(NOT boost_${library}_POPULATED)
+        message(STATUS "Populating Boost ${library}")
+        fetchcontent_populate(boost_${library})
+        add_subdirectory(${boost_${library}_SOURCE_DIR} ${boost_${library}_BINARY_DIR})
+    endif()
+endfunction()
 
-fetchcontent_declare(
-    glm
-    GIT_REPOSITORY https://github.com/g-truc/glm.git
-    GIT_TAG cc98465e3508535ba8c7f6208df934c156a018dc
-)
-fetchcontent_getproperties(glm)
-if(NOT glm_POPULATED)
-    message(STATUS "Populating glm")
-    fetchcontent_populate(glm)
-    set(GLFW_BUILD_DOCS
-        OFF
-        CACHE INTERNAL "" FORCE
-    )
-    set(GLFW_BUILD_TESTS
-        OFF
-        CACHE INTERNAL "" FORCE
-    )
-    set(GLFW_BUILD_EXAMPLES
-        OFF
-        CACHE INTERNAL "" FORCE
-    )
-    add_subdirectory(${glm_SOURCE_DIR} ${glm_BINARY_DIR})
-    target_compile_definitions(
-        glm
-        INTERFACE GLM_FORCE_INLINE
-                  GLM_FORCE_RADIANS
-                  GLM_FORCE_INTRINSICS
-                  GLM_FORCE_DEPTH_ZERO_TO_ONE
-                  GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-    )
-endif()
+fetch_boost_library(fusion)
+fetch_boost_library(core)
+fetch_boost_library(config)
+fetch_boost_library(container_hash)
+fetch_boost_library(detail)
+fetch_boost_library(integer)
+fetch_boost_library(static_assert)
+fetch_boost_library(type_traits)
+fetch_boost_library(assert)
+fetch_boost_library(preprocessor)
+fetch_boost_library(throw_exception)
+fetch_boost_library(function_types)
+fetch_boost_library(mpl)
+fetch_boost_library(tuple)
+fetch_boost_library(typeof)
+fetch_boost_library(utility)
+fetch_boost_library(predef)
+fetch_boost_library(io)
+fetch_boost_library(dll)
 
-fetchcontent_declare(
-    magic_enum
-    GIT_REPOSITORY https://github.com/Neargye/magic_enum
-    GIT_TAG v0.8.0
-)
-if(NOT magic_enum_POPULATED)
-    message(STATUS "Populating Magic Enum")
-    fetchcontent_populate(magic_enum)
-    add_subdirectory(${magic_enum_SOURCE_DIR} ${magic_enum_BINARY_DIR})
-endif()
+fetch_boost_library(filesystem)
+fetch_boost_library(atomic)
+fetch_boost_library(align)
+fetch_boost_library(iterator)
+fetch_boost_library(concept_check)
+fetch_boost_library(conversion)
+fetch_boost_library(function)
+fetch_boost_library(bind)
+fetch_boost_library(move)
+fetch_boost_library(smart_ptr)
+fetch_boost_library(spirit)
+fetch_boost_library(array)
+fetch_boost_library(endian)
+fetch_boost_library(foreach)
+fetch_boost_library(optional)
+fetch_boost_library(phoenix)
+fetch_boost_library(pool)
+fetch_boost_library(proto)
+fetch_boost_library(range)
+fetch_boost_library(regex)
+fetch_boost_library(thread)
+fetch_boost_library(chrono)
+fetch_boost_library(ratio)
+fetch_boost_library(rational)
+fetch_boost_library(container)
+fetch_boost_library(date_time)
+fetch_boost_library(numeric_conversion)
+fetch_boost_library(tokenizer)
+fetch_boost_library(exception)
+fetch_boost_library(intrusive)
+fetch_boost_library(algorithm)
+fetch_boost_library(lexical_cast)
+fetch_boost_library(unordered)
+fetch_boost_library(variant)
+fetch_boost_library(variant2)
+fetch_boost_library(system)
+fetch_boost_library(type_index)
+fetch_boost_library(winapi)
+fetch_boost_library(mp11)
+
+add_subdirectory(libcommon/)
+add_library(pivot::commom ALIAS pivot-common)
 
 add_subdirectory(libecs/)
+add_library(pivot::ecs ALIAS pivot-ecs)
+
 add_subdirectory(libgraphics/)
+add_library(pivot::graphics ALIAS pivot-graphics)
+
 add_subdirectory(libscript/)
+add_library(pivot::script ALIAS pivot-script)
+
 add_subdirectory(libpivot/)
+add_library(pivot::pivot ALIAS pivot)
 
 option(BUILD_EDITOR "Build pivot editor" ON)
 if(BUILD_EDITOR)
@@ -181,8 +212,3 @@ option(BUILD_LAUNCHER "Build pivot launcher" ON)
 if(BUILD_LAUNCHER)
     add_subdirectory(launcher/)
 endif()
-
-add_library(pivot::pivot ALIAS pivot)
-add_library(pivot::graphics ALIAS pivot-graphics)
-add_library(pivot::ecs ALIAS pivot-ecs)
-add_library(pivot::script ALIAS pivot-script)

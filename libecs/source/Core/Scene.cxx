@@ -2,15 +2,13 @@
 
 #include "pivot/ecs/Core/Scene.hxx"
 #include <pivot/ecs/Components/Tag.hxx>
+#include <pivot/ecs/Components/TagArray.hxx>
 #include <pivot/ecs/Core/Component/index.hxx>
 
 using namespace pivot::ecs;
 
 Scene::Scene(std::string sceneName)
-    : name(sceneName),
-      mSystemManager(mComponentManager, mEntityManager),
-      mEventManager(mSystemManager),
-      mCurrentCamera(0)
+    : name(sceneName), mSystemManager(mComponentManager, mEntityManager), mEventManager(mSystemManager)
 {
     mTagId = mComponentManager.RegisterComponent(Tag::description);
 }
@@ -19,13 +17,16 @@ const std::string &Scene::getName() const { return name; }
 
 Entity Scene::CreateEntity()
 {
+    PROFILE_FUNCTION();
     Entity newEntity = mEntityManager.CreateEntity();
-    mComponentManager.AddComponent(newEntity, "Entity " + std::to_string(newEntity), mTagId);
+    mComponentManager.AddComponent(newEntity,
+                                   data::Value{data::Record{{"name", "Entity " + std::to_string(newEntity)}}}, mTagId);
     return newEntity;
 }
 
 Entity Scene::CreateEntity(std::string newName)
 {
+    PROFILE_FUNCTION();
     Entity newEntity = mEntityManager.CreateEntity();
     mComponentManager.AddComponent(newEntity, data::Value{data::Record{{"name", newName}}}, mTagId);
     return newEntity;
@@ -35,6 +36,7 @@ std::unordered_map<Entity, Signature> Scene::getEntities() const { return mEntit
 
 void Scene::DestroyEntity(Entity entity)
 {
+    PROFILE_FUNCTION();
     mEntityManager.DestroyEntity(entity);
     mComponentManager.EntityDestroyed(entity);
 }
@@ -43,36 +45,17 @@ Signature Scene::getSignature(Entity entity) { return mEntityManager.GetSignatur
 
 std::string Scene::getEntityName(Entity entity)
 {
+    PROFILE_FUNCTION();
     return std::get<std::string>(
         std::get<data::Record>(mComponentManager.GetComponent(entity, mTagId).value()).at("name"));
 }
 
 uint32_t Scene::getLivingEntityCount() { return mEntityManager.getLivingEntityCount(); }
 
-void Scene::setCamera(std::uint16_t camera) { mCurrentCamera = camera; }
-
-void Scene::addCamera(Entity camera) { mCamera.push_back(camera); }
-
-void Scene::switchCamera()
-{
-    if (mCamera.size() > 0) mCurrentCamera = (mCurrentCamera + 1) % mCamera.size();
-}
-
-pivot::builtins::Camera &Scene::getCamera()
-{
-    if (mCamera.size() == 0) throw EcsException("No camera set");
-    throw std::logic_error("Unimplemented");
-    // return mComponentManager.GetComponent<Camera>(mCamera[mCurrentCamera]);
-}
-
-std::vector<Entity> &Scene::getCameras() { return mCamera; }
-
 pivot::ecs::component::Manager &Scene::getComponentManager() { return mComponentManager; }
 
 /// Get the component manager (const)
 const pivot::ecs::component::Manager &Scene::getComponentManager() const { return mComponentManager; }
-
-pivot::ecs::systems::Manager &Scene::getSystemManager() { return mSystemManager; }
 
 const pivot::ecs::systems::Manager &Scene::getSystemManager() const { return mSystemManager; }
 
@@ -87,10 +70,11 @@ const EntityManager &Scene::getEntityManager() const { return mEntityManager; }
 std::unique_ptr<Scene> Scene::load(const nlohmann::json &obj, const pivot::ecs::component::Index &cIndex,
                                    const pivot::ecs::systems::Index &sIndex)
 {
+    PROFILE_FUNCTION();
     auto scene = std::make_unique<Scene>(obj["name"].get<std::string>());
     auto &componentManager = scene->getComponentManager();
     auto &entityManager = scene->getEntityManager();
-    auto &systemManager = scene->getSystemManager();
+    auto &systemManager = scene->mSystemManager;
 
     for (auto entities: obj["components"]) {
         auto entity = entityManager.CreateEntity();
@@ -118,6 +102,7 @@ namespace
 void extract_assets(const data::Value &value, std::set<std::string> &assets,
                     std::optional<Scene::AssetTranslator> &assetTranslator)
 {
+    PROFILE_FUNCTION();
     value.visit_data([&](const auto &data) {
         using type = std::decay_t<decltype(data)>;
         if constexpr (std::is_same_v<type, data::Asset>) {
@@ -132,9 +117,10 @@ void extract_assets(const data::Value &value, std::set<std::string> &assets,
 }
 }    // namespace
 
-void Scene::save(const std::filesystem::path &path, std::optional<AssetTranslator> assetTranslator,
-                 std::optional<ScriptTranslator> scriptTranslator) const
+nlohmann::json Scene::getJson(std::optional<AssetTranslator> assetTranslator,
+                              std::optional<ScriptTranslator> scriptTranslator) const
 {
+    PROFILE_FUNCTION();
     // serialize scene
     nlohmann::json output;
     std::set<std::string> scriptUsed;
@@ -167,8 +153,35 @@ void Scene::save(const std::filesystem::path &path, std::optional<AssetTranslato
     output["systems"] = systems;
     output["scripts"] = scriptUsed;
     output["assets"] = assets;
+    return output;
+}
+
+void Scene::save(const std::filesystem::path &path, std::optional<AssetTranslator> assetTranslator,
+                 std::optional<ScriptTranslator> scriptTranslator) const
+{
+    PROFILE_FUNCTION();
     // write in file
     std::ofstream out(path);
-    out << std::setw(4) << output << std::endl;
+    out << std::setw(4) << getJson(assetTranslator, scriptTranslator) << std::endl;
     out.close();
+}
+
+void Scene::registerSystem(const systems::Description &description, pivot::OptionalRef<const component::Index> cIndex)
+{
+    PROFILE_FUNCTION();
+    if (cIndex.has_value()) {
+        for (auto &component: description.systemComponents) {
+            if (!mComponentManager.GetComponentId(component).has_value()) {
+                auto cDesc = cIndex->get().getDescription(component);
+                if (cDesc.has_value()) { mComponentManager.RegisterComponent(*cDesc); }
+            }
+        }
+    }
+    mSystemManager.useSystem(description);
+}
+
+std::optional<Entity> Scene::getEntityID(const std::string &name)
+{
+    auto array = dynamic_cast<const component::TagArray &>(mComponentManager.GetComponentArray(mTagId));
+    return array.getEntityID(name);
 }

@@ -9,6 +9,7 @@ namespace pivot::graphics::vk_utils
 {
 std::string readFile(const std::filesystem::path &filename)
 {
+    DEBUG_FUNCTION();
     assert(!std::filesystem::is_symlink(filename));
 
     /// Must be opened in binary mode, so Windows won't mess with the newlines
@@ -26,8 +27,18 @@ std::string readFile(const std::filesystem::path &filename)
     return fileContent;
 }
 
+std::size_t writeFile(const std::filesystem::path &filename, const std::string_view &content)
+{
+    DEBUG_FUNCTION();
+    std::ofstream file(filename);
+    file << content;
+    file.close();
+    return content.size();
+}
+
 vk::ShaderModule createShaderModule(const vk::Device &device, std::span<const std::byte> code)
 {
+    DEBUG_FUNCTION();
     auto createInfo = vk_init::populateVkShaderModuleCreateInfo(code);
     return device.createShaderModule(createInfo);
 }
@@ -53,9 +64,9 @@ vk::Format findSupportedFormat(vk::PhysicalDevice &gpu, const std::vector<vk::Fo
 {
     for (vk::Format format: candidates) {
         vk::FormatProperties props = gpu.getFormatProperties(format);
-        if (tiling == vk::ImageTiling::eLinear && (props.linearTilingFeatures & features) == features) {
+        if (tiling == vk::ImageTiling::eOptimal && (props.optimalTilingFeatures & features) == features) {
             return format;
-        } else if (tiling == vk::ImageTiling::eOptimal && (props.optimalTilingFeatures & features) == features) {
+        } else if (tiling == vk::ImageTiling::eLinear && (props.linearTilingFeatures & features) == features) {
             return format;
         }
     }

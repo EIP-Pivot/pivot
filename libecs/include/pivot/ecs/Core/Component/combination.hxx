@@ -50,6 +50,17 @@ public:
 
         /// The entity number of the combination
         Entity entity;
+
+        /// Get a vector of all component refs
+        std::vector<ComponentRef> getAllComponents() const
+        {
+            std::vector<ComponentRef> components;
+            auto arrays = this->intersection.arrays();
+
+            components.reserve(arrays.size());
+            for (std::size_t i = 0; i < arrays.size(); i++) { components.emplace_back(arrays[i], this->entity); }
+            return components;
+        }
     };
 
     /// Iterator over all entity having components in each array

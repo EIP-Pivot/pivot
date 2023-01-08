@@ -1,6 +1,9 @@
 #include "pivot/script/Engine.hxx"
-#include "Logger.hpp"
 #include "pivot/script/Exceptions.hxx"
+
+#include "pivot/pivot.hxx"
+
+#include <cpplogger/Logger.hpp>
 #include <cstdlib>
 #include <ctime>
 
@@ -16,6 +19,8 @@ Engine::Engine(systems::Index &systemIndex, component::Index &componentIndex, ev
 
 std::string Engine::loadFile(const std::string &file, bool isContent, bool verbose)
 {    // Load a file to register all descriptions in the file, as well as store the trees for the system entry points
+    DEBUG_FUNCTION();
+
     if (verbose) logger.info("script::Engine") << ": Loading file " << file;
     Node fileNode;
     try {
@@ -61,8 +66,10 @@ std::string Engine::loadFile(const std::string &file, bool isContent, bool verbo
 
 std::vector<ecs::event::Event> Engine::systemCallback(const systems::Description &system,
                                                       component::ArrayCombination &entities,
-                                                      const event::EventWithComponent &trigger)
+                                                      event::EventWithComponent &trigger)
 {
+    PROFILE_FUNCTION();
+
     if (!_systems.contains(system.name)) {
         // std::cerr << std::format("Unregistered system '{}'", system.name) << std::endl; // format not available in
         // c++20 gcc yet
@@ -91,6 +98,7 @@ std::vector<ecs::event::Event> Engine::systemCallback(const systems::Description
 
 Node Engine::getEntryPointFor(const std::string &systemName, const Node &file)
 {    // Get the entry point for a system name in a file root tree node
+    DEBUG_FUNCTION();
     for (const Node &declaration: file.children)
         if (declaration.type == NodeType::SystemDeclaration && declaration.value == systemName)
             for (const Node &child: declaration.children)

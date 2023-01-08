@@ -11,7 +11,7 @@ fetchcontent_getproperties(glfw)
 if(NOT glfw_POPULATED)
     message(STATUS "Populating glfw")
     fetchcontent_populate(glfw)
-    add_subdirectory(${glfw_SOURCE_DIR} ${glfw_BINARY_DIR})
+    add_subdirectory(${glfw_SOURCE_DIR} ${glfw_BINARY_DIR} EXCLUDE_FROM_ALL)
     target_compile_definitions(glfw INTERFACE GLFW_INCLUDE_NONE GLFW_INCLUDE_VULKAN)
 endif()
 
@@ -36,7 +36,7 @@ if(NOT ktx_POPULATED)
         OFF
         CACHE INTERNAL "" FORCE
     )
-    add_subdirectory(${ktx_SOURCE_DIR} ${ktx_BINARY_DIR})
+    add_subdirectory(${ktx_SOURCE_DIR} ${ktx_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
 fetchcontent_declare(
@@ -60,7 +60,7 @@ if(NOT tinygltf_POPULATED)
         OFF
         CACHE INTERNAL "" FORCE
     )
-    add_subdirectory(${tinygltf_SOURCE_DIR} ${tinygltf_BINARY_DIR})
+    add_subdirectory(${tinygltf_SOURCE_DIR} ${tinygltf_BINARY_DIR} EXCLUDE_FROM_ALL)
     target_compile_definitions(
         tinygltf
         PUBLIC TINYGLTF_NO_STB_IMAGE
@@ -114,13 +114,13 @@ fetchcontent_getproperties(tinyobjloader)
 if(NOT tinyobjloader_POPULATED)
     message(STATUS "Populating tinyobjloader")
     fetchcontent_populate(tinyobjloader)
-    add_subdirectory(${tinyobjloader_SOURCE_DIR} ${tinyobjloader_BINARY_DIR})
+    add_subdirectory(${tinyobjloader_SOURCE_DIR} ${tinyobjloader_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
 fetchcontent_declare(
     imgui
     GIT_REPOSITORY https://github.com/ocornut/imgui.git
-    GIT_TAG 377b864bb4a9ed9a25674b04f64f63baf221060d
+    GIT_TAG e9f50fb87c1037e06a9b0e93484fd794a32cb835
 )
 fetchcontent_getproperties(imgui)
 if(NOT imgui_POPULATED)
@@ -144,7 +144,7 @@ endif()
 fetchcontent_declare(
     imguizmo
     GIT_REPOSITORY https://github.com/CedricGuillemet/ImGuizmo.git
-    GIT_TAG 1.83
+    GIT_TAG e3174578bdc99c715e51c5ad88e7d50b4eeb19b0
 )
 fetchcontent_getproperties(imguizmo)
 if(NOT imguizmo_POPULATED)
@@ -162,17 +162,24 @@ if(NOT imguizmo_POPULATED)
     target_link_libraries(imguizmo PRIVATE imgui)
 endif()
 
+set(PIVOT_ASSET_DEFAULT_DIRECTORY
+    "${CMAKE_SOURCE_DIR}/editor/assets/"
+    CACHE STRING "Path to the default lookup directory for the asset loading"
+)
+
 add_library(
     ${PROJECT_NAME} STATIC
     source/lib.cxx
+    source/types/Transform.cxx
+    source/types/TransformArray.cxx
     source/types/Vertex.cxx
     source/types/Frame.cxx
     source/types/Light.cxx
     source/types/UniformBufferObject.cxx
+    source/types/QueueFamilyIndices.cxx
     source/Window.cxx
     source/vk_utils.cxx
     source/vk_init.cxx
-    source/vk_debug.cxx
     source/VulkanRenderPass.cxx
     source/SwapchainSupportDetails.cxx
     source/PipelineBuilders/GraphicsPipelineBuilder.cxx
@@ -180,6 +187,7 @@ add_library(
     source/VulkanAllocator.cxx
     source/VulkanLoader.cxx
     source/VulkanSwapchain.cxx
+    source/AssetsStorage/CPUStorage.cxx
     source/AssetsStorage/AssetStorage.cxx
     source/AssetsStorage/AssetStorage_init.cxx
     source/AssetsStorage/AssetStorage_build.cxx
@@ -199,38 +207,28 @@ add_library(
     source/DescriptorAllocator/DescriptorAllocator.cxx
     source/DescriptorAllocator/DescriptorBuilder.cxx
     source/DescriptorAllocator/DescriptorLayoutCache.cxx
-    source/abstract/AImmediateCommand.cxx
+    source/VulkanImmediateCommand.cxx
     source/culling.cxx
-    source/DrawCallResolver.cxx
+    source/Resolver/DrawCallResolver.cxx
+    source/Resolver/LightDataResolver.cxx
+    source/Resolver/AssetResolver.cxx
+    source/ResolverDispatcher.cxx
     source/PipelineStorage.cxx
 )
 
-target_compile_options(
-    ${PROJECT_NAME}
-    PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-            -Wall
-            -Wextra>
-            $<$<CXX_COMPILER_ID:MSVC>:
-            /W4
-            /wd4267
-            /wd4201
-            /wd4244>
-)
+target_pivot_compile_option(${PROJECT_NAME})
 
-target_precompile_headers(${PROJECT_NAME} PRIVATE <vulkan/vulkan.hpp> <vk_mem_alloc.hpp>)
-
-set(PIVOT_ASSET_DEFAULT_DIRECTORY
-    "${CMAKE_SOURCE_DIR}/editor/assets/"
-    CACHE STRING "Path to the default lookup directory for the asset loading"
-)
+target_precompile_headers(${PROJECT_NAME} REUSE_FROM pivot-common)
 
 target_compile_definitions(
     ${PROJECT_NAME}
     PUBLIC VULKAN_HPP_NO_CONSTRUCTORS
            VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
            VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1
+           PIVOT_SOURCE_DIRECTORY="${CMAKE_SOURCE_DIR}"
            PIVOT_ASSET_DEFAULT_DIRECTORY="${PIVOT_ASSET_DEFAULT_DIRECTORY}"
            PIVOT_WINDOW_ICON_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../assets"
+           PIVOT_MAX_FRAMES_IN_FLIGHT=3
 )
 
 add_shader(${PROJECT_NAME} default.vert)
@@ -240,28 +238,26 @@ add_shader(${PROJECT_NAME} default_unlit.frag)
 add_shader(${PROJECT_NAME} default_pbr.frag)
 add_shader(${PROJECT_NAME} culling.comp)
 
-target_include_directories(${PROJECT_NAME} PUBLIC include/)
-
 target_link_libraries(
     ${PROJECT_NAME}
-    PUBLIC logger
+    PUBLIC pivot-common
     PUBLIC VulkanMemoryAllocator
     PUBLIC imgui
     PUBLIC imguizmo
     PUBLIC glfw
-    PUBLIC glm
     PUBLIC tinyobjloader
     PUBLIC ktx
     PUBLIC tinygltf
     PUBLIC stb
-    PUBLIC magic_enum
     PUBLIC Vulkan::Vulkan
+    PUBLIC pivot::ecs
 )
 
 build_tests(
     ${PROJECT_NAME}
     tests/culling.cxx
     tests/bounding_box.cxx
-    tests/indexed_storage.cxx
-    tests/flags.cxx
+    tests/asset_storage_cpu_storage.cxx
+    tests/asset_loading_gltf.cxx
+    tests/asset_loading_obj.cxx
 )

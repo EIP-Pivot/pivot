@@ -1,4 +1,4 @@
-#include <Logger.hpp>
+
 
 #include <pivot/builtins/components/RenderObject.hxx>
 #include <pivot/ecs/Core/Component/description_helpers.hxx>

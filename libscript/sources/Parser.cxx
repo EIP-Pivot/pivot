@@ -5,10 +5,11 @@
 #include <stack>
 #include <unordered_map>
 
-#include "Logger.hpp"
 #include "magic_enum.hpp"
 #include "pivot/script/Exceptions.hxx"
 #include "pivot/script/Parser.hxx"
+#include <cpplogger/Logger.hpp>
+#include <pivot/pivot.hxx>
 
 namespace pivot::ecs::script::parser
 {
@@ -38,6 +39,7 @@ const std::unordered_map<std::string, data::BasicType> gVariableTypes{{"Vector3"
                 System Declaration:		A node containing the declaration of a System		*/
 Node Parser::ast_from_file(const std::string &file, bool isContent, bool verbose)
 {
+    DEBUG_FUNCTION();
     Node result = {.type = NodeType::File, .value = file};
     // Fill _tokens with the tokens from the file
     tokens_from_file(file, isContent, verbose);
@@ -74,6 +76,7 @@ Node Parser::ast_from_file(const std::string &file, bool isContent, bool verbose
                 Neither of the two above		*/
 void Parser::tokens_from_file(const std::string &file, bool isContent, bool verbose)
 {
+    DEBUG_FUNCTION();
     std::string text = "";
     if (isContent) {
         text = file;
@@ -98,7 +101,6 @@ void Parser::tokens_from_file(const std::string &file, bool isContent, bool verb
     _tokens = {};
     // Indices for navigating file string
     size_t lineNb = 1;
-    size_t lastLine = 0;
     size_t lastLineIndentSize = 0;
     size_t lineStart = 0;
     size_t lineEnd = text.find('\n', lineStart);
@@ -167,17 +169,19 @@ void Parser::tokens_from_file(const std::string &file, bool isContent, bool verb
                     rcursor = line.find('"', lcursor + 1);    // find the end to the double quote string
                     if (rcursor ==
                         std::string::npos) {    // no more '"' on the line, multi-line quoted strings unsupported yet.
-                        // pretend the string ends at the end of the line
+                                                // pretend the string ends at the end of the line
+                        std::string literalString = unescapeChars(line.substr(lcursor));
                         _tokens.push(Token{.type = TokenType::DoubleQuotedString,
-                                           .value = line.substr(lcursor),
+                                           .value = literalString,
                                            .line_nb = lineNb,
                                            .char_nb = lcursor + 1});
                         lcursor = line.size();    // end of line
                         continue;    // no more tokens on the line, and rcursor == std::string::npos, go to next line
                     } else {         // the quote ends on the same line
                         // save raw value without the '"'
+                        std::string literalString = unescapeChars(line.substr(lcursor + 1, rcursor - lcursor - 1));
                         _tokens.push(Token{.type = TokenType::DoubleQuotedString,
-                                           .value = line.substr(lcursor + 1, rcursor - lcursor - 1),
+                                           .value = literalString,
                                            .line_nb = lineNb,
                                            .char_nb = lcursor + 1});
                         lcursor = rcursor + 1;
@@ -210,20 +214,20 @@ void Parser::tokens_from_file(const std::string &file, bool isContent, bool verb
 
             } else {    // tokens are the string up until the symbol, and the symbol itself
                 std::string tokenStr = line.substr(lcursor, rcursor - lcursor);
-                bool isLiteral = false;
-                try {                                 // if token is a literal number, store it as that
-                    std::stod(tokenStr);              // check integral part is a number
-                    if (line.at(rcursor) == '.') {    // handle decimal literals
+                bool isLastToken = false;
+                try {                                          // if token is a literal number, store it as that
+                    static_cast<void>(std::stod(tokenStr));    // check integral part is a number
+                    if (line.at(rcursor) == '.') {             // handle decimal literals
                         rcursor = line.find_first_of(gKnownSymbols, rcursor + 1);
-                        rcursor = ((rcursor == std::string::npos) ? line.size() - 1 : rcursor);
-                        tokenStr = line.substr(lcursor, rcursor - lcursor + 1);
-                        std::stod(tokenStr);    // check full decimal number
+                        isLastToken = (rcursor == std::string::npos);
+                        rcursor = ((rcursor == std::string::npos) ? line.size() : rcursor);
+                        tokenStr = line.substr(lcursor, rcursor - lcursor);
+                        static_cast<void>(std::stod(tokenStr));    // check full decimal number
                     }
                     _tokens.push(Token{.type = TokenType::LiteralNumber,
                                        .value = tokenStr,
                                        .line_nb = lineNb,
                                        .char_nb = lcursor + 1});
-                    isLiteral = true;
                 } catch (const std::invalid_argument &) {    // token is not a number
                     if (tokenStr == "True" || tokenStr == "False") {
                         _tokens.push(Token{
@@ -245,7 +249,7 @@ void Parser::tokens_from_file(const std::string &file, bool isContent, bool verb
                     _tokens.push(Token{
                         .type = TokenType::Identifier, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
                 }
-                if (!std::isspace(line.at(rcursor)))
+                if (!isLastToken && !std::isspace(line.at(rcursor)))
                     _tokens.push(Token{.type = TokenType::Symbol,
                                        .value = line.substr(rcursor, 1),
                                        .line_nb = lineNb,
@@ -256,12 +260,10 @@ void Parser::tokens_from_file(const std::string &file, bool isContent, bool verb
         }
         if (lcursor < line.size()) {    // TODO : handle last token more elegantly ?
             std::string tokenStr = line.substr(lcursor, rcursor - lcursor);
-            bool isLiteral = false;
-            try {                       // if token is a literal number, store it as that
-                std::stod(tokenStr);    // check integral part is a number
+            try {                                          // if token is a literal number, store it as that
+                static_cast<void>(std::stod(tokenStr));    // check integral part is a number
                 _tokens.push(Token{
                     .type = TokenType::LiteralNumber, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
-                isLiteral = true;
             } catch (const std::invalid_argument &) {    // token is not a number
                 if (tokenStr == "True" || tokenStr == "False") {
                     _tokens.push(Token{
@@ -374,6 +376,7 @@ void Parser::consumeEventToken(Node &result, TokenType expectedType, NodeType fi
 
 Node Parser::consumeComponent()
 {    // Consume a component token and all following to build a component declaration node
+    DEBUG_FUNCTION();
     Node result = {.type = NodeType::ComponentDeclaration};
     if (_tokens.size() <= 1) {    // Tokens only contains ["component"]
         logger.err("ERROR") << " at line " << _tokens.front().line_nb << " char " << _tokens.front().char_nb << ": '"
@@ -416,6 +419,7 @@ Node Parser::consumeComponent()
 }
 void Parser::consumeComponentToken(Node &result, TokenType expectedType, NodeType fillType, Token &lastToken)
 {    // consume one token
+    DEBUG_FUNCTION();
     if (_tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
@@ -441,6 +445,7 @@ void Parser::consumeComponentToken(Node &result, TokenType expectedType, NodeTyp
 }
 Node Parser::consumeSystem()
 {    // Consume a system token and all following to build a system declaration node
+    DEBUG_FUNCTION();
     Node result = {.type = NodeType::SystemDeclaration};
     if (_tokens.size() <= 1) {    // Tokens only contains ["system"]
         logger.err("ERROR") << " at line " << _tokens.front().line_nb << " char " << _tokens.front().char_nb << ": '"
@@ -540,6 +545,7 @@ Node Parser::consumeSystem()
 }
 void Parser::consumeSystemDescriptionToken(Node &result, TokenType expectedType, NodeType fillType, Token &lastToken)
 {    // consume one token for declaration (front of queue)
+    DEBUG_FUNCTION();
     if (_tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
@@ -566,6 +572,7 @@ void Parser::consumeSystemDescriptionToken(Node &result, TokenType expectedType,
 void Parser::consumeSystemDescriptionToken(const Token &token, Node &result, TokenType expectedType, NodeType fillType,
                                            Token &lastToken)
 {    // consume one token for declaration (parameter)
+    DEBUG_FUNCTION();
     if (token.type != expectedType) {
         logger.err("ERROR") << " at line " << token.line_nb << " char " << token.char_nb << ": '" << token.value << "'";
         logger.err("Expected ") << magic_enum::enum_name(expectedType) << "token";
@@ -581,6 +588,7 @@ void Parser::consumeSystemDescriptionToken(const Token &token, Node &result, Tok
 }
 void Parser::consumeSystemStatement(Node &result, Token &lastToken)
 {    // consume an entire statement and append it to children node
+    DEBUG_FUNCTION();
     if (_tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
@@ -588,7 +596,6 @@ void Parser::consumeSystemStatement(Node &result, Token &lastToken)
     }
     const Token &token = _tokens.front();
     Node statementResult = {.type = NodeType::Statement, .line_nb = token.line_nb, .char_nb = token.char_nb};
-    size_t lineNb = token.line_nb;
     if (std::find(gBlockops.begin(), gBlockops.end(), token.value) != gBlockops.end()) {    // Is block operator
         statementResult.value = token.value;    // store the "if","while","for" for the interpreter
         consumeSystemBlock(statementResult, lastToken);
@@ -620,6 +627,7 @@ void Parser::consumeSystemStatement(Node &result, Token &lastToken)
 }
 void Parser::consumeSystemBlock(Node &result, Token &lastToken)
 {    // consume entire block and append it to children node
+    DEBUG_FUNCTION();
     Node blockCondition = {.type = NodeType::Expression,
                            .value = "condition",
                            .line_nb = _tokens.front().line_nb,
@@ -636,6 +644,7 @@ void Parser::consumeSystemBlock(Node &result, Token &lastToken)
 }
 void Parser::consumeSystemVariable(Node &result, Token &lastToken)
 {    // consume a variable and append it to children node
+    DEBUG_FUNCTION();
     if (_tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
@@ -700,6 +709,7 @@ void Parser::consumeSystemVariable(Node &result, Token &lastToken)
 }
 void Parser::consumeSystemExpression(Node &result, Token &lastToken)
 {    // consume an expression and append it to children node
+    DEBUG_FUNCTION();
     if (_tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
@@ -793,6 +803,7 @@ void Parser::consumeSystemExpression(Node &result, Token &lastToken)
 }
 void Parser::consumeSystemFuncParams(Node &result, Token &lastToken)
 {    // consume function parameters and append them to children node
+    DEBUG_FUNCTION();
     if (_tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
@@ -805,7 +816,10 @@ void Parser::consumeSystemFuncParams(Node &result, Token &lastToken)
     // TODO : handle parentheses '(' ')'
     while (_tokens.size() > 0 && _tokens.front().value != ")") {    // an expression runs until a ')' symbol
         // consumeSystemVariable(paramsResult, lastToken);             // consume variable
-        consumeSystemExpression(paramsResult, lastToken);
+        Node expressionResult = {
+            .type = NodeType::Expression, .line_nb = _tokens.front().line_nb, .char_nb = _tokens.front().char_nb};
+        consumeSystemExpression(expressionResult, lastToken);
+        paramsResult.children.push_back(expressionResult);
         if (_tokens.empty() || _tokens.front().value == ")")    // no more variables, end of expression
             break;
         if (_tokens.front().value != ",") {    // token is not an comma
@@ -824,6 +838,7 @@ void Parser::consumeSystemFuncParams(Node &result, Token &lastToken)
 
 void Parser::consumeSystemVarOrFunc(Node &result, Token &lastToken)
 {
+    DEBUG_FUNCTION();
     if (_tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
@@ -843,6 +858,7 @@ void Parser::consumeSystemVarOrFunc(Node &result, Token &lastToken)
 
 void Parser::expectSystemToken(TokenType expectedType, Token &lastToken, bool consume)
 {    // check that token exists, and is of correct type (and potentially consume it from tokens)
+    DEBUG_FUNCTION();
     if (_tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
@@ -862,6 +878,7 @@ void Parser::expectSystemToken(TokenType expectedType, Token &lastToken, bool co
 }
 void Parser::expectSystemTokenValue(const std::string &expectedValue, Token &lastToken, bool consume)
 {    // check that token exists, and is of correct value (and potentially consume it from tokens)
+    DEBUG_FUNCTION();
     if (_tokens.empty()) {
         logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
                             << lastToken.value << "'";
@@ -881,7 +898,8 @@ void Parser::expectSystemTokenValue(const std::string &expectedValue, Token &las
 }
 
 bool Parser::isDeclarationOver()
-{                           // Is there no more tokens, or is the first the end of the declaration
+{    // Is there no more tokens, or is the first the end of the declaration
+    DEBUG_FUNCTION();
     if (_tokens.empty())    // No more tokens
         return true;
     if (_tokens.front().value == "component" ||
@@ -896,6 +914,7 @@ bool hasHigherPrecedence(const std::string &op, const std::string &compareTo)
 {    // Does the op have higher precedence ( or priority ) than compareTo
     return precedenceOf(op) > precedenceOf(compareTo);
 }
+
 Precedence precedenceOf(const std::string &op)
 {    // Get a number representing the priority of op
     if (gOneCharOps.contains(op)) return gOneCharOps.at(op);
@@ -1044,6 +1063,24 @@ std::string remove_comments(const std::string &line)
 bool line_is_empty(const std::string &line)
 {    // Is line empty
     return line.find_first_not_of(" \t") == std::string::npos;
+}
+
+std::string replaceAll(std::string str, const std::string &from, const std::string &to)
+{    // Replace all occurences of string 'from' by string 'to' in string 'str'
+    size_t start_pos = 0;
+    while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length();    // Handles case where 'to' is a substring of 'from'
+    }
+    return str;
+}
+
+std::string unescapeChars(std::string str)
+{    // This isn't very clean, but easier to read than regex
+    std::string r = replaceAll(str, "\\t", "\t");
+    r = replaceAll(r, "\\n", "\n");
+    r = replaceAll(r, "\\r", "\r");
+    return r;
 }
 
 }    // end of namespace pivot::ecs::script::parser

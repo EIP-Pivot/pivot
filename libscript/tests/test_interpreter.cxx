@@ -122,8 +122,10 @@ TEST_CASE("Scripting-Refacto-Interpreter_One")
         .event = event::Event{.description = Sdescription.eventListener, .entities = {1, 2}, .payload = 0.12}};
 
     Sdescription.system(Sdescription, combinations, evt);
-    std::cout << "Returned " << std::get<bool>(std::get<data::Record>(array1->getValueForEntity(0).value()).at("b"))
-              << std::endl;
+
+    bool result = std::get<bool>(std::get<data::Record>(array1->getValueForEntity(0).value()).at("b"));
+    REQUIRE(result == true);
+    std::cout << "Returned " << result << std::endl;
 
     std::cout << "------Interpreter------end" << std::endl;
 }
@@ -152,4 +154,45 @@ TEST_CASE("Scripting-Event-Declaration")
     REQUIRE(eind.getDescription("Kill").has_value());
     REQUIRE(eind.getDescription("Damage").has_value());
     REQUIRE(eind.getDescription("Move").has_value());
+}
+
+TEST_CASE("Scripting-Interpreter-Vector")
+{
+    std::cout << "------Interpreter Vector------start" << std::endl;
+
+    component::Index cind;
+    systems::Index sind;
+    event::Index eind;
+    script::Engine engine(sind, cind, eind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
+    // std::string file = "C:/Users/Najo/eip/pivot/libscript/tests/vector.pvt";
+    // engine.loadFile(file);
+    std::string fileContent = "component C\n"
+                              "\tVector3 vec\n"
+                              "system S(anyEntity<C>) event Tick(Number deltaTime)\n"
+                              "\tprint(anyEntity.C.vec)\n"
+                              "\tanyEntity.C.vec.x = 5\n"
+                              "\tanyEntity.C.vec.y = 2555\n"
+                              "\tanyEntity.C.vec.z = 0\n"
+                              "\tprint(anyEntity.C.vec)\n";
+    engine.loadFile(fileContent, true);
+
+    REQUIRE(sind.getDescription("S").has_value());
+    REQUIRE(cind.getDescription("C").has_value());
+
+    auto Cdescription = cind.getDescription("C").value();
+    auto Sdescription = sind.getDescription("S").value();
+    auto array1 = Cdescription.createContainer(Cdescription);
+    std::vector<data::Value> entity = {data::Record{{"vec", glm::vec3{1.0, 2.0, 3.0}}}};
+    array1->setValueForEntity(0, entity.at(0));
+    component::ArrayCombination combinations{{std::ref(*array1)}};
+    event::EventWithComponent evt = {
+        .event = event::Event{.description = Sdescription.eventListener, .entities = {1, 2}, .payload = 0.12}};
+
+    Sdescription.system(Sdescription, combinations, evt);
+
+    REQUIRE(std::get<glm::vec3>(std::get<data::Record>(array1->getValueForEntity(0).value()).at("vec")).x == 5);
+    REQUIRE(std::get<glm::vec3>(std::get<data::Record>(array1->getValueForEntity(0).value()).at("vec")).y == 2555);
+    REQUIRE(std::get<glm::vec3>(std::get<data::Record>(array1->getValueForEntity(0).value()).at("vec")).z == 0);
+
+    std::cout << "------Interpreter Vector------end" << std::endl;
 }

@@ -32,31 +32,31 @@ public:
     }
 
     /// Set the path of the vertex shader to use, can be chained
-    GraphicsPipelineBuilder &setVertexShaderPath(const std::string &path) noexcept
+    GraphicsPipelineBuilder &setVertexShaderPath(const std::filesystem::path &path) noexcept
     {
         vertexShaderPath = path;
         return *this;
     }
     /// Set the path of the fragment shader to use, can be chained
-    GraphicsPipelineBuilder &setFragmentShaderPath(const std::string &path) noexcept
+    GraphicsPipelineBuilder &setFragmentShaderPath(const std::filesystem::path &path) noexcept
     {
         fragmentShaderPath = path;
         return *this;
     }
     /// Set the path of the geometry shader to use, can be chained
-    GraphicsPipelineBuilder &setGeometryShaderPath(const std::string &path) noexcept
+    GraphicsPipelineBuilder &setGeometryShaderPath(const std::filesystem::path &path) noexcept
     {
         geometryShaderPath = path;
         return *this;
     }
     /// Set the path of the tessellation evaluation shader to use, can be chained
-    GraphicsPipelineBuilder &setTessellationEvaluationShaderPath(const std::string &path) noexcept
+    GraphicsPipelineBuilder &setTessellationEvaluationShaderPath(const std::filesystem::path &path) noexcept
     {
         tessellationEvaluationShaderPath = path;
         return *this;
     }
     /// Set the path of the tessellation control shader to use, can be chained
-    GraphicsPipelineBuilder &setTessellationControlShaderPath(const std::string &path) noexcept
+    GraphicsPipelineBuilder &setTessellationControlShaderPath(const std::filesystem::path &path) noexcept
     {
         tessellationControlShaderPath = path;
         return *this;
@@ -137,11 +137,11 @@ private:
                             vk::PipelineCache pipelineCache = VK_NULL_HANDLE) const;
 
 private:
-    std::string vertexShaderPath;
-    std::optional<std::string> fragmentShaderPath;
-    std::optional<std::string> geometryShaderPath;
-    std::optional<std::string> tessellationControlShaderPath;
-    std::optional<std::string> tessellationEvaluationShaderPath;
+    std::filesystem::path vertexShaderPath;
+    std::optional<std::filesystem::path> fragmentShaderPath;
+    std::optional<std::filesystem::path> geometryShaderPath;
+    std::optional<std::filesystem::path> tessellationControlShaderPath;
+    std::optional<std::filesystem::path> tessellationEvaluationShaderPath;
 
     vk::PipelineInputAssemblyStateCreateInfo inputAssembly;
     vk::PipelineColorBlendAttachmentState colorBlendAttachment;

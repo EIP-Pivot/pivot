@@ -1,36 +1,38 @@
 #include "pivot/graphics/VulkanBase.hxx"
-#include "pivot/graphics/DebugMacros.hxx"
+#include "pivot/pivot.hxx"
 
 #include <optional>
 
 namespace pivot::graphics
 {
-VulkanBase::VulkanBase(const std::string &windowName, const bool bForceValidation)
-    : VulkanLoader(), abstract::AImmediateCommand(), window(windowName, 800, 600)
+VulkanBase::VulkanBase(const bool bForceValidation): VulkanLoader(), VulkanImmediateCommand()
 {
+    DEBUG_FUNCTION();
     bEnableValidationLayers |= bForceValidation;
 }
 
-VulkanBase::~VulkanBase() {}
+VulkanBase::~VulkanBase() { DEBUG_FUNCTION(); }
 
-void VulkanBase::init(const std::vector<const char *> &instanceExtensions,
+void VulkanBase::init(Window &window, const std::vector<const char *> &instanceExtensions,
                       const std::vector<const char *> &deviceExtensions,
                       const std::vector<const char *> &validationLayers)
 {
-    DEBUG_FUNCTION
+    DEBUG_FUNCTION();
+    window_ref = window;
     createInstance(instanceExtensions, validationLayers);
     createDebugMessenger();
     createSurface();
     selectPhysicalDevice(deviceExtensions);
     createLogicalDevice(deviceExtensions);
     createAllocator();
-    abstract::AImmediateCommand::init(device, physical_device, queueIndices.transferFamily.value());
+    VulkanImmediateCommand::init(device, physical_device, queueIndices);
 }
 
 void VulkanBase::destroy()
 {
-    DEBUG_FUNCTION;
-    abstract::AImmediateCommand::destroy();
+    DEBUG_FUNCTION();
+
+    VulkanImmediateCommand::destroy();
     baseDeletionQueue.flush();
 }
 

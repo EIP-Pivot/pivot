@@ -1,6 +1,6 @@
 #include "pivot/graphics/DescriptorAllocator/DescriptorBuilder.hxx"
 
-#include "Logger.hpp"
+#include <cpplogger/Logger.hpp>
 
 namespace pivot::graphics
 {

@@ -4,6 +4,8 @@
 #include <ratio>
 #include <thread>
 
+#include <pivot/pivot.hxx>
+
 template <unsigned FPS>
 class FrameLimiter
 {
@@ -12,6 +14,8 @@ public:
 
     void sleep()
     {
+        PROFILE_FUNCTION();
+
         tp += time_frame;
         std::this_thread::sleep_until(tp);
     };

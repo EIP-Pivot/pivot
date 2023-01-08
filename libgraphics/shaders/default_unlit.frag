@@ -1,14 +1,19 @@
 #version 460
 
 struct Material {
-    vec4 baseColor;
+    float alphaCutOff;
     float metallic;
     float roughness;
+    vec4 baseColor;
+    vec4 baseColorFactor;
+    vec4 emissiveFactor;
     int baseColorTexture;
     int metallicRoughnessTexture;
     int normalTexture;
     int occlusionTexture;
     int emissiveTexture;
+    int specularGlossinessTexture;
+    int diffuseTexture;
 };
 
 struct pushConstantStruct {
@@ -22,15 +27,18 @@ layout(constant_id = 0) const uint NUMBER_OF_TEXTURES = 1;
 layout(location = 0) in vec3 fragPosition;
 layout(location = 1) in vec3 fragNormal;
 layout(location = 2) in vec2 fragTextCoords;
+layout(location = 3) in vec3 fragColor;
 layout(location = 4) in flat uint materialIndex;
 
 layout(location = 0) out vec4 outColor;
 
-layout(std140, set = 0, binding = 1) readonly buffer ObjectMaterials
+layout(std140, set = 2, binding = 1) readonly buffer ObjectMaterials
 {
     Material materials[];
 }
 objectMaterials;
+
+layout(set = 2, binding = 2) uniform sampler2D texSampler[NUMBER_OF_TEXTURES];
 
 layout(push_constant) uniform readonly constants
 {
@@ -38,13 +46,15 @@ layout(push_constant) uniform readonly constants
 }
 cameraData;
 
-layout(set = 0, binding = 2) uniform sampler2D texSampler[NUMBER_OF_TEXTURES];
-
 void main()
 {
     Material material = objectMaterials.materials[materialIndex];
-    vec3 diffuseColor = (material.baseColorTexture >= 0)
-                            ? (texture(texSampler[material.baseColorTexture], fragTextCoords).rgb)
-                            : (material.baseColor.rgb);
-    outColor = vec4(diffuseColor, 1.0);
+    vec4 diffuseColor = (material.baseColorTexture >= 0)
+                            ? (texture(texSampler[material.baseColorTexture], fragTextCoords))
+                            : (material.baseColor);
+
+    diffuseColor *= vec4(fragColor, 1.0) * material.baseColorFactor;
+    if (diffuseColor.a < material.alphaCutOff)
+        discard;
+    outColor = diffuseColor;
 }

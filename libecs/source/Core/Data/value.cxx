@@ -1,10 +1,13 @@
 #include <pivot/ecs/Core/Data/value.hxx>
 
+#include "pivot/pivot.hxx"
+
 namespace pivot::ecs::data
 {
 
 RecordType Record::type() const
 {
+    PROFILE_FUNCTION();
     RecordType type;
 
     for (const auto &[key, value]: *this) { type.insert({key, value.type()}); }
@@ -14,6 +17,7 @@ RecordType Record::type() const
 
 Type Value::type() const
 {
+    PROFILE_FUNCTION();
     return std::visit(
         [](const auto &value) {
             using type = std::decay_t<decltype(value)>;

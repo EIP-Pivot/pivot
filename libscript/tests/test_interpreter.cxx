@@ -141,19 +141,38 @@ TEST_CASE("Scripting-Event-Declaration")
     // std::string file = "C:/Users/jonme/eip/pivot/libscript/tests/b.pvt";
     // engine.loadFile(file);
     std::string fileContent = "event Kill\n"
-                              "\tStats, Inventory\n"
                               "\tString monster\n"
                               "event Damage\n"
-                              "\tStats\n"
                               "\tNumber damage\n"
                               "event Move\n"
-                              "\tPosition, Velocity\n"
-                              "\tNumber deltaTime\n";
+                              "\tNumber deltaTime\n"
+                              "system killMonster() event Tick(Number deltaTime)\n"
+                              "\temit Kill(\"frankenstein\")\n";
     engine.loadFile(fileContent, true);
 
-    REQUIRE(eind.getDescription("Kill").has_value());
+    auto killDescription = eind.getDescription("Kill").value();
+    REQUIRE(killDescription.name == "Kill");
+    REQUIRE(killDescription.payload == data::Type{data::RecordType{{"monster", data::Type{data::BasicType::String}}}});
+    REQUIRE(killDescription.payloadName == "???");
+    REQUIRE(killDescription.entities.size() == 0);
+    REQUIRE(killDescription.provenance.isExternalRessource());
+
     REQUIRE(eind.getDescription("Damage").has_value());
     REQUIRE(eind.getDescription("Move").has_value());
+
+    auto killMonsterSystem = sind.getDescription("killMonster").value();
+    REQUIRE(killMonsterSystem.name == "killMonster");
+    REQUIRE(killMonsterSystem.entityName == "");
+
+    event::EventWithComponent event = {
+        .event = event::Event{.description = killMonsterSystem.eventListener, .entities = {}, .payload = 0.12}};
+    auto comb = component::ArrayCombination({});
+    auto systemResult = killMonsterSystem.system(killMonsterSystem, comb, event);
+    REQUIRE(systemResult.size() == 1);
+    auto killEvent = systemResult.at(0);
+    REQUIRE(killEvent.description.name == killDescription.name);
+    REQUIRE(killEvent.entities.size() == 0);
+    REQUIRE(killEvent.payload == data::Value{"frankenstein"});
 }
 
 TEST_CASE("Scripting-Interpreter-Vector")

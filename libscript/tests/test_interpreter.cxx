@@ -153,7 +153,7 @@ TEST_CASE("Scripting-Event-Declaration")
     auto killDescription = eind.getDescription("Kill").value();
     REQUIRE(killDescription.name == "Kill");
     REQUIRE(killDescription.payload == data::Type{data::RecordType{{"monster", data::Type{data::BasicType::String}}}});
-    REQUIRE(killDescription.payloadName == "???");
+    REQUIRE(killDescription.payloadName == "");
     REQUIRE(killDescription.entities.size() == 0);
     REQUIRE(killDescription.provenance.isExternalRessource());
 

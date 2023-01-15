@@ -1,35 +1,33 @@
-#include "ImGuiCore/EntityModule.hxx"
-#include "ImGuiCore/ImGuiTheme.hxx"
+#include "Windows/EntityWindow.hxx"
 
+#include <imgui.h>
 #include <misc/cpp/imgui_stdlib.h>
 
-void EntityModule::create()
+#include "ImGuiCore/ImGuiTheme.hxx"
+
+using namespace pivot::editor;
+
+void EntityWindow::render()
 {
     PROFILE_FUNCTION();
-    auto &componentManager = m_scene->getComponentManager();
+    auto &componentManager = m_manager.getCurrentScene()->getComponentManager();
     auto tagId = componentManager.GetComponentId("Tag").value();
-    if (m_scene.id() != currentScene) {
-        _hasSelected = false;
-        entitySelected = -1;
-    }
-    currentScene = m_scene.id();
-    ImGui::Begin(" Entity ");
+    ImGui::Begin(" Entity ", &m_open);
     ImGuiTheme::setDefaultFramePadding();
     createPopUp();
     if (ImGui::Button("Add entity")) ImGui::OpenPopup("NewEntity");
-    if (_hasSelected) {
+    if (m_manager.getSelectedEntity() != -1u) {
         ImGui::SameLine();
         if (ImGui::Button("Remove entity")) removeEntity();
     }
     ImGui::Separator();
-    for (auto const &[entity, _]: m_scene->getEntities()) {
+    for (auto const &[entity, _]: m_manager.getCurrentScene()->getEntities()) {
         if (ImGui::Selectable(
                 std::get<std::string>(
                     std::get<pivot::ecs::data::Record>(componentManager.GetComponent(entity, tagId).value()).at("name"))
                     .c_str(),
-                entitySelected == entity)) {
-            _hasSelected = true;
-            entitySelected = entity;
+                m_manager.getSelectedEntity() == entity)) {
+            m_manager.setSelectedEntity(entity);
         }
         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
             std::cout << std::get<std::string>(
@@ -43,37 +41,30 @@ void EntityModule::create()
     ImGui::End();
 }
 
-Entity EntityModule::addEntity()
+Entity EntityWindow::addEntity()
 {
     PROFILE_FUNCTION();
-    Entity newEntity = m_scene->CreateEntity();
-    entitySelected = newEntity;
-    _hasSelected = true;
+    Entity newEntity = m_manager.getCurrentScene()->CreateEntity();
+    m_manager.setSelectedEntity(newEntity);
     return newEntity;
 }
 
-Entity EntityModule::addEntity(std::string name)
+Entity EntityWindow::addEntity(std::string name)
 {
     PROFILE_FUNCTION();
-    Entity newEntity = m_scene->CreateEntity(name);
-    entitySelected = newEntity;
-    _hasSelected = true;
+    Entity newEntity = m_manager.getCurrentScene()->CreateEntity(name);
+    m_manager.setSelectedEntity(newEntity);
     return newEntity;
 }
 
-void EntityModule::removeEntity()
+void EntityWindow::removeEntity()
 {
     PROFILE_FUNCTION();
-    m_scene->DestroyEntity(entitySelected);
-    entitySelected = 0;
-    _hasSelected = false;
+    m_manager.getCurrentScene()->DestroyEntity(m_manager.getSelectedEntity());
+    m_manager.setSelectedEntity(-1);
 }
 
-Entity EntityModule::getEntitySelected() { return entitySelected; }
-
-bool EntityModule::hasSelected() { return _hasSelected; }
-
-void EntityModule::createPopUp()
+void EntityWindow::createPopUp()
 {
     PROFILE_FUNCTION();
     if (ImGui::BeginPopup("NewEntity")) {

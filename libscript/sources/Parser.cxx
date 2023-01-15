@@ -220,14 +220,14 @@ void Parser::tokens_from_file(const std::string &file, bool isContent, bool verb
             } else {    // tokens are the string up until the symbol, and the symbol itself
                 std::string tokenStr = line.substr(lcursor, rcursor - lcursor);
                 bool isLastToken = false;
-                try {                                 // if token is a literal number, store it as that
-                    std::stod(tokenStr);              // check integral part is a number
-                    if (line.at(rcursor) == '.') {    // handle decimal literals
+                try {                                          // if token is a literal number, store it as that
+                    static_cast<void>(std::stod(tokenStr));    // check integral part is a number
+                    if (line.at(rcursor) == '.') {             // handle decimal literals
                         rcursor = line.find_first_of(gKnownSymbols, rcursor + 1);
                         isLastToken = (rcursor == std::string::npos);
                         rcursor = ((rcursor == std::string::npos) ? line.size() : rcursor);
                         tokenStr = line.substr(lcursor, rcursor - lcursor);
-                        std::stod(tokenStr);    // check full decimal number
+                        static_cast<void>(std::stod(tokenStr));    // check full decimal number
                     }
                     _tokens.push(Token{.type = TokenType::LiteralNumber,
                                        .value = tokenStr,
@@ -265,8 +265,8 @@ void Parser::tokens_from_file(const std::string &file, bool isContent, bool verb
         }
         if (lcursor < line.size()) {    // TODO : handle last token more elegantly ?
             std::string tokenStr = line.substr(lcursor, rcursor - lcursor);
-            try {                       // if token is a literal number, store it as that
-                std::stod(tokenStr);    // check integral part is a number
+            try {                                          // if token is a literal number, store it as that
+                static_cast<void>(std::stod(tokenStr));    // check integral part is a number
                 _tokens.push(Token{
                     .type = TokenType::LiteralNumber, .value = tokenStr, .line_nb = lineNb, .char_nb = lcursor + 1});
             } catch (const std::invalid_argument &) {    // token is not a number

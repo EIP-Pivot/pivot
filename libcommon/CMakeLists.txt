@@ -101,7 +101,12 @@ if(DEFINED ENV{CI})
     target_compile_definitions(${PROJECT_NAME} PUBLIC NO_BENCHMARK)
 endif()
 
-target_link_libraries(${PROJECT_NAME} PUBLIC logger glm magic_enum mimalloc-static)
+target_link_libraries(${PROJECT_NAME} PUBLIC logger glm magic_enum boost_dll)
+
+option(MIMALLOC_ENABLED "Use mimalloc instead of the default allocator" ON)
+if(MIMALLOC_ENABLED)
+    target_link_libraries(${PROJECT_NAME} PUBLIC mimalloc-static)
+endif()
 
 target_precompile_headers(
     ${PROJECT_NAME}

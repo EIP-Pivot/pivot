@@ -24,12 +24,12 @@ GraphicsPipelineBuilder::GraphicsPipelineBuilder()
 
 GraphicsPipelineBuilder::~GraphicsPipelineBuilder() {}
 
-static void loadShader(const std::string &path, const vk::ShaderStageFlagBits &stage, vk::Device &device,
+static void loadShader(const std::filesystem::path &path, const vk::ShaderStageFlagBits &stage, vk::Device &device,
                        std::vector<vk::PipelineShaderStageCreateInfo> &shaderStages) noexcept
 {
     auto shaderCode = vk_utils::readBinaryFile(path);
     auto shaderModule = vk_utils::createShaderModule(device, shaderCode);
-    vk_debug::setObjectName(device, shaderModule, path);
+    vk_debug::setObjectName(device, shaderModule, path.string());
     shaderStages.push_back(vk_init::populateVkPipelineShaderStageCreateInfo(stage, shaderModule));
 }
 

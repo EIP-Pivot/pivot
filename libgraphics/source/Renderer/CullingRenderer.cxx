@@ -1,3 +1,5 @@
+#include <pivot/config.hxx>
+
 #include "pivot/graphics/Renderer/CullingRenderer.hxx"
 
 #include "pivot/graphics/PipelineBuilders/ComputePipelineBuilder.hxx"
@@ -81,8 +83,9 @@ void CullingRenderer::createPipelineLayout(vk::Device &device, const ResolverDis
 void CullingRenderer::createPipeline()
 {
     DEBUG_FUNCTION();
+    std::filesystem::path shader_directory = pivot::Config::find_shaders_folder();
     ComputePipelineBuilder builder;
-    builder.setPipelineLayout(cullingLayout).setComputeShaderPath("shaders/culling.comp.spv");
+    builder.setPipelineLayout(cullingLayout).setComputeShaderPath(shader_directory / "culling.comp.spv");
     storage.pipeline.get().newComputePipeline("culling", builder);
 }
 

@@ -599,6 +599,8 @@ void Parser::consumeSystemStatement(Node &result, Token &lastToken)
     if (std::find(gBlockops.begin(), gBlockops.end(), token.value) != gBlockops.end()) {    // Is block operator
         statementResult.value = token.value;    // store the "if","while","for" for the interpreter
         consumeSystemBlock(statementResult, lastToken);
+    } else if (token.value == "emit") {
+        consumeEmitStatement(statementResult, lastToken);    // line starts with variable
     } else {
         consumeSystemVariable(statementResult, lastToken);    // line starts with variable
         if (_tokens.front().value == "=") {                   // assign expression to variable
@@ -624,6 +626,25 @@ void Parser::consumeSystemStatement(Node &result, Token &lastToken)
         }
     }
     result.children.push_back(statementResult);
+}
+void Parser::consumeEmitStatement(Node &result, [[maybe_unused]] Token &lastToken)
+{
+    Node emitEvent = {
+        .type = NodeType::EmitEvent,
+        .line_nb = _tokens.front().line_nb,
+        .char_nb = _tokens.front().char_nb,
+    };
+
+    _tokens.pop();
+
+    auto eventToken = _tokens.front();
+    if (eventToken.type != TokenType::Identifier) { throw UnexpectedTokenTypeException("Expected event name"); }
+    emitEvent.value = eventToken.value;
+    _tokens.pop();
+
+    consumeSystemFuncParams(emitEvent, eventToken);
+
+    result.children.push_back(emitEvent);
 }
 void Parser::consumeSystemBlock(Node &result, Token &lastToken)
 {    // consume entire block and append it to children node

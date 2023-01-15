@@ -50,6 +50,7 @@ enum class NodeType {
     Type,
     Name,
     Symbol,
+    EmitEvent,
 };
 
 enum class Precedence {

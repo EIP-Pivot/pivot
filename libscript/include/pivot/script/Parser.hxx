@@ -60,6 +60,9 @@ private:
     /// Check for end of system/component declaration
     bool isDeclarationOver();
 
+    /// Consume an emit event statement
+    void consumeEmitStatement(Node &result, Token &lastToken);
+
 private:
     std::queue<Token> _tokens;
 };

@@ -10,9 +10,9 @@
 namespace pivot::ecs::script
 {
 
-Engine::Engine(systems::Index &systemIndex, component::Index &componentIndex,
+Engine::Engine(systems::Index &systemIndex, component::Index &componentIndex, event::Index &eventIndex,
                interpreter::builtins::BuiltinContext context)
-    : _systemIndex(systemIndex), _componentIndex(componentIndex), _interpreter(context)
+    : _systemIndex(systemIndex), _componentIndex(componentIndex), _eventIndex(eventIndex), _interpreter(context)
 {
     std::srand(std::time(nullptr));    // for built-in rand_int
 }
@@ -51,7 +51,7 @@ std::string Engine::loadFile(const std::string &file, bool isContent, bool verbo
 
     // TODO: return string with error on top of the node
     std::vector<systems::Description> sysDescs = interpreter::registerDeclarations(
-        fileNode, _componentIndex);    // register component descriptions, and retrieve system descriptions
+        fileNode, _componentIndex, _eventIndex);    // register component descriptions, and retrieve system descriptions
     for (systems::Description &desc: sysDescs) {
         desc.system = std::bind(&Engine::systemCallback, this, std::placeholders::_1, std::placeholders::_2,
                                 std::placeholders::_3);    // add the callback to the descriptions

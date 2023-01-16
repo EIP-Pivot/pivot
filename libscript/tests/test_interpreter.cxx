@@ -1,4 +1,6 @@
+#include "pivot/ecs/Core/Component/ref.hxx"
 #include "pivot/script/Engine.hxx"
+
 // #include "pivot/ecs/Core/Scripting/Parser.hxx"
 // #include "pivot/ecs/Core/Scripting/Interpreter.hxx"
 // #include "pivot/ecs/Core/Scripting/ScriptEngine.hxx"
@@ -53,7 +55,8 @@ TEST_CASE("Scripting-Refacto-Engine")
         "	# anyEntity.Position.pos_z = anyEntity.Position.pos_z + anyEntity.Velocity.vel_z# * deltaTime\n";
     component::Index cind;
     systems::Index sind;
-    script::Engine engine(sind, cind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
+    event::Index eind;
+    script::Engine engine(sind, cind, eind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
     engine.loadFile(file, true);
 
     REQUIRE(sind.getDescription("onTickPhysics").has_value());
@@ -100,7 +103,8 @@ TEST_CASE("Scripting-Refacto-Interpreter_One")
 
     component::Index cind;
     systems::Index sind;
-    script::Engine engine(sind, cind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
+    event::Index eind;
+    script::Engine engine(sind, cind, eind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
     // std::string file = "../libscript/tests/tests/systems/interpreter/valid2.pvt";
     // engine.loadFile(file);
     std::string fileContent = "component C\n\tBoolean b\nsystem S(anyEntity<C>) event Tick(Number "
@@ -134,7 +138,8 @@ TEST_CASE("Scripting-Interpreter-Vector")
 
     component::Index cind;
     systems::Index sind;
-    script::Engine engine(sind, cind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
+    event::Index eind;
+    script::Engine engine(sind, cind, eind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
     // std::string file = "C:/Users/Najo/eip/pivot/libscript/tests/vector.pvt";
     // engine.loadFile(file);
     std::string fileContent = "component C\n"
@@ -166,4 +171,86 @@ TEST_CASE("Scripting-Interpreter-Vector")
     REQUIRE(std::get<glm::vec3>(std::get<data::Record>(array1->getValueForEntity(0).value()).at("vec")).z == 0);
 
     std::cout << "------Interpreter Vector------end" << std::endl;
+}
+
+TEST_CASE("Scripting-Event-Declaration")
+{
+    std::cout << "\n\n"
+              << "--------Scripting Event Declaration --------" << std::endl;
+
+    component::Index cind;
+    systems::Index sind;
+    event::Index eind;
+
+    script::Engine engine(sind, cind, eind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
+
+    std::string fileContent =
+        "event Kill\n"
+        "\tStats, Inventory\n"
+        "\tString monster\n"
+        "\n"
+        "event Damage\n"
+        "\tStats\n"
+        "\tNumber damage\n"
+        "\n"
+        "event Move\n"
+        "\tPosition, Velocity\n"
+        "\tNumber deltaTime\n"
+        "\n"
+        "component Stats\n"
+        "\tNumber hp\n"
+        "\n"
+        "component Inventory\n"
+        "\tNumber gold\n"
+        "\n"
+        "component Player\n"
+        "\tBoolean p\n"
+        "\n"
+        "system S(player<Stats, Inventory, Player>) event Kill(String monster, killed<Stats, Inventory>)\n"
+        "\tprint(\"Event monster entity:\")\n"
+        "\tprint(\"\tname: \", monster)\n"
+        "\tprint(\"\thp: \", killed.Stats.hp)\n"
+        "\tprint(\"\tgoldReward: \", killed.Inventory.gold)\n"
+        "\tplayer.Inventory.gold = player.Inventory.gold + killed.Inventory.gold\n";
+
+    engine.loadFile(fileContent, true);
+
+    REQUIRE(sind.getDescription("S").has_value());
+    REQUIRE(cind.getDescription("Stats").has_value());
+    REQUIRE(cind.getDescription("Inventory").has_value());
+    REQUIRE(cind.getDescription("Player").has_value());
+    REQUIRE(eind.getDescription("Kill").has_value());
+    REQUIRE(eind.getDescription("Damage").has_value());
+    REQUIRE(eind.getDescription("Move").has_value());
+
+    auto Statsdescription = cind.getDescription("Stats").value();
+    auto Inventorydescription = cind.getDescription("Inventory").value();
+    auto Playerdescription = cind.getDescription("Player").value();
+    auto Sdescription = sind.getDescription("S").value();
+    auto array1 = Statsdescription.createContainer(Statsdescription);
+    auto array2 = Inventorydescription.createContainer(Inventorydescription);
+    auto array3 = Playerdescription.createContainer(Playerdescription);
+    pivot::ecs::component::ComponentRef statsRef = pivot::ecs::component::ComponentRef(*array1, 1);
+    pivot::ecs::component::ComponentRef invRef = pivot::ecs::component::ComponentRef(*array2, 1);
+    std::vector<data::Value> playerEntity = {data::Record{{"hp", 100.0}}, data::Record{{"gold", 02880.0}},
+                                             data::Record{{"p", true}}};
+    std::vector<data::Value> monsterEntity = {data::Record{{"hp", 25.0}}, data::Record{{"gold", 10.0}}};
+    array1->setValueForEntity(0, playerEntity.at(0));
+    array1->setValueForEntity(1, monsterEntity.at(0));
+    array2->setValueForEntity(0, playerEntity.at(1));
+    array2->setValueForEntity(1, monsterEntity.at(1));
+    array3->setValueForEntity(0, playerEntity.at(2));
+    component::ArrayCombination combinations{{std::ref(*array1), std::ref(*array2), std::ref(*array3)}};
+    event::EventWithComponent evt = {
+        .event =
+            event::Event{.description = Sdescription.eventListener, .entities = {1}, .payload = std::string("dragon")},
+        .components = {{statsRef, invRef}}};
+
+    Sdescription.system(Sdescription, combinations, evt);
+
+    REQUIRE(std::get<double>(std::get<data::Record>(array2->getValueForEntity(0).value()).at("gold")) == 02890.0);
+
+    std::cout << "--------Scripting Event Declaration --------"
+              << "\n\n"
+              << std::endl;
 }

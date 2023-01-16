@@ -8,6 +8,8 @@
 #include "pivot/ecs/Core/Component/ScriptingComponentArray.hxx"
 #include "pivot/ecs/Core/Component/description.hxx"
 #include "pivot/ecs/Core/Component/index.hxx"
+#include "pivot/ecs/Core/Event/description.hxx"
+#include "pivot/ecs/Core/Event/index.hxx"
 #include "pivot/ecs/Core/Systems/description.hxx"
 #include "pivot/ecs/Core/Systems/index.hxx"
 
@@ -20,7 +22,8 @@ namespace pivot::ecs::script::interpreter
 {
 
 // Parse a file syntax tree to register the component and system declarations
-std::vector<systems::Description> registerDeclarations(const Node &file, component::Index &componentIndex);
+std::vector<systems::Description> registerDeclarations(const Node &file, component::Index &componentIndex,
+                                                       event::Index &eventIndex);
 
 /// Main class of the script interpreter
 class Interpreter
@@ -60,6 +63,7 @@ void validateParams(const std::vector<data::Value> &toValidate, size_t expectedS
 // Register description from a declaration
 void registerComponentDeclaration(const Node &component, component::Index &componentIndex, const std::string &fileName);
 systems::Description registerSystemDeclaration(const Node &system, const std::string &fileName);
+void registerEventDeclaration(const Node &event, event::Index &eventIndex, const std::string &filename);
 
 // Consume a child node from a declaration
 void consumeNode(const std::vector<Node> &children, size_t &childIndex, systems::Description &sysDesc,

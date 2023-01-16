@@ -397,9 +397,6 @@ void registerEventDeclaration(const Node &event, event::Index &eventIndex, const
         .name = event.value,
     };
 
-    data::RecordType payloadType;
-    data::Type lastType;
-
     for (const Node &eventParameter: event.children) {
         switch (eventParameter.type) {
             case NodeType::EventEntityParameter:
@@ -411,13 +408,12 @@ void registerEventDeclaration(const Node &event, event::Index &eventIndex, const
                                         << ": '" << eventParameter.value << "'";
                     throw UnknownTypeException("This is not a PivotScript type.");
                 }
-                lastType = gVariableTypes.at(eventParameter.value);
+                r.payload = gVariableTypes.at(eventParameter.value);
                 break;
-            case NodeType::EventPayloadName: payloadType.insert({eventParameter.value, lastType}); break;
+            case NodeType::EventPayloadName: r.payloadName = eventParameter.value; break;
             default: throw UnexpectedNodeTypeException("Not an event node");
         }
     }
-    r.payload = payloadType;
     r.provenance = Provenance::externalRessource(filename);
     eventIndex.registerEvent(r);
 }

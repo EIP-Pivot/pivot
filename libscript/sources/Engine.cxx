@@ -75,19 +75,8 @@ std::vector<ecs::event::Event> createEventsFromStack(const event::Index &eventIn
             logger.warn() << "Unknown event " << eventToEmit.eventName;
             continue;
         }
-        data::Record record;
-        data::RecordType type = std::get<data::RecordType>(description->payload);
-        std::size_t i = 0;
-        for (auto [key, value]: type) {
-            if (eventToEmit.values.size() < i) {
-                logger.warn() << "Not enough values in emit";
-                continue;
-            }
-            record.insert({key, eventToEmit.values.at(i)});
-            i++;
-        }
         eventsEmitted.push_back(
-            event::Event{.description = description.value(), .entities = {}, .payload = data::Value{record}});
+            event::Event{.description = description.value(), .entities = {}, .payload = eventToEmit.values.at(0)});
     }
     return eventsEmitted;
 }

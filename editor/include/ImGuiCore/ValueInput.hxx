@@ -1,9 +1,9 @@
 #pragma once
 #include <imgui.h>
+#include <misc/cpp/imgui_stdlib.h>
 
 // Must be after imgui
 #include <ImGuizmo.h>
-#include <misc/cpp/imgui_stdlib.h>
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/vec3.hpp>
@@ -12,7 +12,8 @@
 #include <pivot/ecs/Core/Data/value.hxx>
 #include <pivot/ecs/Core/SceneManager.hxx>
 
-#include <ImGuiCore/CustomWidget.hxx>
+#include "ImGuiCore/CustomWidget.hxx"
+#include "Windows/AssetWindow.hxx"
 
 class ValueInput
 {
@@ -36,7 +37,15 @@ public:
 
     void drawInput(pivot::ecs::data::Asset &asset, const std::string &name)
     {
-        ImGui::InputText(name.c_str(), &asset.name);
+        CustomWidget::CustomInputText(name, asset.name);
+        if (ImGui::BeginDragDropTarget()) {
+            if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET")) {
+                pivotAssertMsg(payload->Data, "Empty drag and drop payload");
+                auto *assetWrapper = reinterpret_cast<pivot::editor::AssetWindow::wrapper *>(payload->Data);
+                asset.name = std::string(assetWrapper->name);
+            }
+            ImGui::EndDragDropTarget();
+        }
     }
 
     void drawInput(pivot::ecs::data::Void &, const std::string &name)

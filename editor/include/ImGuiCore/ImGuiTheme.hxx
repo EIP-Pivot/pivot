@@ -3,6 +3,8 @@
 #include <imgui.h>
 #include <map>
 
+#include <string>
+
 class ImGuiTheme
 {
 public:

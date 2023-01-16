@@ -411,7 +411,15 @@ data::Value builtin_operator<Operator::Modulo>(const data::Value &left, const da
                 throw InvalidOperation("Cannot modulo by zero.");
             }
             return data::Value(std::get<int>(left) % std::get<int>(right));    // perform arithmetic modulo
-        } else {                                                               // unsupported
+        } else if (std::get<data::BasicType>(left.type()) == data::BasicType::Number &&
+                   std::get<data::BasicType>(right.type()) == data::BasicType::Number) {
+            if ((int)std::get<double>(right) == 0) {    // handle modulo by zero
+                logger.err("ERROR") << " by '" << std::get<int>(left) << "' and '0'";
+                throw InvalidOperation("Cannot modulo by zero.");
+            }
+            return data::Value(
+                (double)((int)std::get<double>(left) % (int)std::get<double>(right)));    // perform arithmetic modulo
+        } else {                                                                          // unsupported
             logger.err("ERROR") << " by '" << left.type().toString() << "' and '" << right.type().toString() << "'";
             throw InvalidOperation("Invalid modulo '%' operator between these types.");
         }

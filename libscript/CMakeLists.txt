@@ -23,4 +23,5 @@ build_tests(
     tests/test_decimals.cxx
     tests/test_multibyte.cxx
     tests/test_entities.cxx
+    tests/test_negative_numbers.cxx
 )

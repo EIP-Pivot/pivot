@@ -8,6 +8,7 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
 
+#include <pivot/config.hxx>
 #include <pivot/engine.hxx>
 
 #include <pivot/internal/FrameLimiter.hxx>
@@ -40,28 +41,6 @@
 
 using namespace pivot;
 using namespace pivot::ecs;
-
-static std::filesystem::path getAssetFilePass()
-{
-    auto current_entry = boost::dll::program_location().parent_path();
-    auto find_asset_folder = [](const boost::filesystem::path &entry) -> std::optional<std::filesystem::path> {
-        for (auto &directory_entry: boost::make_iterator_range(boost::filesystem::directory_iterator(entry), {})) {
-            if (!boost::filesystem::is_directory(directory_entry)) continue;
-            if (directory_entry.path().filename() == "assets")
-                return std::filesystem::path(directory_entry.path().string());
-        }
-        return std::nullopt;
-    };
-    for (int i = 0; i < PIVOT_ASSET_SEARCH_DEPTH; i++) {
-        auto path = find_asset_folder(current_entry);
-        if (path.has_value()) {
-            return path.value();
-            break;
-        }
-        current_entry = current_entry.parent_path();
-    }
-    throw std::runtime_error("Can't find the asset folder !");
-}
 
 namespace pivot
 {
@@ -103,7 +82,7 @@ Engine::Engine()
 {
     DEBUG_FUNCTION();
     Platform::setThreadName(logger.getThreadHandle(), "Logger Thread");
-    m_asset_directory = getAssetFilePass();
+    m_asset_directory = pivot::Config::find_assets_folder();
 
     m_component_index.registerComponent(graphics::Transform::description);
     m_component_index.registerComponent(builtins::components::Gravity::description);
@@ -288,6 +267,14 @@ ecs::SceneManager::SceneId Engine::registerScene(std::unique_ptr<ecs::Scene> sce
     return id;
 }
 
+void Engine::resetScene(ecs::SceneManager::SceneId id, const nlohmann::json &json)
+{
+    auto scene = Scene::load(json, m_component_index, m_system_index);
+    m_scene_manager.resetScene(id, std::move(scene));
+    postSceneRegister(m_scene_manager.getSceneById(id));
+    changeCurrentScene(id);
+}
+
 void Engine::saveScene(ecs::SceneManager::SceneId id, const std::filesystem::path &path)
 {
     DEBUG_FUNCTION();
@@ -367,14 +354,16 @@ void Engine::setCurrentCamera(std::optional<Entity> camera) { m_camera_array.val
 
 internals::LocationCamera Engine::getCurrentCamera()
 {
-    std::scoped_lock lock(m_transform_array.value().get().getMutex());
-    auto current_camera = m_camera_array.value().get().getCurrentCamera();
-    if (current_camera.has_value()) {
-        auto [camera_entity, camera] = current_camera.value();
-        auto &transform_array = m_transform_array.value().get();
-        if (transform_array.getExistence().at(camera_entity)) {
-            return internals::LocationCamera{.camera = camera.get(),
-                                             .transform = transform_array.getData()[camera_entity]};
+    if (m_transform_array.has_value()) {
+        std::scoped_lock lock(m_transform_array.value().get().getMutex());
+        auto current_camera = m_camera_array.value().get().getCurrentCamera();
+        if (current_camera.has_value()) {
+            auto [camera_entity, camera] = current_camera.value();
+            auto &transform_array = m_transform_array.value().get();
+            if (transform_array.getExistence().at(camera_entity)) {
+                return internals::LocationCamera{.camera = camera.get(),
+                                                 .transform = transform_array.getData()[camera_entity]};
+            }
         }
     }
     return m_default_camera;

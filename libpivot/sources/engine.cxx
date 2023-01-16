@@ -66,11 +66,37 @@ static std::filesystem::path getAssetFilePass()
 namespace pivot
 {
 Engine::Engine()
-    : m_scripting_engine(m_system_index, m_component_index,
-                         pivot::ecs::script::interpreter::builtins::BuiltinContext{
-                             .isKeyPressed = std::bind_front(&Engine::isKeyPressed, this),
-                             .selectCamera = std::bind_front(&Engine::setCurrentCamera, this),
-                         }),
+    : m_scripting_engine(
+          m_system_index, m_component_index,
+          pivot::ecs::script::interpreter::builtins::BuiltinContext{
+              .isKeyPressed = std::bind_front(&Engine::isKeyPressed, this),
+              .selectCamera = std::bind_front(&Engine::setCurrentCamera, this),
+              .createEntity = [this](const std::string &name) -> std::pair<pivot::Entity, std::string> {
+                  pivot::Entity createdEntityId = 0;
+                  std::string actualName = name;
+                  while (this->m_scene_manager.getCurrentScene()
+                             .getEntityID(actualName)
+                             .has_value()) {    // while entity exists already
+                      actualName = actualName + " - Copied";
+                  }
+                  createdEntityId = this->m_scene_manager.getCurrentScene().CreateEntity(actualName);
+                  return std::pair<pivot::Entity, std::string>(createdEntityId, actualName);
+              },
+              .removeEntity =
+                  [this](const std::string &name) {
+                      pivot::Entity createdEntityId = 0;
+                      std::string actualName = name;
+                      if (this->m_scene_manager.getCurrentScene()
+                              .getEntityID(actualName)
+                              .has_value())    // entity exists
+                          this->m_scene_manager.getCurrentScene().DestroyEntity(
+                              this->m_scene_manager.getCurrentScene().getEntityID(actualName).value());
+                  },
+              .addComponent = [this](Entity entityId, const std::string &entity, const std::string &component) -> void {
+                  // componentManager->getComponentId(component)
+                  // scene->AddComponent()
+                  return;
+              }}),
       m_default_camera_data(),
       m_default_camera_transform{.position = glm::vec3(0, 5, 0)},
       m_default_camera{m_default_camera_data, m_default_camera_transform}

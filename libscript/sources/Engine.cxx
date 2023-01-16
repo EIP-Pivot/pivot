@@ -75,11 +75,14 @@ std::vector<ecs::event::Event> Engine::systemCallback(const systems::Description
         logger.err("Unregistered system '") << system.name << "'";
         return {};
     }
+    std::vector<ecs::event::Event> emittedEvents;
     const Node &systemEntry = _systems.at(system.name);    // Avoid looking up for every entity
     for (auto entity: entities) {                          // For every entity, execute the system with it as parameter
         try {
             _stack.clear();
-            _interpreter.executeSystem(systemEntry, system, entity, trigger, _stack);
+            std::vector<ecs::event::Event> localEvents =
+                _interpreter.executeSystem(systemEntry, system, entity, trigger, _stack);
+            for (auto e: localEvents) emittedEvents.push_back(e);
         } catch (const InvalidOperation &e) {
             logger.err("Invalid Operation: ") << e.what();
         } catch (const InvalidException &e) {
@@ -90,7 +93,7 @@ std::vector<ecs::event::Event> Engine::systemCallback(const systems::Description
             logger.err("Unhandled std exception: ") << e.what();
         }
     }
-    return {};
+    return emittedEvents;
 }
 
 // Private functions

@@ -33,9 +33,9 @@ public:
     Interpreter(builtins::BuiltinContext context): m_builtinContext(context) {}
 
     /// Execute a SystemEntryPoint node by executing all of its statements
-    void executeSystem(const Node &systemEntry, const systems::Description &desc,
-                       component::ArrayCombination::ComponentCombination &entity, event::EventWithComponent &trigger,
-                       Stack &stack);
+    std::vector<ecs::event::Event> executeSystem(const Node &systemEntry, const systems::Description &desc,
+                                                 component::ArrayCombination::ComponentCombination &entity,
+                                                 event::EventWithComponent &trigger, Stack &stack);
 
 private:
     /// Execute a statement (used for recursion for blocks)
@@ -49,6 +49,9 @@ private:
 
     /// Reference to the Window to get the input
     builtins::BuiltinContext m_builtinContext;
+
+    /// List of events to return
+    std::vector<ecs::event::Event> m_events;
 };
 
 // Private functions

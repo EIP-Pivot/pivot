@@ -1,0 +1,35 @@
+component Once
+    Boolean trigger
+
+system S(anyEntity<Once>) event KeyPress(String key)
+    if key == "N"
+        Entity monster = createEntity("monster1")
+        Entity player = createEntity("player")
+    if key == "A"
+        removeEntity("monster1")
+        removeEntity("player")
+    if key == "Z"
+        removeEntity("monster1 - Copied")
+        removeEntity("player - Copied")
+    if key == "E"
+        removeEntity("monster1 - Copied - Copied")
+        removeEntity("player - Copied - Copied")
+    if key == "R"
+        removeEntity("monster1 - Copied - Copied - Copied")
+        removeEntity("player - Copied - Copied - Copied")
+    if key == "T"
+        emitEvent("Tick")
+    if key == "L"
+        List newList = list(0, 1, 2)
+        print("Print list: ", newList)
+        print("Print list size: ", len(newList))
+        print("Print list at 0: ", at(newList, 0))
+        print("Print list at 1: ", at(newList, 1))
+        print("Removing item at index 0...")
+        newList = remove(newList, 1)
+        print("Print list: ", newList)
+        newList = remove(newList, 0)
+        newList = remove(newList, 0)
+        print("Print list: ", newList)
+        newList = push(newList, 0, "lol", vec3(1,2,3), color(255,255,255,255))
+        print("Print list: ", newList)

@@ -76,3 +76,11 @@ TEST_CASE("Builtin color", "[script][builtin]")
     REQUIRE(std::holds_alternative<data::Color>(result));
     REQUIRE(std::get<data::Color>(result) == Color{4, 255, 2, 1});
 }
+
+TEST_CASE("Builtin not", "[script][builtin]")
+{
+    auto context = BuiltinContext::mock();
+
+    REQUIRE(std::get<bool>(builtin_not({true}, context)) == false);
+    REQUIRE(std::get<bool>(builtin_not({false}, context)) == true);
+}

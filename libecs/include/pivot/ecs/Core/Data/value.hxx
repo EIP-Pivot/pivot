@@ -35,8 +35,38 @@ struct Record : public std::map<std::string, Value> {
  * - Void (no value)
  * - Entity (entity reference)
  */
-struct Value
-    : public std::variant<std::string, double, int, bool, glm::vec3, glm::vec2, Record, Asset, Color, Void, EntityRef> {
+
+/// Value containing an entity record and id
+struct ScriptEntity {
+    /// Data::Record of the entities components
+    data::Record components;
+
+    /// Entity id of the entity
+    pivot::Entity entityId;
+
+    bool operator<(const ScriptEntity &rhs) const { return entityId < rhs.entityId; }
+    bool operator>(const ScriptEntity &rhs) const { return rhs.entityId < entityId; }
+    bool operator<=(const ScriptEntity &rhs) const { return !(entityId > rhs.entityId); }
+    bool operator>=(const ScriptEntity &rhs) const { return !(entityId < rhs.entityId); }
+    bool operator==(const ScriptEntity &rhs) const { return entityId == rhs.entityId; }
+    bool operator!=(const ScriptEntity &rhs) const { return !(entityId == rhs.entityId); }
+};
+
+/// Value containing a list
+struct List {
+    /// List of values
+    std::vector<data::Value> items;
+
+    bool operator<(const List &rhs) const { return items.size() < rhs.items.size(); }
+    bool operator>(const List &rhs) const { return rhs.items.size() < items.size(); }
+    bool operator<=(const List &rhs) const { return !(items.size() > rhs.items.size()); }
+    bool operator>=(const List &rhs) const { return !(items.size() < rhs.items.size()); }
+    bool operator==(const List &rhs) const { return items.size() == rhs.items.size(); }
+    bool operator!=(const List &rhs) const { return !(items.size() == rhs.items.size()); }
+};
+
+struct Value : public std::variant<std::string, double, int, bool, glm::vec3, glm::vec2, Record, Asset, Color, Void,
+                                   EntityRef, ScriptEntity, List> {
     using variant::variant;
 
     /// Returns the Type corresponding to this Value

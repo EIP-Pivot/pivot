@@ -104,8 +104,15 @@ data::Value &Stack::findMut(const std::string &name, data::Record &where)
         throw InvalidException("Stack Find: Unknown Variable.");
     } else if (!std::holds_alternative<data::Record>(
                    where.at(accessingVar))) {    // record contains variable, but it is not a record
-        logger.err("ERROR") << " with variable " << accessingVar << " of type " << where.at(accessingVar).type();
-        throw InvalidException("Stack Find: Variable is not a Record");
+        if (std::holds_alternative<data::ScriptEntity>(where.at(accessingVar))) {
+            return findMut(name.substr(dot + 1),
+                           std::get<data::ScriptEntity>(where.at(accessingVar))
+                               .components);    // recursive call on the rest of the access chain
+
+        } else {
+            logger.err("ERROR") << " with variable " << accessingVar << " of type " << where.at(accessingVar).type();
+            throw InvalidException("Stack Find: Variable is not a Record");
+        }
     }
     return findMut(name.substr(dot + 1),
                    std::get<data::Record>(where.at(accessingVar)));    // recursive call on the rest of the access chain
@@ -141,7 +148,12 @@ const data::Value Stack::find(const std::string &name, const data::Record &where
                                     << where.at(accessingVar).type();
                 throw InvalidException("Stack Find: Can only access field 'x' 'y' or 'z' of Vector3");
             }
-        } else {    // if it is neither a record nor a vector3 throw
+        } else if (std::holds_alternative<data::ScriptEntity>(
+                       where.at(accessingVar))) {    // but it might be a scriptEntity
+            return find(name.substr(dot + 1),
+                        std::get<data::ScriptEntity>(where.at(accessingVar))
+                            .components);    // recursive call on the rest of the access chain
+        } else {                             // if it is neither a record nor a vector3 nor a ScriptEntity throw
             logger.err("ERROR") << " with variable " << accessingVar << " of type " << where.at(accessingVar).type();
             throw InvalidException("Stack Find: Variable is not a Record");
         }

@@ -45,6 +45,12 @@ enum class BasicType {
     /// The property is a reference to another entity
     EntityRef,
 
+    /// The property is of type ScriptEntity
+    ScriptEntity,
+
+    /// The property is of type List
+    List,
+
     /// The property is of type Color
     Color,
 };
@@ -77,6 +83,9 @@ std::ostream &operator<<(std::ostream &stream, const BasicType &type);
 std::ostream &operator<<(std::ostream &stream, const RecordType &type);
 std::ostream &operator<<(std::ostream &stream, const Type &type);
 
+struct ScriptEntity;
+struct List;
+
 template <typename T>
 constexpr std::optional<BasicType> basic_type_representation = std::nullopt;
 
@@ -100,6 +109,10 @@ template <>
 constexpr std::optional<BasicType> basic_type_representation<Void> = BasicType::Void;
 template <>
 constexpr std::optional<BasicType> basic_type_representation<EntityRef> = BasicType::EntityRef;
+template <>
+constexpr std::optional<BasicType> basic_type_representation<ScriptEntity> = BasicType::ScriptEntity;
+template <>
+constexpr std::optional<BasicType> basic_type_representation<List> = BasicType::List;
 
 }    // namespace pivot::ecs::data
 

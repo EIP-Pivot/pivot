@@ -69,6 +69,16 @@ public:
         for (auto &[name, value]: values) drawInput(value, name);
     }
 
+    void drawInput(pivot::ecs::data::ScriptEntity &entity, const std::string &)
+    {
+        for (auto &[name, value]: entity.components) drawInput(value, name);
+    }
+
+    void drawInput(pivot::ecs::data::List &list, const std::string &name)
+    {
+        for (size_t i = 0; i < list.items.size(); i++) drawInput(list.items.at(i), std::to_string(i));
+    }
+
     void drawInput(pivot::ecs::data::Value &value, const std::string &name)
     {
         std::visit([&name, this](auto &&arg) { this->drawInput(arg, name); },

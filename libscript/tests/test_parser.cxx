@@ -125,6 +125,7 @@ TEST_CASE("Parse emit event", "[scripting]")
     Node system = file.children.at(0);
     Node statements = system.children.at(6);
     Node emitStatement = statements.children.at(0);
+    REQUIRE(emitStatement.value == "emit");
     Node emitEvent = emitStatement.children.at(0);
     REQUIRE(emitEvent.type == NodeType::EmitEvent);
     REQUIRE(emitEvent.value == "TestEvent");

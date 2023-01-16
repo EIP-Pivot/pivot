@@ -50,6 +50,9 @@ private:
     /// evaluate a postfix expression
     data::Value evaluateExpression(const Node &expr, const Stack &stack);
 
+    // Execute an emit event statement
+    void executeEmitStatement(const Node &functionCall, Stack &stack);
+
     /// Reference to the Window to get the input
     builtins::BuiltinContext m_builtinContext;
 };

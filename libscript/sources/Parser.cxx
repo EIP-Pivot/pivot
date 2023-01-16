@@ -600,6 +600,7 @@ void Parser::consumeSystemStatement(Node &result, Token &lastToken)
         statementResult.value = token.value;    // store the "if","while","for" for the interpreter
         consumeSystemBlock(statementResult, lastToken);
     } else if (token.value == "emit") {
+        statementResult.value = "emit";                      // store the "if","while","for" for the interpreter
         consumeEmitStatement(statementResult, lastToken);    // line starts with variable
     } else {
         consumeSystemVariable(statementResult, lastToken);    // line starts with variable

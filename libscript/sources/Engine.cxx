@@ -64,11 +64,41 @@ std::string Engine::loadFile(const std::string &file, bool isContent, bool verbo
     return (file + " parsed succesfully.");    // no errors
 }
 
+std::vector<ecs::event::Event> createEventsFromStack(const event::Index &eventIndex, interpreter::Stack &stack)
+{
+    auto events = stack.getEventsToEmit();
+    std::vector<ecs::event::Event> eventsEmitted;
+
+    for (auto &eventToEmit: events) {
+        auto description = eventIndex.getDescription(eventToEmit.eventName);
+        if (!description.has_value()) {
+            logger.warn() << "Unknown event " << eventToEmit.eventName;
+            continue;
+        }
+        data::Record record;
+        data::RecordType type = std::get<data::RecordType>(description->payload);
+        std::size_t i = 0;
+        for (auto [key, value]: type) {
+            if (eventToEmit.values.size() < i) {
+                logger.warn() << "Not enough values in emit";
+                continue;
+            }
+            record.insert({key, eventToEmit.values.at(i)});
+            i++;
+        }
+        eventsEmitted.push_back(
+            event::Event{.description = description.value(), .entities = {}, .payload = data::Value{record}});
+    }
+    return eventsEmitted;
+}
+
 std::vector<ecs::event::Event> Engine::systemCallback(const systems::Description &system,
                                                       component::ArrayCombination &entities,
                                                       event::EventWithComponent &trigger)
 {
     PROFILE_FUNCTION();
+
+    std::vector<ecs::event::Event> allEventsEmitted;
 
     if (!_systems.contains(system.name)) {
         // std::cerr << std::format("Unregistered system '{}'", system.name) << std::endl; // format not available in
@@ -81,6 +111,7 @@ std::vector<ecs::event::Event> Engine::systemCallback(const systems::Description
         try {
             _stack.clear();
             _interpreter.executeSystem(systemEntry, system, entity, trigger, _stack);
+            for (auto event: createEventsFromStack(_eventIndex, _stack)) { allEventsEmitted.push_back(event); }
         } catch (const InvalidOperation &e) {
             logger.err("Invalid Operation: ") << e.what();
         } catch (const InvalidException &e) {
@@ -91,7 +122,7 @@ std::vector<ecs::event::Event> Engine::systemCallback(const systems::Description
             logger.err("Unhandled std exception: ") << e.what();
         }
     }
-    return {};
+    return allEventsEmitted;
 }
 
 // Private functions

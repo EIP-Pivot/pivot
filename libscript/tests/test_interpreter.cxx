@@ -172,7 +172,7 @@ TEST_CASE("Scripting-Event-Declaration")
     auto killEvent = systemResult.at(0);
     REQUIRE(killEvent.description.name == killDescription.name);
     REQUIRE(killEvent.entities.size() == 0);
-    REQUIRE(killEvent.payload == data::Value{"frankenstein"});
+    REQUIRE(killEvent.payload == data::Value{data::Record{{"monster", "frankenstein"}}});
 }
 
 TEST_CASE("Scripting-Interpreter-Vector")

@@ -263,10 +263,27 @@ void Interpreter::executeStatement(const Node &statement, Stack &stack)
 
         // data::Value exprResult = evaluateExpression(statement.children.at(0), stack);
         // std::cout << "ASSIGN:  " << statement.children.at(2).value << std::endl;
+    } else if (statement.value == "emit") {
+        executeEmitStatement(statement.children.at(0), stack);
     } else {    // unsupported yet
         logger.err("ERROR") << " at node " << statement.value;
         throw InvalidException("Invalid Statement: Unsupported statement.");
     }
+}
+
+void Interpreter::executeEmitStatement(const Node &statement, Stack &stack)
+{
+    std::vector<data::Value> parameters;
+    for (const Node &param: statement.children.at(0).children) {    // get all the parameters for the callback
+        if (param.type == NodeType::FunctionCall)                   // parameter is function call
+            parameters.push_back(executeFunction(param, stack));
+        else if (param.type == NodeType::Expression)    // parameter is expression
+            parameters.push_back(evaluateExpression(param, stack));
+        else    // parameter is variable
+            parameters.push_back(valueOf(param, stack));
+    }
+
+    stack.emitEvent(statement.value, parameters);
 }
 
 // Execute a function

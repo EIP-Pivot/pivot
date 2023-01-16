@@ -45,7 +45,9 @@ public:
 
     /// Details of an event emitted by the system
     struct EventToEmit {
+        /// Name of the event to emit
         std::string eventName;
+        /// Payload of the event
         std::vector<data::Value> values;
     };
 

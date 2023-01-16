@@ -36,6 +36,9 @@ public:
     /// Set current scene id
     void setCurrentSceneId(SceneId newLevel);
 
+    /// Reset scene id
+    void resetScene(SceneId sceneId, std::unique_ptr<Scene> scene);
+
     /// Get the id of a scene by its name, or nullopt if the scene does not exist
     std::optional<SceneId> getSceneId(const std::string &sceneName) const;
 

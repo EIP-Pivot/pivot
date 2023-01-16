@@ -117,8 +117,8 @@ void extract_assets(const data::Value &value, std::set<std::string> &assets,
 }
 }    // namespace
 
-void Scene::save(const std::filesystem::path &path, std::optional<AssetTranslator> assetTranslator,
-                 std::optional<ScriptTranslator> scriptTranslator) const
+nlohmann::json Scene::getJson(std::optional<AssetTranslator> assetTranslator,
+                              std::optional<ScriptTranslator> scriptTranslator) const
 {
     PROFILE_FUNCTION();
     // serialize scene
@@ -153,9 +153,16 @@ void Scene::save(const std::filesystem::path &path, std::optional<AssetTranslato
     output["systems"] = systems;
     output["scripts"] = scriptUsed;
     output["assets"] = assets;
+    return output;
+}
+
+void Scene::save(const std::filesystem::path &path, std::optional<AssetTranslator> assetTranslator,
+                 std::optional<ScriptTranslator> scriptTranslator) const
+{
+    PROFILE_FUNCTION();
     // write in file
     std::ofstream out(path);
-    out << std::setw(4) << output << std::endl;
+    out << std::setw(4) << getJson(assetTranslator, scriptTranslator) << std::endl;
     out.close();
 }
 

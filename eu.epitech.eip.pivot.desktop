@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=PivotEngine
+GenericName=Game Engine
+Comment=Fast and accessible game engine
+# Path=/usr/bin/pivot-editor
+Exec=pivot-editor
+Icon=PivotEngine
+Terminal=false
+

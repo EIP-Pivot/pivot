@@ -61,9 +61,11 @@ Node Parser::ast_from_file(const std::string &file, bool isContent, bool verbose
             result.children.push_back(consumeComponent());
         else if (t.value == "system")
             result.children.push_back(consumeSystem());
+        else if (t.value == "event")
+            result.children.push_back(consumeEvent());
         else {    // neither an identifier, a component nor a system
             logger.err("ERROR") << " at line " << t.line_nb << " char " << t.char_nb << ": '" << t.value << "'";
-            throw UnexpectedTokenTypeException("Expected 'component' or 'system' token.");
+            throw UnexpectedTokenTypeException("Expected 'component', 'system' or 'event' token.");
         }
     }
     if (verbose) printFileNode(result);
@@ -298,6 +300,88 @@ void Parser::tokens_from_file(const std::string &file, bool isContent, bool verb
 }
 
 // Private methods
+Node Parser::consumeEvent()
+{    // Consume an event token and all following to build an event declaration node
+    Node result = {.type = NodeType::EventDeclaration};
+    if (_tokens.size() <= 1) {    // Tokens only contains ["event"]
+        logger.err("ERROR") << " at line " << _tokens.front().line_nb << " char " << _tokens.front().char_nb << ": '"
+                            << _tokens.front().value << "'";
+        throw UnexpectedEOFException("Expected new event declaration");
+    }
+    Token last = _tokens.front();
+    result.line_nb = last.line_nb;
+    result.char_nb = last.char_nb;
+    _tokens.pop();    // Delete 'event' token
+
+    consumeEventToken(result, TokenType::Identifier, NodeType::EventName,
+                      last);    // consume 'eventName' token
+    if (_tokens.empty()) {      // Expect at least one parameter
+        logger.err("ERROR") << " at line " << last.line_nb << " char " << last.char_nb << ": '" << last.value << "'";
+        throw UnexpectedEOFException("Expected event parameter");
+    }
+    if (_tokens.front().type == TokenType::Indent) {    // Multiline event declaration
+        _tokens.pop();                                  // Delete Indent token
+        // Iterate over all tokens until either end of file, Dedent token or other declaration
+        // Remove tokens line by line, either groups of components, or "Type Name" payload
+        while (_tokens.size() > 0 && _tokens.front().value != "component" && _tokens.front().value != "system" &&
+               _tokens.front().value != "event" && _tokens.front().type != TokenType::Dedent) {
+            if (gVariableTypes.contains(
+                    _tokens.front().value)) {    // if token is a pivotscript type, this is the payload
+                consumeEventToken(result, TokenType::Identifier, NodeType::EventPayloadType, last);
+                consumeEventToken(result, TokenType::Identifier, NodeType::EventPayloadName, last);
+            } else {    // otherwise it is a group of components
+                Node entityParameterResult = {.type = NodeType::EventEntityParameter};
+                while (!_tokens.empty()) {    // iterate over every component from that group
+                    consumeEventToken(entityParameterResult, TokenType::Identifier, NodeType::EventEntityComponent,
+                                      last);
+                    if (_tokens.empty() || _tokens.front().line_nb != last.line_nb ||
+                        _tokens.front().type == TokenType::Dedent)    // end of event declaration
+                        break;
+                    expectSystemTokenValue(",", last, true);    // expect ',' token to separate component parameters
+                }
+                result.children.push_back(
+                    entityParameterResult);    // push the entity parameter to the event description
+            }
+        }
+        if (_tokens.size() > 0) {                               // File still has content
+            if (_tokens.front().type != TokenType::Dedent) {    // But no Dedent token
+                logger.err("ERROR") << " at line " << last.line_nb << " char " << last.char_nb << ": '" << last.value
+                                    << "'";
+                throw UnexpectedTokenTypeException("Expected a Dedent token");
+            }
+            _tokens.pop();    // Erase Dedent token
+        }
+    } else {                                                                     // Single line event declaration
+        consumeEventToken(result, TokenType::Symbol, NodeType::Symbol, last);    // expect "=" symbol
+        consumeEventToken(result, TokenType::Identifier, NodeType::EventPayloadType, last);
+        consumeEventToken(result, TokenType::Identifier, NodeType::EventPayloadName, last);
+    }
+    return result;
+}
+void Parser::consumeEventToken(Node &result, TokenType expectedType, NodeType fillType, Token &lastToken)
+{    // consume one token
+    if (_tokens.empty()) {
+        logger.err("ERROR") << " at line " << lastToken.line_nb << " char " << lastToken.char_nb << ": '"
+                            << lastToken.value << "'";
+        throw UnexpectedEOFException("Expected event entity parameter, or payload, or end of declaration");
+    }
+    if (_tokens.front().type != expectedType) {
+        logger.err("ERROR") << " at line " << _tokens.front().line_nb << " char " << _tokens.front().char_nb << ": '"
+                            << _tokens.front().value << "'";
+        logger.err("Expected ") << magic_enum::enum_name(expectedType) << " token";
+        throw UnexpectedTokenTypeException("Invalid type for token.");
+    }
+    if (fillType == NodeType::EventName)    // The event name is stored in the value of the node
+        result.value = _tokens.front().value;
+    else    // but its parameters are stored in the children node
+        result.children.push_back(Node{.type = fillType,
+                                       .value = _tokens.front().value,
+                                       .line_nb = _tokens.front().line_nb,
+                                       .char_nb = _tokens.front().char_nb});
+    // consume the token
+    lastToken = _tokens.front();
+    _tokens.pop();
+}
 
 Node Parser::consumeComponent()
 {    // Consume a component token and all following to build a component declaration node
@@ -306,7 +390,7 @@ Node Parser::consumeComponent()
     if (_tokens.size() <= 1) {    // Tokens only contains ["component"]
         logger.err("ERROR") << " at line " << _tokens.front().line_nb << " char " << _tokens.front().char_nb << ": '"
                             << _tokens.front().value << "'";
-        throw UnexpectedEOFException("Expected new declaration");
+        throw UnexpectedEOFException("Expected new component declaration");
     }
     Token last = _tokens.front();
     result.line_nb = last.line_nb;
@@ -324,7 +408,7 @@ Node Parser::consumeComponent()
         // Iterate over all tokens until either end of file, Dedent token or other declaration
         // Remove tokens two by two, by expecting "Type Name" tokens
         while (_tokens.size() > 0 && _tokens.front().value != "component" && _tokens.front().value != "system" &&
-               _tokens.front().type != TokenType::Dedent) {
+               _tokens.front().value != "event" && _tokens.front().type != TokenType::Dedent) {
             consumeComponentToken(result, TokenType::Identifier, NodeType::PropertyType, last);
             consumeComponentToken(result, TokenType::Identifier, NodeType::PropertyName, last);
         }
@@ -524,6 +608,9 @@ void Parser::consumeSystemStatement(Node &result, Token &lastToken)
     if (std::find(gBlockops.begin(), gBlockops.end(), token.value) != gBlockops.end()) {    // Is block operator
         statementResult.value = token.value;    // store the "if","while","for" for the interpreter
         consumeSystemBlock(statementResult, lastToken);
+    } else if (token.value == "emit") {
+        statementResult.value = "emit";                      // store the "if","while","for" for the interpreter
+        consumeEmitStatement(statementResult, lastToken);    // line starts with variable
     } else {
         consumeSystemVariable(statementResult, lastToken);    // line starts with variable
         if (_tokens.front().value == "=") {                   // assign expression to variable
@@ -549,6 +636,25 @@ void Parser::consumeSystemStatement(Node &result, Token &lastToken)
         }
     }
     result.children.push_back(statementResult);
+}
+void Parser::consumeEmitStatement(Node &result, [[maybe_unused]] Token &lastToken)
+{
+    Node emitEvent = {
+        .type = NodeType::EmitEvent,
+        .line_nb = _tokens.front().line_nb,
+        .char_nb = _tokens.front().char_nb,
+    };
+
+    _tokens.pop();
+
+    Token eventToken = _tokens.front();
+    if (eventToken.type != TokenType::Identifier) { throw UnexpectedTokenTypeException("Expected event name"); }
+    emitEvent.value = eventToken.value;
+    _tokens.pop();
+
+    consumeSystemFuncParams(emitEvent, eventToken);
+
+    result.children.push_back(emitEvent);
 }
 void Parser::consumeSystemBlock(Node &result, Token &lastToken)
 {    // consume entire block and append it to children node

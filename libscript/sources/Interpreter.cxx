@@ -112,7 +112,8 @@ const std::unordered_map<std::string, pivot::ecs::event::Description> eventDescr
 // Public functions ( can be called anywhere )
 
 // This will go through a file's tree and register all component/system declarations into the global index
-std::vector<systems::Description> registerDeclarations(const Node &file, component::Index &componentIndex)
+std::vector<systems::Description> registerDeclarations(const Node &file, component::Index &componentIndex,
+                                                       event::Index &eventIndex)
 {
     DEBUG_FUNCTION();
     std::vector<systems::Description> result;
@@ -128,6 +129,8 @@ std::vector<systems::Description> registerDeclarations(const Node &file, compone
         for (const Node &node: file.children) {
             if (node.type == NodeType::ComponentDeclaration) {    // register component
                 registerComponentDeclaration(node, componentIndex, file.value);
+            } else if (node.type == NodeType::EventDeclaration) {    // register event
+                registerEventDeclaration(node, eventIndex, file.value);
             } else if (node.type == NodeType::SystemDeclaration) {    // store system declaration for return
                 systems::Description r = registerSystemDeclaration(node, file.value);
                 if (r.name == "Error 1") {
@@ -302,10 +305,27 @@ void Interpreter::executeStatement(const Node &statement, Stack &stack)
 
         // data::Value exprResult = evaluateExpression(statement.children.at(0), stack);
         // std::cout << "ASSIGN:  " << statement.children.at(2).value << std::endl;
+    } else if (statement.value == "emit") {
+        executeEmitStatement(statement.children.at(0), stack);
     } else {    // unsupported yet
         logger.err("ERROR") << " at node " << statement.value;
         throw InvalidException("Invalid Statement: Unsupported statement.");
     }
+}
+
+void Interpreter::executeEmitStatement(const Node &statement, Stack &stack)
+{
+    std::vector<data::Value> parameters;
+    for (const Node &param: statement.children.at(0).children) {    // get all the parameters for the callback
+        if (param.type == NodeType::FunctionCall)                   // parameter is function call
+            parameters.push_back(executeFunction(param, stack));
+        else if (param.type == NodeType::Expression)    // parameter is expression
+            parameters.push_back(evaluateExpression(param, stack));
+        else    // parameter is variable
+            parameters.push_back(valueOf(param, stack));
+    }
+
+    stack.emitEvent(statement.value, parameters);
 }
 
 // Execute a function
@@ -419,6 +439,33 @@ void registerComponentDeclaration(const Node &component, component::Index &compo
     r.defaultValue = r.type.defaultValue();
     componentIndex.registerComponent(r);
 }
+void registerEventDeclaration(const Node &event, event::Index &eventIndex, const std::string &filename)
+{
+    pivot::ecs::event::Description r = {
+        .name = event.value,
+    };
+
+    for (const Node &eventParameter: event.children) {
+        switch (eventParameter.type) {
+            case NodeType::EventEntityParameter:
+                // TODO : handle event description with ecs
+                break;
+            case NodeType::EventPayloadType:
+                if (!gVariableTypes.contains(eventParameter.value)) {    // Not a known pivotscript type
+                    logger.err("ERROR") << " at line " << eventParameter.line_nb << " char " << eventParameter.char_nb
+                                        << ": '" << eventParameter.value << "'";
+                    throw UnknownTypeException("This is not a PivotScript type.");
+                }
+                r.payload = gVariableTypes.at(eventParameter.value);
+                break;
+            case NodeType::EventPayloadName: r.payloadName = eventParameter.value; break;
+            default: throw UnexpectedNodeTypeException("Not an event node");
+        }
+    }
+    r.provenance = Provenance::externalRessource(filename);
+    eventIndex.registerEvent(r);
+}
+
 // Register a system declaration node
 systems::Description registerSystemDeclaration(const Node &system, const std::string &fileName)
 {
@@ -454,7 +501,7 @@ systems::Description registerSystemDeclaration(const Node &system, const std::st
     if (cursor == nbChildren || system.children.at(cursor).value != "event") {    // Default Tick event
         evtDesc.name = "Tick";
         evtDesc.payload = data::BasicType::Number;
-        // evtDesc.payloadName = "deltaTime"; // TODO: payload name
+        evtDesc.payloadName = "deltaTime";
         evtDesc.provenance = Provenance();
     } else {    // Custom event
         expectNodeTypeValue(system.children, cursor, NodeType::EventKeyword, "event", true);

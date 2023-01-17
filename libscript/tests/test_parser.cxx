@@ -1,10 +1,13 @@
-#include "pivot/script/Parser.hxx"
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
+#include <magic_enum.hpp>
 #include <string>
 #include <vector>
 
+#include "pivot/script/Parser.hxx"
+
 using namespace pivot::ecs;
+using namespace pivot::ecs::script;
 
 TEST_CASE("Scripting-Refacto-HelperFunctions")
 {
@@ -112,3 +115,21 @@ TEST_CASE("Scripting-Parser-ValidFiles")
 //     for (const std::string &file: fileNames) { REQUIRE_THROWS(parser.ast_from_file(file, false, false)); }
 //     std::cout << "------Parser/Invalidfiles------end" << std::endl;
 // }
+
+TEST_CASE("Parse emit event", "[scripting]")
+{
+    const auto script = "system test() event Tick()\n\temit TestEvent(\"value\")\n";
+    parser::Parser parser;
+    Node file;
+    REQUIRE_NOTHROW(file = parser.ast_from_file(script, true, true));
+    Node system = file.children.at(0);
+    Node statements = system.children.at(6);
+    Node emitStatement = statements.children.at(0);
+    REQUIRE(emitStatement.value == "emit");
+    Node emitEvent = emitStatement.children.at(0);
+    REQUIRE(emitEvent.type == NodeType::EmitEvent);
+    REQUIRE(emitEvent.value == "TestEvent");
+    REQUIRE(emitEvent.children.size() == 1);
+    Node eventArg = emitEvent.children.at(0);
+    REQUIRE(eventArg.type == NodeType::FunctionParams);
+}

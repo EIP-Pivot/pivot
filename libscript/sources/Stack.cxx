@@ -162,4 +162,9 @@ const data::Value Stack::find(const std::string &name, const data::Record &where
                 std::get<data::Record>(where.at(accessingVar)));    // recursive call on the rest of the access chain
 }
 
+void Stack::emitEvent(std::string eventName, std::vector<data::Value> values)
+{
+    _eventsToEmit.emplace_back(eventName, values);
+}
+
 }    // end of namespace pivot::ecs::script::interpreter

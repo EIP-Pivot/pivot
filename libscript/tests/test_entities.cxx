@@ -14,11 +14,12 @@ TEST_CASE("Scripting-Interpreter-Entities")
 
     component::Index cind;
     systems::Index sind;
+    event::Index eind;
     SceneManager m_scene_manager{};
     m_scene_manager.registerScene("Scene1");
     m_scene_manager.setCurrentSceneId(m_scene_manager.getSceneId("Scene1").value());
     script::Engine engine(
-        sind, cind,
+        sind, cind, eind,
         pivot::ecs::script::interpreter::builtins::BuiltinContext{
             .isKeyPressed = [](auto) { return false; },
             .selectCamera = [](auto) { return false; },
@@ -45,10 +46,13 @@ TEST_CASE("Scripting-Interpreter-Entities")
 
     std::string fileContent = "component Once\n"
                               "\tBoolean trigger\n"
-                              "\n"
+                              "event Tick\n"
+                              "\tNumber dt\n"
+                              "event KeyPress\n"
+                              "\tString key\n"
                               "system S(anyEntity<Once>) event Tick(Number deltaTime)\n"
-                              "\temitEvent(\"Tick\")\n"
-                              "\temitEvent(\"KeyPress\")\n";
+                              "\temit Tick(12)\n"
+                              "\temit KeyPress(\"m\")\n";
 
     engine.loadFile(fileContent, true);
 

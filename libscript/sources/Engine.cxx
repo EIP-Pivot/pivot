@@ -64,10 +64,10 @@ std::string Engine::loadFile(const std::string &file, bool isContent, bool verbo
     return (file + " parsed succesfully.");    // no errors
 }
 
-std::vector<ecs::event::Event> createEventsFromStack(const event::Index &eventIndex, interpreter::Stack &stack)
+void createEventsFromStack(const event::Index &eventIndex, const interpreter::Stack &stack,
+                           std::vector<ecs::event::Event> &eventsEmitted)
 {
     auto events = stack.getEventsToEmit();
-    std::vector<ecs::event::Event> eventsEmitted;
 
     for (auto &eventToEmit: events) {
         auto description = eventIndex.getDescription(eventToEmit.eventName);
@@ -78,7 +78,6 @@ std::vector<ecs::event::Event> createEventsFromStack(const event::Index &eventIn
         eventsEmitted.push_back(
             event::Event{.description = description.value(), .entities = {}, .payload = eventToEmit.values.at(0)});
     }
-    return eventsEmitted;
 }
 
 std::vector<ecs::event::Event> Engine::systemCallback(const systems::Description &system,
@@ -100,7 +99,7 @@ std::vector<ecs::event::Event> Engine::systemCallback(const systems::Description
         try {
             _stack.clear();
             _interpreter.executeSystem(systemEntry, system, entity, trigger, _stack);
-            for (auto event: createEventsFromStack(_eventIndex, _stack)) { allEventsEmitted.push_back(event); }
+            createEventsFromStack(_eventIndex, _stack, allEventsEmitted);
         } catch (const InvalidOperation &e) {
             logger.err("Invalid Operation: ") << e.what();
         } catch (const InvalidException &e) {

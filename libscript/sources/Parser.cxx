@@ -645,7 +645,7 @@ void Parser::consumeEmitStatement(Node &result, [[maybe_unused]] Token &lastToke
 
     _tokens.pop();
 
-    auto eventToken = _tokens.front();
+    Token eventToken = _tokens.front();
     if (eventToken.type != TokenType::Identifier) { throw UnexpectedTokenTypeException("Expected event name"); }
     emitEvent.value = eventToken.value;
     _tokens.pop();

@@ -25,9 +25,13 @@ public:
     constexpr const std::queue<Token> &getTokenQueue() const { return _tokens; };
 
 private:
+    /// Consume an event token and all following to build an event declaration node
+    Node consumeEvent();
+    /// Consume one event token
+    void consumeEventToken(Node &result, TokenType expectedType, NodeType fillType, Token &lastToken);
     /// Consume a component token and all following to build a component declaration node
     Node consumeComponent();
-    /// Consume one token
+    /// Consume one component token
     void consumeComponentToken(Node &result, TokenType expectedType, NodeType fillType, Token &lastToken);
     /// Consume a system token and all following to build a system declaration node
     Node consumeSystem();
@@ -55,6 +59,9 @@ private:
     void expectSystemTokenValue(const std::string &expectedValue, Token &lastToken, bool consume);
     /// Check for end of system/component declaration
     bool isDeclarationOver();
+
+    /// Consume an emit event statement
+    void consumeEmitStatement(Node &result, Token &lastToken);
 
 private:
     std::queue<Token> _tokens;

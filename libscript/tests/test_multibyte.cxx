@@ -11,7 +11,8 @@ TEST_CASE("Scripting-Interpreter-Multibyte")
 
     component::Index cind;
     systems::Index sind;
-    script::Engine engine(sind, cind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
+    event::Index eind;
+    script::Engine engine(sind, cind, eind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
     // std::string file = "../libscript/tests/multibyte.pvt";
     // engine.loadFile(file);
 

@@ -45,7 +45,7 @@ using namespace pivot::ecs;
 namespace pivot
 {
 Engine::Engine()
-    : m_scripting_engine(m_system_index, m_component_index,
+    : m_scripting_engine(m_system_index, m_component_index, m_event_index,
                          pivot::ecs::script::interpreter::builtins::BuiltinContext{
                              .isKeyPressed = std::bind_front(&Engine::isKeyPressed, this),
                              .selectCamera = std::bind_front(&Engine::setCurrentCamera, this),

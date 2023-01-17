@@ -10,9 +10,9 @@
 namespace pivot::ecs::script
 {
 
-Engine::Engine(systems::Index &systemIndex, component::Index &componentIndex,
+Engine::Engine(systems::Index &systemIndex, component::Index &componentIndex, event::Index &eventIndex,
                interpreter::builtins::BuiltinContext context)
-    : _systemIndex(systemIndex), _componentIndex(componentIndex), _interpreter(context)
+    : _systemIndex(systemIndex), _componentIndex(componentIndex), _eventIndex(eventIndex), _interpreter(context)
 {
     std::srand(std::time(nullptr));    // for built-in rand_int
 }
@@ -51,7 +51,8 @@ std::string Engine::loadFile(const std::string &file, bool isContent, bool verbo
 
     // TODO: return string with error on top of the node
     std::vector<systems::Description> sysDescs = interpreter::registerDeclarations(
-        fileNode, _componentIndex);    // register component descriptions, and retrieve system descriptions
+        fileNode, _componentIndex,
+        _eventIndex);    // register component and event descriptions, and retrieve system descriptions
     for (systems::Description &desc: sysDescs) {
         desc.system = std::bind(&Engine::systemCallback, this, std::placeholders::_1, std::placeholders::_2,
                                 std::placeholders::_3);    // add the callback to the descriptions
@@ -63,11 +64,29 @@ std::string Engine::loadFile(const std::string &file, bool isContent, bool verbo
     return (file + " parsed succesfully.");    // no errors
 }
 
+void createEventsFromStack(const event::Index &eventIndex, const interpreter::Stack &stack,
+                           std::vector<ecs::event::Event> &eventsEmitted)
+{
+    auto events = stack.getEventsToEmit();
+
+    for (auto &eventToEmit: events) {
+        auto description = eventIndex.getDescription(eventToEmit.eventName);
+        if (!description.has_value()) {
+            logger.warn() << "Unknown event " << eventToEmit.eventName;
+            continue;
+        }
+        eventsEmitted.push_back(
+            event::Event{.description = description.value(), .entities = {}, .payload = eventToEmit.values.at(0)});
+    }
+}
+
 std::vector<ecs::event::Event> Engine::systemCallback(const systems::Description &system,
                                                       component::ArrayCombination &entities,
                                                       event::EventWithComponent &trigger)
 {
     PROFILE_FUNCTION();
+
+    std::vector<ecs::event::Event> allEventsEmitted;
 
     if (!_systems.contains(system.name)) {
         // std::cerr << std::format("Unregistered system '{}'", system.name) << std::endl; // format not available in
@@ -80,6 +99,7 @@ std::vector<ecs::event::Event> Engine::systemCallback(const systems::Description
         try {
             _stack.clear();
             _interpreter.executeSystem(systemEntry, system, entity, trigger, _stack);
+            createEventsFromStack(_eventIndex, _stack, allEventsEmitted);
         } catch (const InvalidOperation &e) {
             logger.err("Invalid Operation: ") << e.what();
         } catch (const InvalidException &e) {
@@ -90,7 +110,7 @@ std::vector<ecs::event::Event> Engine::systemCallback(const systems::Description
             logger.err("Unhandled std exception: ") << e.what();
         }
     }
-    return {};
+    return allEventsEmitted;
 }
 
 // Private functions

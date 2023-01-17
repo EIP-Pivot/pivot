@@ -53,7 +53,8 @@ TEST_CASE("Scripting-Refacto-Engine")
         "	# anyEntity.Position.pos_z = anyEntity.Position.pos_z + anyEntity.Velocity.vel_z# * deltaTime\n";
     component::Index cind;
     systems::Index sind;
-    script::Engine engine(sind, cind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
+    event::Index eind;
+    script::Engine engine(sind, cind, eind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
     engine.loadFile(file, true);
 
     REQUIRE(sind.getDescription("onTickPhysics").has_value());
@@ -100,7 +101,8 @@ TEST_CASE("Scripting-Refacto-Interpreter_One")
 
     component::Index cind;
     systems::Index sind;
-    script::Engine engine(sind, cind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
+    event::Index eind;
+    script::Engine engine(sind, cind, eind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
     // std::string file = "../libscript/tests/tests/systems/interpreter/valid2.pvt";
     // engine.loadFile(file);
     std::string fileContent = "component C\n\tBoolean b\nsystem S(anyEntity<C>) event Tick(Number "
@@ -128,13 +130,59 @@ TEST_CASE("Scripting-Refacto-Interpreter_One")
     std::cout << "------Interpreter------end" << std::endl;
 }
 
+TEST_CASE("Scripting-Event-Declaration")
+{
+    component::Index cind;
+    systems::Index sind;
+    event::Index eind;
+
+    script::Engine engine(sind, cind, eind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
+
+    // std::string file = "C:/Users/jonme/eip/pivot/libscript/tests/b.pvt";
+    // engine.loadFile(file);
+    std::string fileContent = "event Kill\n"
+                              "\tString monster\n"
+                              "event Damage\n"
+                              "\tNumber damage\n"
+                              "event Move\n"
+                              "\tNumber deltaTime\n"
+                              "system killMonster() event Tick(Number deltaTime)\n"
+                              "\temit Kill(\"frankenstein\")\n";
+    engine.loadFile(fileContent, true);
+
+    auto killDescription = eind.getDescription("Kill").value();
+    REQUIRE(killDescription.name == "Kill");
+    REQUIRE(killDescription.payload == data::Type{data::BasicType::String});
+    REQUIRE(killDescription.payloadName == "monster");
+    REQUIRE(killDescription.entities.size() == 0);
+    REQUIRE(killDescription.provenance.isExternalRessource());
+
+    REQUIRE(eind.getDescription("Damage").has_value());
+    REQUIRE(eind.getDescription("Move").has_value());
+
+    auto killMonsterSystem = sind.getDescription("killMonster").value();
+    REQUIRE(killMonsterSystem.name == "killMonster");
+    REQUIRE(killMonsterSystem.entityName == "");
+
+    event::EventWithComponent event = {
+        .event = event::Event{.description = killMonsterSystem.eventListener, .entities = {}, .payload = 0.12}};
+    auto comb = component::ArrayCombination({});
+    auto systemResult = killMonsterSystem.system(killMonsterSystem, comb, event);
+    REQUIRE(systemResult.size() == 1);
+    auto killEvent = systemResult.at(0);
+    REQUIRE(killEvent.description.name == killDescription.name);
+    REQUIRE(killEvent.entities.size() == 0);
+    REQUIRE(killEvent.payload == data::Value{"frankenstein"});
+}
+
 TEST_CASE("Scripting-Interpreter-Vector")
 {
     std::cout << "------Interpreter Vector------start" << std::endl;
 
     component::Index cind;
     systems::Index sind;
-    script::Engine engine(sind, cind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
+    event::Index eind;
+    script::Engine engine(sind, cind, eind, pivot::ecs::script::interpreter::builtins::BuiltinContext());
     // std::string file = "C:/Users/Najo/eip/pivot/libscript/tests/vector.pvt";
     // engine.loadFile(file);
     std::string fileContent = "component C\n"

@@ -20,6 +20,7 @@ enum class NodeType {
     File,
     ComponentDeclaration,
     SystemDeclaration,
+    EventDeclaration,
     ComponentName,
     SystemName,
     PropertyType,
@@ -30,6 +31,7 @@ enum class NodeType {
     EventPayloadName,
     EventEntityComponent,
     EventEntityName,
+    EventEntityParameter,
     EntityParameterName,
     EntityParameterComponent,
     Indent,
@@ -48,6 +50,7 @@ enum class NodeType {
     Type,
     Name,
     Symbol,
+    EmitEvent,
 };
 
 enum class Precedence {

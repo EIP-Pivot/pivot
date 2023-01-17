@@ -33,8 +33,26 @@ public:
     /// Modify the value of a variable in the stack, by name, name can contain access ('.')
     void setValue(const std::string &name, const data::Value &newVal);
 
+    /// emit an event
+    void emitEvent(std::string eventName, std::vector<data::Value>);
+
     /// Clear the stack
-    inline void clear() noexcept { _stack.clear(); }
+    inline void clear() noexcept
+    {
+        _stack.clear();
+        _eventsToEmit.clear();
+    }
+
+    /// Details of an event emitted by the system
+    struct EventToEmit {
+        /// Name of the event to emit
+        std::string eventName;
+        /// Payload of the event
+        std::vector<data::Value> values;
+    };
+
+    /// Get events to emit
+    const std::vector<EventToEmit> &getEventsToEmit() const { return _eventsToEmit; }
 
 private:
     data::Record _stack;    /// name to variable
@@ -42,6 +60,8 @@ private:
     bool setVectorValue(const std::string &name, const data::Value &newVal, data::Record &where);
     data::Value &findMut(const std::string &name, data::Record &where);
     const data::Value find(const std::string &name, const data::Record &where) const;
+
+    std::vector<EventToEmit> _eventsToEmit;
 };
 
 }    // end of namespace pivot::ecs::script::interpreter

@@ -75,16 +75,23 @@ endif()
 fetchcontent_declare(
     vma
     GIT_REPOSITORY https://github.com/YaaZ/VulkanMemoryAllocator-Hpp.git
-    GIT_TAG da6ea76eecf12a1decc76f58a3e096bcc555bd94
+    GIT_TAG 62b1d32e96acf36f6da619d3f818d2edc7cbbc7b
 )
 fetchcontent_getproperties(vma)
 if(NOT vma_POPULATED)
     message(STATUS "Populating vma")
     fetchcontent_populate(vma)
-    add_library(VulkanMemoryAllocator STATIC ${vma_SOURCE_DIR}/include/vk_mem_alloc.h)
-    set_source_files_properties(${vma_SOURCE_DIR}/include/vk_mem_alloc.h PROPERTIES LANGUAGE CXX)
-    target_include_directories(VulkanMemoryAllocator SYSTEM PUBLIC ${vma_SOURCE_DIR}/include/)
-    target_compile_definitions(VulkanMemoryAllocator PRIVATE VMA_IMPLEMENTATION)
+
+    if(NOT EXISTS ${vma_BINARY_DIR}/vk_mem_alloc.cpp)
+        file(WRITE ${vma_BINARY_DIR}/vk_mem_alloc.cpp
+             "#define VMA_IMPLEMENTATION\n#include \"vk_mem_alloc.h\""
+        )
+    endif()
+
+    add_library(VulkanMemoryAllocator STATIC ${vma_BINARY_DIR}/vk_mem_alloc.cpp)
+    target_include_directories(
+        VulkanMemoryAllocator SYSTEM PUBLIC ${vma_SOURCE_DIR}/VulkanMemoryAllocator/include/ ${vma_SOURCE_DIR}/include/
+    )
     set_target_properties(VulkanMemoryAllocator PROPERTIES LINKER_LANGUAGE CXX)
     target_link_libraries(VulkanMemoryAllocator PUBLIC Vulkan::Vulkan)
 endif()

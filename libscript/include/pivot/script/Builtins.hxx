@@ -22,6 +22,15 @@ struct BuiltinContext {
     /// Select an entity as the new current camera
     std::function<void(std::optional<Entity>)> selectCamera;
 
+    /// Create an entity in the current scene
+    std::function<std::pair<pivot::Entity, std::string>(const std::string &)> createEntity;
+
+    /// Remove an entity in the current scene
+    std::function<void(const std::string &)> removeEntity;
+
+    /// Add a component to an entity
+    std::function<void(pivot::Entity, const std::string &, const std::string &)> addComponent;
+
     /// Mock builtin context for unit testing
     static BuiltinContext mock()
     {
@@ -66,6 +75,26 @@ data::Value builtin_sqrt(const std::vector<data::Value> &params, const BuiltinCo
 ///     Returns the absolute value of the given Number
 data::Value builtin_abs(const std::vector<data::Value> &params, const BuiltinContext &context);
 
+/// Boolean not(Boolean v)
+///     Returns the not value of v
+data::Value builtin_not(const std::vector<data::Value> &params, const BuiltinContext &context);
+
+/// ScriptEntity  createEntity(String name)
+///     Returns the created entity just BAM
+data::Value builtin_createEntity(const std::vector<data::Value> &params, const BuiltinContext &context);
+
+/// void  removeEntity(String name)
+///     Removes the given entity from the scene if it exists
+data::Value builtin_removeEntity(const std::vector<data::Value> &params, const BuiltinContext &context);
+
+/// void  addComponent(String entityToAddTheComponentTo, String theComponentToAddToTheEntity)
+///     Returns nothing, but adds the component to the given entity
+data::Value builtin_addComponent(const std::vector<data::Value> &params, const BuiltinContext &context);
+
+/// void  emitEvent(String eventName)
+///     Emits the event
+data::Value builtin_emitEvent(const std::vector<data::Value> &params, const BuiltinContext &context);
+
 /// String	toString(Any val)
 ///		Returns a string representation of the given Value
 data::Value builtin_toString(const std::vector<data::Value> &params, const BuiltinContext &);
@@ -77,6 +106,26 @@ data::Value builtin_vec3(const std::vector<data::Value> &params, const BuiltinCo
 /// Color  color(Number r, Number g, Number b, Number a)
 ///     Returns a built Color value from the rgba parameters
 data::Value builtin_color(const std::vector<data::Value> &params, const BuiltinContext &context);
+
+/// List  list(Any item1, Any item2 ...)
+///     Returns a list with optional items to put inside
+data::Value builtin_list(const std::vector<data::Value> &params, const BuiltinContext &);
+
+/// Any  at(List haystack, Number needle)
+///     Returns the value at the given index in given list
+data::Value builtin_at(const std::vector<data::Value> &params, const BuiltinContext &);
+
+/// Number  len(List list)
+///     Returns the size of the list
+data::Value builtin_len(const std::vector<data::Value> &params, const BuiltinContext &);
+
+/// Void  remove(List list, Number toRemove)
+///     Removes the value at given index
+data::Value builtin_remove(const std::vector<data::Value> &params, const BuiltinContext &);
+
+/// Void  push(List list, Any toPush1, any toPush2 ...)
+///     At the values to the list
+data::Value builtin_push(const std::vector<data::Value> &params, const BuiltinContext &);
 
 /// Void selectCamera(Entity entity)
 data::Value builtin_selectCamera(const std::vector<data::Value> &params, const BuiltinContext &context);

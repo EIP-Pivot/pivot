@@ -29,7 +29,9 @@ const std::unordered_map<std::string, data::BasicType> gVariableTypes{{"Vector3"
                                                                       {"Number", data::BasicType::Number},
                                                                       {"Boolean", data::BasicType::Boolean},
                                                                       {"Color", data::BasicType::Number},
-                                                                      {"String", data::BasicType::String}};
+                                                                      {"Entity", data::BasicType::ScriptEntity},
+                                                                      {"String", data::BasicType::String},
+                                                                      {"List", data::BasicType::List}};
 
 // Public methods
 

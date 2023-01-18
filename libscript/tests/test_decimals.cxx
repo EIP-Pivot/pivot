@@ -9,7 +9,7 @@ using namespace pivot::ecs;
 
 TEST_CASE("Scripting-Interpreter-Decimals")
 {
-    logger.start();
+    // logger.start();
 
     logger.info("------Interpreter Decimals------") << "Start";
 

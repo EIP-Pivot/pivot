@@ -30,4 +30,7 @@ Type Value::type() const
         // FIXME: Remove the static_cast when GCC 12 releases
         static_cast<const Value::variant &>(*this));
 }
+
+bool List::operator==(const List &rhs) const { return items.size() == rhs.items.size(); }
+auto List::operator<=>(const List &rhs) const { return items.size() <=> rhs.items.size(); }
 }    // namespace pivot::ecs::data

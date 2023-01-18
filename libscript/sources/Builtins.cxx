@@ -45,8 +45,14 @@ data::Value builtin_print_stream(const std::vector<data::Value> &params, std::os
                     stream << "Asset(" << value.name << ")";
                 } else if constexpr (std::is_same_v<type, glm::vec3>) {
                     stream << "vec3(" << value.x << "," << value.y << "," << value.z << ")";
+                } else if constexpr (std::is_same_v<type, data::Color>) {
+                    stream << "color(" << value.rgba[0] << "," << value.rgba[1] << "," << value.rgba[2] << ","
+                           << value.rgba[3] << ")";
                 } else if constexpr (std::is_same_v<type, pivot::EntityRef>) {
                     stream << "EntityRef(" << (value.is_empty() ? "EMPTY" : std::to_string(value.ref).c_str()) << ")";
+                } else if constexpr (std::is_same_v<type, data::List>) {
+                    stream << "List\t";
+                    builtin_print_stream((std::get<data::List>((const data::Value &)value)).items, stream);
                 } else {
                     throw std::runtime_error("Code branch shouldn't execute.");
                 }
@@ -94,6 +100,37 @@ data::Value builtin_abs(const std::vector<data::Value> &params, const BuiltinCon
 {
     auto absVal = std::get<double>(params[0]) > 0 ? std::get<double>(params[0]) : -std::get<double>(params[0]);
     return data::Value(absVal);
+}
+
+data::Value builtin_not(const std::vector<data::Value> &params, const BuiltinContext &context)
+{
+    return (!std::get<bool>(params.at(0)));
+}
+
+data::Value builtin_createEntity(const std::vector<data::Value> &params, const BuiltinContext &context)
+{
+    std::pair<pivot::Entity, std::string> entityId = context.createEntity(std::get<std::string>(params.at(0)));
+
+    data::ScriptEntity createdScriptEntity{data::Record{{"name", entityId.second}}, entityId.first};
+    data::Value createdEntity = data::Value(createdScriptEntity);
+    return createdEntity;
+}
+
+data::Value builtin_removeEntity(const std::vector<data::Value> &params, const BuiltinContext &context)
+{
+    context.removeEntity(std::get<std::string>(params.at(0)));
+    return data::Value();
+}
+
+data::Value builtin_emitEvent(const std::vector<data::Value> &params, const BuiltinContext &context)
+{
+    std::cout << "Emitting event " << std::get<std::string>(params.at(0)) << std::endl;
+    return data::Value();
+}
+
+data::Value builtin_addComponent(const std::vector<data::Value> &params, const BuiltinContext &context)
+{
+    return data::Value();
 }
 
 std::string removeTrailingZeroes(std::string str)
@@ -401,6 +438,53 @@ data::Value builtin_color(const std::vector<data::Value> &params, const BuiltinC
 {
     return {data::Color{.rgba = {(float)std::get<double>(params.at(0)), (float)std::get<double>(params.at(1)),
                                  (float)std::get<double>(params.at(2)), (float)std::get<double>(params.at(3))}}};
+}
+
+data::Value builtin_list(const std::vector<data::Value> &params, const BuiltinContext &)
+{
+    data::List r;
+
+    for (const data::Value &param: params) { r.items.push_back(param); }
+    return {r};
+}
+
+data::Value builtin_at(const std::vector<data::Value> &params, const BuiltinContext &)
+{
+    size_t index = (size_t)(std::get<double>(params.at(1)));
+    const data::List &list = std::get<data::List>(params.at(0));
+    if (index >= list.items.size()) {
+        logger.err("ERROR") << " by index 'at(" << index << ")' and size '" << list.items.size() << "'";
+        throw InvalidOperation("Index out of list range.");
+    }
+    return list.items.at(index);
+}
+
+data::Value builtin_len(const std::vector<data::Value> &params, const BuiltinContext &)
+{
+    return data::Value{(double)std::get<data::List>(params.at(0)).items.size()};
+}
+
+data::Value builtin_remove(const std::vector<data::Value> &params, const BuiltinContext &)
+{
+    size_t index = (size_t)(std::get<double>(params.at(1)));
+    const data::List &list = std::get<data::List>(params.at(0));
+    if (index >= list.items.size()) {
+        logger.err("ERROR") << " by index 'at(" << index << ")' and size '" << list.items.size() << "'";
+        throw InvalidOperation("Index out of list range.");
+    }
+    data::List r;
+    for (size_t i = 0; i < list.items.size(); i++)
+        if (i != index) r.items.push_back(data::Value{list.items.at(i)});
+    return data::Value{r};
+}
+
+data::Value builtin_push(const std::vector<data::Value> &params, const BuiltinContext &)
+{
+    const data::List &list = std::get<data::List>(params.at(0));
+    data::List r;
+    for (const data::Value &v: list.items) r.items.push_back(v);
+    for (size_t i = 1; i < params.size(); i++) r.items.push_back(params.at(i));
+    return data::Value{r};
 }
 
 // Mathematical/Arithmetic operators -- end

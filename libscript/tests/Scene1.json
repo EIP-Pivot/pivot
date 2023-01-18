@@ -1,0 +1,20 @@
+{
+    "assets": [],
+    "components": [
+        {
+            "Once": {
+                "trigger": false
+            },
+            "Tag": {
+                "name": "Player"
+            }
+        }
+    ],
+    "name": "Default",
+    "scripts": [
+        "a.pivotscript"
+    ],
+    "systems": [
+        "S"
+    ]
+}

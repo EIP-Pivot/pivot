@@ -94,6 +94,7 @@ std::vector<ecs::event::Event> Engine::systemCallback(const systems::Description
         logger.err("Unregistered system '") << system.name << "'";
         return {};
     }
+    std::vector<ecs::event::Event> emittedEvents;
     const Node &systemEntry = _systems.at(system.name);    // Avoid looking up for every entity
     for (auto entity: entities) {                          // For every entity, execute the system with it as parameter
         try {

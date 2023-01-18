@@ -12,9 +12,9 @@ namespace pivot::ecs::script::interpreter
 {
 
 const std::map<std::string, data::BasicType> gVariableTypes{
-    {"Vector3", data::BasicType::Vec3},  {"Vector2", data::BasicType::Vec2},    {"Asset", data::BasicType::Asset},
-    {"Number", data::BasicType::Number}, {"Boolean", data::BasicType::Boolean}, {"Color", data::BasicType::Color},
-    {"String", data::BasicType::String}};
+    {"Vector3", data::BasicType::Vec3},  {"Vector2", data::BasicType::Vec2},        {"Asset", data::BasicType::Asset},
+    {"Number", data::BasicType::Number}, {"Boolean", data::BasicType::Boolean},     {"Color", data::BasicType::Color},
+    {"String", data::BasicType::String}, {"Entity", data::BasicType::ScriptEntity}, {"List", data::BasicType::List}};
 // Map builtin binary (two operands) operators, to their operator enum
 const std::map<std::string, std::function<data::Value(const data::Value &, const data::Value &)>> gOperatorCallbacks = {
     {"*", interpreter::builtins::builtin_operator<builtins::Operator::Multiplication>},
@@ -56,11 +56,32 @@ const std::unordered_map<std::string, std::pair<BuiltinFunctionCallback, Paramet
      {interpreter::builtins::builtin_print,
       {std::numeric_limits<size_t>::max(),
        {{data::BasicType::String, data::BasicType::Number, data::BasicType::Integer, data::BasicType::Boolean,
-         data::BasicType::Asset, data::BasicType::Vec3, data::BasicType::EntityRef}}}}},
+         data::BasicType::Color, data::BasicType::Asset, data::BasicType::Vec3, data::BasicType::List,
+         data::BasicType::EntityRef}}}}},
     {"randint", {interpreter::builtins::builtin_randint, {1, {{data::BasicType::Number}}}}},
     {"pow", {interpreter::builtins::builtin_power, {2, {{data::BasicType::Number}, {data::BasicType::Number}}}}},
     {"sqrt", {interpreter::builtins::builtin_sqrt, {1, {{data::BasicType::Number}}}}},
     {"abs", {interpreter::builtins::builtin_abs, {1, {{data::BasicType::Number}}}}},
+    {"not", {interpreter::builtins::builtin_not, {1, {{data::BasicType::Boolean}}}}},
+    {"createEntity", {interpreter::builtins::builtin_createEntity, {1, {{data::BasicType::String}}}}},
+    {"removeEntity", {interpreter::builtins::builtin_removeEntity, {1, {{data::BasicType::String}}}}},
+    {"emitEvent", {interpreter::builtins::builtin_emitEvent, {1, {{data::BasicType::String}}}}},
+    {"addComponent",
+     {interpreter::builtins::builtin_addComponent, {2, {{data::BasicType::String}, {data::BasicType::String}}}}},
+    {"list",
+     {interpreter::builtins::builtin_list,
+      {std::numeric_limits<size_t>::max(),
+       {{data::BasicType::String, data::BasicType::Number, data::BasicType::Integer, data::BasicType::Boolean,
+         data::BasicType::Asset, data::BasicType::Vec3, data::BasicType::EntityRef}}}}},
+    {"at", {interpreter::builtins::builtin_at, {2, {{data::BasicType::List}, {data::BasicType::Number}}}}},
+    {"remove", {interpreter::builtins::builtin_remove, {2, {{data::BasicType::List}, {data::BasicType::Number}}}}},
+    {"push",
+     {interpreter::builtins::builtin_push,
+      {std::numeric_limits<size_t>::max(),
+       {{data::BasicType::String, data::BasicType::Number, data::BasicType::Integer, data::BasicType::Boolean,
+         data::BasicType::Asset, data::BasicType::Vec3, data::BasicType::List, data::BasicType::EntityRef,
+         data::BasicType::Color}}}}},
+    {"len", {interpreter::builtins::builtin_len, {1, {{data::BasicType::List}}}}},
     {"vec3",
      {interpreter::builtins::builtin_vec3,
       {3, {{data::BasicType::Number}, {data::BasicType::Number}, {data::BasicType::Number}}}}},
@@ -68,6 +89,25 @@ const std::unordered_map<std::string, std::pair<BuiltinFunctionCallback, Paramet
      {interpreter::builtins::builtin_color,
       {4,
        {{data::BasicType::Number}, {data::BasicType::Number}, {data::BasicType::Number}, {data::BasicType::Number}}}}}};
+
+const std::unordered_map<std::string, pivot::ecs::event::Description> eventDescriptions = {
+    {"Tick",
+     {
+         .name = "Tick",
+         .entities = {},
+         .payload = pivot::ecs::data::BasicType::Number,
+         .payloadName = "delta",
+         .provenance = pivot::ecs::Provenance::builtin(),
+     }},
+    {"KeyPress",
+     {
+         .name = "KeyPress",
+         .entities = {},
+         .payload = pivot::ecs::data::BasicType::String,
+         .payloadName = "key",
+         .provenance = pivot::ecs::Provenance::builtin(),
+     }},
+};
 
 // Public functions ( can be called anywhere )
 
@@ -130,9 +170,10 @@ std::vector<systems::Description> registerDeclarations(const Node &file, compone
 }
 
 // This will execute a SystemEntryPoint node by executing all of its statements
-void Interpreter::executeSystem(const Node &systemEntry, const systems::Description &desc,
-                                component::ArrayCombination::ComponentCombination &entityComponentCombination,
-                                event::EventWithComponent &trigger, Stack &stack)
+std::vector<ecs::event::Event>
+Interpreter::executeSystem(const Node &systemEntry, const systems::Description &desc,
+                           component::ArrayCombination::ComponentCombination &entityComponentCombination,
+                           event::EventWithComponent &trigger, Stack &stack)
 {
     PROFILE_FUNCTION();
     // systemComponents : [ "Position", "Velocity" ]
@@ -158,6 +199,7 @@ void Interpreter::executeSystem(const Node &systemEntry, const systems::Descript
     for (std::size_t i = 0; i < desc.eventListener.entities.size(); i++) {
         stack.updateEntity(desc.eventListener.entities[i], trigger.components[i]);
     }
+    return m_events;
 }
 
 // Private functions (never called elsewhere than this file and tests)
@@ -312,6 +354,12 @@ data::Value Interpreter::executeFunction(const Node &functionCall, const Stack &
     validateParams(parameters, gBuiltinsCallbacks.at(callee.value).second.first,
                    gBuiltinsCallbacks.at(callee.value).second.second,
                    callee.value);    // pair is <size_t numberOfParams, vector<data::Type> types>
+    if (callee.value == "emitEvent") {
+        event::Event evt = {.description = eventDescriptions.at(std::get<std::string>(parameters.at(0))),
+                            .entities = {},
+                            .payload = (0.13)};
+        m_events.push_back(evt);
+    }
     return gBuiltinsCallbacks.at(callee.value)
         .first(parameters, m_builtinContext);    // return the return value of the built-in
 }

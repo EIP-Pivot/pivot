@@ -19,13 +19,17 @@ struct BuiltinContext {
     /// Functor returning true if a specific key is pressed
     std::function<bool(const std::string &)> isKeyPressed;
 
+    /// Functor calling the setScene from ecs::ScenemManager
+    std::function<void(const std::string &)> loadScene;
+
     /// Select an entity as the new current camera
     std::function<void(std::optional<Entity>)> selectCamera;
 
     /// Mock builtin context for unit testing
     static BuiltinContext mock()
     {
-        return BuiltinContext{.isKeyPressed = [](auto) { return false; }, .selectCamera = [](auto) {}};
+        return BuiltinContext{
+            .isKeyPressed = [](auto) { return false; }, .loadScene = [](auto) {}, .selectCamera = [](auto) {}};
     }
 };
 
@@ -39,6 +43,10 @@ data::Value builtin_print(const std::vector<data::Value> &params, const BuiltinC
 
 /// Same as above but take a ostream to write to
 data::Value builtin_print_stream(const std::vector<data::Value> &params, std::ostream &stream);
+
+/// void	loadScene(String scene)
+///		Loads the scene string passed as parameter into the editor
+data::Value builtin_loadScene(const std::vector<data::Value> &params, const BuiltinContext &context);
 
 // Math built-ins
 /// Number cos(Number radAngle)

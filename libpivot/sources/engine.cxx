@@ -47,6 +47,16 @@ namespace pivot
 Engine::Engine()
     : m_scripting_engine(m_system_index, m_component_index, m_event_index,
                          pivot::ecs::script::interpreter::builtins::BuiltinContext{
+                             .loadScene =
+                                 [this](const std::string &scene) {
+                                     // Check that the scene is loaded
+                                     if (!this->m_scene_manager.getSceneId(scene).has_value()) {
+                                         logger.warn("loadScene") << "The scene " << scene << " doesn't exist.";
+                                         return;
+                                     }
+                                     // Set the scene as the active one
+                                     this->changeCurrentScene(this->m_scene_manager.getSceneId(scene).value());
+                                 },
                              .isKeyPressed = std::bind_front(&Engine::isKeyPressed, this),
                              .selectCamera = std::bind_front(&Engine::setCurrentCamera, this),
                          }),
